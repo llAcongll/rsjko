@@ -1,0 +1,35 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: #0b4ea2;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+
+/* MAIN CONTENT */
+.main {
+  flex: 1;
+  padding: 20px;
+  background: #f5f7fb;
+}
+
+/* MODAL HIDDEN DEFAULT */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

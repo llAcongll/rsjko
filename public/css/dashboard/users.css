@@ -1,0 +1,316 @@
+/* =========================
+   USERS TABLE
+========================= */
+
+.users-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(0,0,0,.08);
+}
+
+.users-table thead {
+  background: #f5f7fb;
+}
+
+.users-table th,
+.users-table td {
+  padding: 16px;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.users-table th {
+  font-weight: 700;
+  color: #333;
+}
+
+.users-table td {
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================
+   SOFT VERTICAL DIVIDER
+========================= */
+
+.users-table th,
+.users-table td {
+  position: relative;
+}
+
+/* garis vertikal */
+.users-table th:not(:last-child)::after,
+.users-table td:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+
+  width: 1px;
+  height: 60%;
+
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    #e5e7eb,
+    transparent
+  );
+}
+
+/* =========================
+   COLUMN ALIGNMENT
+========================= */
+
+.col-no {
+  width: 60px;
+  text-align: center;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.users-page .users-table th:nth-child(3),
+.users-page .users-table td:nth-child(3) {
+  width: 140px;
+  text-align: center;
+}
+
+.users-page .users-table th:nth-child(4),
+.users-page .users-table td:nth-child(4) {
+  width: 160px;
+  text-align: center;
+}
+
+/* =========================
+   ROW EFFECT & DIVIDER
+========================= */
+
+.users-table tbody tr {
+  position: relative;
+  transition: background .15s ease;
+}
+
+.users-table tbody tr:hover {
+  background: #f9fbff;
+}
+
+.users-table tbody tr:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    #e5e7eb,
+    transparent
+  );
+}
+
+/* =========================
+   ROLE BADGE
+========================= */
+
+.badge-role {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.badge-admin {
+  background: #fdecea;
+  color: #c62828;
+}
+
+.badge-user {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+/* =========================
+   ACTION BUTTONS
+========================= */
+
+.action-group {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-action {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.btn-action:focus,
+.btn-action:active {
+  outline: none;
+}
+
+.btn-action:focus-visible {
+  box-shadow: 0 0 0 3px rgba(37,99,235,.25);
+}
+
+.btn-edit {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.btn-edit:hover {
+  background: #bbdefb;
+}
+
+.btn-delete {
+  background: #fdecea;
+  color: #c62828;
+}
+
+.btn-delete:hover {
+  background: #f8cfcf;
+}
+
+/* =========================
+   USERS HEADER
+========================= */
+
+.users-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.users-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* =========================
+   ADD USER BUTTON
+========================= */
+
+.btn-add-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 10px 16px;
+  border-radius: 10px;
+
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border: none;
+  cursor: pointer;
+
+  box-shadow: 0 6px 16px rgba(37,99,235,.25);
+  transition: all .2s ease;
+}
+
+.btn-add-user:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #1e40af, #1d4ed8);
+  box-shadow: 0 10px 22px rgba(37,99,235,.35);
+}
+
+.btn-add-user:active {
+  transform: scale(.97);
+}
+
+/* =========================
+   USER MODAL
+========================= */
+
+#userModal.confirm-overlay {
+  background: rgba(15, 23, 42, 0.65);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+@supports not ((backdrop-filter: blur(6px)) or (-webkit-backdrop-filter: blur(6px))) {
+  #userModal.confirm-overlay {
+    background: rgba(15, 23, 42, 0.8);
+  }
+}
+
+#userModal .confirm-box {
+  padding: 26px 28px;
+  border-radius: 20px;
+
+  box-shadow:
+    0 30px 60px rgba(0,0,0,.28),
+    0 10px 20px rgba(0,0,0,.12);
+
+  transform: scale(.96) translateY(10px);
+  opacity: 0;
+  transition: all .25s ease;
+}
+
+#userModal[style*="opacity: 1"] .confirm-box {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+#userModal h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 14px;
+
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+
+  font-size: 14px;
+  transition: all .2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+}

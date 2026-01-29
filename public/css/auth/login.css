@@ -1,0 +1,203 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background:
+    radial-gradient(
+      circle at top center,
+      rgba(30,136,229,0.18),
+      rgba(227,242,253,0.9) 45%,
+      #ffffff 70%
+    );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.card {
+  background: #ffffff;
+  padding: 18px 30px 36px;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 18px;
+  box-shadow: 0 18px 45px rgba(0,0,0,.15);
+  text-align: center;
+  border-top: 8px solid #0b4ea2;
+  animation: fadeIn .5s ease;
+}
+
+.logo {
+  width: 170px;
+  height: auto;
+  display: block;
+  margin: 0 auto 8px;
+}
+
+h1 {
+  margin: 5px 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #0b3c75;
+  white-space: nowrap;
+}
+
+h2 {
+  margin: 0 0 4px;
+  color: #0b3c75;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.instansi {
+  margin: 0 0 22px;
+  font-size: 13px;
+  color: #0b4ea2;
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+  padding: 13px 14px;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  border: 1px solid #dcdcdc;
+  font-size: 14px;
+}
+
+input:focus {
+  outline: none;
+  border-color: #1e88e5;
+  box-shadow: 0 0 0 2px rgba(30,136,229,.2);
+}
+
+.password-wrap {
+  position: relative;
+}
+
+.toggle-pass {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  cursor: pointer;
+  font-size: 15px;
+  color: #1e88e5;
+
+  -webkit-user-select: none; /* Safari iOS */
+  -moz-user-select: none;    /* Firefox */
+  -ms-user-select: none;     /* Old Edge */
+  user-select: none;         /* Standard */
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 6px;
+  background: #0b4ea2;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: #083b7a;
+}
+
+button:disabled {
+  background: #90caf9;
+  cursor: not-allowed;
+}
+
+.msg {
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 20px;
+}
+
+.confirm-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
+
+  z-index: 9999;
+}
+
+.confirm-box{
+  background: #fff;
+  width: 360px;
+  max-width: 90%;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 20px 45px rgba(0,0,0,.3);
+}
+
+.confirm-actions{
+  display: flex;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.confirm-actions button{
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.btn-cancel{
+  background: #e0e0e0;
+  color: #333;
+}
+
+.btn-danger{
+  background: #0b4ea2;
+  color: #fff;
+}
+
+.toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  background: #0b4ea2;
+  color: #fff;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(0,0,0,.25);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all .3s ease;
+  z-index: 10000;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-error {
+  background: #dc2626;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

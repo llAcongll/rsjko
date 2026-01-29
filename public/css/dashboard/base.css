@@ -1,0 +1,466 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f5f7fb;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* =====================
+   SIDEBAR
+===================== */
+.sidebar {
+  width: 240px;
+  background: #0b4ea2;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.sidebar h3 {
+  margin: 10px 0 20px;
+  font-size: 16px;
+}
+
+/* SIDEBAR BUTTON */
+.sidebar button {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #fff;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  text-align: left;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.sidebar button:hover {
+  background: rgba(255,255,255,.15);
+}
+
+/* LOGOUT BUTTON */
+.sidebar .logout {
+  background: #083b7a;
+  margin-top: 10px;
+}
+
+/* =====================
+   SUBMENU
+===================== */
+.submenu-child {
+  display: none;
+  margin-left: 10px;
+}
+
+.submenu-child button {
+  font-size: 13px;
+  opacity: .95;
+}
+
+/* =====================
+   MAIN CONTENT
+===================== */
+.main {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+#mainContent {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  min-height: calc(100vh - 48px);
+}
+
+/* =========================
+   TOAST NOTIFICATION (GLOBAL)
+   Reusable for all pages
+========================= */
+
+/* =========================
+   TOAST NOTIFICATION
+========================= */
+/* =========================
+   TOAST NOTIFICATION
+========================= */
+
+.toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+
+  padding: 14px 18px;
+  border-radius: 12px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  background: #1f2937;
+  color: #fff;
+
+  box-shadow: 0 12px 30px rgba(0,0,0,.25);
+
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all .3s ease;
+
+  z-index: 9999; /* 🔑 INI KUNCINYA */
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* VARIANT */
+.toast.success {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+.toast.error {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.toast.info {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+/* =========================
+   MODAL TITLE
+========================= */
+.confirm-box h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* =========================
+   FORM SPACING
+========================= */
+.form-group {
+  margin-bottom: 18px;
+}
+
+/* =========================
+   ACTION BUTTON WRAPPER
+========================= */
+.confirm-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 32px; /* 🔥 jarak dari form */
+}
+
+/* =========================
+   BUTTON BASE
+========================= */
+.confirm-actions button {
+  flex: 1;
+  height: 44px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all .18s ease;
+}
+
+/* =========================
+   SECONDARY BUTTON
+========================= */
+.btn-secondary {
+  background: #e5e7eb;
+  color: #334155;
+}
+
+.btn-secondary:hover {
+  background: #d1d5db;
+}
+
+/* =========================
+   PRIMARY BUTTON
+========================= */
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+/* =========================
+   DANGER BUTTON (DELETE)
+========================= */
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+/* =========================
+   SIDEBAR ACTIVE STATE
+========================= */
+
+.sidebar button {
+  position: relative;
+  transition: all .2s ease;
+}
+
+.sidebar button.active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  font-weight: 600;
+}
+
+.sidebar button.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 4px;
+  background: #60a5fa;
+}
+
+/* =========================
+   SUBMENU
+========================= */
+
+.submenu-child button {
+  position: relative; /* 🔑 WAJIB */
+  background: transparent;
+  padding-left: 36px;
+  transition: all .2s ease;
+}
+
+.submenu-child button.active {
+  color: #2563eb;
+  font-weight: 600;
+  background: rgba(37,99,235,.08);
+  border-radius: 8px;
+}
+
+.submenu-child button.active::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2563eb;
+  transform: translateY(-50%);
+  opacity: .9;
+}
+
+/* =========================
+   FIX SUBMENU ACTIVE INSIDE ACTIVE PARENT
+========================= */
+
+.sidebar button.active + .submenu-child button {
+  background: transparent;
+  color: #c7d2fe;
+}
+
+.sidebar button.active + .submenu-child button.active {
+  color: #2563eb;
+  background: transparent;
+}
+
+.sidebar .logout {
+  margin-top: 8px;
+  background: rgba(239,68,68,.12);
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.sidebar .logout:hover {
+  background: rgba(239,68,68,.2);
+}
+
+/* =========================
+   MODAL OVERLAY (GLOBAL)
+========================= */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(15, 23, 42, 0.55);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+
+.confirm-overlay[style*="opacity: 1"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* =========================
+   MODAL BOX (GLOBAL)
+========================= */
+.confirm-box {
+  background: #ffffff;
+  border-radius: 22px;
+
+  width: 100%;
+  max-width: 440px;
+  padding: 28px 30px;
+
+  box-shadow:
+    0 30px 60px rgba(0,0,0,.28),
+    0 12px 24px rgba(0,0,0,.18);
+
+  transform: translateY(20px) scale(.96);
+  opacity: 0;
+
+  transition:
+    transform .3s cubic-bezier(.22,1,.36,1),
+    opacity .25s ease;
+}
+
+.confirm-overlay[style*="opacity: 1"] .confirm-box {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* =========================
+   MODAL ACTIONS (FORM / CRUD)
+========================= */
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 32px;
+}
+
+.modal-actions button {
+  min-width: 120px;
+  height: 44px;
+  padding: 0 18px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+
+  transition: all .18s ease;
+}
+
+.modal-actions .btn-primary {
+  box-shadow: 0 10px 24px rgba(37,99,235,.35);
+}
+
+/* =========================
+   TABLE ACTION BUTTON
+========================= */
+.aksi-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-aksi {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: all .15s ease;
+}
+
+/* DETAIL */
+.btn-aksi.detail {
+  background: rgba(16,185,129,.12);
+  color: #059669;
+}
+
+.btn-aksi.detail:hover {
+  background: rgba(16,185,129,.2);
+}
+
+/* EDIT */
+.btn-aksi.edit {
+  background: rgba(37,99,235,.12);
+  color: #2563eb;
+}
+
+.btn-aksi.edit:hover {
+  background: rgba(37,99,235,.2);
+}
+
+/* DELETE */
+.btn-aksi.delete {
+  background: rgba(239,68,68,.12);
+  color: #ef4444;
+}
+
+.btn-aksi.delete:hover {
+  background: rgba(239,68,68,.2);
+}
+
+/* =========================
+   DETAIL MODAL CONTENT
+========================= */
+.detail-content {
+  margin-top: 18px;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.detail-value {
+  font-weight: 700;
+  text-align: right;
+}
