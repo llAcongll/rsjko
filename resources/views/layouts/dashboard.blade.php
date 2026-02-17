@@ -3,7 +3,11 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard</title>
+  <title>SIPBLUD EHD</title>
+
+  <link rel="icon" href="https://drive.google.com/uc?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&v=2" type="image/x-icon">
+  <link rel="shortcut icon" href="https://drive.google.com/uc?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&v=2"
+    type="image/x-icon">
 
   <meta name="csrf-token" content="{{ csrf_token() }}">
 

@@ -20,6 +20,10 @@ use App\Http\Controllers\MouController;
 use App\Http\Controllers\PiutangController;
 use App\Http\Controllers\PenyesuaianPendapatanController;
 
+Route::get('/health', function () {
+    return response('OK', 200);
+});
+
 /*
 |--------------------------------------------------------------------------
 | AUTH

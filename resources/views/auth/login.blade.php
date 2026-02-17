@@ -6,10 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
-  <title>Login – Sistem Informasi Pendapatan</title>
+  <title>SIPBLUD EHD</title>
 
-  <link rel="icon" type="image/png" sizes="32x32"
-    href="https://drive.google.com/uc?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx">
+  <link rel="icon" href="https://drive.google.com/uc?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&v=2" type="image/x-icon">
+  <link rel="shortcut icon" href="https://drive.google.com/uc?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&v=2"
+    type="image/x-icon">
 
   {{-- GOOGLE FONTS & ICONS --}}
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,7 +28,7 @@
     <div class="login-card">
       <div class="login-header">
         <img src="https://drive.google.com/thumbnail?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&sz=w400" class="logo"
-          alt="Logo Provinsi Kepulauan Riau">
+          alt="Logo Provinsi Kepulauan Riau" title="SIPBLUD EHD">
         <div class="branding">
           <h1>SISTEM INFORMASI PENDAPATAN</h1>
           <h2>RSJKO ENGKU HAJI DAUD</h2>

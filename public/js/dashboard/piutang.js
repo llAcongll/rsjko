@@ -117,12 +117,14 @@ function renderPiutangTable(items, from) {
                     <button class="btn-aksi detail" onclick="detailPiutang(${item.id})" title="Lihat Detail">
                         <i class="ph ph-eye"></i>
                     </button>
+                    ${hasPermission('PIUTANG_CRUD') ? `
                     <button class="btn-aksi edit" onclick="editPiutang(${item.id})" title="Edit Data">
                         <i class="ph ph-pencil-simple"></i>
                     </button>
                     <button class="btn-aksi delete" onclick="deletePiutang(${item.id})" title="Hapus Data">
                         <i class="ph ph-trash"></i>
                     </button>
+                    ` : ''}
                 </div>
             </td>
         `;
