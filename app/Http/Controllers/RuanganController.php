@@ -11,18 +11,16 @@ class RuanganController extends Controller
 {
     public function index()
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_VIEW'), 403);
 
-        return response()->json(
-            Ruangan::select('id','kode','nama')
-                ->orderByRaw("CAST(SUBSTRING(kode, 2) AS UNSIGNED)")
-                ->get()
-        );
+        return view('dashboard.pages.ruangan');
     }
+
+    /* ================= CRUD (ADMIN) ================= */
 
     public function store(Request $request)
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_CRUD'), 403);
 
         $request->validate([
             'nama' => 'required|string|max:100',
@@ -38,37 +36,35 @@ class RuanganController extends Controller
 
     public function update(Request $request, Ruangan $ruangan)
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_CRUD'), 403);
 
-        $data = $request->validate([
-            'nama' => 'required|string|max:100',
-        ]);
-
-        $ruangan->update($data);
+        $ruangan->update(
+            $request->validate([
+                'nama' => 'required|string|max:100',
+            ])
+        );
 
         return response()->json(['success' => true]);
     }
 
     public function destroy(Ruangan $ruangan)
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_CRUD'), 403);
 
         $ruangan->delete();
 
         return response()->json(['success' => true]);
     }
 
-    private function generateKodeRuangan()
+    /* ================= DATA JSON ================= */
+
+    public function list()
     {
-        $last = DB::table('ruangans')
-            ->select('kode')
-            ->orderByRaw("CAST(SUBSTRING(kode, 2) AS UNSIGNED) DESC")
-            ->first();
-
-        if (!$last) return 'R001';
-
-        $num = (int) substr($last->kode, 1);
-        return 'R' . str_pad($num + 1, 3, '0', STR_PAD_LEFT);
+        return response()->json(
+            Ruangan::select('id', 'kode', 'nama')
+                ->orderByRaw("CAST(SUBSTRING(kode, 2) AS UNSIGNED)")
+                ->get()
+        );
     }
 
     public function nextKode()
@@ -78,13 +74,17 @@ class RuanganController extends Controller
         ]);
     }
 
-    public function list()
-{
-    return response()->json(
-        Ruangan::select('id','kode','nama')
-            ->orderByRaw("CAST(SUBSTRING(kode, 2) AS UNSIGNED)")
-            ->get()
-    );
-}
+    /* ================= HELPER ================= */
 
+    private function generateKodeRuangan()
+    {
+        $last = Ruangan::orderByRaw("CAST(SUBSTRING(kode, 2) AS UNSIGNED) DESC")
+            ->first();
+
+        if (!$last)
+            return 'R001';
+
+        $num = (int) substr($last->kode, 1);
+        return 'R' . str_pad($num + 1, 3, '0', STR_PAD_LEFT);
+    }
 }

@@ -4,8 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const msg = document.getElementById("msg");
   const username = document.getElementById("username");
   const password = document.getElementById("password");
+  const tahun = document.getElementById("tahun");
 
-  // 🔒 GUARD WAJIB (INI KUNCI UTAMA)
   if (!btn || !username || !password) {
     console.warn("Login elements not found, script skipped");
     return;
@@ -19,9 +19,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function login() {
     const u = username.value.trim();
     const p = password.value.trim();
+    const t = tahun ? tahun.value : null;
 
     if (!u || !p) {
-      msg.textContent = "⚠️ Username dan password wajib diisi";
+      toast("⚠️ Username dan password wajib diisi", "error");
       return;
     }
 
@@ -29,56 +30,61 @@ document.addEventListener("DOMContentLoaded", () => {
       "Konfirmasi Login",
       "Apakah Anda yakin ingin masuk ke sistem?",
       function () {
-        processLogin(u, p);
+        processLogin(u, p, t);
       }
     );
   }
 
-function processLogin(u, p) {
-  btn.disabled = true;
-  btn.textContent = "Memproses...";
-  msg.textContent = "";
+  function processLogin(u, p, t) {
+    btn.disabled = true;
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<span>Memproses...</span><i class="ph ph-circle-notch animate-spin"></i>';
+    msg.textContent = "";
 
-  fetch("/login", {
-    method: "POST",
-    credentials: "same-origin",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json", // 🔑 WAJIB
-      "X-CSRF-TOKEN": document
-        .querySelector('meta[name="csrf-token"]')
-        .getAttribute("content")
-    },
-    body: JSON.stringify({
-      username: u,
-      password: p
+    fetch("/login", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-CSRF-TOKEN": document
+          .querySelector('meta[name="csrf-token"]')
+          .getAttribute("content")
+      },
+      body: JSON.stringify({
+        username: u,
+        password: p,
+        tahun: t
+      })
     })
-  })
-    .then(async res => {
-      const text = await res.text();
+      .then(async res => {
+        const text = await res.text();
 
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        console.error("❌ BUKAN JSON:", text);
-        throw new Error("Server error, bukan JSON");
-      }
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          console.error("❌ BUKAN JSON:", text);
+          throw new Error("Server error, bukan JSON");
+        }
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || "Login gagal");
-      }
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || "Login gagal");
+        }
 
-      // ✅ LOGIN SUKSES
-      window.location.href = "/dashboard";
-    })
-    .catch(err => {
-      msg.textContent = "❌ " + err.message;
-      btn.disabled = false;
-      btn.textContent = "Masuk";
-      password.value = "";
-    });
-}
+        // ✅ LOGIN SUKSES
+        toast("Login berhasil! Mengalihkan...", "success");
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 1000);
+      })
+      .catch(err => {
+        toast("❌ " + err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+        password.value = "";
+      });
+  }
 
   /* ===============================
      CONFIRM MODAL
@@ -87,24 +93,22 @@ function processLogin(u, p) {
     confirmCallback = onOk;
 
     const titleEl = document.getElementById("confirmTitle");
-    const msgEl   = document.getElementById("confirmMessage");
-    const modal   = document.getElementById("confirmModal");
+    const msgEl = document.getElementById("confirmMessage");
+    const modal = document.getElementById("confirmModal");
 
     if (!titleEl || !msgEl || !modal) return;
 
     titleEl.innerText = title;
-    msgEl.innerText   = message;
+    msgEl.innerText = message;
 
-    modal.style.opacity = "1";
-    modal.style.pointerEvents = "auto";
+    modal.classList.add("show");
   }
 
   function closeConfirm() {
     const modal = document.getElementById("confirmModal");
     if (!modal) return;
 
-    modal.style.opacity = "0";
-    modal.style.pointerEvents = "none";
+    modal.classList.remove("show");
     confirmCallback = null;
   }
 
@@ -122,12 +126,25 @@ function processLogin(u, p) {
     if (e.key === "Enter") login();
   });
 
-  window.togglePassword = function () {
-    const input = document.getElementById("password");
-    if (!input) return;
+  // Toggle Password Visibility
+  const btnTogglePass = document.getElementById("btn-toggle-pass");
+  const eyeIcon = document.getElementById("eye-icon");
 
-    input.type = input.type === "password" ? "text" : "password";
-  };
+  if (btnTogglePass && eyeIcon) {
+    btnTogglePass.addEventListener("click", () => {
+      const isPassword = password.type === "password";
+      password.type = isPassword ? "text" : "password";
+
+      // Update icon
+      if (isPassword) {
+        eyeIcon.classList.remove("ph-eye");
+        eyeIcon.classList.add("ph-eye-slash");
+      } else {
+        eyeIcon.classList.remove("ph-eye-slash");
+        eyeIcon.classList.add("ph-eye");
+      }
+    });
+  }
 
   // expose untuk modal
   window.closeConfirm = closeConfirm;

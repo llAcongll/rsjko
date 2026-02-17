@@ -21,7 +21,7 @@ async function fetchJsonSafe(response) {
 /* ==================================================
    OPEN MODAL (ADD / EDIT)
 ================================================== */
-window.openUserForm = function (id = null, username = '', role = 'USER') {
+window.openUserForm = function (id = null, username = '', role = 'USER', permissions = []) {
   editingUserId = id;
 
   document.getElementById('userModalTitle').innerText =
@@ -31,9 +31,31 @@ window.openUserForm = function (id = null, username = '', role = 'USER') {
   document.getElementById('userPassword').value = '';
   document.getElementById('userRole').value = role;
 
+  // Reset & Populate Checkboxes
+  const checkboxes = document.querySelectorAll('#permissionSection input[type="checkbox"]');
+  checkboxes.forEach(cb => {
+    cb.checked = (role === 'ADMIN') || permissions.includes(cb.value);
+  });
+
+  togglePermissionSection();
+
   const modal = document.getElementById('userModal');
-  modal.style.opacity = '1';
-  modal.style.pointerEvents = 'auto';
+  modal.classList.add('show');
+};
+
+window.togglePermissionSection = function () {
+  const role = document.getElementById('userRole').value;
+  const section = document.getElementById('permissionSection');
+
+  if (role === 'ADMIN') {
+    section.style.opacity = '0.5';
+    section.style.pointerEvents = 'none';
+    // Centang semua jika admin (visual only)
+    section.querySelectorAll('input').forEach(i => i.checked = true);
+  } else {
+    section.style.opacity = '1';
+    section.style.pointerEvents = 'auto';
+  }
 };
 
 /* ==================================================
@@ -41,8 +63,7 @@ window.openUserForm = function (id = null, username = '', role = 'USER') {
 ================================================== */
 window.closeUserModal = function () {
   const modal = document.getElementById('userModal');
-  modal.style.opacity = '0';
-  modal.style.pointerEvents = 'none';
+  modal.classList.remove('show');
   editingUserId = null;
 };
 
@@ -52,11 +73,19 @@ window.closeUserModal = function () {
 window.submitUser = function () {
   const username = document.getElementById('userUsername').value.trim();
   const password = document.getElementById('userPassword').value;
-  const role     = document.getElementById('userRole').value;
+  const role = document.getElementById('userRole').value;
 
   if (!username) {
     alert('Username wajib diisi');
     return;
+  }
+
+  // Collect Permissions
+  let permissions = [];
+  if (role === 'USER') {
+    document.querySelectorAll('#permissionSection input[type="checkbox"]:checked').forEach(cb => {
+      permissions.push(cb.value);
+    });
   }
 
   const url = editingUserId
@@ -73,28 +102,28 @@ window.submitUser = function () {
       'Content-Type': 'application/json',
       'Accept': 'application/json' // 🔑 WAJIB
     },
-    body: JSON.stringify({ username, password, role })
+    body: JSON.stringify({ username, password, role, permissions })
   })
-  .then(async r => {
-    const data = await fetchJsonSafe(r);
+    .then(async r => {
+      const data = await fetchJsonSafe(r);
 
-    if (!r.ok) {
-      const msg =
-        data?.errors
-          ? Object.values(data.errors)[0][0]
-          : data.message || 'Gagal menyimpan user';
+      if (!r.ok) {
+        const msg =
+          data?.errors
+            ? Object.values(data.errors)[0][0]
+            : data.message || 'Gagal menyimpan user';
 
-      throw new Error(msg);
-    }
+        throw new Error(msg);
+      }
 
-    return data;
-  })
-  .then(() => {
-    closeUserModal();
-    toast('User berhasil disimpan', 'success');
-    openUsers();
-  })
-  .catch(err => toast(err.message, 'error'));
+      return data;
+    })
+    .then(() => {
+      closeUserModal();
+      toast('User berhasil disimpan', 'success');
+      openUsers();
+    })
+    .catch(err => toast(err.message, 'error'));
 
 };
 
@@ -110,7 +139,7 @@ window.editUser = function (id) {
   })
     .then(fetchJsonSafe)
     .then(user => {
-      openUserForm(user.id, user.username, user.role);
+      openUserForm(user.id, user.username, user.role, user.permissions || []);
     })
     .catch(err => toast(err.message, 'error'));
 };

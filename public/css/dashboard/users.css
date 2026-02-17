@@ -10,7 +10,7 @@
   background: #fff;
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 12px 30px rgba(0,0,0,.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .08);
 }
 
 .users-table thead {
@@ -54,12 +54,10 @@
   width: 1px;
   height: 60%;
 
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    #e5e7eb,
-    transparent
-  );
+  background: linear-gradient(to bottom,
+      transparent,
+      #e5e7eb,
+      transparent);
 }
 
 /* =========================
@@ -105,12 +103,10 @@
   right: 16px;
   bottom: 0;
   height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    #e5e7eb,
-    transparent
-  );
+  background: linear-gradient(to right,
+      transparent,
+      #e5e7eb,
+      transparent);
 }
 
 /* =========================
@@ -168,7 +164,7 @@
 }
 
 .btn-action:focus-visible {
-  box-shadow: 0 0 0 3px rgba(37,99,235,.25);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .25);
 }
 
 .btn-edit {
@@ -227,14 +223,14 @@
   border: none;
   cursor: pointer;
 
-  box-shadow: 0 6px 16px rgba(37,99,235,.25);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, .25);
   transition: all .2s ease;
 }
 
 .btn-add-user:hover {
   transform: translateY(-1px);
   background: linear-gradient(135deg, #1e40af, #1d4ed8);
-  box-shadow: 0 10px 22px rgba(37,99,235,.35);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, .35);
 }
 
 .btn-add-user:active {
@@ -262,15 +258,16 @@
   border-radius: 20px;
 
   box-shadow:
-    0 30px 60px rgba(0,0,0,.28),
-    0 10px 20px rgba(0,0,0,.12);
+    0 30px 60px rgba(0, 0, 0, .28),
+    0 10px 20px rgba(0, 0, 0, .12);
 
   transform: scale(.96) translateY(10px);
   opacity: 0;
   transition: all .25s ease;
 }
 
-#userModal[style*="opacity: 1"] .confirm-box {
+#userModal[style*="opacity: 1"] .confirm-box,
+#userModal.show .confirm-box {
   transform: scale(1) translateY(0);
   opacity: 1;
 }
@@ -312,5 +309,5 @@
 .form-input:focus {
   outline: none;
   border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
 }

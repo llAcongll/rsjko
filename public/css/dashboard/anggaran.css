@@ -1,0 +1,245 @@
+/* =====================================================
+   ANGGARAN PENDAPATAN (PREMIUM)
+===================================================== */
+
+.anggaran-wrapper {
+  margin-top: 24px;
+  animation: fadeIn 0.4s ease;
+}
+
+#kodeRekeningTree {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Row Styling */
+.anggaran-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 180px 180px;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.anggaran-row:hover {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: #e2e8f0;
+  transform: translateX(4px);
+}
+
+.anggaran-row.header-row {
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+  border-radius: 12px 12px 0 0;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Columns */
+.col-kode {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.col-uraian {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.header-node .col-uraian {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.col-anggaran,
+.col-realisasi {
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.col-anggaran {
+  color: #2563eb;
+}
+
+.col-realisasi {
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Icons within rows */
+.node-type-icon {
+  font-size: 16px;
+  color: #94a3b8;
+}
+
+.header-node .node-type-icon {
+  color: #3b82f6;
+}
+
+/* Badges */
+.badge-source {
+  font-size: 9px;
+  font-weight: 800;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  text-transform: uppercase;
+}
+
+/* Actions in row */
+.anggaran-row .btn-aksi {
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.2s ease;
+  width: 28px;
+  height: 28px;
+}
+
+.anggaran-row:hover .btn-aksi {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Modal Rincian Table Styling */
+#rincianTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#rincianTable th {
+  background: #f8fafc;
+  padding: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+#rincianTable td {
+  padding: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+#rincianTable .form-input {
+  height: 38px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  padding: 0 12px;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+#rincianTable .form-input:focus {
+  background: #fff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+#rincianTable .row-subtotal {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+#rincianTable .btn-aksi.delete {
+  background: #fff;
+  border: 1px solid #fee2e2;
+  color: #ef4444;
+}
+
+#rincianTable .btn-aksi.delete:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  transform: scale(1.1);
+}
+
+/* Tombol Tambah Komponen di Modal */
+.rincian-section .btn-primary.btn-sm {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+}
+
+.rincian-section .btn-primary.btn-sm:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+}
+
+.rincian-section .btn-primary.btn-sm i {
+  font-size: 16px;
+}
+
+.modal-total-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 12px 20px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-total-label {
+  font-weight: 700;
+  color: #1e40af;
+  font-size: 14px;
+}
+
+.modal-total-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1d4ed8;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

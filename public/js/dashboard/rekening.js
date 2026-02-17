@@ -1,8 +1,14 @@
 let editingRekeningId = null;
 let rekeningRawData = [];
 let rekeningCurrentPage = 1;
-const REKENING_PER_PAGE = 50;
+const REKENING_PER_PAGE = 10;
 let rekeningFilteredData = [];
+
+// Helper untuk mendapatkan base URL dashboard secara dinamis
+const getDashboardUrl = (path) => {
+  const base = window.location.pathname.split('/dashboard')[0];
+  return `${base}/dashboard/${path}`;
+};
 
 const BANK_LIST = [
   'Bank Riau Kepri Syariah',
@@ -27,23 +33,81 @@ window.openRekeningForm = function (row = null) {
   rkCD.value = row ? row.cd : '';
   rkJumlah.value = row ? formatNumber(row.jumlah) : '';
 
-  rekeningModal.style.opacity = '1';
-  rekeningModal.style.pointerEvents = 'auto';
+  rekeningModal.classList.add('show');
 
   validateRekeningForm();
 };
 
 window.closeRekeningModal = function () {
-  rekeningModal.style.opacity = '0';
-  rekeningModal.style.pointerEvents = 'none';
+  rekeningModal.classList.remove('show');
   editingRekeningId = null;
+};
+
+/* =========================
+   DETAIL
+========================= */
+window.detailRekening = function (id) {
+  const modal = document.getElementById('rekeningDetailModal');
+  const content = document.getElementById('detailRekeningContent');
+
+  if (!modal || !content) return;
+  modal.classList.add('show');
+
+  content.innerHTML = `
+        <div class="flex items-center justify-center py-8 text-slate-500">
+            <i class="ph ph-spinner animate-spin text-3xl mr-2"></i>
+            <p>Memuat detail...</p>
+        </div>
+    `;
+
+  const url = getDashboardUrl(`rekening-korans/${id}`);
+
+  fetch(url, {
+    headers: { Accept: 'application/json' }
+  })
+    .then(r => r.json())
+    .then(row => {
+      content.innerHTML = `
+                <div class="detail-row">
+                    <div class="label">Tanggal</div>
+                    <div class="value">${formatDate(row.tanggal)}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="label">Bank</div>
+                    <div class="value">${row.bank}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="label">Keterangan</div>
+                    <div class="value">${row.keterangan}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="label">Jenis (C/D)</div>
+                    <div class="value">
+                        <span class="badge ${row.cd === 'C' ? 'success' : 'danger'}">
+                            ${row.cd === 'C' ? 'Credit (Masuk)' : 'Debit (Keluar)'}
+                        </span>
+                    </div>
+                </div>
+                <div class="detail-total">
+                    <span>Jumlah</span>
+                    <strong>${formatRupiah(row.jumlah)}</strong>
+                </div>
+            `;
+    })
+    .catch(err => {
+      content.innerHTML = `<p class="text-danger">Gagal memuat detail: ${err.message}</p>`;
+    });
+};
+
+window.closeDetailRekening = function () {
+  document.getElementById('rekeningDetailModal')?.classList.remove('show');
 };
 
 /* =========================
    SUBMIT
 ========================= */
 window.submitRekening = function () {
-  const jumlah = parseInt(rkJumlah.value.replace(/\D/g, ''), 10) || 0;
+  const jumlah = parseAngka(rkJumlah.value);
 
   if (jumlah <= 0) {
     toast('Jumlah harus lebih dari 0', 'error');
@@ -63,9 +127,8 @@ window.submitRekening = function () {
     return;
   }
 
-  const url = editingRekeningId
-    ? `/dashboard/rekening-korans/${editingRekeningId}`
-    : `/dashboard/rekening-korans`;
+  const baseUrl = getDashboardUrl('rekening-korans');
+  const url = editingRekeningId ? `${baseUrl}/${editingRekeningId}` : baseUrl;
 
   fetch(url, {
     method: editingRekeningId ? 'PUT' : 'POST',
@@ -93,7 +156,8 @@ window.deleteRekening = function (id) {
     'Hapus Data',
     'Data rekening akan dihapus permanen',
     () => {
-      fetch(`/dashboard/rekening-korans/${id}`, {
+      const url = getDashboardUrl(`rekening-korans/${id}`);
+      fetch(url, {
         method: 'DELETE',
         headers: {
           'X-CSRF-TOKEN': csrfToken(),
@@ -113,11 +177,21 @@ window.deleteRekening = function (id) {
    LOAD DATA
 ========================= */
 window.loadRekening = function () {
-  fetch('/dashboard/rekening-korans', {
+  const url = getDashboardUrl('rekening-korans');
+  fetch(url, {
     headers: { 'Accept': 'application/json' }
   })
-    .then(r => r.json())
+    .then(async r => {
+      const json = await r.json();
+      if (!r.ok) throw new Error(json.message || 'Gagal memuat data');
+      return json;
+    })
     .then(data => {
+      // Pastikan data adalah array
+      if (!Array.isArray(data)) data = [];
+
+      // Urutkan dari tanggal paling awal (asc by tanggal)
+      data.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
       rekeningRawData = data;
       rekeningFilteredData = data;
       rekeningCurrentPage = 1;
@@ -160,6 +234,8 @@ function renderRekeningTable(data) {
   }
 
   // 🔹 render baris + saldo running
+  const canCRUD = window.hasPermission('REKENING_CRUD');
+
   pageData.forEach((row, i) => {
     const jumlah = Number(row.jumlah) || 0;
     saldoRunning += row.cd === 'C' ? jumlah : -jumlah;
@@ -168,14 +244,25 @@ function renderRekeningTable(data) {
       <tr>
         <td>${start + i + 1}</td>
         <td>${formatDate(row.tanggal)}</td>
-        <td>${row.bank}</td>
-        <td class="ellipsis">${row.keterangan}</td>
+        <td class="ellipsis" title="${row.bank}">${row.bank}</td>
+        <td><div class="ellipsis-content" title="${row.keterangan}">${row.keterangan}</div></td>
         <td class="cd ${row.cd === 'C' ? 'credit' : 'debit'}">${row.cd}</td>
         <td class="amount">${formatRupiah(jumlah)}</td>
         <td class="amount">${formatRupiah(saldoRunning)}</td>
         <td>
-          <button class="btn-action" onclick='openRekeningForm(${JSON.stringify(row)})'>✏️</button>
-          <button class="btn-action" onclick='deleteRekening(${row.id})'>🗑️</button>
+          <div class="flex justify-center gap-2">
+            <button class="btn-aksi detail" onclick="detailRekening(${row.id})" title="Lihat Detail">
+              <i class="ph ph-eye"></i>
+            </button>
+            ${canCRUD ? `
+              <button class="btn-aksi edit" onclick='openRekeningForm(${JSON.stringify(row).replace(/'/g, "&apos;")})' title="Edit Data">
+                <i class="ph ph-pencil-simple"></i>
+              </button>
+              <button class="btn-aksi delete" onclick="deleteRekening(${row.id})" title="Hapus Data">
+                <i class="ph ph-trash"></i>
+              </button>
+            ` : ''}
+          </div>
         </td>
       </tr>
     `;
@@ -190,11 +277,19 @@ function renderRekeningTable(data) {
   document.getElementById('saldoBSI').innerText = formatRupiah(saldoBSI);
   document.getElementById('saldoTotal').innerText = formatRupiah(total);
 
-  document.getElementById('percentBRKS').innerText =
-    total ? ((saldoBRKS / total) * 100).toFixed(1) + '%' : '0%';
+  const pBRK = total ? ((saldoBRKS / total) * 100).toFixed(1) : '0';
+  const elBRK = document.getElementById('percentBRKS');
+  if (elBRK) {
+    elBRK.innerText = `${pBRK}% dari total`;
+    elBRK.className = Number(pBRK) > 0 ? 'growth-up' : '';
+  }
 
-  document.getElementById('percentBSI').innerText =
-    total ? ((saldoBSI / total) * 100).toFixed(1) + '%' : '0%';
+  const pBSI = total ? ((saldoBSI / total) * 100).toFixed(1) : '0';
+  const elBSI = document.getElementById('percentBSI');
+  if (elBSI) {
+    elBSI.innerText = `${pBSI}% dari total`;
+    elBSI.className = Number(pBSI) > 0 ? 'growth-up' : '';
+  }
 }
 
 /* =========================
@@ -212,7 +307,7 @@ window.applyRekeningFilter = function () {
   if (end) filtered = filtered.filter(r => r.tanggal <= end);
 
   rekeningFilteredData = filtered;
-  rekeningCurrentPage = 1;
+  rekeningCurrentPage = 1; // reset ke hal 1 tiap filter
   renderRekeningTable(rekeningFilteredData);
 };
 
@@ -222,14 +317,10 @@ window.applyRekeningFilter = function () {
 window.formatDate = d =>
   d ? new Date(d).toLocaleDateString('id-ID') : '-';
 
-window.formatRupiah = n =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR'
-  }).format(n || 0);
+
 
 function formatNumber(n) {
-  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return formatRibuan(n);
 }
 
 function fillBankDropdown(selected = '') {
@@ -247,7 +338,7 @@ function fillBankDropdown(selected = '') {
    VALIDATION
 ========================= */
 function validateRekeningForm() {
-  const jumlah = parseInt(rkJumlah.value.replace(/\D/g, ''), 10) || 0;
+  const jumlah = parseAngka(rkJumlah.value);
 
   document.querySelector('#rekeningModal .btn-primary').disabled =
     !rkTanggal.value ||
@@ -261,10 +352,18 @@ function validateRekeningForm() {
    AUTO FORMAT RUPIAH
 ========================= */
 window.formatRupiahInput = function (el) {
-  const raw = el.value.replace(/\D/g, '');
-  el.value = raw ? formatNumber(raw) : '';
+  // We allow decimals now, so don't strip everything
   validateRekeningForm();
 };
+
+// Add blur/focus listeners for decimal entry
+rkJumlah?.addEventListener('blur', function (e) {
+  e.target.value = formatRibuan(parseAngka(e.target.value));
+});
+rkJumlah?.addEventListener('focus', function (e) {
+  let val = parseAngka(e.target.value);
+  e.target.value = val === 0 ? '' : val.toString().replace('.', ',');
+});
 
 /* =========================
    EVENT BINDING
@@ -285,28 +384,132 @@ function updateRekeningInfo(from, to, total) {
     return;
   }
 
-  info.innerText = `Menampilkan ${from}–${to} dari ${total} data`;
-}
-
-function renderRekeningPagination(total) {
-  const wrap = document.getElementById('rekeningPagination');
-  if (!wrap) return;
-
   const totalPages = Math.ceil(total / REKENING_PER_PAGE);
-  wrap.innerHTML = '';
-
-  for (let i = 1; i <= totalPages; i++) {
-    const btn = document.createElement('button');
-    btn.innerText = i;
-    if (i === rekeningCurrentPage) btn.classList.add('active');
-
-    btn.onclick = () => {
-      rekeningCurrentPage = i;
-      renderRekeningTable(rekeningFilteredData);
-    };
-
-    wrap.appendChild(btn);
-  }
+  info.innerText = `Menampilkan ${from}–${to} dari ${total} data • Halaman ${rekeningCurrentPage} dari ${totalPages}`;
 }
+
+/* =========================
+   PAGINATION (CONSISTENT STYLE)
+========================= */
+/* =========================
+   PAGINATION (CONSISTENT STYLE)
+========================= */
+function renderRekeningPagination(totalCount) {
+  const info = document.getElementById('rekeningInfo');
+  const prevBtn = document.getElementById('prevPageRekening');
+  const nextBtn = document.getElementById('nextPageRekening');
+  const pageInfo = document.getElementById('pageInfoRekening');
+
+  if (!info || !prevBtn || !nextBtn || !pageInfo) return;
+
+  const totalPages = Math.ceil(totalCount / REKENING_PER_PAGE) || 1;
+  const from = totalCount ? (rekeningCurrentPage - 1) * REKENING_PER_PAGE + 1 : 0;
+  const to = Math.min(rekeningCurrentPage * REKENING_PER_PAGE, totalCount);
+
+  info.innerText = `Menampilkan ${from}–${to} dari ${totalCount} data`;
+  pageInfo.innerText = `${rekeningCurrentPage} / ${totalPages}`;
+
+  prevBtn.disabled = rekeningCurrentPage === 1;
+  nextBtn.disabled = rekeningCurrentPage === totalPages;
+}
+
+window.changeRekeningPage = function (dir) {
+  rekeningCurrentPage += dir;
+  renderRekeningTable(rekeningFilteredData);
+};
+
+/* =========================
+   IMPORT
+========================= */
+window.uploadRekeningImport = function (input) {
+  if (!input.files || !input.files[0]) return;
+
+  const file = input.files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+
+  // Show loading indicator
+  const btn = document.querySelector('button[onclick*="importRekeningFile"]');
+  const originalText = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Uploading...';
+  }
+
+  fetch('/dashboard/rekening-korans/import', {
+    method: 'POST',
+    headers: {
+      'X-CSRF-TOKEN': csrfToken()
+    },
+    body: formData
+  })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+        toast(res.message, 'success');
+        loadRekening();
+      } else {
+        if (res.errors && res.errors.length) {
+          toast(res.errors[0] + (res.errors.length > 1 ? ` (+${res.errors.length - 1} lainnya)` : ''), 'error');
+          console.error(res.errors);
+        } else {
+          toast(res.message || 'Gagal import data', 'error');
+        }
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      toast('Terjadi kesalahan saat upload', 'error');
+    })
+    .finally(() => {
+      input.value = '';
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    });
+};
+/* =========================
+   BULK DELETE
+========================= */
+window.deleteBulkRekening = function () {
+  const bank = document.getElementById('filterBank').value;
+  const start = document.getElementById('filterStart').value;
+  const end = document.getElementById('filterEnd').value;
+
+  let msg = 'Hapus semua data rekening?';
+  if (bank || start || end) {
+    msg = `Hapus data${bank ? ` ${bank}` : ''}${start ? ` dari ${formatDateIndo(start)}` : ''}${end ? ` sampai ${formatDateIndo(end)}` : ''}?`;
+  }
+
+  openConfirm(
+    'Hapus Massal',
+    msg,
+    () => {
+      const url = getDashboardUrl('rekening-korans/bulk-delete');
+      fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-TOKEN': csrfToken(),
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ bank, start, end }) // Send filters
+      })
+        .then(r => r.json())
+        .then(res => {
+          toast(`Berhasil menghapus ${res} data`, 'success');
+          loadRekening();
+        })
+        .catch(err => {
+          console.error(err);
+          toast('Gagal menghapus data', 'error');
+        });
+    },
+    'Hapus Data',
+    'ph-trash',
+    'btn-danger'
+  );
+};
 
 document.querySelector('.main')?.classList.add('rekening-mode');

@@ -1,4 +1,8 @@
 let editingRuanganId = null;
+let ruanganData = [];
+let filteredRuangan = [];
+let currentPage = 1;
+const perPage = 10;
 
 /* =========================
    OPEN MODAL (ADD / EDIT)
@@ -7,8 +11,8 @@ window.openRuanganForm = function (id = null, kode = '', nama = '') {
   editingRuanganId = id;
 
   const titleEl = document.getElementById('ruanganModalTitle');
-  const kodeEl  = document.getElementById('ruanganKode');
-  const namaEl  = document.getElementById('ruanganNama');
+  const kodeEl = document.getElementById('ruanganKode');
+  const namaEl = document.getElementById('ruanganNama');
 
   titleEl.innerText = id ? '✏️ Edit Ruangan' : '🏥 Tambah Ruangan';
   namaEl.value = nama || '';
@@ -35,8 +39,7 @@ window.openRuanganForm = function (id = null, kode = '', nama = '') {
   }
 
   const modal = document.getElementById('ruanganModal');
-  modal.style.opacity = '1';
-  modal.style.pointerEvents = 'auto';
+  modal.classList.add('show');
 };
 
 /* =========================
@@ -44,8 +47,7 @@ window.openRuanganForm = function (id = null, kode = '', nama = '') {
 ========================= */
 window.closeRuanganModal = function () {
   const modal = document.getElementById('ruanganModal');
-  modal.style.opacity = '0';
-  modal.style.pointerEvents = 'none';
+  modal.classList.remove('show');
   editingRuanganId = null;
 };
 
@@ -83,13 +85,9 @@ window.submitRuangan = function () {
     })
     .then(() => {
       closeRuanganModal();
-
-      // reload view + data (FLOW LAMA TETAP)
-      loadContent('ruangan');
-      setTimeout(() => {
-        if (window.loadRuangan) loadRuangan();
-      }, 300);
-
+      if (typeof window.loadRuanganTable === 'function') {
+        window.loadRuanganTable(); // 🔥 REFRESH DATA SAJA
+      }
       toast('Ruangan berhasil disimpan', 'success');
     })
     .catch(err => toast(err.message, 'error'));
@@ -98,44 +96,30 @@ window.submitRuangan = function () {
 /* =========================
    LOAD DATA RUANGAN
 ========================= */
-window.loadRuangan = function () {
-  fetch('/dashboard/ruangans', {
+window.loadRuanganTable = function () {
+  console.log('🔥 loadRuanganTable DIPANGGIL');
+
+  fetch('/dashboard/ruangan-list', {
     headers: { 'Accept': 'application/json' }
   })
     .then(r => r.json())
     .then(data => {
-      const tbody = document.querySelector('#ruanganTable tbody');
-      if (!tbody) return;
+      // 🔑 SIMPAN KE STATE
+      ruanganData = data;
+      filteredRuangan = [...data];
+      currentPage = 1;
 
-      tbody.innerHTML = '';
+      // 🔥 RENDER LEWAT SATU PINTU
+      renderRuanganPage();
+      updatePaginationInfo(filteredRuangan.length);
 
-      data.forEach((r, i) => {
-        const kode = encodeURIComponent(r.kode);
-        const nama = encodeURIComponent(r.nama);
+      // init fitur
+      initSearchRuangan();
+      initSortableRuangan();
+      bindPaginationRuangan();
 
-        tbody.innerHTML += `
-          <tr>
-            <td class="col-no">${i + 1}</td>
-            <td>${r.kode}</td>
-            <td>${r.nama}</td>
-            <td>
-              <div class="action-group">
-                <button class="btn-action btn-edit"
-                  onclick="openRuanganForm(
-                    ${r.id},
-                    decodeURIComponent('${kode}'),
-                    decodeURIComponent('${nama}')
-                  )">✏️</button>
-
-                <button class="btn-action btn-delete"
-                  onclick="deleteRuangan(${r.id})">🗑️</button>
-              </div>
-            </td>
-          </tr>
-        `;
-      });
-    })
-    .catch(err => toast(err.message, 'error'));
+      setTimeout(syncRuanganScrollbar, 0);
+    });
 };
 
 /* =========================
@@ -159,10 +143,193 @@ window.deleteRuangan = function (id) {
           return data;
         })
         .then(() => {
-          loadRuangan(); // refresh table
+          if (typeof window.loadRuanganTable === 'function') {
+            window.loadRuanganTable();
+          }
           toast('Ruangan berhasil dihapus', 'success');
         })
         .catch(err => toast(err.message, 'error'));
     }
   );
 };
+
+function syncRuanganScrollbar() {
+  const body = document.querySelector('.ruangan-table-body');
+  const header = document.querySelector('.ruangan-table-wrapper > table');
+
+  if (!body || !header) return;
+
+  const scrollbarWidth = body.offsetWidth - body.clientWidth;
+  header.style.setProperty('--scrollbar-width', scrollbarWidth + 'px');
+}
+
+window.initRuangan = function () {
+  console.log('initRuangan jalan');
+  console.log('table:', document.getElementById('ruanganTable'));
+
+  if (document.getElementById('ruanganTable')) {
+    loadRuanganTable();
+  }
+};
+
+let ruanganSort = {
+  key: null,
+  direction: 'asc'
+};
+
+function initSortableRuangan() {
+  const table = document.getElementById('ruanganTable');
+  if (!table) return;
+
+  const headers = table.querySelectorAll('th[data-sort]');
+
+  headers.forEach((th, index) => {
+    th.addEventListener('click', () => {
+      const map = ['no', 'kode', 'nama'];
+      const key = map[index];
+
+      // toggle arah
+      if (ruanganSort.key === key) {
+        ruanganSort.direction =
+          ruanganSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        ruanganSort.key = key;
+        ruanganSort.direction = 'asc';
+      }
+
+      // reset indikator
+      headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+      th.classList.add(
+        ruanganSort.direction === 'asc' ? 'sort-asc' : 'sort-desc'
+      );
+
+      applySortRuangan();
+      currentPage = 1;
+      renderRuanganPage();
+      updatePaginationInfo(filteredRuangan.length);
+    });
+  });
+}
+
+function applySortRuangan() {
+  if (!ruanganSort.key) return;
+
+  filteredRuangan.sort((a, b) => {
+    let A, B;
+
+    if (ruanganSort.key === 'no') {
+      A = a.id;
+      B = b.id;
+    } else {
+      A = a[ruanganSort.key].toLowerCase();
+      B = b[ruanganSort.key].toLowerCase();
+    }
+
+    if (A < B) return ruanganSort.direction === 'asc' ? -1 : 1;
+    if (A > B) return ruanganSort.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+function initSearchRuangan() {
+  const input = document.getElementById('ruanganSearch');
+  if (!input) return;
+
+  if (input.dataset.bound === '1') return;
+  input.dataset.bound = '1';
+
+  input.addEventListener('input', () => {
+    const keyword = input.value.toLowerCase().trim();
+
+    filteredRuangan = ruanganData.filter(r =>
+      r.kode.toLowerCase().includes(keyword) ||
+      r.nama.toLowerCase().includes(keyword)
+    );
+
+    currentPage = 1;
+    renderRuanganPage();
+    updatePaginationInfo(filteredRuangan.length);
+  });
+}
+
+function renderRuanganPage() {
+  const tbody = document.querySelector('#ruanganTable tbody');
+  if (!tbody) return;
+
+  const start = (currentPage - 1) * perPage;
+  const end = start + perPage;
+
+  const pageData = filteredRuangan.slice(start, end);
+
+  tbody.innerHTML = '';
+
+  const canCRUD = window.hasPermission('MASTER_CRUD');
+
+  pageData.forEach((r, i) => {
+    tbody.innerHTML += `
+      <tr>
+        <td class="text-center">${start + i + 1}</td>
+        <td>${r.kode}</td>
+        <td>${r.nama}</td>
+        <td>
+          <div class="flex justify-center gap-2">
+            ${canCRUD ? `
+              <button class="btn-aksi edit" 
+                onclick="openRuanganForm(${r.id}, '${r.kode}', '${r.nama}')" title="Edit Ruangan">
+                <i class="ph ph-pencil"></i>
+              </button>
+              <button class="btn-aksi delete" 
+                onclick="deleteRuangan(${r.id})" title="Hapus Ruangan">
+                <i class="ph ph-trash"></i>
+              </button>
+            ` : '-'}
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+function bindPaginationRuangan() {
+  const prevBtn = document.getElementById('prevPage');
+  const nextBtn = document.getElementById('nextPage');
+
+  if (!prevBtn || !nextBtn) return;
+
+  prevBtn.onclick = () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderRuanganPage();
+    }
+  };
+
+  nextBtn.onclick = () => {
+    const totalPage = Math.ceil(filteredRuangan.length / perPage);
+    if (currentPage < totalPage) {
+      currentPage++;
+      renderRuanganPage();
+      updatePaginationInfo(filteredRuangan.length);
+    }
+  };
+
+}
+
+function updatePaginationInfo(total) {
+  const pageInfo = document.getElementById('pageInfo');
+  const ruanganInfo = document.getElementById('ruanganInfo');
+  const prevBtn = document.getElementById('prevPage');
+  const nextBtn = document.getElementById('nextPage');
+
+  if (!pageInfo || !ruanganInfo || !prevBtn || !nextBtn) return;
+
+  const totalPage = Math.max(1, Math.ceil(total / perPage));
+
+  const start = (currentPage - 1) * perPage + 1;
+  const end = Math.min(currentPage * perPage, total);
+
+  pageInfo.innerText = `Halaman ${currentPage} / ${totalPage}`;
+  ruanganInfo.innerText = `Menampilkan ${start}–${end} dari ${total} data`;
+
+  prevBtn.disabled = currentPage === 1;
+  nextBtn.disabled = currentPage === totalPage;
+}

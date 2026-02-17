@@ -13,6 +13,7 @@ class RekeningKoran extends Model
 
     protected $fillable = [
         'tanggal',
+        'tahun',
         'bank',
         'keterangan',
         'cd',
@@ -21,5 +22,7 @@ class RekeningKoran extends Model
 
     protected $casts = [
         'tanggal' => 'date',
+        'tahun' => 'integer',
+        'jumlah' => 'decimal:2',
     ];
 }

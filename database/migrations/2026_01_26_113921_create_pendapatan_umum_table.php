@@ -7,29 +7,23 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::table('pendapatan_umum', function (Blueprint $table) {
+        Schema::create('pendapatan_umum', function (Blueprint $table) {
+            $table->id();
 
-            $table->date('tanggal')->after('id');
-            $table->string('nama_pasien')->after('tanggal');
+            $table->date('tanggal');
+            $table->string('nama_pasien');
 
             $table->foreignId('ruangan_id')
-                ->after('nama_pasien')
                 ->constrained('ruangans')
                 ->cascadeOnUpdate()
                 ->restrictOnDelete();
 
-            $table->enum('metode_pembayaran', ['TUNAI', 'NON_TUNAI'])
-                ->after('ruangan_id');
+            $table->enum('metode_pembayaran', ['TUNAI', 'NON_TUNAI']);
 
-            $table->foreignId('bank_id')
-                ->nullable()
-                ->after('metode_pembayaran')
-                ->constrained('banks')
-                ->nullOnDelete();
+            // Bank disimpan sebagai string (BRK / BSI)
+            $table->string('bank', 50)->nullable();
 
-            $table->string('metode_detail')
-                ->nullable()
-                ->after('bank_id');
+            $table->string('metode_detail')->nullable();
 
             // ===== NOMINAL =====
             $table->unsignedBigInteger('rs_tindakan')->default(0);
@@ -38,25 +32,13 @@ return new class extends Migration {
             $table->unsignedBigInteger('pelayanan_obat')->default(0);
 
             $table->unsignedBigInteger('total')->default(0);
+
+            $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::table('pendapatan_umum', function (Blueprint $table) {
-            $table->dropColumn([
-                'tanggal',
-                'nama_pasien',
-                'ruangan_id',
-                'metode_pembayaran',
-                'bank_id',
-                'metode_detail',
-                'rs_tindakan',
-                'rs_obat',
-                'pelayanan_tindakan',
-                'pelayanan_obat',
-                'total',
-            ]);
-        });
+        Schema::dropIfExists('pendapatan_umum');
     }
 };

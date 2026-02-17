@@ -9,13 +9,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
 {
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
         if (!Auth::check()) {
             abort(401);
         }
 
-        if (Auth::user()->role !== $role) {
+        if (!in_array(Auth::user()->role, $roles)) {
             abort(403);
         }
 

@@ -1,0 +1,263 @@
+/* =========================
+   KODE REKENING TREE (PREMIUM)
+========================= */
+#kodeRekeningTree {
+  margin-top: 24px;
+  animation: slideUp 0.4s ease-out;
+}
+
+.kode-node {
+  display: flex;
+  flex-direction: column;
+}
+
+.kode-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-radius: 12px;
+  margin-bottom: 4px;
+  max-width: 900px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.kode-row:hover {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: #e2e8f0;
+  transform: translateX(4px);
+}
+
+.kode-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+/* Icon Styling */
+.node-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.node-icon.header {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.node-icon.detail {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+/* Text Styling */
+.node-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.node-kode {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 13px;
+  padding: 2px 6px;
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.node-nama {
+  font-size: 14px;
+  color: #334155;
+  font-weight: 500;
+}
+
+.header .node-nama {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Badges */
+.sumber-badge {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: #ecfdf5;
+  color: #059669;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid #a7f3d0;
+  letter-spacing: 0.02em;
+}
+
+/* Actions */
+.kode-actions {
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.kode-row:hover .kode-actions {
+  opacity: 1;
+}
+
+.btn-aksi {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-aksi:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.btn-aksi.add:hover {
+  color: #3b82f6;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.btn-aksi.edit:hover {
+  color: #f59e0b;
+  background: #fffbeb;
+  border-color: #fef3c7;
+}
+
+.btn-aksi.delete:hover {
+  color: #ef4444;
+  background: #fef2f2;
+  border-color: #fee2e2;
+}
+
+/* Children & Lines */
+.kode-children {
+  margin-left: 15px;
+  padding-left: 20px;
+  border-left: 1.5px solid #e2e8f0;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.kode-children::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, #e2e8f0 0%, transparent 100%);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   FORCE MASTER SUBMENU
+========================= */
+#submenuMaster {
+  display: none;
+}
+
+#submenuMaster.open {
+  display: block !important;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal-box {
+  background: #fff;
+  width: 420px;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.kode-right {
+  min-width: 220px;
+  text-align: right;
+}
+
+.kode-anggaran {
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+/* =========================
+   MODAL LAMA (DEFAULT HIDDEN)
+========================= */
+#anggaranModal {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+
+/* modal box */
+#anggaranModal .modal-box {
+  background: #fff;
+  border-radius: 18px;
+  padding: 26px 28px;
+  max-width: 420px;
+  width: 100%;
+}
+
+/* AKTIF */
+#anggaranModal.show {
+  opacity: 1;
+  pointer-events: auto;
+}

@@ -1,17 +1,17 @@
 <div id="previewModal" class="confirm-overlay">
-  <div class="confirm-box" style="max-width:520px">
+    <div class="confirm-box detail-box" style="max-width: 600px;">
+        <h3 id="previewTitle" class="modal-title">
+            <i class="ph ph-file-text"></i> Detail
+        </h3>
 
-    <h3 id="previewTitle">📋 Preview</h3>
+        <div id="previewContent">
+            <!-- Dynamic Content -->
+        </div>
 
-    <div
-      id="previewContent"
-      style="text-align:left; font-size:14px">
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeModal('previewModal')">
+                Tutup
+            </button>
+        </div>
     </div>
-
-    <div class="confirm-actions">
-      <button class="btn-secondary" onclick="closePreview()">❌ Tutup</button>
-      <button class="btn-primary" onclick="handlePreviewOk()">OK</button>
-    </div>
-
-  </div>
 </div>

@@ -10,6 +10,11 @@ class User extends Authenticatable
         'username',
         'password',
         'role',
+        'permissions',
+    ];
+
+    protected $casts = [
+        'permissions' => 'array',
     ];
 
     protected $hidden = [
@@ -28,5 +33,17 @@ class User extends Authenticatable
     public function isUser(): bool
     {
         return $this->role === 'USER';
+    }
+
+    public function hasPermission($permission): bool
+    {
+        // Admin selalu punya izin
+        if ($this->isAdmin())
+            return true;
+
+        if (empty($this->permissions))
+            return false;
+
+        return in_array($permission, $this->permissions);
     }
 }

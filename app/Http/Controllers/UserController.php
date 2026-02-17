@@ -14,7 +14,7 @@ class UserController extends Controller
         abort_unless(Auth::user()->isAdmin(), 403);
 
         return response()->json(
-            User::select('id', 'username', 'role')->get()
+            User::select('id', 'username', 'role', 'permissions')->get()
         );
     }
 
@@ -25,13 +25,15 @@ class UserController extends Controller
         $data = $request->validate([
             'username' => 'required|unique:users',
             'password' => 'required',
-            'role'     => 'required|in:ADMIN,USER'
+            'role' => 'required|in:ADMIN,USER',
+            'permissions' => 'nullable|array'
         ]);
 
         User::create([
             'username' => $data['username'],
             'password' => Hash::make($data['password']),
-            'role'     => $data['role'],
+            'role' => $data['role'],
+            'permissions' => $data['permissions'] ?? [],
         ]);
 
         return response()->json(['success' => true]);
@@ -43,8 +45,9 @@ class UserController extends Controller
 
         $data = $request->validate([
             'username' => 'required|unique:users,username,' . $user->id,
-            'role'     => 'required|in:ADMIN,USER',
-            'password' => 'nullable'
+            'role' => 'required|in:ADMIN,USER',
+            'password' => 'nullable',
+            'permissions' => 'nullable|array'
         ]);
 
         if (!empty($data['password'])) {
@@ -72,9 +75,10 @@ class UserController extends Controller
         abort_unless(Auth::user()->isAdmin(), 403);
 
         return response()->json([
-            'id'       => $user->id,
+            'id' => $user->id,
             'username' => $user->username,
-            'role'     => $user->role,
+            'role' => $user->role,
+            'permissions' => $user->permissions,
         ]);
     }
 }

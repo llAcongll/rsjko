@@ -1,0 +1,173 @@
+/* ======================================================
+   MOU TABLE – SAME STYLE AS RUANGAN
+   (1 TABLE + STICKY THEAD)
+====================================================== */
+
+/* =========================
+   WRAPPER (NO SCROLL)
+========================= */
+.mou-table-wrapper {
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+}
+
+/* =========================
+   TABLE BASE
+========================= */
+.users-table.mou-table {
+    width: 100%;
+    table-layout: auto;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* =========================
+   HEADER (STICKY)
+========================= */
+.users-table.mou-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+
+    background: #f5f7fb;
+    box-shadow: inset 0 -1px 0 #e5e7eb;
+
+    text-align: center;
+    font-weight: 600;
+}
+
+/* =========================
+   CELL
+========================= */
+.users-table.mou-table th,
+.users-table.mou-table td {
+    padding: 14px 12px;
+    vertical-align: middle;
+    font-size: 14px;
+}
+
+/* =========================
+   COLUMN WIDTH & ALIGN
+========================= */
+
+/* No */
+.users-table.mou-table th:nth-child(1),
+.users-table.mou-table td:nth-child(1) {
+    width: 60px;
+    text-align: center;
+}
+
+/* Kode */
+.users-table.mou-table th:nth-child(2),
+.users-table.mou-table td:nth-child(2) {
+    width: 120px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Nama Instansi */
+.users-table.mou-table th:nth-child(3) {
+    text-align: center;
+}
+
+.users-table.mou-table td:nth-child(3) {
+    text-align: left;
+    padding-left: 20px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Aksi */
+.users-table.mou-table th:nth-child(4),
+.users-table.mou-table td:nth-child(4) {
+    width: 160px;
+    text-align: center;
+}
+
+/* =========================
+   ACTION BUTTON
+========================= */
+.users-table.mou-table td:nth-child(4) .action-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.users-table.mou-table td:nth-child(4) .btn-action {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+}
+
+/* =========================
+   SORTABLE HEADER
+========================= */
+#mouTable th[data-sort] {
+    cursor: pointer;
+    user-select: none;
+}
+
+#mouTable th.sort-asc::after {
+    content: " ▲";
+    font-size: 11px;
+}
+
+#mouTable th.sort-desc::after {
+    content: " ▼";
+    font-size: 11px;
+}
+
+/* =========================
+   SEARCH
+========================= */
+.mou-search {
+    margin-bottom: 14px;
+}
+
+#mouSearch {
+    max-width: 320px;
+    width: 100%;
+    padding: 10px 14px;
+
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+#mouSearch:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* =========================
+   PAGINATION
+========================= */
+.mou-footer {
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mou-pagination {
+    display: flex;
+    gap: 8px;
+}
+
+.mou-pagination button {
+    min-width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: #e5e7eb;
+    cursor: pointer;
+}
+
+.mou-pagination button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}

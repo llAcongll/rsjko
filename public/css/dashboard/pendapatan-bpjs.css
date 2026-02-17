@@ -1,0 +1,54 @@
+.bpjs-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+
+.bpjs-tab {
+    padding: 8px 16px;
+    border: none;
+    background: #f0f0f0;
+    cursor: pointer;
+    border-radius: 6px 6px 0 0;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.bpjs-tab:hover {
+    background: #e0e0e0;
+}
+
+.bpjs-tab.active {
+    background: #007bff;
+    color: white;
+}
+
+#noSepGroup {
+    transition: all 0.3s;
+}
+
+.btn-danger-outline {
+    background: #fff;
+    border: 1.5px solid #ef4444;
+    color: #ef4444;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-danger-outline:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+.btn-secondary {
+    background: #f1f5f9;
+    color: #475569;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: #e2e8f0;
+}

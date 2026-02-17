@@ -16,25 +16,34 @@ class AuthController extends BaseController
     }
 
     public function login(Request $request)
-{
-    $credentials = $request->validate([
-        'username' => 'required',
-        'password' => 'required',
-    ]);
+    {
+        $credentials = $request->validate([
+            'username' => 'required',
+            'password' => 'required',
+            'tahun' => 'nullable|integer'
+        ]);
 
-    if (!Auth::attempt($credentials)) {
+        if (!Auth::attempt(['username' => $credentials['username'], 'password' => $credentials['password']])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Username atau password salah'
+            ], 401);
+        }
+
+        $request->session()->regenerate();
+
+        // Simpan tahun anggaran ke session
+        if ($request->has('tahun')) {
+            session(['tahun_anggaran' => $request->tahun]);
+        } else {
+            // Default ke tahun sekarang jika tidak ada
+            session(['tahun_anggaran' => date('Y')]);
+        }
+
         return response()->json([
-            'success' => false,
-            'message' => 'Username atau password salah'
-        ], 401);
+            'success' => true
+        ]);
     }
-
-    $request->session()->regenerate();
-
-    return response()->json([
-        'success' => true
-    ]);
-}
 
     public function logout(Request $request)
     {

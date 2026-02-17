@@ -10,10 +10,11 @@ class PendapatanUmum extends Model
 
     protected $fillable = [
         'tanggal',
+        'tahun',
         'nama_pasien',
         'ruangan_id',
         'metode_pembayaran',
-        'bank_id',
+        'bank',
         'metode_detail',
         'rs_tindakan',
         'rs_obat',
@@ -24,11 +25,12 @@ class PendapatanUmum extends Model
 
     protected $casts = [
         'tanggal' => 'date',
-        'rs_tindakan' => 'integer',
-        'rs_obat' => 'integer',
-        'pelayanan_tindakan' => 'integer',
-        'pelayanan_obat' => 'integer',
-        'total' => 'integer',
+        'tahun' => 'integer',
+        'rs_tindakan' => 'decimal:2',
+        'rs_obat' => 'decimal:2',
+        'pelayanan_tindakan' => 'decimal:2',
+        'pelayanan_obat' => 'decimal:2',
+        'total' => 'decimal:2',
     ];
 
     public function ruangan()
