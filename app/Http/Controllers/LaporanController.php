@@ -277,7 +277,7 @@ class LaporanController extends Controller
 
     public function exportPdf(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
 
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());

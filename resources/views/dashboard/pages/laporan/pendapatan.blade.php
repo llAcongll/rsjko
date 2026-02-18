@@ -23,6 +23,8 @@
                         <i class="ph ph-file-xls"></i>
                         <span>Excel</span>
                     </button>
+                @endif
+                @if(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'))
                     <button class="btn-filter" style="background: #ef4444; border-color: #ef4444" onclick="exportPdf()">
                         <i class="ph ph-file-pdf"></i>
                         <span>PDF</span>

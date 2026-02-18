@@ -59,6 +59,8 @@
               Anggaran</label></div>
           <div class="permission-item"><label><input type="checkbox" value="LAPORAN_EXPORT"> Ekspor Laporan
               (Excel/CSV)</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="LAPORAN_EXPORT_PDF"> Ekspor Laporan
+              (PDF)</label></div>
 
           <p style="font-weight: 600; font-size: 12px; margin-top: 12px; margin-bottom: 8px; color: #1e293b;">Piutang
           </p>
