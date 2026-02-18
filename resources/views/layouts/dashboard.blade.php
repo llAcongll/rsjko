@@ -5,8 +5,9 @@
   <meta charset="UTF-8">
   <title>SIPBLUD EHD</title>
 
-  <link rel="icon" href="https://drive.google.com/uc?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&v=2" type="image/x-icon">
-  <link rel="shortcut icon" href="https://drive.google.com/uc?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&v=2"
+  <link rel="icon" href="https://drive.google.com/thumbnail?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&sz=w100"
+    type="image/x-icon">
+  <link rel="shortcut icon" href="https://drive.google.com/thumbnail?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&sz=w100"
     type="image/x-icon">
 
   <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -38,6 +39,7 @@
     window.userPermissions = {!! json_encode(auth()->user()->permissions ?? []) !!};
     window.isAdmin = {{ auth()->user()->isAdmin() ? 'true' : 'false' }};
 
+    window.tahunAnggaran = "{{ session('tahun_anggaran') }}";
     window.hasPermission = function (p) {
       if (window.isAdmin) return true;
       return window.userPermissions.includes(p);
@@ -199,7 +201,7 @@
         </div>
       </div>
 
-      <form id="logoutForm" method="POST" action="/logout">
+      <form id="logoutForm" method="POST" action="{{ url('logout') }}">
         @csrf
         <button type="button" class="btn-logout" onclick="confirmLogout()">
           <i class="ph ph-sign-out"></i>
@@ -224,6 +226,7 @@
 
   {{-- MODAL PREVIEW --}}
   @include('dashboard.partials.preview')
+  @include('dashboard.partials.report-preview-modal')
 
   {{-- MODAL USER --}}
   @include('dashboard.partials.user-form')

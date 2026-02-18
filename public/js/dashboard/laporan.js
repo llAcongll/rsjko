@@ -14,6 +14,8 @@ window.loadLaporan = async function (type) {
     const start = startEl ? startEl.value : '';
     const end = endEl ? endEl.value : '';
 
+    window.lastLaporanType = type;
+
     if (!end) {
         toast('Pilih tanggal!', 'error');
         return;
@@ -34,6 +36,7 @@ window.loadLaporan = async function (type) {
 
         const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
         const data = await res.json();
+        window.lastLaporanData = data;
 
         if (type === 'PENDAPATAN') renderPendapatan(data);
         else if (type === 'REKON') renderRekon(data);
@@ -234,11 +237,6 @@ function renderRekon(data) {
         const isMatch = Math.abs(item.selisih) < 1;
         const isKumulatifMatch = Math.abs(item.kumulatif) < 1;
 
-        // Status Logic: 
-        // 1. Match (Harian 0)
-        // 2. Timing OK (Kumulatif 0, tapi harian ada selisih) -> Ini untuk kasus setor besoknya
-        // 3. Selisih (Kumulatif != 0)
-
         let statusClass = 'badge-danger';
         let statusText = '❌ SELISIH';
 
@@ -320,28 +318,20 @@ function renderMou(data) {
 }
 
 function renderAnggaran(data) {
-    // Update Cards
     if (document.getElementById('totalTargetAnggaran')) document.getElementById('totalTargetAnggaran').innerText = formatRupiah(data.totals.target);
     if (document.getElementById('totalRealisasiAnggaran')) document.getElementById('totalRealisasiAnggaran').innerText = formatRupiah(data.totals.realisasi);
 
-    // Dynamic Capaian Card
     const capaianEl = document.getElementById('totalPersentaseAnggaran');
     if (capaianEl) {
         capaianEl.innerText = data.totals.persen + '%';
-
-        // Find parent card to update color
         const cardVal = parseFloat(data.totals.persen);
         const card = capaianEl.closest('.laporan-card');
-
         if (card) {
-            // Remove old highlights
             card.classList.remove('highlight-orange', 'highlight-blue', 'highlight-green', 'highlight-purple');
-
-            // Add new based on value
-            if (cardVal >= 100) card.classList.add('highlight-purple'); // Excellent
-            else if (cardVal >= 80) card.classList.add('highlight-green'); // Good
-            else if (cardVal >= 50) card.classList.add('highlight-blue'); // Progressing
-            else card.classList.add('highlight-orange'); // Warning
+            if (cardVal >= 100) card.classList.add('highlight-purple');
+            else if (cardVal >= 80) card.classList.add('highlight-green');
+            else if (cardVal >= 50) card.classList.add('highlight-blue');
+            else card.classList.add('highlight-orange');
         }
     }
 
@@ -351,12 +341,10 @@ function renderAnggaran(data) {
 
     data.data.forEach(item => {
         const isHeader = item.tipe === 'header';
-
-        // Progress Bar Color Logic
-        let progressColor = '#3b82f6'; // Default Blue
-        if (item.persen >= 100) progressColor = '#9333ea'; // Purple
-        else if (item.persen >= 80) progressColor = '#10b981'; // Green
-        else if (item.persen < 50) progressColor = '#f59e0b'; // Orange
+        let progressColor = '#3b82f6';
+        if (item.persen >= 100) progressColor = '#9333ea';
+        else if (item.persen >= 80) progressColor = '#10b981';
+        else if (item.persen < 50) progressColor = '#f59e0b';
 
         body.insertAdjacentHTML('beforeend', `
             <tr class="${isHeader ? 'row-header' : 'row-detail'}">
@@ -380,33 +368,421 @@ function renderAnggaran(data) {
     });
 }
 
-window.exportLaporan = function () {
-    const startEl = document.getElementById('laporanStart');
-    const endEl = document.getElementById('laporanEnd');
-    const start = startEl ? startEl.value : '';
-    const end = endEl ? endEl.value : '';
+window.exportLaporan = function (type) {
+    const reportType = type || window.lastLaporanType || 'PENDAPATAN';
+    const start = document.getElementById('laporanStart')?.value;
+    const end = document.getElementById('laporanEnd')?.value;
 
     if (!end) {
         toast('Pilih tanggal!', 'error');
         return;
     }
 
-    // Redirect to backend export route
-    window.location.href = `/dashboard/laporan/export/pendapatan?start=${start}&end=${end}`;
-    toast('⏳ Menyiapkan Export Excel...', 'info');
+    const mapping = {
+        'PENDAPATAN': 'pendapatan',
+        'REKON': 'rekon',
+        'PIUTANG': 'piutang',
+        'MOU': 'mou',
+        'ANGGARAN': 'anggaran'
+    };
+
+    const endpoint = mapping[reportType] || 'pendapatan';
+    window.location.href = `/dashboard/laporan/export/${endpoint}?start=${start}&end=${end}`;
+    toast(`⏳ Menyiapkan Unduh Excel ${reportType}...`, 'info');
 };
 
-window.exportPdf = function () {
-    const startEl = document.getElementById('laporanStart');
-    const endEl = document.getElementById('laporanEnd');
-    const start = startEl ? startEl.value : '';
-    const end = endEl ? endEl.value : '';
+window.exportPdf = function (type) {
+    const reportType = type || window.lastLaporanType || 'PENDAPATAN';
+    const start = document.getElementById('laporanStart')?.value;
+    const end = document.getElementById('laporanEnd')?.value;
 
     if (!end) {
         toast('Pilih tanggal!', 'error');
         return;
     }
 
-    window.location.href = `/dashboard/laporan/export/pendapatan-pdf?start=${start}&end=${end}`;
-    toast('⏳ Menyiapkan Export PDF...', 'info');
+    const mapping = {
+        'PENDAPATAN': 'pendapatan-pdf',
+        'REKON': 'rekon-pdf',
+        'PIUTANG': 'piutang-pdf',
+        'MOU': 'mou-pdf',
+        'ANGGARAN': 'anggaran-pdf'
+    };
+
+    const endpoint = mapping[reportType] || 'pendapatan-pdf';
+    window.location.href = `/dashboard/laporan/export/${endpoint}?start=${start}&end=${end}`;
+    toast(`⏳ Menyiapkan Export PDF ${reportType}...`, 'info');
+};
+
+window.openPreviewModal = function (type) {
+    const reportType = type || window.lastLaporanType;
+    const start = document.getElementById('laporanStart')?.value;
+    const end = document.getElementById('laporanEnd')?.value;
+
+    if (!window.lastLaporanData || window.lastLaporanType !== reportType) {
+        toast('Klik Tampilkan data terlebih dahulu!', 'info');
+        return;
+    }
+
+    const data = window.lastLaporanData;
+    const periodeEl = document.getElementById('previewPeriode');
+    const tahunEl = document.getElementById('previewTahun');
+    const tahunContainer = document.getElementById('previewTahunContainer');
+
+    if (periodeEl) {
+        periodeEl.innerText = `Periode: ${formatTanggal(start)} s/d ${formatTanggal(end)}`;
+    }
+
+    const titleMapping = {
+        'PENDAPATAN': 'LAPORAN PENDAPATAN',
+        'REKON': 'LAPORAN REKONSILIASI',
+        'PIUTANG': 'LAPORAN PIUTANG',
+        'MOU': 'LAPORAN KERJASAMA / MOU',
+        'ANGGARAN': 'LAPORAN REALISASI ANGGARAN'
+    };
+    const modalMainTitle = document.getElementById('previewMainTitle');
+    if (modalMainTitle) modalMainTitle.innerText = titleMapping[reportType] || 'LAPORAN';
+
+    const modalTitle = document.getElementById('modalReportTitle');
+    if (modalTitle) modalTitle.innerText = `Preview ${titleMapping[reportType] || 'Laporan'}`;
+
+    const tablesContainer = document.getElementById('previewTables');
+    if (!tablesContainer) return;
+    tablesContainer.innerHTML = '';
+
+    const fr = (num) => {
+        if (typeof num !== 'number') num = parseFloat(num) || 0;
+        const val = num.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return `
+            <div style="display: flex; justify-content: space-between; width: 100%; gap: 5px;">
+                <span>Rp</span>
+                <span style="text-align: right;">${val}</span>
+            </div>
+        `;
+    };
+
+    const numFr = (num) => {
+        if (typeof num !== 'number') num = parseFloat(num) || 0;
+        return num.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
+    if (reportType === 'PENDAPATAN') {
+        const categoryKeys = [
+            'BPJS_JAMINAN', 'PASIEN_UMUM', 'KERJASAMA', 'PKL', 'MAGANG',
+            'LAIN_LAIN', 'PENELITIAN', 'PERMINTAAN_DATA', 'STUDY_BANDING',
+        ];
+
+        // 1. RINGKASAN Table
+        let summaryHtml = `
+            <h6 style="margin:20px 0 10px; font-weight:bold; border-left:4px solid #6366f1; padding-left:10px; font-size:11pt;">1. RINGKASAN PENDAPATAN</h6>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                    <thead style="background:#f8fafc;">
+                        <tr>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 25%;">Kategori Pasien</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 10%;">Transaksi</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 22%;">Jasa RS</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 22%;">Jasa Pelayanan</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 21%;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+        let gCount = 0, gRs = 0, gPel = 0, gTotal = 0;
+        Object.keys(data.summary).forEach(key => {
+            const item = data.summary[key];
+            const c = parseInt(item.count) || 0;
+            const r = parseFloat(item.rs) || 0;
+            const p = parseFloat(item.pelayanan) || 0;
+            const t = parseFloat(item.total) || 0;
+            gCount += c; gRs += r; gPel += p; gTotal += t;
+            summaryHtml += `
+                        <tr>
+                            <td style="border:1px solid #000; padding:8px;">${key}</td>
+                            <td style="border:1px solid #000; padding:8px; text-align:center;">${c}</td>
+                            <td style="border:1px solid #000; padding:8px;">${fr(r)}</td>
+                            <td style="border:1px solid #000; padding:8px;">${fr(p)}</td>
+                            <td style="border:1px solid #000; padding:8px; font-weight:bold;">${fr(t)}</td>
+                        </tr>`;
+        });
+        summaryHtml += `
+                        <tr style="background:#f1f5f9; font-weight:bold;">
+                            <td style="border:1px solid #000; padding:8px; text-align:center;">TOTAL</td>
+                            <td style="border:1px solid #000; padding:8px; text-align:center;">${gCount}</td>
+                            <td style="border:1px solid #000; padding:8px;">${fr(gRs)}</td>
+                            <td style="border:1px solid #000; padding:8px;">${fr(gPel)}</td>
+                            <td style="border:1px solid #000; padding:8px;">${fr(gTotal)}</td>
+                        </tr></tbody></table>`;
+        tablesContainer.innerHTML += summaryHtml;
+
+        // 2. METODE PEMBAYARAN Table
+        let breakdownHtml = `
+            <h6 style="margin:25px 0 10px; font-weight:bold; border-left:4px solid #10b981; padding-left:10px; font-size:11pt;">2. RINCIAN METODE PEMBAYARAN</h6>
+                                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                                    <thead style="background:#f8fafc;">
+                                        <tr>
+                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 40%;">Uraian Akun</th>
+                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">Tunai</th>
+                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">Non-Tunai</th>
+                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+
+        let tTunai = 0, tNon = 0, tPAll = 0;
+        categoryKeys.forEach(key => {
+            const item = data.breakdown[key];
+            if (!item) return;
+            const tun = parseFloat(item.payments.TUNAI) || 0;
+            const nonAt = parseFloat(item.payments.NON_TUNAI) || 0;
+            const tot = parseFloat(item.payments.TOTAL) || 0;
+            tTunai += tun; tNon += nonAt; tPAll += tot;
+            breakdownHtml += `
+                                        <tr>
+                                            <td style="border:1px solid #000; padding:8px;">${item.nama}</td>
+                                            <td style="border:1px solid #000; padding:8px;">${fr(tun)}</td>
+                                            <td style="border:1px solid #000; padding:8px;">${fr(nonAt)}</td>
+                                            <td style="border:1px solid #000; padding:8px; font-weight:bold;">${fr(tot)}</td>
+                                        </tr>`;
+        });
+        breakdownHtml += `<tr style="background:#f1f5f9; font-weight:bold;">
+                                            <td style="border:1px solid #000; padding:8px; text-align:center;">JUMLAH KESELURUHAN</td>
+                                            <td style="border:1px solid #000; padding:8px;">${fr(tTunai)}</td>
+                                            <td style="border:1px solid #000; padding:8px;">${fr(tNon)}</td>
+                                            <td style="border:1px solid #000; padding:8px;">${fr(tPAll)}</td>
+                                        </tr></tbody></table>`;
+        tablesContainer.innerHTML += breakdownHtml;
+
+        // 3. BANK RECEPTION Table
+        let bankHtml = `
+            <h6 style="margin:25px 0 10px; font-weight:bold; border-left:4px solid #3b82f6; padding-left:10px; font-size:11pt;">3. RINCIAN PENERIMAAN BANK</h6>
+                                                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                                                    <thead style="background:#f8fafc;">
+                                                        <tr>
+                                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 40%;">Uraian Akun</th>
+                                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">BRK</th>
+                                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">BSI</th>
+                                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">Total</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>`;
+
+        let tBRK = 0, tBSI = 0, tBAll = 0;
+        categoryKeys.forEach(key => {
+            const item = data.breakdown[key];
+            if (!item) return;
+            const brk = parseFloat(item.banks.BRK) || 0;
+            const bsi = parseFloat(item.banks.BSI) || 0;
+            const tot = parseFloat(item.banks.TOTAL) || 0;
+            tBRK += brk; tBSI += bsi; tBAll += tot;
+            bankHtml += `
+                                                        <tr>
+                                                            <td style="border:1px solid #000; padding:8px;">${item.nama}</td>
+                                                            <td style="border:1px solid #000; padding:8px;">${fr(brk)}</td>
+                                                            <td style="border:1px solid #000; padding:8px;">${fr(bsi)}</td>
+                                                            <td style="border:1px solid #000; padding:8px; font-weight:bold;">${fr(tot)}</td>
+                                                        </tr>`;
+        });
+        bankHtml += `<tr style="background:#f1f5f9; font-weight:bold;">
+                                                            <td style="border:1px solid #000; padding:8px; text-align:center;">JUMLAH PENERIMAAN BANK</td>
+                                                            <td style="border:1px solid #000; padding:8px;">${fr(tBRK)}</td>
+                                                            <td style="border:1px solid #000; padding:8px;">${fr(tBSI)}</td>
+                                                            <td style="border:1px solid #000; padding:8px;">${fr(tBAll)}</td>
+                                                        </tr></tbody></table>`;
+        tablesContainer.innerHTML += bankHtml;
+
+        // 4. ROOMS Section
+        let roomHtml = `
+            <h6 style="margin:25px 0 10px; font-weight:bold; border-left:4px solid #f43f5e; padding-left:10px; font-size:11pt;">4. PENDAPATAN PER RUANGAN</h6>
+                                                                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                                                                    <thead style="background:#f8fafc;">
+                                                                        <tr>
+                                                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 50%;">Nama Ruangan</th>
+                                                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 15%;">Jumlah Pasien</th>
+                                                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 35%;">Total Pendapatan</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>`;
+
+        let tRCount = 0, tRTotal = 0;
+        const roomEntries = Object.entries(data.rooms || {});
+        roomEntries.forEach(([room, total]) => {
+            const count = data.room_patients[room] || 0;
+            tRCount += count; tRTotal += total;
+            roomHtml += `
+                                                                        <tr>
+                                                                            <td style="border:1px solid #000; padding:8px;">${room}</td>
+                                                                            <td style="border:1px solid #000; padding:8px; text-align:center;">${count}</td>
+                                                                            <td style="border:1px solid #000; padding:8px;">${fr(total)}</td>
+                                                                        </tr>`;
+        });
+        roomHtml += `
+                                                                        <tr style="background:#f1f5f9; font-weight:bold;">
+                                                                            <td style="border:1px solid #000; padding:8px; text-align:center;">GRAND TOTAL (SEMUA RUANGAN)</td>
+                                                                            <td style="border:1px solid #000; padding:8px; text-align:center;">${tRCount}</td>
+                                                                            <td style="border:1px solid #000; padding:8px;">${fr(tRTotal)}</td>
+                                                                        </tr></tbody></table>`;
+        tablesContainer.innerHTML += roomHtml;
+
+    } else if (reportType === 'REKON') {
+        let rekonHtml = `
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                <thead style="background:#f8fafc;">
+                    <tr>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 15%;">Tanggal</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 22%;">Bank (Kredit)</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 22%;">Modul Netto</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">Selisih Harian</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 21%;">Selisih Kumulatif</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        data.forEach(item => {
+            rekonHtml += `
+                <tr>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${formatTanggal(item.tanggal)}</td>
+                    <td style="border:1px solid #000; padding:8px;">${fr(item.bank)}</td>
+                    <td style="border:1px solid #000; padding:8px;">${fr(item.pendapatan)}</td>
+                    <td style="border:1px solid #000; padding:8px;">${fr(item.selisih)}</td>
+                    <td style="border:1px solid #000; padding:8px; font-weight:bold;">${fr(item.kumulatif)}</td>
+                </tr>`;
+        });
+        rekonHtml += `</tbody></table> `;
+        tablesContainer.innerHTML = rekonHtml;
+
+    } else if (reportType === 'PIUTANG') {
+        let piutangHtml = `
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                <thead style="background:#f8fafc;">
+                    <tr>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 30%;">Perusahaan Penjamin</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 17%;">Piutang</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 17%;">Potongan</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 17%;">Adm Bank</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 19%;">Total Dibayar</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        data.data.forEach(item => {
+            piutangHtml += `
+                <tr>
+                    <td style="border:1px solid #000; padding:8px; vertical-align: middle;">${item.nama_perusahaan}</td>
+                    <td style="border:1px solid #000; padding:8px; vertical-align: middle;">
+                        <div style="display: flex; justify-content: space-between; width: 100%;">
+                            <span>Rp</span>
+                            <span>${numFr(item.total_piutang)}</span>
+                        </div>
+                    </td>
+                    <td style="border:1px solid #000; padding:8px; vertical-align: middle;">
+                        <div style="display: flex; justify-content: space-between; width: 100%;">
+                            <span>Rp</span>
+                            <span>${numFr(item.total_potongan)}</span>
+                        </div>
+                    </td>
+                    <td style="border:1px solid #000; padding:8px; vertical-align: middle;">
+                        <div style="display: flex; justify-content: space-between; width: 100%;">
+                            <span>Rp</span>
+                            <span>${numFr(item.total_adm_bank)}</span>
+                        </div>
+                    </td>
+                    <td style="border:1px solid #000; padding:8px; vertical-align: middle; font-weight:bold;">
+                        <div style="display: flex; justify-content: space-between; width: 100%;">
+                            <span>Rp</span>
+                            <span>${numFr(item.total_dibayar)}</span>
+                        </div>
+                    </td>
+                </tr>`;
+        });
+        piutangHtml += `
+                <tr style="background:#f1f5f9; font-weight:bold;">
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">GRAND TOTAL</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right; white-space:nowrap;">${fr(data.totals.piutang)}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right; white-space:nowrap;">${fr(data.totals.potongan)}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right; white-space:nowrap;">${fr(data.totals.adm_bank)}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right; white-space:nowrap;">${fr(data.totals.dibayar)}</td>
+                </tr></tbody></table>`;
+        tablesContainer.innerHTML = piutangHtml;
+
+    } else if (reportType === 'MOU') {
+        let mouHtml = `
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:8pt;">
+                <thead style="background:#f8fafc;">
+                    <tr>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 30%;">Nama MOU / Instansi</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 8%;">Trans</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 14%;">Jasa RS</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 14%;">Jasa Pel</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 14%;">Pot</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 10%;">Adm</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 18%;">Total Netto</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        let tT = 0, tR = 0, tP = 0, tPot = 0, tA = 0, tNet = 0;
+        data.forEach(item => {
+            tT += parseInt(item.count); tR += parseFloat(item.rs); tP += parseFloat(item.pelayanan);
+            tPot += parseFloat(item.potongan); tA += parseFloat(item.adm_bank); tNet += parseFloat(item.total);
+            mouHtml += `
+                <tr>
+                    <td style="border:1px solid #000; padding:5px;">${item.nama_mou}</td>
+                    <td style="border:1px solid #000; padding:5px; text-align:center;">${item.count}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(item.rs)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(item.pelayanan)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(item.potongan)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(item.adm_bank)}</td>
+                    <td style="border:1px solid #000; padding:5px; font-weight:bold;">${fr(item.total)}</td>
+                </tr>`;
+        });
+        mouHtml += `
+                <tr style="background:#f1f5f9; font-weight:bold;">
+                    <td style="border:1px solid #000; padding:5px; text-align:center;">TOTAL</td>
+                    <td style="border:1px solid #000; padding:5px; text-align:center;">${tT}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(tR)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(tP)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(tPot)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(tA)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(tNet)}</td>
+                </tr></tbody></table>`;
+        tablesContainer.innerHTML = mouHtml;
+
+    } else if (reportType === 'ANGGARAN') {
+        let aggHtml = `
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:8pt;">
+                <thead style="background:#f8fafc;">
+                    <tr>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 15%;">Kode</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 35%;">Uraian</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 20%;">Target</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 20%;">Realisasi</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 10%;">%</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        data.data.forEach(item => {
+            const isBold = item.level < 5;
+            aggHtml += `
+                <tr style="${isBold ? 'font-weight:bold; background-color:#f8fafc;' : ''}">
+                    <td style="border:1px solid #000; padding:5px;">${item.kode}</td>
+                    <td style="border:1px solid #000; padding:5px;">${item.nama}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(item.target)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(item.realisasi)}</td>
+                    <td style="border:1px solid #000; padding:5px; text-align:center;">${item.persen}%</td>
+                </tr>`;
+        });
+        aggHtml += `
+                <tr style="background:#f1f5f9; font-weight:bold;">
+                    <td colspan="2" style="border:1px solid #000; padding:5px; text-align:center;">TOTAL</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(data.totals.target)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(data.totals.realisasi)}</td>
+                    <td style="border:1px solid #000; padding:5px; text-align:center;">${data.totals.persen}%</td>
+                </tr></tbody></table>`;
+        tablesContainer.innerHTML = aggHtml;
+    }
+
+    const modal = document.getElementById('previewLaporanModal');
+    if (modal) modal.classList.add('show');
+};
+
+window.closePreviewModal = function () {
+    const modal = document.getElementById('previewLaporanModal');
+    if (modal) modal.classList.remove('show');
 };

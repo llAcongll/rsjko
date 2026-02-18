@@ -883,4 +883,96 @@ class LaporanController extends Controller
         }
         return $total;
     }
+
+    public function exportRekon(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT'), 403);
+        $start = $request->get('start', '2026-01-01');
+        $end = $request->get('end', Carbon::now()->toDateString());
+        $data = $this->getRekon($request)->getData();
+
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=\"Laporan_Rekon_{$start}_to_{$end}.xls\"");
+        return view('dashboard.exports.rekon', ['data' => $data, 'start' => $start, 'end' => $end]);
+    }
+
+    public function exportRekonPdf(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'), 403);
+        $start = $request->get('start', '2026-01-01');
+        $end = $request->get('end', Carbon::now()->toDateString());
+        $data = $this->getRekon($request)->getData();
+
+        $pdf = Pdf::loadView('dashboard.exports.rekon_pdf', ['data' => $data, 'start' => $start, 'end' => $end]);
+        return $pdf->download("Laporan_Rekon_{$start}_to_{$end}.pdf");
+    }
+
+    public function exportPiutang(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT'), 403);
+        $start = $request->get('start', '2026-01-01');
+        $end = $request->get('end', Carbon::now()->toDateString());
+        $res = $this->getPiutang($request)->getData();
+
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=\"Laporan_Piutang_{$start}_to_{$end}.xls\"");
+        return view('dashboard.exports.piutang', ['data' => $res->data, 'totals' => $res->totals, 'start' => $start, 'end' => $end]);
+    }
+
+    public function exportPiutangPdf(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'), 403);
+        $start = $request->get('start', '2026-01-01');
+        $end = $request->get('end', Carbon::now()->toDateString());
+        $res = $this->getPiutang($request)->getData();
+
+        $pdf = Pdf::loadView('dashboard.exports.piutang_pdf', ['data' => $res->data, 'totals' => $res->totals, 'start' => $start, 'end' => $end]);
+        return $pdf->download("Laporan_Piutang_{$start}_to_{$end}.pdf");
+    }
+
+    public function exportMou(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT'), 403);
+        $start = $request->get('start', '2026-01-01');
+        $end = $request->get('end', Carbon::now()->toDateString());
+        $data = $this->getMou($request)->getData();
+
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=\"Laporan_MOU_{$start}_to_{$end}.xls\"");
+        return view('dashboard.exports.mou', ['data' => $data, 'start' => $start, 'end' => $end]);
+    }
+
+    public function exportMouPdf(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'), 403);
+        $start = $request->get('start', '2026-01-01');
+        $end = $request->get('end', Carbon::now()->toDateString());
+        $data = $this->getMou($request)->getData();
+
+        $pdf = Pdf::loadView('dashboard.exports.mou_pdf', ['data' => $data, 'start' => $start, 'end' => $end]);
+        return $pdf->download("Laporan_MOU_{$start}_to_{$end}.pdf");
+    }
+
+    public function exportAnggaran(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT'), 403);
+        $start = $request->get('start', '2026-01-01');
+        $end = $request->get('end', Carbon::now()->toDateString());
+        $res = $this->getAnggaran($request)->getData();
+
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=\"Laporan_Realisasi_Anggaran_{$start}_to_{$end}.xls\"");
+        return view('dashboard.exports.anggaran', ['data' => $res->data, 'totals' => $res->totals, 'start' => $start, 'end' => $end]);
+    }
+
+    public function exportAnggaranPdf(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'), 403);
+        $start = $request->get('start', '2026-01-01');
+        $end = $request->get('end', Carbon::now()->toDateString());
+        $res = $this->getAnggaran($request)->getData();
+
+        $pdf = Pdf::loadView('dashboard.exports.anggaran_pdf', ['data' => $res->data, 'totals' => $res->totals, 'start' => $start, 'end' => $end]);
+        return $pdf->download("Laporan_Realisasi_Anggaran_{$start}_to_{$end}.pdf");
+    }
 }

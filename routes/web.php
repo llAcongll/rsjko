@@ -332,6 +332,18 @@ Route::middleware('auth')
 Route::get('/dashboard/laporan/data', [LaporanController::class, 'index'])->middleware('auth');
 Route::get('/dashboard/laporan/export/pendapatan', [LaporanController::class, 'export'])->middleware('auth');
 Route::get('/dashboard/laporan/export/pendapatan-pdf', [LaporanController::class, 'exportPdf'])->middleware('auth');
+
+Route::get('/dashboard/laporan/export/rekon', [LaporanController::class, 'exportRekon'])->middleware('auth');
+Route::get('/dashboard/laporan/export/rekon-pdf', [LaporanController::class, 'exportRekonPdf'])->middleware('auth');
+
+Route::get('/dashboard/laporan/export/piutang', [LaporanController::class, 'exportPiutang'])->middleware('auth');
+Route::get('/dashboard/laporan/export/piutang-pdf', [LaporanController::class, 'exportPiutangPdf'])->middleware('auth');
+
+Route::get('/dashboard/laporan/export/mou', [LaporanController::class, 'exportMou'])->middleware('auth');
+Route::get('/dashboard/laporan/export/mou-pdf', [LaporanController::class, 'exportMouPdf'])->middleware('auth');
+
+Route::get('/dashboard/laporan/export/anggaran', [LaporanController::class, 'exportAnggaran'])->middleware('auth');
+Route::get('/dashboard/laporan/export/anggaran-pdf', [LaporanController::class, 'exportAnggaranPdf'])->middleware('auth');
 Route::get('/dashboard/laporan/rekon', [LaporanController::class, 'getRekon'])->middleware('auth');
 Route::get('/dashboard/laporan/piutang', [LaporanController::class, 'getPiutang'])->middleware('auth');
 Route::get('/dashboard/laporan/mou', [LaporanController::class, 'getMou'])->middleware('auth');

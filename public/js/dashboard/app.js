@@ -397,9 +397,14 @@ window.confirmLogout = function () {
 
 function doLogout() {
   if (isLoggingOut) return;
-  isLoggingOut = true;
 
   const form = document.getElementById('logoutForm');
+  if (!form) {
+    console.error('Logout form not found');
+    return;
+  }
+
+  isLoggingOut = true;
   const btn = form.querySelector('.btn-logout');
 
   if (btn) {
@@ -407,5 +412,6 @@ function doLogout() {
     btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> <span>Keluar...</span>';
   }
 
-  form.submit();
+  // Use native submit to bypass any potential overrides or event listeners
+  HTMLFormElement.prototype.submit.call(form);
 }

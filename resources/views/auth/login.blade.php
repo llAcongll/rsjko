@@ -8,8 +8,9 @@
 
   <title>SIPBLUD EHD</title>
 
-  <link rel="icon" href="https://drive.google.com/uc?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&v=2" type="image/x-icon">
-  <link rel="shortcut icon" href="https://drive.google.com/uc?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&v=2"
+  <link rel="icon" href="https://drive.google.com/thumbnail?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&sz=w100"
+    type="image/x-icon">
+  <link rel="shortcut icon" href="https://drive.google.com/thumbnail?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&sz=w100"
     type="image/x-icon">
 
   {{-- GOOGLE FONTS & ICONS --}}

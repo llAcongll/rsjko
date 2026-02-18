@@ -66,22 +66,49 @@
 </head>
 
 <body>
-    <div class="title">LAPORAN PENDAPATAN PASIEN</div>
-    <div class="subtitle">Periode: {{ \Carbon\Carbon::parse($start)->translatedFormat('d F Y') }} s/d
+    <table class="table" style="border: none; margin-bottom: 20px;">
+        <tr>
+            <td colspan="5" class="text-center" style="border: none; font-size: 14pt;">PEMERINTAH PROVINSI KEPULAUAN RIAU</td>
+        </tr>
+        <tr>
+            <td colspan="5" class="text-center" style="border: none; font-size: 13pt; font-weight: bold;">RUMAH SAKIT JIWA DAN KETERGANTUNGAN OBAT</td>
+        </tr>
+        <tr>
+            <td colspan="5" class="text-center" style="border: none; font-size: 13pt; font-weight: bold;">ENGKU HAJI DAUD</td>
+        </tr>
+        <tr>
+            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Jalan Indun Suri – Simpang Busung Nomor 1 Tanjung Uban Kode Pos 29152</td>
+        </tr>
+        <tr>
+            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Telepon (0771) 482655, 482796 • Faksimile (0771) 482795</td>
+        </tr>
+        <tr>
+            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Pos-el: rskjoehd@kepriprov.go.id</td>
+        </tr>
+        <tr>
+            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Laman: www.rsuehd.kepriprov.go.id</td>
+        </tr>
+        <tr>
+            <td colspan="5" style="border-bottom: 2px solid #000; height: 10px;"></td>
+        </tr>
+    </table>
+
+    <div class="title" style="margin-top: 20px;">LAPORAN PENDAPATAN PASIEN</div>
+    <div class="subtitle" style="text-decoration: underline;">Periode: {{ \Carbon\Carbon::parse($start)->translatedFormat('d F Y') }} s/d
         {{ \Carbon\Carbon::parse($end)->translatedFormat('d F Y') }}</div>
 
     <table class="table">
         <!-- SECTION 1: RINGKASAN -->
         <thead>
             <tr>
-                <th colspan="5" style="background-color: #d9ead3; font-size: 12pt;">1. RINGKASAN PENDAPATAN</th>
+                <th colspan="5" style="background-color: #d9ead3; font-size: 12pt; text-align: center;">1. RINGKASAN PENDAPATAN</th>
             </tr>
             <tr>
-                <th>Kategori Pendapatan</th>
-                <th>Jumlah Transaksi</th>
-                <th>Jasa Rumah Sakit</th>
-                <th>Jasa Pelayanan</th>
-                <th>Total Pendapatan</th>
+                <th style="text-align: center;">Kategori Pendapatan</th>
+                <th style="text-align: center;">Jumlah Transaksi</th>
+                <th style="text-align: center;">Jasa Rumah Sakit</th>
+                <th style="text-align: center;">Jasa Pelayanan</th>
+                <th style="text-align: center;">Total Pendapatan</th>
             </tr>
         </thead>
         <tbody>
@@ -106,11 +133,11 @@
                 </tr>
             @endforeach
             <tr class="font-bold" style="background-color: #f2f2f2;">
-                <td>TOTAL KESELURUHAN</td>
-                <td class="text-center">{{ number_format($totTrans, 0, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($totRs, 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($totPel, 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($totAll, 2, ',', '.') }}</td>
+                <td style="text-align: center;">TOTAL</td>
+                <td style="text-align: center;">{{ number_format($totTrans, 0, ',', '.') }}</td>
+                <td style="text-align: right;">{{ number_format($totRs, 2, ',', '.') }}</td>
+                <td style="text-align: right;">{{ number_format($totPel, 2, ',', '.') }}</td>
+                <td style="text-align: right;">{{ number_format($totAll, 2, ',', '.') }}</td>
             </tr>
         </tbody>
 
@@ -122,15 +149,15 @@
         <!-- SECTION 2: METODE PEMBAYARAN -->
         <thead>
             <tr>
-                <th colspan="5" style="background-color: #cfe2f3; font-size: 12pt;">2. RINCIAN METODE PEMBAYARAN (TUNAI
+                <th colspan="5" style="background-color: #cfe2f3; font-size: 12pt; text-align: center;">2. RINCIAN METODE PEMBAYARAN (TUNAI
                     & NON-TUNAI)</th>
             </tr>
             <tr>
-                <th>Kode Rekening</th>
-                <th>Uraian Akun Pendapatan</th>
-                <th>Tunai</th>
-                <th>Non-Tunai</th>
-                <th>Total</th>
+                <th style="text-align: center;">Kode Rekening</th>
+                <th style="text-align: center;">Uraian Akun Pendapatan</th>
+                <th style="text-align: center;">Tunai</th>
+                <th style="text-align: center;">Non-Tunai</th>
+                <th style="text-align: center;">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -152,10 +179,10 @@
                 </tr>
             @endforeach
             <tr class="font-bold bg-gray">
-                <td colspan="2" class="text-right">JUMLAH KESELURUHAN</td>
-                <td class="text-right">{{ number_format($tTunai, 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($tNon, 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($tTotal, 2, ',', '.') }}</td>
+                <td colspan="2" style="text-align: center;">JUMLAH KESELURUHAN</td>
+                <td style="text-align: right;">{{ number_format($tTunai, 2, ',', '.') }}</td>
+                <td style="text-align: right;">{{ number_format($tNon, 2, ',', '.') }}</td>
+                <td style="text-align: right;">{{ number_format($tTotal, 2, ',', '.') }}</td>
             </tr>
         </tbody>
 
@@ -167,15 +194,15 @@
         <!-- SECTION 3: BANK -->
         <thead>
             <tr>
-                <th colspan="5" style="background-color: #fff2cc; font-size: 12pt;">3. RINCIAN PENERIMAAN BANK (RECON)
+                <th colspan="5" style="background-color: #fff2cc; font-size: 12pt; text-align: center;">3. RINCIAN PENERIMAAN BANK (RECON)
                 </th>
             </tr>
             <tr>
-                <th>Kode Rekening</th>
-                <th>Uraian Akun Pendapatan</th>
-                <th>BRK (Tunai + Transfer)</th>
-                <th>BSI (Transfer)</th>
-                <th>Total</th>
+                <th style="text-align: center;">Kode Rekening</th>
+                <th style="text-align: center;">Uraian Akun Pendapatan</th>
+                <th style="text-align: center;">BRK (Tunai + Transfer)</th>
+                <th style="text-align: center;">BSI (Transfer)</th>
+                <th style="text-align: center;">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -197,10 +224,10 @@
                 </tr>
             @endforeach
             <tr class="font-bold bg-gray">
-                <td colspan="2" class="text-right">JUMLAH PENERIMAAN BANK</td>
-                <td class="text-right">{{ number_format($tBrk, 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($tBsi, 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($tTotalB, 2, ',', '.') }}</td>
+                <td colspan="2" style="text-align: center;">JUMLAH PENERIMAAN BANK</td>
+                <td style="text-align: right;">{{ number_format($tBrk, 2, ',', '.') }}</td>
+                <td style="text-align: right;">{{ number_format($tBsi, 2, ',', '.') }}</td>
+                <td style="text-align: right;">{{ number_format($tTotalB, 2, ',', '.') }}</td>
             </tr>
         </tbody>
 
@@ -212,13 +239,13 @@
         <!-- SECTION 4: ROOMS -->
         <thead>
             <tr>
-                <th colspan="5" style="background-color: #ead1dc; font-size: 12pt;">4. PENDAPATAN & PASIEN PER RUANGAN
+                <th colspan="5" style="background-color: #ead1dc; font-size: 12pt; text-align: center;">4. PENDAPATAN & PASIEN PER RUANGAN
                 </th>
             </tr>
             <tr>
-                <th colspan="2">Nama Ruangan</th>
-                <th>Jumlah Pasien</th>
-                <th colspan="2">Total Pendapatan</th>
+                <th colspan="2" style="text-align: center;">Nama Ruangan</th>
+                <th style="text-align: center;">Jumlah Pasien</th>
+                <th colspan="2" style="text-align: center;">Total Pendapatan</th>
             </tr>
         </thead>
         <tbody>
@@ -234,9 +261,9 @@
                 </tr>
             @endforeach
             <tr class="font-bold bg-gray">
-                <td colspan="2">TOTAL RUANGAN</td>
-                <td class="text-center">{{ number_format($tRCount, 0, ',', '.') }}</td>
-                <td colspan="2" class="text-right">{{ number_format($tRTotal, 2, ',', '.') }}</td>
+                <td colspan="2" style="text-align: center;">GRAND TOTAL (SEMUA RUANGAN)</td>
+                <td style="text-align: center;">{{ number_format($tRCount, 0, ',', '.') }}</td>
+                <td colspan="2" style="text-align: right;">{{ number_format($tRTotal, 2, ',', '.') }}</td>
             </tr>
         </tbody>
     </table>

@@ -2,9 +2,7 @@
     <div class="laporan-header">
         <div class="header-left">
             <h2><i class="ph ph-chart-line"></i> Laporan Realisasi Anggaran</h2>
-            <p>Perbandingan Pencapaian Pendapatan terhadap Target Anggaran Pendapatan (Tahun Anggaran
-                {{ session('tahun_anggaran') }})
-            </p>
+            <p>Perbandingan Pencapaian Pendapatan terhadap Target Anggaran Pendapatan</p>
         </div>
         <div class="header-right">
             <div class="laporan-filter-group">
@@ -18,8 +16,14 @@
                 </div>
                 <button class="btn-filter" onclick="loadLaporan('ANGGARAN')">
                     <i class="ph ph-magnifying-glass"></i>
-                    <span>Filter</span>
+                    <span>Tampilkan</span>
                 </button>
+                @if(auth()->user()->hasPermission('LAPORAN_ANGGARAN') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+                    <button class="btn-preview" onclick="openPreviewModal('ANGGARAN')">
+                        <i class="ph ph-file-search"></i>
+                        <span>Preview & Unduh</span>
+                    </button>
+                @endif
             </div>
         </div>
     </div>

@@ -16,8 +16,14 @@
                 </div>
                 <button class="btn-filter" onclick="loadLaporan('REKON')">
                     <i class="ph ph-magnifying-glass"></i>
-                    <span>Filter</span>
+                    <span>Tampilkan</span>
                 </button>
+                @if(auth()->user()->hasPermission('LAPORAN_REKON') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+                    <button class="btn-preview" onclick="openPreviewModal('REKON')">
+                        <i class="ph ph-file-search"></i>
+                        <span>Preview & Unduh</span>
+                    </button>
+                @endif
             </div>
         </div>
     </div>

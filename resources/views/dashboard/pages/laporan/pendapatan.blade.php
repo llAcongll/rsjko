@@ -16,18 +16,13 @@
                 </div>
                 <button class="btn-filter" onclick="loadLaporan('PENDAPATAN')">
                     <i class="ph ph-magnifying-glass"></i>
-                    <span>Filter</span>
+                    <span>Tampilkan</span>
                 </button>
-                @if(auth()->user()->hasPermission('LAPORAN_EXPORT'))
-                    <button class="btn-filter" style="background: #10b981; border-color: #10b981" onclick="exportLaporan()">
-                        <i class="ph ph-file-xls"></i>
-                        <span>Excel</span>
-                    </button>
-                @endif
-                @if(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'))
-                    <button class="btn-filter" style="background: #ef4444; border-color: #ef4444" onclick="exportPdf()">
-                        <i class="ph ph-file-pdf"></i>
-                        <span>PDF</span>
+                <div class="filter-divider" style="width: 1px; height: 24px; background: #e2e8f0; margin: 0 8px;"></div>
+                @if(auth()->user()->hasPermission('LAPORAN_PENDAPATAN') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+                    <button class="btn-preview" onclick="openPreviewModal('PENDAPATAN')">
+                        <i class="ph ph-eye"></i>
+                        <span>Preview & Unduh</span>
                     </button>
                 @endif
             </div>
