@@ -1,6 +1,6 @@
 window.initLaporan = function (type = 'PENDAPATAN') {
     const today = new Date().toISOString().split('T')[0];
-    const firstDay = '2025-01-01';
+    const firstDay = '2026-01-01';
 
     if (document.getElementById('laporanStart')) document.getElementById('laporanStart').value = firstDay;
     if (document.getElementById('laporanEnd')) document.getElementById('laporanEnd').value = today;
@@ -381,23 +381,32 @@ function renderAnggaran(data) {
 }
 
 window.exportLaporan = function () {
-    const table = document.querySelector('.report-table');
-    if (!table) { toast('Tidak ada data', 'error'); return; }
-    const rows = [];
-    table.querySelectorAll('tr').forEach(tr => {
-        const cols = [];
-        tr.querySelectorAll('th, td').forEach(td => {
-            cols.push('"' + td.innerText.trim().replace(/"/g, '""') + '"');
-        });
-        rows.push(cols.join(','));
-    });
-    const BOM = '\uFEFF';
-    const csv = BOM + rows.join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `laporan_export.csv`;
-    a.click();
-    toast('✅ Export berhasil', 'success');
+    const startEl = document.getElementById('laporanStart');
+    const endEl = document.getElementById('laporanEnd');
+    const start = startEl ? startEl.value : '';
+    const end = endEl ? endEl.value : '';
+
+    if (!end) {
+        toast('Pilih tanggal!', 'error');
+        return;
+    }
+
+    // Redirect to backend export route
+    window.location.href = `/dashboard/laporan/export/pendapatan?start=${start}&end=${end}`;
+    toast('⏳ Menyiapkan Export Excel...', 'info');
+};
+
+window.exportPdf = function () {
+    const startEl = document.getElementById('laporanStart');
+    const endEl = document.getElementById('laporanEnd');
+    const start = startEl ? startEl.value : '';
+    const end = endEl ? endEl.value : '';
+
+    if (!end) {
+        toast('Pilih tanggal!', 'error');
+        return;
+    }
+
+    window.location.href = `/dashboard/laporan/export/pendapatan-pdf?start=${start}&end=${end}`;
+    toast('⏳ Menyiapkan Export PDF...', 'info');
 };

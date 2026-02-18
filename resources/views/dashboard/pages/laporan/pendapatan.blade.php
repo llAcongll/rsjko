@@ -21,7 +21,11 @@
                 @if(auth()->user()->hasPermission('LAPORAN_EXPORT'))
                     <button class="btn-filter" style="background: #10b981; border-color: #10b981" onclick="exportLaporan()">
                         <i class="ph ph-file-xls"></i>
-                        <span>Export Excel</span>
+                        <span>Excel</span>
+                    </button>
+                    <button class="btn-filter" style="background: #ef4444; border-color: #ef4444" onclick="exportPdf()">
+                        <i class="ph ph-file-pdf"></i>
+                        <span>PDF</span>
                     </button>
                 @endif
             </div>

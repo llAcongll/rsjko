@@ -503,8 +503,12 @@ window.initPendapatanUmum = function () {
 
 function hitungTotal() {
   let total = 0;
-  document.querySelectorAll('.nominal-value').forEach(i => total += parseFloat(i.value || 0));
-  document.getElementById('totalPembayaran').innerText = formatRupiah(total);
+  const form = document.getElementById('formPendapatanUmum');
+  if (form) {
+    form.querySelectorAll('.nominal-value').forEach(i => total += parseFloat(i.value || 0));
+  }
+  const totalEl = document.getElementById('totalPembayaran');
+  if (totalEl) totalEl.innerText = formatRupiah(total);
 }
 
 function cekSiapSimpan() {

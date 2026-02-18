@@ -29,10 +29,13 @@ window.formatRibuan = function (num) {
 
 window.parseAngka = function (val) {
   if (!val) return 0;
-  // Hapus semua karakter kecuali angka, koma, dan titik
-  // Kita asumsikan format input bisa pakai koma (indo) atau titik (internasional)
-  // Untuk parsing, kita ubah koma jadi titik
-  let clean = val.toString().replace(/[^0-9,.-]/g, '').replace(',', '.');
+  // Hapus semua karakter kecuali angka, koma, titik, dan minus
+  let s = val.toString().replace(/[^0-9,.-]/g, '');
+
+  // Di format Indonesia: titik adalah ribuan, koma adalah desimal.
+  // Kita hapus titik, lalu ubah koma menjadi titik agar bisa di-parse oleh parseFloat.
+  let clean = s.replace(/\./g, '').replace(',', '.');
+
   return parseFloat(clean) || 0;
 };
 

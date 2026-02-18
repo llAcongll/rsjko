@@ -330,6 +330,8 @@ Route::middleware('auth')
 |--------------------------------------------------------------------------
 */
 Route::get('/dashboard/laporan/data', [LaporanController::class, 'index'])->middleware('auth');
+Route::get('/dashboard/laporan/export/pendapatan', [LaporanController::class, 'export'])->middleware('auth');
+Route::get('/dashboard/laporan/export/pendapatan-pdf', [LaporanController::class, 'exportPdf'])->middleware('auth');
 Route::get('/dashboard/laporan/rekon', [LaporanController::class, 'getRekon'])->middleware('auth');
 Route::get('/dashboard/laporan/piutang', [LaporanController::class, 'getPiutang'])->middleware('auth');
 Route::get('/dashboard/laporan/mou', [LaporanController::class, 'getMou'])->middleware('auth');

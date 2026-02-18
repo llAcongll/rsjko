@@ -6,13 +6,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Models\KodeRekening;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LaporanController extends Controller
 {
     public function index(Request $request)
     {
         abort_unless(auth()->user()->hasPermission('LAPORAN_PENDAPATAN') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
-        $start = $request->get('start', '2025-01-01');
+        $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
 
         $tables = [
@@ -159,6 +160,225 @@ class LaporanController extends Controller
         ]);
     }
 
+    public function export(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
+
+        $start = $request->get('start', '2026-01-01');
+        $end = $request->get('end', Carbon::now()->toDateString());
+        $tahun = session('tahun_anggaran');
+
+        // Reuse index logic but for export
+        $tables = [
+            'UMUM' => 'pendapatan_umum',
+            'BPJS' => 'pendapatan_bpjs',
+            'JAMINAN' => 'pendapatan_jaminan',
+            'KERJASAMA' => 'pendapatan_kerjasama',
+            'LAIN' => 'pendapatan_lain'
+        ];
+
+        $summary = [];
+        foreach ($tables as $key => $table) {
+            $stats = DB::table($table)
+                ->whereBetween('tanggal', [$start, $end])
+                ->where('tahun', $tahun)
+                ->selectRaw('
+                    SUM(IFNULL(rs_tindakan,0) + IFNULL(rs_obat,0)) as rs_total,
+                    SUM(IFNULL(pelayanan_tindakan,0) + IFNULL(pelayanan_obat,0)) as pelayanan_total,
+                    SUM(IFNULL(total,0)) as grand_total,
+                    COUNT(*) as count
+                ')
+                ->first();
+
+            $rs = $stats->rs_total ?? 0;
+            $pelayanan = $stats->pelayanan_total ?? 0;
+            $total = $stats->grand_total ?? 0;
+
+            if ($key === 'BPJS' || $key === 'JAMINAN') {
+                $ded = DB::table('penyesuaian_pendapatans')
+                    ->where('kategori', $key)
+                    ->whereBetween('tanggal', [$start, $end])
+                    ->where('tahun', $tahun)
+                    ->selectRaw('SUM(potongan) as total_potongan, SUM(administrasi_bank) as total_adm')
+                    ->first();
+
+                $potongan = $ded->total_potongan ?? 0;
+                $adm = $ded->total_adm ?? 0;
+
+                $rs -= round($potongan * 0.7, 2);
+                $pelayanan -= round($potongan * 0.3, 2);
+                $rs -= $adm;
+                $total = $rs + $pelayanan;
+            }
+
+            $summary[$key] = [
+                'rs' => $rs,
+                'pelayanan' => $pelayanan,
+                'total' => $total,
+                'count' => (int) ($stats->count ?? 0)
+            ];
+        }
+
+        $categories = [
+            'BPJS_JAMINAN' => ['kode' => '4.1.02.01.001.00005', 'nama' => 'Retribusi Pelayanan Kesehatan Pasien Jaminan'],
+            'PASIEN_UMUM' => ['kode' => '4.1.02.01.001.00005', 'nama' => 'Retribusi Pelayanan Kesehatan Pasien Non Jaminan (Mandiri)'],
+            'KERJASAMA' => ['kode' => '4.1.02.02.001.00005', 'nama' => 'Retribusi Pemakaian Ruangan'],
+            'PKL' => ['kode' => '4.1.04.16.004.00001', 'nama' => 'Pendapatan BLUD dari Hasil Kerja Sama dengan Pihak Praktek Kerja Lapangan (PKL)'],
+            'MAGANG' => ['kode' => '4.1.04.16.004.00001', 'nama' => 'Pendapatan BLUD dari Hasil Kerja Sama dengan Pihak Praktek Magang'],
+            'LAIN_LAIN' => ['kode' => '4.1.04.16.004.00006', 'nama' => 'Pendapatan BLUD dari Lain-lain Pendapatan BLUD yang Sah Tanpa Kerja Sama'],
+            'PENELITIAN' => ['kode' => '4.1.04.16.004.00006', 'nama' => 'Pendapatan BLUD dari Pengembangan Usaha Penelitian'],
+            'PERMINTAAN_DATA' => ['kode' => '4.1.04.16.004.00006', 'nama' => 'Pendapatan BLUD dari Pengembangan Usaha Permintaan Data'],
+            'STUDY_BANDING' => ['kode' => '4.1.04.16.004.00006', 'nama' => 'Pendapatan BLUD dari Pengembangan Usaha Study Banding'],
+        ];
+
+        $breakdown = [];
+        foreach ($categories as $key => $meta) {
+            $stats = $this->getDetailedBreakdown($key, $tahun, $start, $end);
+            $breakdown[$key] = array_merge($meta, $stats);
+        }
+
+        // Room Stats
+        $roomStats = [];
+        foreach ($tables as $table) {
+            $rooms = DB::table($table)
+                ->join('ruangans', "$table.ruangan_id", '=', 'ruangans.id')
+                ->select('ruangans.nama', DB::raw('SUM(total) as total'), DB::raw('COUNT(*) as count'))
+                ->whereBetween('tanggal', [$start, $end])
+                ->where("$table.tahun", $tahun)
+                ->groupBy('ruangans.nama')
+                ->get();
+
+            foreach ($rooms as $r) {
+                if (!isset($roomStats[$r->nama])) {
+                    $roomStats[$r->nama] = ['total' => 0, 'count' => 0];
+                }
+                $roomStats[$r->nama]['total'] += $r->total;
+                $roomStats[$r->nama]['count'] += $r->count;
+            }
+        }
+        uasort($roomStats, fn($a, $b) => $b['total'] <=> $a['total']);
+
+        $filename = "Laporan_Pendapatan_{$start}_to_{$end}.xls";
+
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=\"$filename\"");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+
+        return view('dashboard.exports.pendapatan', [
+            'start' => $start,
+            'end' => $end,
+            'summary' => $summary,
+            'breakdown' => $breakdown,
+            'rooms' => $roomStats,
+            'tahun' => $tahun
+        ]);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
+
+        $start = $request->get('start', '2026-01-01');
+        $end = $request->get('end', Carbon::now()->toDateString());
+        $tahun = session('tahun_anggaran');
+
+        $tables = [
+            'UMUM' => 'pendapatan_umum',
+            'BPJS' => 'pendapatan_bpjs',
+            'JAMINAN' => 'pendapatan_jaminan',
+            'KERJASAMA' => 'pendapatan_kerjasama',
+            'LAIN' => 'pendapatan_lain'
+        ];
+
+        $summary = [];
+        foreach ($tables as $key => $table) {
+            $stats = DB::table($table)
+                ->whereBetween('tanggal', [$start, $end])
+                ->where('tahun', $tahun)
+                ->selectRaw('
+                    SUM(IFNULL(rs_tindakan,0) + IFNULL(rs_obat,0)) as rs_total,
+                    SUM(IFNULL(pelayanan_tindakan,0) + IFNULL(pelayanan_obat,0)) as pelayanan_total,
+                    SUM(IFNULL(total,0)) as grand_total,
+                    COUNT(*) as count
+                ')
+                ->first();
+
+            $rs = $stats->rs_total ?? 0;
+            $pelayanan = $stats->pelayanan_total ?? 0;
+            $total = $stats->grand_total ?? 0;
+
+            if ($key === 'BPJS' || $key === 'JAMINAN') {
+                $ded = DB::table('penyesuaian_pendapatans')
+                    ->where('kategori', $key)
+                    ->whereBetween('tanggal', [$start, $end])
+                    ->where('tahun', $tahun)
+                    ->selectRaw('SUM(potongan) as total_potongan, SUM(administrasi_bank) as total_adm')
+                    ->first();
+
+                $potongan = $ded->total_potongan ?? 0;
+                $adm = $ded->total_adm ?? 0;
+
+                $rs -= round($potongan * 0.7, 2);
+                $pelayanan -= round($potongan * 0.3, 2);
+                $rs -= $adm;
+                $total = $rs + $pelayanan;
+            }
+
+            $summary[$key] = ['rs' => $rs, 'pelayanan' => $pelayanan, 'total' => $total, 'count' => (int) ($stats->count ?? 0)];
+        }
+
+        $categories = [
+            'BPJS_JAMINAN' => ['kode' => '4.1.02.01.001.00005', 'nama' => 'Retribusi Pelayanan Kesehatan Pasien Jaminan'],
+            'PASIEN_UMUM' => ['kode' => '4.1.02.01.001.00005', 'nama' => 'Retribusi Pelayanan Kesehatan Pasien Non Jaminan (Mandiri)'],
+            'KERJASAMA' => ['kode' => '4.1.02.02.001.00005', 'nama' => 'Retribusi Pemakaian Ruangan'],
+            'PKL' => ['kode' => '4.1.04.16.004.00001', 'nama' => 'Pendapatan BLUD dari Hasil Kerja Sama dengan Pihak Praktek Kerja Lapangan (PKL)'],
+            'MAGANG' => ['kode' => '4.1.04.16.004.00001', 'nama' => 'Pendapatan BLUD dari Hasil Kerja Sama dengan Pihak Praktek Magang'],
+            'LAIN_LAIN' => ['kode' => '4.1.04.16.004.00006', 'nama' => 'Pendapatan BLUD dari Lain-lain Pendapatan BLUD yang Sah Tanpa Kerja Sama'],
+            'PENELITIAN' => ['kode' => '4.1.04.16.004.00006', 'nama' => 'Pendapatan BLUD dari Pengembangan Usaha Penelitian'],
+            'PERMINTAAN_DATA' => ['kode' => '4.1.04.16.004.00006', 'nama' => 'Pendapatan BLUD dari Pengembangan Usaha Permintaan Data'],
+            'STUDY_BANDING' => ['kode' => '4.1.04.16.004.00006', 'nama' => 'Pendapatan BLUD dari Pengembangan Usaha Study Banding'],
+        ];
+
+        $breakdown = [];
+        foreach ($categories as $key => $meta) {
+            $stats = $this->getDetailedBreakdown($key, $tahun, $start, $end);
+            $breakdown[$key] = array_merge($meta, $stats);
+        }
+
+        $roomStats = [];
+        foreach ($tables as $table) {
+            $rooms = DB::table($table)
+                ->join('ruangans', "$table.ruangan_id", '=', 'ruangans.id')
+                ->select('ruangans.nama', DB::raw('SUM(total) as total'), DB::raw('COUNT(*) as count'))
+                ->whereBetween('tanggal', [$start, $end])
+                ->where("$table.tahun", $tahun)
+                ->groupBy('ruangans.nama')
+                ->get();
+
+            foreach ($rooms as $r) {
+                if (!isset($roomStats[$r->nama])) {
+                    $roomStats[$r->nama] = ['total' => 0, 'count' => 0];
+                }
+                $roomStats[$r->nama]['total'] += $r->total;
+                $roomStats[$r->nama]['count'] += $r->count;
+            }
+        }
+        uasort($roomStats, fn($a, $b) => $b['total'] <=> $a['total']);
+
+        $pdf = Pdf::loadView('dashboard.exports.pendapatan_pdf', [
+            'start' => $start,
+            'end' => $end,
+            'summary' => $summary,
+            'breakdown' => $breakdown,
+            'rooms' => $roomStats
+        ]);
+
+        return $pdf->download("Laporan_Pendapatan_{$start}_to_{$end}.pdf");
+    }
+
+
+
     private function getDetailedBreakdown($category, $tahun, $start, $end)
     {
         $query = null;
@@ -283,7 +503,7 @@ class LaporanController extends Controller
     public function getRekon(Request $request)
     {
         abort_unless(auth()->user()->hasPermission('LAPORAN_REKON') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
-        $start = $request->get('start', '2025-01-01');
+        $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
 
         $rekKoran = DB::table('rekening_korans')
@@ -356,7 +576,7 @@ class LaporanController extends Controller
     public function getPiutang(Request $request)
     {
         abort_unless(auth()->user()->hasPermission('LAPORAN_PIUTANG') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
-        $start = $request->get('start', '2025-01-01');
+        $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
 
@@ -425,7 +645,7 @@ class LaporanController extends Controller
     public function getMou(Request $request)
     {
         abort_unless(auth()->user()->hasPermission('LAPORAN_MOU') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
-        $start = $request->get('start', '2025-01-01');
+        $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
 
@@ -534,7 +754,7 @@ class LaporanController extends Controller
     public function getAnggaran(Request $request)
     {
         abort_unless(auth()->user()->hasPermission('LAPORAN_ANGGARAN') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
-        $start = $request->get('start', '2025-01-01');
+        $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
 
