@@ -64,13 +64,15 @@
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th style="width: 150px;">Kode Rekening</th>
-                        <th>Uraian</th>
-                        <th style="text-align:right">Target Anggaran</th>
-                        <th style="text-align:right">Realisasi</th>
-                        <th style="text-align:right">Selisih</th>
-                        <th style="text-align:center">Persentase</th>
-                        <th style="width: 120px;">Progres</th>
+                        <th style="width: 150px; vertical-align: middle;">Kode Rekening</th>
+                        <th style="vertical-align: middle;">Uraian</th>
+                        <th style="text-align:right; vertical-align: middle;">Target Anggaran</th>
+                        <th style="text-align:center">Realisasi (Lalu)</th>
+                        <th style="text-align:center">Realisasi (Kini)</th>
+                        <th style="text-align:center">Realisasi (Total)</th>
+                        <th style="text-align:right; vertical-align: middle;">Selisih</th>
+                        <th style="text-align:center; vertical-align: middle;">%</th>
+                        <th style="width: 120px; vertical-align: middle;">Progres</th>
                     </tr>
                 </thead>
                 <tbody id="laporanAnggaranBody">

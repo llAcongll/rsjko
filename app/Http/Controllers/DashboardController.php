@@ -67,205 +67,111 @@ class DashboardController extends BaseController
     public function summary()
     {
         try {
+            $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
             $tables = ['pendapatan_umum', 'pendapatan_bpjs', 'pendapatan_jaminan', 'pendapatan_kerjasama', 'pendapatan_lain'];
 
-            /* 🔑 TANGGAL DASHBOARD = DATA TERAKHIR DARI SEMUA TABEL */
-            $dashboardDate = null;
-            $tahunAnggaran = session('tahun_anggaran');
+            /* 1. TARGET ANGGARAN (Total dari Anggaran Rekening Tahun Ini) */
+            $targetPendapatan = DB::table('anggaran_rekening')
+                ->where('tahun', $tahunAnggaran)
+                ->sum('nilai');
+
+            /* 2. REALISASI & BREAKDOWN (RS vs PELAYANAN) */
+            $totalRS = 0;
+            $totalPelayanan = 0;
 
             foreach ($tables as $tbl) {
-                $maxTbl = DB::table($tbl)
+                $sums = DB::table($tbl)
                     ->where('tahun', $tahunAnggaran)
-                    ->max('tanggal');
-                if ($maxTbl && (!$dashboardDate || $maxTbl > $dashboardDate)) {
-                    $dashboardDate = $maxTbl;
-                }
+                    ->select(
+                        DB::raw('SUM(rs_tindakan + rs_obat) as rs'),
+                        DB::raw('SUM(pelayanan_tindakan + pelayanan_obat) as pelayanan')
+                    )
+                    ->first();
+
+                $totalRS += ($sums->rs ?? 0);
+                $totalPelayanan += ($sums->pelayanan ?? 0);
             }
 
-            if (!$dashboardDate) {
-                return response()->json([
-                    'summary' => [
-                        'todayIncome' => 0,
-                        'monthIncome' => 0,
-                        'todayTransaction' => 0,
-                        'activeRoom' => 0,
-                        'todayGrowth' => 0,
-                    ],
-                    'distribution' => [
-                        'umum' => 100,
-                        'bpjs' => 0,
-                        'jaminan' => 0,
-                        'lainnya' => 0,
-                    ],
-                    'todaySummary' => [
-                        'totalTransaction' => 0,
-                        'topIncomeType' => 'UMUM',
-                        'topRoom' => '-',
-                        'dominantPatient' => 'UMUM',
-                    ],
-                ]);
-            }
-
-            $dashboardDate = Carbon::parse($dashboardDate)->toDateString();
-            $monthStart = Carbon::parse($dashboardDate)->startOfMonth()->toDateString();
-
-            /* =========================
-               SUMMARY TOTALS
-            ========================= */
-            $todayIncome = 0;
-            $monthIncome = 0;
-            $todayTransaction = 0;
-
-            foreach ($tables as $tbl) {
-                $todayIncome += DB::table($tbl)
-                    ->whereDate('tanggal', $dashboardDate)
-                    ->where('tahun', $tahunAnggaran)
-                    ->sum('total');
-                $monthIncome += DB::table($tbl)
-                    ->whereBetween('tanggal', [$monthStart, $dashboardDate])
-                    ->where('tahun', $tahunAnggaran)
-                    ->sum('total');
-                $todayTransaction += DB::table($tbl)
-                    ->whereDate('tanggal', $dashboardDate)
-                    ->where('tahun', $tahunAnggaran)
-                    ->count();
-            }
-
-            $activeRoom = DB::table('ruangans')->count();
-
-            /* =========================
-               TODAY GROWTH (vs hari sebelumnya)
-            ========================= */
-            $yesterdayDate = Carbon::parse($dashboardDate)->subDay()->toDateString();
-            $yesterdayIncome = 0;
-            foreach ($tables as $tbl) {
-                $yesterdayIncome += DB::table($tbl)
-                    ->whereDate('tanggal', $yesterdayDate)
-                    ->where('tahun', $tahunAnggaran)
-                    ->sum('total');
-            }
-
-            $todayGrowth = 0;
-            if ($yesterdayIncome > 0) {
-                $todayGrowth = round((($todayIncome - $yesterdayIncome) / $yesterdayIncome) * 100, 1);
-            }
-
-            /* =========================
-               TOP ROOM (Across all tables for today)
-            ========================= */
-            $roomCounts = [];
-            foreach ($tables as $tbl) {
-                $results = DB::table($tbl)
-                    ->join('ruangans', "$tbl.ruangan_id", '=', 'ruangans.id')
-                    ->select('ruangans.nama', DB::raw('COUNT(*) as total'))
-                    ->whereDate("$tbl.tanggal", $dashboardDate)
-                    ->where("$tbl.tahun", $tahunAnggaran)
-                    ->groupBy('ruangans.nama')
-                    ->get();
-                foreach ($results as $r) {
-                    $roomCounts[$r->nama] = ($roomCounts[$r->nama] ?? 0) + $r->total;
-                }
-            }
-            arsort($roomCounts);
-            $topRoom = key($roomCounts) ?? '-';
-
-            /* =========================
-               DISTRIBUSI PASIEN (DINAMIS - MONTHLY)
-            ========================= */
-            $incUmum = DB::table('pendapatan_umum')
-                ->whereBetween('tanggal', [$monthStart, $dashboardDate])
+            /* 3. DEDUCTIONS (POTONGAN & ADM BANK) */
+            $totalPotongan = DB::table('penyesuaian_pendapatans')
                 ->where('tahun', $tahunAnggaran)
-                ->sum('total');
+                ->sum(DB::raw('IFNULL(potongan, 0) + IFNULL(administrasi_bank, 0)'));
 
-            // BPJS Deduction
-            $bpjsRaw = DB::table('pendapatan_bpjs')
-                ->whereBetween('tanggal', [$monthStart, $dashboardDate])
-                ->where('tahun', $tahunAnggaran)
-                ->sum('total');
-            $bpjsDed = $this->calculateDeductions($monthStart, $dashboardDate, 'pendapatan_bpjs', $tahunAnggaran);
-            $incBpjs = max(0, $bpjsRaw - $bpjsDed);
+            $realisasiGross = $totalRS + $totalPelayanan;
+            $realisasiNet = max(0, $realisasiGross - $totalPotongan);
 
-            // Jaminan Deduction
-            $jamRaw = DB::table('pendapatan_jaminan')
-                ->whereBetween('tanggal', [$monthStart, $dashboardDate])
-                ->where('tahun', $tahunAnggaran)
-                ->sum('total');
-            $jamDed = $this->calculateDeductions($monthStart, $dashboardDate, 'pendapatan_jaminan', $tahunAnggaran);
-            $incJaminan = max(0, $jamRaw - $jamDed);
+            /* 4. PERSENTASE CAPAIAN */
+            $persenCapaian = $targetPendapatan > 0 ? round(($realisasiNet / $targetPendapatan) * 100, 2) : 0;
 
-            $incKerja = DB::table('pendapatan_kerjasama')
-                ->whereBetween('tanggal', [$monthStart, $dashboardDate])
-                ->where('tahun', $tahunAnggaran)
-                ->sum('total');
-            $incLain = DB::table('pendapatan_lain')
-                ->whereBetween('tanggal', [$monthStart, $dashboardDate])
-                ->where('tahun', $tahunAnggaran)
-                ->sum('total');
+            /* 5. DISTRIBUSI PASIEN (Pie Chart) */
+            $incUmum = DB::table('pendapatan_umum')->where('tahun', $tahunAnggaran)->sum('total');
+            $incBpjs = DB::table('pendapatan_bpjs')->where('tahun', $tahunAnggaran)->sum('total');
+            $incJaminan = DB::table('pendapatan_jaminan')->where('tahun', $tahunAnggaran)->sum('total');
+            $incKerja = DB::table('pendapatan_kerjasama')->where('tahun', $tahunAnggaran)->sum('total');
+            $incLain = DB::table('pendapatan_lain')->where('tahun', $tahunAnggaran)->sum('total');
 
-            // Today Deductions for Today Income
-            $todayBpjsDed = $this->calculateDeductions($dashboardDate, $dashboardDate, 'pendapatan_bpjs', $tahunAnggaran);
-            $todayJamDed = $this->calculateDeductions($dashboardDate, $dashboardDate, 'pendapatan_jaminan', $tahunAnggaran);
-            $todayIncome = max(0, $todayIncome - ($todayBpjsDed + $todayJamDed));
-
-            // Month Income is sum of nets
-            $monthIncome = $incUmum + $incBpjs + $incJaminan + $incKerja + $incLain;
-
-            // Updated Growth logic (Yesterday Net)
-            $yesterdayBpjsDed = $this->calculateDeductions($yesterdayDate, $yesterdayDate, 'pendapatan_bpjs', $tahunAnggaran);
-            $yesterdayJamDed = $this->calculateDeductions($yesterdayDate, $yesterdayDate, 'pendapatan_jaminan', $tahunAnggaran);
-            $yesterdayIncome = max(0, $yesterdayIncome - ($yesterdayBpjsDed + $yesterdayJamDed));
-
-            $todayGrowth = 0;
-            if ($yesterdayIncome > 0) {
-                $todayGrowth = round((($todayIncome - $yesterdayIncome) / $yesterdayIncome) * 100, 1);
-            }
-
-            $totalAll = $monthIncome;
+            // Apply specific deductions for BPJS and Jaminan if possible for more accuracy, 
+            // but for summary distribution we'll use gross ratios first or just simple sums.
+            $totalForDist = $incUmum + $incBpjs + $incJaminan + $incKerja + $incLain;
 
             $distribution = [
-                'umum' => $totalAll > 0 ? round(($incUmum / $totalAll) * 100, 1) : 0,
-                'bpjs' => $totalAll > 0 ? round(($incBpjs / $totalAll) * 100, 1) : 0,
-                'jaminan' => $totalAll > 0 ? round(($incJaminan / $totalAll) * 100, 1) : 0,
-                'kerjasama' => $totalAll > 0 ? round(($incKerja / $totalAll) * 100, 1) : 0,
-                'lainnya' => $totalAll > 0 ? round(($incLain / $totalAll) * 100, 1) : 0,
+                'umum' => $totalForDist > 0 ? round(($incUmum / $totalForDist) * 100, 1) : 0,
+                'bpjs' => $totalForDist > 0 ? round(($incBpjs / $totalForDist) * 100, 1) : 0,
+                'jaminan' => $totalForDist > 0 ? round(($incJaminan / $totalForDist) * 100, 1) : 0,
+                'kerjasama' => $totalForDist > 0 ? round(($incKerja / $totalForDist) * 100, 1) : 0,
+                'lainnya' => $totalForDist > 0 ? round(($incLain / $totalForDist) * 100, 1) : 0,
             ];
-
-            if ($totalAll == 0)
-                $distribution['umum'] = 100;
-
-            /* =========================
-               TOP INCOME TYPE
-            ========================= */
-            $incomeTypes = [
-                'UMUM' => $incUmum,
-                'BPJS' => $incBpjs,
-                'JAMINAN' => $incJaminan,
-                'KERJASAMA' => $incKerja,
-                'LAIN' => $incLain
-            ];
-            arsort($incomeTypes);
-            $topIncomeType = key($incomeTypes) ?? 'UMUM';
 
             return response()->json([
                 'summary' => [
-                    'todayIncome' => $todayIncome,
-                    'monthIncome' => $monthIncome,
-                    'todayTransaction' => $todayTransaction,
-                    'activeRoom' => $activeRoom,
-                    'todayGrowth' => $todayGrowth,
+                    'totalPendapatanRS' => $totalRS,
+                    'totalJasaPelayanan' => $totalPelayanan,
+                    'targetPendapatan' => $targetPendapatan,
+                    'realisasiPendapatan' => $realisasiNet,
+                    'persenCapaian' => $persenCapaian,
                 ],
                 'distribution' => $distribution,
-                'todaySummary' => [
-                    'totalTransaction' => $todayTransaction,
-                    'topIncomeType' => $topIncomeType,
-                    'topRoom' => $topRoom,
-                    'dominantPatient' => $topIncomeType,
-                ],
             ]);
 
         } catch (\Throwable $e) {
             logger()->error('Dashboard Error', ['msg' => $e->getMessage(), 'line' => $e->getLine()]);
             return response()->json(['error' => 'Dashboard error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function chartRooms()
+    {
+        try {
+            $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
+            $tables = ['pendapatan_umum', 'pendapatan_bpjs', 'pendapatan_jaminan', 'pendapatan_kerjasama', 'pendapatan_lain'];
+
+            $roomIncome = [];
+            // Get all rooms first to ensure labels are complete (optional, but better for consistency)
+            $rooms = DB::table('ruangans')->pluck('nama', 'id');
+
+            foreach ($tables as $tbl) {
+                $results = DB::table($tbl)
+                    ->where('tahun', $tahunAnggaran)
+                    ->select('ruangan_id', DB::raw('SUM(total) as total'))
+                    ->groupBy('ruangan_id')
+                    ->get();
+
+                foreach ($results as $res) {
+                    $roomName = $rooms[$res->ruangan_id] ?? 'Unknown';
+                    $roomIncome[$roomName] = ($roomIncome[$roomName] ?? 0) + $res->total;
+                }
+            }
+
+            // Sort by income DESC
+            arsort($roomIncome);
+
+            return response()->json([
+                'labels' => array_keys($roomIncome),
+                'values' => array_values($roomIncome),
+                'year' => $tahunAnggaran
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 

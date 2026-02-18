@@ -66,6 +66,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('dashboard')->group(function () {
         Route::get('/summary', [DashboardController::class, 'summary']);
         Route::get('/chart-7-days', [DashboardController::class, 'chart7Days']);
+        Route::get('/chart-rooms', [DashboardController::class, 'chartRooms']);
     });
 });
 

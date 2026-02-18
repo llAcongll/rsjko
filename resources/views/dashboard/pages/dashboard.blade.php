@@ -16,61 +16,59 @@
   </div>
 
   {{-- SUMMARY CARDS --}}
-  <div class="dashboard-cards">
-
+  <div class="dashboard-cards anggaran-cards">
+    <!-- PENDAPATAN RUMAH SAKIT TAHUN ANGGARAN -->
     <div class="dash-card blue">
-      <div class="dash-card-icon">
-        <i class="ph ph-trend-up"></i>
-      </div>
+      <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
       <div class="dash-card-content">
-        <span class="label">Pendapatan Hari Ini</span>
-        <h3 data-key="todayIncome">...</h3>
-        <small data-key="todayGrowth">Menunggu data...</small>
+        <span class="label">Pendapatan RS (Tahun {{ session('tahun_anggaran') }})</span>
+        <h3 data-key="totalPendapatanRS">Rp 0</h3>
+        <small>Total Pendapatan Rumah Sakit</small>
       </div>
     </div>
 
+    <!-- PENDAPATAN JASA PELAYANAN -->
     <div class="dash-card green">
-      <div class="dash-card-icon">
-        <i class="ph ph-chart-line-up"></i>
-      </div>
+      <div class="dash-card-icon"><i class="ph ph-stethoscope"></i></div>
       <div class="dash-card-content">
-        <span class="label">Bulan Berjalan</span>
-        <h3 data-key="monthIncome">...</h3>
-        <small class="growth-up"><i class="ph ph-caret-up"></i> Terpantau Stabil</small>
+        <span class="label">Pendapatan Jasa Pelayanan</span>
+        <h3 data-key="totalJasaPelayanan">Rp 0</h3>
+        <small>Total Jasa Pelayanan Medis</small>
       </div>
     </div>
 
-    <div class="dash-card purple">
-      <div class="dash-card-icon">
-        <i class="ph ph-receipt"></i>
-      </div>
-      <div class="dash-card-content">
-        <span class="label">Total Transaksi</span>
-        <h3 data-key="todayTransaction">...</h3>
-        <small>Hari ini</small>
-      </div>
-    </div>
-
+    <!-- TARGET PENDAPATAN -->
     <div class="dash-card orange">
-      <div class="dash-card-icon">
-        <i class="ph ph-door"></i>
-      </div>
+      <div class="dash-card-icon"><i class="ph ph-target"></i></div>
       <div class="dash-card-content">
-        <span class="label">Ruangan Aktif</span>
-        <h3 data-key="activeRoom">...</h3>
-        <small>Unit Pelayanan</small>
+        <span class="label">Target Pendapatan</span>
+        <h3 data-key="targetPendapatan">Rp 0</h3>
+        <small>Target Tahun Anggaran {{ session('tahun_anggaran') }}</small>
       </div>
     </div>
 
+    <!-- REALISASI & PERSENTASE -->
+    <div class="dash-card purple">
+      <div class="dash-card-icon"><i class="ph ph-chart-pie-slice"></i></div>
+      <div class="dash-card-content">
+        <span class="label">Realisasi & Capaian</span>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <h3 data-key="realisasiPendapatan">Rp 0</h3>
+          <span data-key="persenCapaian" style="font-size: 14px; font-weight: bold; color: #9333ea;">(0%)</span>
+        </div>
+        <small>Realisasi s.d Hari Ini</small>
+      </div>
+    </div>
   </div>
 
   {{-- MAIN CONTENT --}}
   <div class="dashboard-main">
 
     {{-- GRAFIK --}}
-    <div class="dashboard-box">
+    {{-- GRAFIK PENDAPATAN --}}
+    <div class="dashboard-box mb-4">
       <div class="box-header">
-        <h4><i class="ph ph-chart-bar"></i> Tren Pendapatan Bulanan</h4>
+        <h4><i class="ph ph-chart-bar"></i> Tren Pendapatan Bulanan Tahun {{ session('tahun_anggaran') }}</h4>
       </div>
 
       <div class="chart-container" style="position: relative; height:320px;">
@@ -78,32 +76,36 @@
       </div>
     </div>
 
-    {{-- SIDE INFO --}}
-    <div class="dashboard-side">
-
-      {{-- DISTRIBUSI PASIEN --}}
-      <div class="dashboard-box mb-4">
-        <div class="box-header">
-          <h4><i class="ph ph-users-three"></i> Jenis Pasien</h4>
-        </div>
-
-        <ul class="stat-list" id="distributionList">
-          <li style="justify-content:center;color:#94a3b8;padding:20px 0;">Memuat data...</li>
-        </ul>
+    {{-- GRAFIK RUANGAN --}}
+    <div class="dashboard-box mb-4">
+      <div class="box-header">
+        <h4><i class="ph ph-buildings"></i> Tren Pendapatan Seluruh Unit/Ruangan</h4>
       </div>
 
-      {{-- RINGKASAN HARI INI --}}
-      <div class="dashboard-box">
-        <div class="box-header">
-          <h4><i class="ph ph-info"></i> Info Harian</h4>
-        </div>
-
-        <ul class="stat-list" id="todaySummaryList">
-          <li style="justify-content:center;color:#94a3b8;padding:20px 0;">Memuat data...</li>
-        </ul>
+      <div class="chart-container" style="position: relative; height:400px;">
+        <canvas id="roomChart"></canvas>
       </div>
-
     </div>
-  </div>
 
+    {{-- GRAFIK PERSENTASE JENIS PASIEN --}}
+    <div class="dashboard-box">
+      <div class="box-header">
+        <h4><i class="ph ph-chart-pie-slice"></i> Persentase Jenis Pasien</h4>
+      </div>
+
+      <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+        <div
+          style="flex: 1; min-width: 250px; position: relative; height: 300px; display: flex; justify-content: center;">
+          <canvas id="patientPieChart"></canvas>
+        </div>
+
+        <div style="flex: 1; min-width: 250px;">
+          <ul class="stat-list mt-2" id="distributionList">
+            <li style="justify-content:center;color:#94a3b8;padding:20px 0;">Memuat data...</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>

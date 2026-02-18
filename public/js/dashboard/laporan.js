@@ -319,7 +319,7 @@ function renderMou(data) {
 
 function renderAnggaran(data) {
     if (document.getElementById('totalTargetAnggaran')) document.getElementById('totalTargetAnggaran').innerText = formatRupiah(data.totals.target);
-    if (document.getElementById('totalRealisasiAnggaran')) document.getElementById('totalRealisasiAnggaran').innerText = formatRupiah(data.totals.realisasi);
+    if (document.getElementById('totalRealisasiAnggaran')) document.getElementById('totalRealisasiAnggaran').innerText = formatRupiah(data.totals.realisasi_total);
 
     const capaianEl = document.getElementById('totalPersentaseAnggaran');
     if (capaianEl) {
@@ -353,7 +353,9 @@ function renderAnggaran(data) {
                     <span>${item.nama}</span>
                 </td>
                 <td class="col-mono text-right">${formatRupiah(item.target)}</td>
-                <td class="col-mono text-right">${formatRupiah(item.realisasi)}</td>
+                <td class="col-mono text-right" style="color:#64748b; font-size:12px;">${formatRupiah(item.realisasi_lalu)}</td>
+                <td class="col-mono text-right font-medium text-slate-700">${formatRupiah(item.realisasi_kini)}</td>
+                <td class="col-mono text-right font-bold text-slate-900">${formatRupiah(item.realisasi_total)}</td>
                 <td class="col-mono text-right ${item.selisih < 0 ? 'text-red-500' : 'text-slate-500'}">
                     ${formatRupiah(item.selisih)}
                 </td>
@@ -749,11 +751,14 @@ window.openPreviewModal = function (type) {
             <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:8pt;">
                 <thead style="background:#f8fafc;">
                     <tr>
-                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 15%;">Kode</th>
-                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 35%;">Uraian</th>
-                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 20%;">Target</th>
-                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 20%;">Realisasi</th>
-                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 10%;">%</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 8%;">Kode</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 22%;">Uraian</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 12%;">Target</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 12%;">Real. Lalu</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 12%;">Real. Kini</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 12%;">Real. Total</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 12%;">Selisih</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 6%;">%</th>
                     </tr>
                 </thead>
                 <tbody>`;
@@ -764,7 +769,10 @@ window.openPreviewModal = function (type) {
                     <td style="border:1px solid #000; padding:5px;">${item.kode}</td>
                     <td style="border:1px solid #000; padding:5px;">${item.nama}</td>
                     <td style="border:1px solid #000; padding:5px;">${fr(item.target)}</td>
-                    <td style="border:1px solid #000; padding:5px;">${fr(item.realisasi)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(item.realisasi_lalu)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(item.realisasi_kini)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(item.realisasi_total)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(item.selisih)}</td>
                     <td style="border:1px solid #000; padding:5px; text-align:center;">${item.persen}%</td>
                 </tr>`;
         });
@@ -772,7 +780,10 @@ window.openPreviewModal = function (type) {
                 <tr style="background:#f1f5f9; font-weight:bold;">
                     <td colspan="2" style="border:1px solid #000; padding:5px; text-align:center;">TOTAL</td>
                     <td style="border:1px solid #000; padding:5px;">${fr(data.totals.target)}</td>
-                    <td style="border:1px solid #000; padding:5px;">${fr(data.totals.realisasi)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(data.totals.realisasi_lalu)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(data.totals.realisasi_kini)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(data.totals.realisasi_total)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(data.totals.target - data.totals.realisasi_total)}</td>
                     <td style="border:1px solid #000; padding:5px; text-align:center;">${data.totals.persen}%</td>
                 </tr></tbody></table>`;
         tablesContainer.innerHTML = aggHtml;

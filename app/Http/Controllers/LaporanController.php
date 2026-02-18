@@ -758,20 +758,29 @@ class LaporanController extends Controller
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
 
+        // Dates for calculation
+        $startOfYear = $tahun . '-01-01';
+        $prevEnd = Carbon::parse($start)->subDay()->toDateString(); // Day before start date
+
         // Eager load children recursively
         $roots = KodeRekening::with('children')->whereNull('parent_id')->orderBy('kode')->get();
 
         $report = [];
         foreach ($roots as $root) {
-            $this->processLraNode($root, $tahun, $start, $end, $report);
+            $this->processLraNode($root, $tahun, $start, $end, $startOfYear, $prevEnd, $report);
         }
 
         $totalTarget = 0;
-        $totalReal = 0;
+        $totalRealLalu = 0;
+        $totalRealKini = 0;
+        $totalRealTotal = 0;
+
         foreach ($report as $item) {
             if ($item['level'] == 1) {
                 $totalTarget += $item['target'];
-                $totalReal += $item['realisasi'];
+                $totalRealLalu += $item['realisasi_lalu'];
+                $totalRealKini += $item['realisasi_kini'];
+                $totalRealTotal += $item['realisasi_total'];
             }
         }
 
@@ -779,16 +788,20 @@ class LaporanController extends Controller
             'data' => $report,
             'totals' => [
                 'target' => $totalTarget,
-                'realisasi' => $totalReal,
-                'persen' => $totalTarget > 0 ? round(($totalReal / $totalTarget) * 100, 2) : 0
+                'realisasi_lalu' => $totalRealLalu,
+                'realisasi_kini' => $totalRealKini,
+                'realisasi_total' => $totalRealTotal,
+                'persen' => $totalTarget > 0 ? round(($totalRealTotal / $totalTarget) * 100, 2) : 0
             ]
         ]);
     }
 
-    private function processLraNode($node, $tahun, $start, $end, &$flatList)
+    private function processLraNode($node, $tahun, $start, $end, $startOfYear, $prevEnd, &$flatList)
     {
         $target = 0;
-        $real = 0;
+        $realLalu = 0;
+        $realKini = 0;
+        $realTotal = 0;
 
         $childItems = [];
         if ($node->tipe === 'detail') {
@@ -798,17 +811,30 @@ class LaporanController extends Controller
                 ->value('nilai') ?? 0;
 
             if ($node->sumber_data) {
-                $real = $this->calculateRealisasiDetail($node->sumber_data, $tahun, $start, $end);
+                // Calculate Previous (Jan 1 to Start-1)
+                // If starts on Jan 1, previous is 0
+                if ($start > $startOfYear) {
+                    $realLalu = $this->calculateRealisasiDetail($node->sumber_data, $tahun, $startOfYear, $prevEnd);
+                } else {
+                    $realLalu = 0;
+                }
+
+                // Calculate Current (Start to End)
+                $realKini = $this->calculateRealisasiDetail($node->sumber_data, $tahun, $start, $end);
+
+                $realTotal = $realLalu + $realKini;
             }
         } else {
             foreach ($node->children as $child) {
-                $res = $this->processLraNode($child, $tahun, $start, $end, $childItems);
+                $res = $this->processLraNode($child, $tahun, $start, $end, $startOfYear, $prevEnd, $childItems);
                 $target += $res['target'];
-                $real += $res['realisasi'];
+                $realLalu += $res['realisasi_lalu'];
+                $realKini += $res['realisasi_kini'];
+                $realTotal += $res['realisasi_total'];
             }
         }
 
-        $persen = $target > 0 ? round(($real / $target) * 100, 2) : 0;
+        $persen = $target > 0 ? round(($realTotal / $target) * 100, 2) : 0;
 
         $item = [
             'id' => $node->id,
@@ -817,8 +843,10 @@ class LaporanController extends Controller
             'level' => $node->level,
             'tipe' => $node->tipe,
             'target' => $target,
-            'realisasi' => $real,
-            'selisih' => $target - $real,
+            'realisasi_lalu' => $realLalu,
+            'realisasi_kini' => $realKini,
+            'realisasi_total' => $realTotal,
+            'selisih' => $target - $realTotal,
             'persen' => $persen
         ];
 

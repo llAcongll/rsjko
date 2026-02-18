@@ -13,7 +13,7 @@
 
         body {
             font-family: sans-serif;
-            font-size: 8pt;
+            font-size: 7pt;
             color: #333;
         }
 
@@ -130,8 +130,8 @@
         <h2>RUMAH SAKIT JIWA DAN KETERGANTUNGAN OBAT</h2>
         <h2>ENGKU HAJI DAUD</h2>
         <div class="address">
-            Jalan Indun Suri – Simpang Busung Nomor 1 Tanjung Uban Kode Pos 29152<br>
-            Telepon (0771) 482655, 482796 • Faksimile (0771) 482795<br>
+            Jalan Indun Suri - Simpang Busung Nomor 1 Tanjung Uban Kode Pos 29152<br>
+            Telepon (0771) 482655, 482796, Faksimile (0771) 482795<br>
             Pos-el: rskjoehd@kepriprov.go.id<br>
             Laman: www.rsuehd.kepriprov.go.id
         </div>
@@ -148,11 +148,14 @@
     <table>
         <thead>
             <tr>
-                <th style="width: 15%;">Kode Rekening</th>
-                <th style="width: 35%;">Uraian</th>
-                <th style="width: 20%;">Target Anggaran</th>
-                <th style="width: 20%;">Realisasi</th>
-                <th style="width: 10%;">%</th>
+                <th style="width: 7%; text-align:center;">Kode</th>
+                <th style="width: 25%; text-align:center;">Uraian</th>
+                <th style="width: 12%; text-align:center;">Target</th>
+                <th style="width: 10%; text-align:center;">Real. Lalu</th>
+                <th style="width: 10%; text-align:center;">Real. Kini</th>
+                <th style="width: 11%; text-align:center;">Real. Total</th>
+                <th style="width: 11%; text-align:center;">Selisih</th>
+                <th style="width: 5%; text-align:center;">%</th>
             </tr>
         </thead>
         <tbody>
@@ -170,7 +173,25 @@
                     <td>
                         <div class="curr-cell">
                             <span class="curr-rp">Rp</span>
-                            <span class="curr-val">{{ number_format($item->realisasi, 2, ',', '.') }}</span>
+                            <span class="curr-val">{{ number_format($item->realisasi_lalu, 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="curr-cell">
+                            <span class="curr-rp">Rp</span>
+                            <span class="curr-val">{{ number_format($item->realisasi_kini, 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="curr-cell">
+                            <span class="curr-rp">Rp</span>
+                            <span class="curr-val">{{ number_format($item->realisasi_total, 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="curr-cell">
+                            <span class="curr-rp">Rp</span>
+                            <span class="curr-val">{{ number_format($item->selisih, 2, ',', '.') }}</span>
                         </div>
                     </td>
                     <td class="text-center">{{ number_format($item->persen, 2, ',', '.') }}%</td>
@@ -187,7 +208,26 @@
                 <td>
                     <div class="curr-cell">
                         <span class="curr-rp">Rp</span>
-                        <span class="curr-val">{{ number_format($totals->realisasi, 2, ',', '.') }}</span>
+                        <span class="curr-val">{{ number_format($totals->realisasi_lalu, 2, ',', '.') }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="curr-cell">
+                        <span class="curr-rp">Rp</span>
+                        <span class="curr-val">{{ number_format($totals->realisasi_kini, 2, ',', '.') }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="curr-cell">
+                        <span class="curr-rp">Rp</span>
+                        <span class="curr-val">{{ number_format($totals->realisasi_total, 2, ',', '.') }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="curr-cell">
+                        <span class="curr-rp">Rp</span>
+                        <span
+                            class="curr-val">{{ number_format($totals->target - $totals->realisasi_total, 2, ',', '.') }}</span>
                     </div>
                 </td>
                 <td class="text-center">{{ number_format($totals->persen, 2, ',', '.') }}%</td>

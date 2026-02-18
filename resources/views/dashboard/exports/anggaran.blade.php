@@ -37,7 +37,8 @@
     <div style="text-align: center;">
         <h3>LAPORAN REALISASI ANGGARAN</h3>
         <p>Periode: {{ Carbon::parse($start)->translatedFormat('d F Y') }} s/d
-            {{ Carbon::parse($end)->translatedFormat('d F Y') }}</p>
+            {{ Carbon::parse($end)->translatedFormat('d F Y') }}
+        </p>
     </div>
 
     <table>
@@ -46,7 +47,9 @@
                 <th>Kode Rekening</th>
                 <th>Uraian</th>
                 <th>Target Anggaran</th>
-                <th>Realisasi</th>
+                <th>Realisasi (Lalu)</th>
+                <th>Realisasi (Kini)</th>
+                <th>Realisasi (Total)</th>
                 <th>Selisih</th>
                 <th>%</th>
             </tr>
@@ -58,7 +61,9 @@
                     <td>{{ $item->kode }}</td>
                     <td>{{ $item->nama }}</td>
                     <td class="text-right">Rp {{ number_format($item->target, 2, ',', '.') }}</td>
-                    <td class="text-right">Rp {{ number_format($item->realisasi, 2, ',', '.') }}</td>
+                    <td class="text-right">Rp {{ number_format($item->realisasi_lalu, 2, ',', '.') }}</td>
+                    <td class="text-right">Rp {{ number_format($item->realisasi_kini, 2, ',', '.') }}</td>
+                    <td class="text-right">Rp {{ number_format($item->realisasi_total, 2, ',', '.') }}</td>
                     <td class="text-right">Rp {{ number_format($item->selisih, 2, ',', '.') }}</td>
                     <td class="text-center">{{ number_format($item->persen, 2, ',', '.') }}%</td>
                 </tr>
@@ -66,8 +71,11 @@
             <tr style="background-color: #f1f5f9; font-weight: bold;">
                 <td colspan="2" class="text-center">TOTAL</td>
                 <td class="text-right">Rp {{ number_format($totals->target, 2, ',', '.') }}</td>
-                <td class="text-right">Rp {{ number_format($totals->realisasi, 2, ',', '.') }}</td>
-                <td class="text-right">Rp {{ number_format($totals->target - $totals->realisasi, 2, ',', '.') }}</td>
+                <td class="text-right">Rp {{ number_format($totals->realisasi_lalu, 2, ',', '.') }}</td>
+                <td class="text-right">Rp {{ number_format($totals->realisasi_kini, 2, ',', '.') }}</td>
+                <td class="text-right">Rp {{ number_format($totals->realisasi_total, 2, ',', '.') }}</td>
+                <td class="text-right">Rp {{ number_format($totals->target - $totals->realisasi_total, 2, ',', '.') }}
+                </td>
                 <td class="text-center">{{ number_format($totals->persen, 2, ',', '.') }}%</td>
             </tr>
         </tbody>
