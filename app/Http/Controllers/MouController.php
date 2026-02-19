@@ -11,7 +11,7 @@ class MouController extends Controller
 {
     public function index()
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_MOU_VIEW') || auth()->user()->hasPermission('MASTER_VIEW'), 403);
 
         return view('dashboard.pages.mou');
     }
@@ -20,7 +20,7 @@ class MouController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_MOU_CRUD') || auth()->user()->hasPermission('MASTER_CRUD'), 403);
 
         $request->validate([
             'nama' => 'required|string|max:100',
@@ -36,7 +36,7 @@ class MouController extends Controller
 
     public function update(Request $request, Mou $mou)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_MOU_CRUD') || auth()->user()->hasPermission('MASTER_CRUD'), 403);
 
         $mou->update(
             $request->validate([

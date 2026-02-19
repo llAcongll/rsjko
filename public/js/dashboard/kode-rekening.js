@@ -4,6 +4,7 @@
 
 let editingKodeRekeningId = null;
 let kodeRekeningRaw = [];
+let currentCategory = 'PENDAPATAN';
 
 /* =========================
    DOM BINDING
@@ -26,8 +27,9 @@ function bindKodeRekeningDom() {
 /* =========================
    LOAD TREE (NO ANGGARAN)
 ========================= */
-window.loadKodeRekening = function () {
-  fetch('/dashboard/master/kode-rekening', {
+window.loadKodeRekening = function (category = currentCategory) {
+  currentCategory = category;
+  fetch(`/dashboard/master/kode-rekening?category=${category}`, {
     headers: { Accept: 'application/json' }
   })
     .then(r => r.json())
@@ -53,7 +55,8 @@ function renderNode(node) {
   const wrap = document.createElement('div');
   wrap.className = 'kode-node';
 
-  const canCRUD = window.hasPermission('KODE_REKENING_CRUD');
+  const crudPerm = (currentCategory === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_CRUD' : 'KODE_REKENING_PENDAPATAN_CRUD';
+  const canCRUD = window.hasPermission(crudPerm) || window.hasPermission('KODE_REKENING_CRUD');
 
   const badge = node.tipe === 'detail' && node.sumber_data
     ? `<span class="sumber-badge">${node.sumber_data.replace('_', ' ')}</span>`
@@ -109,7 +112,7 @@ window.openKodeRekeningForm = function (row = null, mode = 'create') {
   krParentId.value = '';
   krLevel.value = 1;
   krTipe.value = 'header';
-  kodeModalTitle.innerText = 'Tambah Kode Rekening';
+  kodeModalTitle.innerText = 'Tambah Kode Rekening ' + (row === 'PENGELUARAN' || currentCategory === 'PENGELUARAN' ? 'Pengeluaran' : 'Pendapatan');
 
   if (mode === 'edit') {
     editingKodeRekeningId = row.id;
@@ -122,6 +125,7 @@ window.openKodeRekeningForm = function (row = null, mode = 'create') {
     kodeModalTitle.innerText = 'Edit Kode Rekening';
   }
 
+  populateSumberDataOptions();
   toggleSumberDataField();
 
   if (mode === 'child') {
@@ -147,6 +151,7 @@ window.submitKodeRekening = function () {
     parent_id: krParentId.value || null,
     level: krLevel.value,
     tipe: krTipe.value,
+    category: currentCategory,
     sumber_data: krSumberData.value || null
   };
 
@@ -191,6 +196,41 @@ window.toggleSumberDataField = function () {
   }
 };
 
+function populateSumberDataOptions() {
+  if (!window.krSumberData) return;
+
+  const currentVal = krSumberData.value;
+  krSumberData.innerHTML = '<option value="">-- Tanpa Mapping --</option>';
+
+  if (currentCategory === 'PENGELUARAN') {
+    const options = [
+      { value: 'PEGAWAI', label: 'PEGAWAI' },
+      { value: 'BARANG_JASA', label: 'BARANG DAN JASA' },
+      { value: 'MODAL', label: 'MODAL ASET LAINNYA' }
+    ];
+    options.forEach(opt => {
+      krSumberData.insertAdjacentHTML('beforeend', `<option value="${opt.value}">${opt.label}</option>`);
+    });
+  } else {
+    const options = [
+      { value: 'PASIEN_UMUM', label: 'PASIEN UMUM' },
+      { value: 'BPJS_JAMINAN', label: 'BPJS DAN JAMINAN' },
+      { value: 'KERJASAMA', label: 'KERJASAMA' },
+      { value: 'PKL', label: 'PRAKTEK KERJA LAPANGAN' },
+      { value: 'MAGANG', label: 'PRAKTEK MAGANG' },
+      { value: 'LAIN_LAIN', label: 'LAIN-LAIN' },
+      { value: 'PENELITIAN', label: 'PENELITIAN' },
+      { value: 'PERMINTAAN_DATA', label: 'PERMINTAAN DATA' },
+      { value: 'STUDY_BANDING', label: 'STUDY BANDING' }
+    ];
+    options.forEach(opt => {
+      krSumberData.insertAdjacentHTML('beforeend', `<option value="${opt.value}">${opt.label}</option>`);
+    });
+  }
+
+  krSumberData.value = currentVal;
+}
+
 /* =========================
    DELETE
 ========================= */
@@ -227,7 +267,8 @@ document.addEventListener('DOMContentLoaded', bindKodeRekeningDom);
    MENU HANDLER - KODE REKENING
    Uses loadContent() from app.js for proper AJAX loading
 ===================================================== */
-window.openKodeRekening = async function (btn) {
+window.openKodeRekening = async function (category = 'PENDAPATAN', btn) {
+  currentCategory = category;
   if (typeof window.setActiveMenu === 'function') {
     window.setActiveMenu(btn);
   }
@@ -236,12 +277,12 @@ window.openKodeRekening = async function (btn) {
   }
 
   // Muat konten halaman via AJAX
-  const ok = await window.loadContent('master/kode-rekening');
+  const ok = await window.loadContent(`master/kode-rekening?category=${category}`);
   if (!ok) return;
 
   // Bind DOM elements for the modal
   bindKodeRekeningDom();
 
   // Load the tree data
-  loadKodeRekening();
+  loadKodeRekening(category);
 };

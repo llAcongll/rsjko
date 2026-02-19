@@ -50,6 +50,8 @@
             (View)</p>
           <div class="permission-item"><label><input type="checkbox" value="LAPORAN_PENDAPATAN"> Laporan
               Pendapatan</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="LAPORAN_PENGELUARAN"> Laporan
+              Pengeluaran</label></div>
           <div class="permission-item"><label><input type="checkbox" value="LAPORAN_REKON"> Laporan Rekon Bank</label>
           </div>
           <div class="permission-item"><label><input type="checkbox" value="LAPORAN_PIUTANG"> Laporan Piutang</label>
@@ -74,16 +76,39 @@
           <div class="permission-item"><label><input type="checkbox" value="PENYESUAIAN_CRUD"> Kelola
               Penyesuaian</label></div>
 
-          <p style="font-weight: 600; font-size: 12px; margin-top: 12px; margin-bottom: 8px; color: #1e293b;">Master &
-            Pengaturan</p>
-          <div class="permission-item"><label><input type="checkbox" value="MASTER_VIEW"> Lihat Master Data</label>
+          <p style="font-weight: 600; font-size: 12px; margin-top: 12px; margin-bottom: 8px; color: #1e293b;">
+            Pengeluaran (Belanja)</p>
+          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_VIEW"> Lihat Data</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_CREATE"> Tambah Data</label>
           </div>
-          <div class="permission-item"><label><input type="checkbox" value="MASTER_CRUD"> Kelola Master Data</label>
+          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_UPDATE"> Edit Data</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_DELETE"> Hapus Data</label>
           </div>
-          <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_VIEW"> Lihat Kode
-              Rekening</label></div>
-          <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_CRUD"> Kelola Kode
-              Rekening</label></div>
+
+          <p style="font-weight: 600; font-size: 12px; margin-top: 12px; margin-bottom: 8px; color: #1e293b;">Master
+            Data (Dasar)</p>
+          <div class="permission-item"><label><input type="checkbox" value="MASTER_RUANGAN_VIEW"> Lihat Ruangan</label>
+          </div>
+          <div class="permission-item"><label><input type="checkbox" value="MASTER_RUANGAN_CRUD"> Kelola Ruangan</label>
+          </div>
+          <div style="margin-top: 4px;"></div>
+          <div class="permission-item"><label><input type="checkbox" value="MASTER_PERUSAHAAN_VIEW"> Lihat
+              Perusahaan/Penjamin</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="MASTER_PERUSAHAAN_CRUD"> Kelola
+              Perusahaan</label></div>
+          <div style="margin-top: 4px;"></div>
+          <div class="permission-item"><label><input type="checkbox" value="MASTER_MOU_VIEW"> Lihat MOU/Pihak
+              Ke-3</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="MASTER_MOU_CRUD"> Kelola MOU</label></div>
+          <div style="margin-top: 4px;"></div>
+          <p style="font-weight: 600; font-size: 12px; margin-top: 12px; margin-bottom: 8px; color: #1e293b;">Kode Rekening & Anggaran</p>
+          <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">PENDAPATAN</div>
+          <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_PENDAPATAN_VIEW"> Lihat Rekening & Anggaran</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_PENDAPATAN_CRUD"> Kelola Rekening & Anggaran</label></div>
+          
+          <div style="font-size: 11px; font-weight: 700; color: #64748b; margin: 8px 0 4px;">PENGELUARAN</div>
+          <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_PENGELUARAN_VIEW"> Lihat Rekening & Anggaran</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_PENGELUARAN_CRUD"> Kelola Rekening & Anggaran</label></div>
         </div>
 
         {{-- PENDAPATAN --}}

@@ -3,7 +3,7 @@
   {{-- HEADER --}}
   <div class="dashboard-header">
     <div class="dashboard-header-left">
-      <h2>Rekening Koran</h2>
+      <h2><i class="ph ph-article"></i> Rekening Koran</h2>
       <p>Kelola dan monitor histori transaksi rekening bank</p>
     </div>
 

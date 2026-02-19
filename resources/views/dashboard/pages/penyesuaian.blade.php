@@ -3,7 +3,7 @@
     {{-- HEADER --}}
     <div class="dashboard-header">
         <div class="dashboard-header-left">
-            <h2>Potongan & Adm Bank</h2>
+            <h2><i class="ph ph-scissors"></i> Potongan & Adm Bank</h2>
             <p>Kelola potongan tagihan dan biaya administrasi bank</p>
         </div>
 

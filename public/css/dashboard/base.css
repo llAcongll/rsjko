@@ -163,6 +163,21 @@ body {
   opacity: 0.8;
 }
 
+.submenu-child button i {
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+.submenu-header {
+  padding: 12px 14px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.7;
+}
+
 .submenu-child button.active {
   background: rgba(255, 255, 255, 0.05);
   color: var(--sidebar-active);
@@ -697,6 +712,22 @@ table tbody td {
   color: #dc2626;
 }
 
+.bg-slate-900 {
+  background-color: #0f172a;
+}
+
+.bg-slate-800 {
+  background-color: #1e293b;
+}
+
+.text-slate-200 {
+  color: #e2e8f0;
+}
+
+.text-slate-300 {
+  color: #cbd5e1;
+}
+
 .uppercase {
   text-transform: uppercase;
 }
@@ -876,7 +907,10 @@ table tbody td {
 
   width: 100%;
   max-width: 440px;
-  padding: 28px 30px;
+  max-height: 90vh;
+  padding: 32px;
+  position: relative;
+  overflow-y: auto;
 
   box-shadow:
     0 30px 60px rgba(0, 0, 0, .28),
@@ -888,6 +922,11 @@ table tbody td {
   transition:
     transform .3s cubic-bezier(.22, 1, .36, 1),
     opacity .25s ease;
+}
+
+/* Detail Box can be wider */
+.confirm-box.detail-box {
+  max-width: 600px;
 }
 
 .confirm-overlay[style*="opacity: 1"] .confirm-box,
@@ -987,36 +1026,28 @@ table tbody td {
 .detail-grid {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 0;
   margin-top: 18px;
 }
 
 .detail-row {
   display: grid;
-  grid-template-columns: 160px 1fr;
+  grid-template-columns: 180px 1fr;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #e5e7eb;
-  transition: all 0.2s ease;
+  padding: 14px 0;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .detail-row:last-child {
   border-bottom: none;
 }
 
-.detail-row:hover {
-  background: #f8fafc;
-  border-radius: 10px;
-  padding-left: 10px;
-  padding-right: 10px;
-  margin-left: -10px;
-  margin-right: -10px;
-}
-
 .detail-row .label {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .detail-row .value {
@@ -1026,7 +1057,7 @@ table tbody td {
   text-align: right;
   white-space: normal;
   word-break: break-word;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 /* Badge in Details */

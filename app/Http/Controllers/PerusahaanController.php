@@ -11,7 +11,7 @@ class PerusahaanController extends Controller
 {
     public function index()
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_PERUSAHAAN_VIEW') || auth()->user()->hasPermission('MASTER_VIEW'), 403);
 
         return view('dashboard.pages.perusahaan');
     }
@@ -20,7 +20,7 @@ class PerusahaanController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_PERUSAHAAN_CRUD') || auth()->user()->hasPermission('MASTER_CRUD'), 403);
 
         $request->validate([
             'nama' => 'required|string|max:100',
@@ -36,7 +36,7 @@ class PerusahaanController extends Controller
 
     public function update(Request $request, Perusahaan $perusahaan)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_PERUSAHAAN_CRUD') || auth()->user()->hasPermission('MASTER_CRUD'), 403);
 
         $perusahaan->update(
             $request->validate([

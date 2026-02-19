@@ -14,6 +14,7 @@ class KodeRekening extends Model
         'parent_id',
         'level',
         'tipe',
+        'category',
         'sumber_data',
         'is_active'
     ];
@@ -25,7 +26,7 @@ class KodeRekening extends Model
 
     public function children()
     {
-        return $this->hasMany(self::class, 'parent_id')->with('children');
+        return $this->hasMany(self::class, 'parent_id')->orderBy('kode')->with('children');
     }
 
     public function anggaran()

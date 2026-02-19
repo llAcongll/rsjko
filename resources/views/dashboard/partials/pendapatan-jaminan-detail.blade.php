@@ -1,5 +1,5 @@
 <div id="pendapatanJaminanDetailModal" class="confirm-overlay">
-    <div class="confirm-box detail-box" style="max-width: 600px;">
+    <div class="confirm-box detail-box">
         <h3 class="modal-title">
             <i class="ph ph-file-text"></i> Detail Pendapatan Jaminan
         </h3>

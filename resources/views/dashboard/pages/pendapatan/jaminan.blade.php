@@ -3,7 +3,7 @@
     {{-- HEADER --}}
     <div class="dashboard-header">
         <div class="dashboard-header-left">
-            <h2>Pendapatan Jaminan</h2>
+            <h2><i class="ph ph-shield-check"></i> Pendapatan Jaminan</h2>
             <p>Kelola pendapatan dari jaminan asuransi dan perusahaan mitra</p>
         </div>
 

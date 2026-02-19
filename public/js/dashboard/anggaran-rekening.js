@@ -5,6 +5,7 @@
 ===================================================== */
 
 let activeAnggaranTahun = null;
+let currentCategoryAnggaran = 'PENDAPATAN';
 
 /* =========================
    INIT — called after AJAX content load
@@ -16,18 +17,19 @@ let activeAnggaranTahun = null;
 /* =========================
    EVENT
 ========================= */
-window.reloadAnggaran = function () {
+window.reloadAnggaran = function (category = currentCategoryAnggaran) {
   const tahun = document.getElementById('anggaranTahun').value;
-  loadAnggaran(tahun);
+  loadAnggaran(tahun, category);
 };
 
 /* =========================
    LOAD DATA
 ========================= */
-function loadAnggaran(tahun) {
+function loadAnggaran(tahun, category = currentCategoryAnggaran) {
   activeAnggaranTahun = tahun;
+  currentCategoryAnggaran = category;
 
-  fetch(`/dashboard/master/kode-rekening-anggaran/${tahun}`, {
+  fetch(`/dashboard/master/kode-rekening-anggaran/${tahun}?category=${category}`, {
     headers: { Accept: 'application/json' }
   })
     .then(r => {
@@ -60,7 +62,8 @@ function renderAnggaranNode(node, level) {
   row.className = `anggaran-row ${isHeader ? 'header-node' : 'detail-node'}`;
   row.style.paddingLeft = (level * 24 + 16) + 'px';
 
-  const canCRUD = window.hasPermission('KODE_REKENING_CRUD');
+  const crudPerm = (currentCategoryAnggaran === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_CRUD' : 'KODE_REKENING_PENDAPATAN_CRUD';
+  const canCRUD = window.hasPermission(crudPerm) || window.hasPermission('KODE_REKENING_CRUD');
 
   row.innerHTML = `
     <div class="col-kode">${node.kode}</div>
@@ -217,7 +220,8 @@ function csrfToken() {
    MENU HANDLER – ANGGARAN PENDAPATAN
    Uses loadContent() from app.js for proper AJAX loading
 ===================================================== */
-window.openAnggaranRekening = async function (btn) {
+window.openAnggaranRekening = async function (category = 'PENDAPATAN', btn) {
+  currentCategoryAnggaran = category;
   if (typeof window.setActiveMenu === 'function') {
     window.setActiveMenu(btn);
   }
@@ -226,14 +230,15 @@ window.openAnggaranRekening = async function (btn) {
   }
 
   // Muat konten halaman via AJAX
-  const ok = await window.loadContent('master/kode-rekening-anggaran');
+  const page = (category === 'PENGELUARAN') ? 'pengeluaran/ANGGARAN' : 'pendapatan/ANGGARAN';
+  const ok = await window.loadContent(page);
   if (!ok) return;
 
-  // Default tahun from the select or fallback to 2026
-  const tahun = document.getElementById('anggaranTahun')?.value || 2026;
+  // Default tahun from the select or fallback current year
+  const tahun = document.getElementById('anggaranTahun')?.value || new Date().getFullYear();
 
   if (typeof loadAnggaran === 'function') {
-    loadAnggaran(tahun);
+    loadAnggaran(tahun, category);
   }
 };
 

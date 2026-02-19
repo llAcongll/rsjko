@@ -17,9 +17,16 @@ class KodeRekeningController extends Controller
     ========================= */
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('KODE_REKENING_VIEW'), 403);
+        $category = $request->get('category', 'PENDAPATAN');
+        $permission = ($category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_VIEW' : 'KODE_REKENING_PENDAPATAN_VIEW';
+        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->hasPermission('KODE_REKENING_VIEW'), 403);
+
         if ($request->expectsJson()) {
-            return $this->buildTree();
+            return $this->buildTree($category);
+        }
+
+        if ($category === 'PENGELUARAN') {
+            return view('dashboard.master.kode-rekening.expenditure');
         }
 
         return view('dashboard.master.kode-rekening.index');
@@ -28,9 +35,9 @@ class KodeRekeningController extends Controller
     /* =========================
        BUILD TREE (FLAT → TREE)
     ========================= */
-    private function buildTree()
+    private function buildTree($category = 'PENDAPATAN')
     {
-        $all = KodeRekening::orderBy('kode')->get();
+        $all = KodeRekening::where('category', $category)->orderBy('kode')->get();
 
         $items = [];
         foreach ($all as $row) {
@@ -65,14 +72,17 @@ class KodeRekeningController extends Controller
     ========================= */
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('KODE_REKENING_CRUD'), 403);
+        $category = $request->get('category');
+        $permission = ($category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_CRUD' : 'KODE_REKENING_PENDAPATAN_CRUD';
+        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->hasPermission('KODE_REKENING_CRUD'), 403);
         $data = $request->validate([
-            'kode' => ['required', 'string', 'max:50', 'unique:kode_rekening,kode'],
+            'kode' => ['required', 'string', 'max:50'],
             'nama' => ['required', 'string', 'max:255'],
             'parent_id' => ['nullable', 'integer', 'exists:kode_rekening,id'],
             'level' => ['required', 'integer', 'min:1'],
             'tipe' => ['required', Rule::in(['header', 'detail'])],
-            'sumber_data' => ['nullable', 'string', Rule::in(['PASIEN_UMUM', 'BPJS_JAMINAN', 'KERJASAMA', 'PKL', 'MAGANG', 'LAIN_LAIN', 'PENELITIAN', 'PERMINTAAN_DATA', 'STUDY_BANDING'])],
+            'category' => ['required', Rule::in(['PENDAPATAN', 'PENGELUARAN'])],
+            'sumber_data' => ['nullable', 'string'],
         ]);
 
         // Validasi level anak
@@ -97,21 +107,22 @@ class KodeRekeningController extends Controller
     ========================= */
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('KODE_REKENING_CRUD'), 403);
         $rekening = KodeRekening::findOrFail($id);
+        $permission = ($rekening->category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_CRUD' : 'KODE_REKENING_PENDAPATAN_CRUD';
+        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->hasPermission('KODE_REKENING_CRUD'), 403);
 
         $data = $request->validate([
             'kode' => [
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('kode_rekening', 'kode')->ignore($rekening->id),
             ],
             'nama' => ['required', 'string', 'max:255'],
             'parent_id' => ['nullable', 'integer', 'exists:kode_rekening,id'],
             'level' => ['required', 'integer', 'min:1'],
             'tipe' => ['required', Rule::in(['header', 'detail'])],
-            'sumber_data' => ['nullable', 'string', Rule::in(['PASIEN_UMUM', 'BPJS_JAMINAN', 'KERJASAMA', 'PKL', 'MAGANG', 'LAIN_LAIN', 'PENELITIAN', 'PERMINTAAN_DATA', 'STUDY_BANDING'])],
+            'category' => ['required', Rule::in(['PENDAPATAN', 'PENGELUARAN'])],
+            'sumber_data' => ['nullable', 'string'],
         ]);
 
         // ❌ Tidak boleh ubah ke DETAIL jika masih punya anak
@@ -132,7 +143,9 @@ class KodeRekeningController extends Controller
 
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('KODE_REKENING_CRUD'), 403);
+        $rekening = KodeRekening::findOrFail($id);
+        $permission = ($rekening->category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_CRUD' : 'KODE_REKENING_PENDAPATAN_CRUD';
+        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->hasPermission('KODE_REKENING_CRUD'), 403);
         try {
             $rekening = KodeRekening::findOrFail($id);
 
@@ -145,12 +158,12 @@ class KodeRekeningController extends Controller
 
             // 2. Cek apakah sudah ada data Transaksi Pendapatan (Realisasi)
             // Ini adalah data riil yang tidak boleh hilang referensinya.
-            $tables = ['pendapatan_umum', 'pendapatan_bpjs', 'pendapatan_jaminan', 'pendapatan_lain', 'pendapatan_kerjasama'];
+            $tables = ['pendapatan_umum', 'pendapatan_bpjs', 'pendapatan_jaminan', 'pendapatan_lain', 'pendapatan_kerjasama', 'pengeluaran'];
             foreach ($tables as $table) {
                 if (Schema::hasColumn($table, 'kode_rekening_id')) {
                     if (DB::table($table)->where('kode_rekening_id', $id)->exists()) {
                         return response()->json([
-                            'message' => "Tidak bisa dihapus karena sudah memiliki data transaksi pendapatan riil. Silakan hapus data pendapatan terkait jika ingin menghapus kode ini."
+                            'message' => "Tidak bisa dihapus karena sudah memiliki data transaksi rill. Silakan hapus data terkait jika ingin menghapus kode ini."
                         ], 422);
                     }
                 }
@@ -181,11 +194,16 @@ class KodeRekeningController extends Controller
     // =========================
     // TREE + ANGARAN (READ ONLY)
     // =========================
-    public function treeAnggaran($tahun)
+    public function treeAnggaran($tahun, Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('KODE_REKENING_VIEW'), 403);
+        $category = $request->get('category', 'PENDAPATAN');
+        $permission = ($category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_VIEW' : 'KODE_REKENING_PENDAPATAN_VIEW';
+        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->hasPermission('KODE_REKENING_VIEW'), 403);
+
         $roots = KodeRekening::with('children.children')
             ->whereNull('parent_id')
+            ->where('category', $category)
+            ->orderBy('kode')
             ->get();
 
         return $roots->map(function ($r) use ($tahun) {
@@ -234,7 +252,7 @@ class KodeRekeningController extends Controller
         if ($rekening->tipe === 'detail') {
             $totalAmount = 0;
 
-            if ($rekening->sumber_data) {
+            if ($rekening->category === 'PENDAPATAN' && $rekening->sumber_data) {
                 $totalAmount = 0;
                 switch ($rekening->sumber_data) {
                     case 'PASIEN_UMUM':
@@ -276,6 +294,20 @@ class KodeRekeningController extends Controller
                         break;
                 }
                 return (int) $totalAmount;
+            }
+
+            if ($rekening->category === 'PENGELUARAN') {
+                if ($rekening->sumber_data) {
+                    return (int) DB::table('pengeluaran')
+                        ->where('kategori', $rekening->sumber_data)
+                        ->whereYear('tanggal', $tahun)
+                        ->sum('nominal');
+                }
+
+                return (int) DB::table('pengeluaran')
+                    ->where('kode_rekening_id', $rekening->id)
+                    ->whereYear('tanggal', $tahun)
+                    ->sum('nominal');
             }
         }
 

@@ -3,7 +3,7 @@
   {{-- HEADER --}}
   <div class="dashboard-header">
     <div class="dashboard-header-left">
-      <h2>Pendapatan Pasien Umum</h2>
+      <h2><i class="ph ph-user"></i> Pendapatan Pasien Umum</h2>
       <p>Kelola dan monitor penerimaan kas dari pasien kategori umum</p>
     </div>
 

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\PendapatanJaminan;
 use App\Models\Ruangan;
 use App\Models\Perusahaan;
+use App\Models\ActivityLog;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -112,7 +113,16 @@ class PendapatanJaminanController extends Controller
         }
         $data['total'] = ($data['rs_tindakan'] ?? 0) + ($data['rs_obat'] ?? 0) + ($data['pelayanan_tindakan'] ?? 0) + ($data['pelayanan_obat'] ?? 0);
         $data['tahun'] = session('tahun_anggaran');
-        PendapatanJaminan::create($data);
+        $pendapatan = PendapatanJaminan::create($data);
+
+        ActivityLog::log(
+            'CREATE',
+            'PENDAPATAN_JAMINAN',
+            "Menambah pendapatan jaminan pasien {$pendapatan->nama_pasien}",
+            $pendapatan->id,
+            null,
+            $pendapatan->toArray()
+        );
         return response()->json(['success' => true]);
     }
 
@@ -145,14 +155,35 @@ class PendapatanJaminanController extends Controller
             $data['metode_detail'] = 'SETOR_TUNAI';
         }
         $data['total'] = ($data['rs_tindakan'] ?? 0) + ($data['rs_obat'] ?? 0) + ($data['pelayanan_tindakan'] ?? 0) + ($data['pelayanan_obat'] ?? 0);
+        $oldValues = $pendapatan->toArray();
         $pendapatan->update($data);
+
+        ActivityLog::log(
+            'UPDATE',
+            'PENDAPATAN_JAMINAN',
+            "Mengubah pendapatan jaminan pasien {$pendapatan->nama_pasien}",
+            $pendapatan->id,
+            $oldValues,
+            $pendapatan->toArray()
+        );
         return response()->json(['success' => true]);
     }
 
     public function destroy($id)
     {
         abort_unless(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CRUD'), 403);
-        PendapatanJaminan::findOrFail($id)->delete();
+        $pendapatan = PendapatanJaminan::findOrFail($id);
+        $oldValues = $pendapatan->toArray();
+        $pendapatan->delete();
+
+        ActivityLog::log(
+            'DELETE',
+            'PENDAPATAN_JAMINAN',
+            "Menghapus pendapatan jaminan pasien {$pendapatan->nama_pasien}",
+            $id,
+            $oldValues,
+            null
+        );
         return response()->json(['success' => true]);
     }
 

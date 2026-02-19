@@ -10,6 +10,53 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class LaporanController extends Controller
 {
+    public function getPengeluaran(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_PENGELUARAN') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
+        $start = $request->get('start', '2026-01-01');
+        $end = $request->get('end', Carbon::now()->toDateString());
+        $tahun = session('tahun_anggaran');
+
+        $query = DB::table('pengeluaran')
+            ->join('kode_rekening', 'pengeluaran.kode_rekening_id', '=', 'kode_rekening.id')
+            ->whereYear('pengeluaran.tanggal', $tahun)
+            ->whereBetween('pengeluaran.tanggal', [$start, $end]);
+
+        // Detail per Account
+        $details = (clone $query)
+            ->select(
+                'kode_rekening.kode',
+                'kode_rekening.nama',
+                DB::raw('SUM(nominal) as total'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('kode_rekening.kode', 'kode_rekening.nama')
+            ->orderBy('kode_rekening.kode')
+            ->get();
+
+        // Summary per Category
+        $summary = DB::table('pengeluaran')
+            ->whereYear('tanggal', $tahun)
+            ->whereBetween('tanggal', [$start, $end])
+            ->select(
+                'kategori',
+                DB::raw('SUM(nominal) as total'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->groupBy('kategori')
+            ->get()
+            ->keyBy('kategori');
+
+        return response()->json([
+            'data' => $details,
+            'summary' => $summary,
+            'period' => [
+                'start' => $start,
+                'end' => $end
+            ]
+        ]);
+    }
+
     public function index(Request $request)
     {
         abort_unless(auth()->user()->hasPermission('LAPORAN_PENDAPATAN') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
@@ -763,7 +810,17 @@ class LaporanController extends Controller
         $prevEnd = Carbon::parse($start)->subDay()->toDateString(); // Day before start date
 
         // Eager load children recursively
-        $roots = KodeRekening::with('children')->whereNull('parent_id')->orderBy('kode')->get();
+        $category = $request->get('category', 'SEMUA');
+        $query = KodeRekening::with('children')
+            ->whereNull('parent_id')
+            ->orderBy('category', 'asc') // PENDAPATAN first
+            ->orderBy('kode');
+
+        if ($category !== 'SEMUA') {
+            $query->where('category', $category);
+        }
+
+        $roots = $query->get();
 
         $report = [];
         foreach ($roots as $root) {
@@ -775,25 +832,69 @@ class LaporanController extends Controller
         $totalRealKini = 0;
         $totalRealTotal = 0;
 
+        $pendTotals = ['target' => 0, 'real' => 0];
+        $pengTotals = ['target' => 0, 'real' => 0];
+
         foreach ($report as $item) {
-            if ($item['level'] == 1) {
-                $totalTarget += $item['target'];
-                $totalRealLalu += $item['realisasi_lalu'];
-                $totalRealKini += $item['realisasi_kini'];
-                $totalRealTotal += $item['realisasi_total'];
+            // Sum if it's a top-level category (Pendapatan or Belanja)
+            // Assuming 4 and 5 are now our roots.
+            // We check against the IDs of the roots we fetched.
+            $isRoot = $roots->contains('id', $item['id']);
+
+            if ($isRoot) {
+                // Collect sub-totals
+                if ($item['category'] === 'PENDAPATAN') {
+                    $pendTotals['target'] += $item['target'];
+                    $pendTotals['real'] += $item['realisasi_total'];
+                } else {
+                    $pengTotals['target'] += $item['target'];
+                    $pengTotals['real'] += $item['realisasi_total'];
+                }
+
+                $multiplier = ($item['category'] === 'PENGELUARAN') ? -1 : 1;
+
+                if ($category === 'SEMUA') {
+                    $totalTarget += ($item['target'] * $multiplier);
+                    $totalRealLalu += ($item['realisasi_lalu'] * $multiplier);
+                    $totalRealKini += ($item['realisasi_kini'] * $multiplier);
+                    $totalRealTotal += ($item['realisasi_total'] * $multiplier);
+                } else {
+                    $totalTarget += $item['target'];
+                    $totalRealLalu += $item['realisasi_lalu'];
+                    $totalRealKini += $item['realisasi_kini'];
+                    $totalRealTotal += $item['realisasi_total'];
+                }
             }
         }
 
-        return response()->json([
+        $res = [
             'data' => $report,
+            'category' => $category,
             'totals' => [
                 'target' => $totalTarget,
                 'realisasi_lalu' => $totalRealLalu,
                 'realisasi_kini' => $totalRealKini,
                 'realisasi_total' => $totalRealTotal,
-                'persen' => $totalTarget > 0 ? round(($totalRealTotal / $totalTarget) * 100, 2) : 0
+                'persen' => $totalTarget != 0 ? round(($totalRealTotal / abs($totalTarget)) * 100, 2) : 0
             ]
-        ]);
+        ];
+
+        if ($category === 'SEMUA') {
+            $res['sub_totals'] = [
+                'pendapatan' => [
+                    'target' => $pendTotals['target'],
+                    'real' => $pendTotals['real'],
+                    'persen' => $pendTotals['target'] > 0 ? round(($pendTotals['real'] / $pendTotals['target']) * 100, 2) : 0
+                ],
+                'pengeluaran' => [
+                    'target' => $pengTotals['target'],
+                    'real' => $pengTotals['real'],
+                    'persen' => $pengTotals['target'] > 0 ? round(($pengTotals['real'] / $pengTotals['target']) * 100, 2) : 0
+                ]
+            ];
+        }
+
+        return response()->json($res);
     }
 
     private function processLraNode($node, $tahun, $start, $end, $startOfYear, $prevEnd, &$flatList)
@@ -823,6 +924,19 @@ class LaporanController extends Controller
                 $realKini = $this->calculateRealisasiDetail($node->sumber_data, $tahun, $start, $end);
 
                 $realTotal = $realLalu + $realKini;
+            } elseif ($node->category === 'PENGELUARAN') {
+                // Calculate by ID directly if no mapping
+                if ($start > $startOfYear) {
+                    $realLalu = DB::table('pengeluaran')
+                        ->where('kode_rekening_id', $node->id)
+                        ->whereBetween('tanggal', [$startOfYear, $prevEnd])
+                        ->sum('nominal');
+                }
+                $realKini = DB::table('pengeluaran')
+                    ->where('kode_rekening_id', $node->id)
+                    ->whereBetween('tanggal', [$start, $end])
+                    ->sum('nominal');
+                $realTotal = $realLalu + $realKini;
             }
         } else {
             foreach ($node->children as $child) {
@@ -842,6 +956,7 @@ class LaporanController extends Controller
             'nama' => $node->nama,
             'level' => $node->level,
             'tipe' => $node->tipe,
+            'category' => $node->category,
             'target' => $target,
             'realisasi_lalu' => $realLalu,
             'realisasi_kini' => $realKini,
@@ -907,6 +1022,14 @@ class LaporanController extends Controller
                     ->where('transaksi', 'NOT LIKE', '%Permintaan Data%')
                     ->where('transaksi', 'NOT LIKE', '%Study Banding%')
                     ->sum('total');
+                break;
+            case 'PEGAWAI':
+            case 'BARANG_JASA':
+            case 'MODAL':
+                $total = DB::table('pengeluaran')
+                    ->where('kategori', $sumberData)
+                    ->whereBetween('tanggal', [$startDate, $endDate])
+                    ->sum('nominal');
                 break;
         }
         return $total;
@@ -990,7 +1113,13 @@ class LaporanController extends Controller
 
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=\"Laporan_Realisasi_Anggaran_{$start}_to_{$end}.xls\"");
-        return view('dashboard.exports.anggaran', ['data' => $res->data, 'totals' => $res->totals, 'start' => $start, 'end' => $end]);
+        return view('dashboard.exports.anggaran', [
+            'data' => $res->data,
+            'totals' => $res->totals,
+            'start' => $start,
+            'end' => $end,
+            'category' => $request->get('category', 'PENDAPATAN')
+        ]);
     }
 
     public function exportAnggaranPdf(Request $request)
@@ -1000,7 +1129,36 @@ class LaporanController extends Controller
         $end = $request->get('end', Carbon::now()->toDateString());
         $res = $this->getAnggaran($request)->getData();
 
-        $pdf = Pdf::loadView('dashboard.exports.anggaran_pdf', ['data' => $res->data, 'totals' => $res->totals, 'start' => $start, 'end' => $end]);
+        $pdf = Pdf::loadView('dashboard.exports.anggaran_pdf', [
+            'data' => $res->data,
+            'totals' => $res->totals,
+            'start' => $start,
+            'end' => $end,
+            'category' => $request->get('category', 'PENDAPATAN')
+        ]);
         return $pdf->download("Laporan_Realisasi_Anggaran_{$start}_to_{$end}.pdf");
+    }
+
+    public function exportPengeluaran(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT'), 403);
+        $start = $request->get('start', '2026-01-01');
+        $end = $request->get('end', Carbon::now()->toDateString());
+        $res = $this->getPengeluaran($request)->getData();
+
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=\"Laporan_Pengeluaran_{$start}_to_{$end}.xls\"");
+        return view('dashboard.exports.pengeluaran', ['data' => $res->data, 'summary' => $res->summary, 'start' => $start, 'end' => $end]);
+    }
+
+    public function exportPengeluaranPdf(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'), 403);
+        $start = $request->get('start', '2026-01-01');
+        $end = $request->get('end', Carbon::now()->toDateString());
+        $res = $this->getPengeluaran($request)->getData();
+
+        $pdf = Pdf::loadView('dashboard.exports.pengeluaran_pdf', ['data' => $res->data, 'summary' => (array) $res->summary, 'start' => $start, 'end' => $end]);
+        return $pdf->download("Laporan_Pengeluaran_{$start}_to_{$end}.pdf");
     }
 }

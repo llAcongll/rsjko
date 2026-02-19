@@ -3,7 +3,7 @@
     {{-- HEADER --}}
     <div class="dashboard-header">
         <div class="dashboard-header-left">
-            <h2>Piutang Usaha</h2>
+            <h2><i class="ph ph-file-text"></i> Piutang Usaha</h2>
             <p>Kelola data piutang dan tagihan perusahaan/asuransi</p>
         </div>
 

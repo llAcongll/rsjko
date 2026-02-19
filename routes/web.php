@@ -19,6 +19,8 @@ use App\Http\Controllers\PerusahaanController;
 use App\Http\Controllers\MouController;
 use App\Http\Controllers\PiutangController;
 use App\Http\Controllers\PenyesuaianPendapatanController;
+use App\Http\Controllers\PengeluaranController;
+use App\Http\Controllers\ActivityLogController;
 
 Route::get('/health', function () {
     return response('OK', 200);
@@ -67,6 +69,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/summary', [DashboardController::class, 'summary']);
         Route::get('/chart-7-days', [DashboardController::class, 'chart7Days']);
         Route::get('/chart-rooms', [DashboardController::class, 'chartRooms']);
+        Route::get('/chart-expenditure', [DashboardController::class, 'chartExpenditure']);
     });
 });
 
@@ -98,7 +101,7 @@ Route::middleware('auth')
         // JSON list (table + dropdown)
         Route::get('/ruangan-list', [RuanganController::class, 'list']);
 
-        Route::middleware('role:ADMIN')
+        Route::middleware('role:ADMIN,USER')
             ->prefix('ruangans')
             ->group(function () {
 
@@ -122,7 +125,7 @@ Route::middleware('auth')
         // JSON list (table + dropdown)
         Route::get('/perusahaan-list', [PerusahaanController::class, 'list']);
 
-        Route::middleware('role:ADMIN')
+        Route::middleware('role:ADMIN,USER')
             ->prefix('perusahaans')
             ->group(function () {
 
@@ -146,7 +149,7 @@ Route::middleware('auth')
         // JSON list (table + dropdown)
         Route::get('/mou-list', [MouController::class, 'list']);
 
-        Route::middleware('role:ADMIN')
+        Route::middleware('role:ADMIN,USER')
             ->prefix('mous')
             ->group(function () {
 
@@ -284,7 +287,21 @@ Route::middleware(['auth', 'role:ADMIN,USER'])->group(function () {
         Route::put('/{id}', [PenyesuaianPendapatanController::class, 'update']);
         Route::delete('/{id}', [PenyesuaianPendapatanController::class, 'destroy']);
     });
+
+    /*
+    |--------------------------------------------------------------------------
+    | PENGELUARAN
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('dashboard/pengeluaran')->group(function () {
+        Route::get('/', [PengeluaranController::class, 'index']);
+        Route::post('/', [PengeluaranController::class, 'store']);
+        Route::get('/{id}', [PengeluaranController::class, 'show']);
+        Route::put('/{id}', [PengeluaranController::class, 'update']);
+        Route::delete('/{id}', [PengeluaranController::class, 'destroy']);
+    });
 });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -323,6 +340,12 @@ Route::middleware('auth')
         */
         Route::post('/anggaran', [AnggaranRekeningController::class, 'store']);
         Route::get('/anggaran/rincian/{rekening_id}/{tahun}', [AnggaranRekeningController::class, 'showRincian']);
+
+        Route::middleware('role:ADMIN')->group(function () {
+            Route::get('/master/activity-logs', [ActivityLogController::class, 'index']);
+            Route::delete('/master/activity-logs/purge', [ActivityLogController::class, 'purge']);
+            Route::delete('/master/activity-logs/{id}', [ActivityLogController::class, 'destroy']);
+        });
     });
 
 /*
@@ -349,6 +372,9 @@ Route::get('/dashboard/laporan/rekon', [LaporanController::class, 'getRekon'])->
 Route::get('/dashboard/laporan/piutang', [LaporanController::class, 'getPiutang'])->middleware('auth');
 Route::get('/dashboard/laporan/mou', [LaporanController::class, 'getMou'])->middleware('auth');
 Route::get('/dashboard/laporan/anggaran', [LaporanController::class, 'getAnggaran'])->middleware('auth');
+Route::get('/dashboard/laporan/pengeluaran', [LaporanController::class, 'getPengeluaran'])->middleware('auth');
+Route::get('/dashboard/laporan/export/pengeluaran', [LaporanController::class, 'exportPengeluaran'])->middleware('auth');
+Route::get('/dashboard/laporan/export/pengeluaran-pdf', [LaporanController::class, 'exportPengeluaranPdf'])->middleware('auth');
 
 Route::get(
     '/dashboard/pendapatan/anggaran',

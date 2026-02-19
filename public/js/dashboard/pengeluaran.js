@@ -1,0 +1,425 @@
+/* =========================
+   PENGELUARAN JS
+========================= */
+
+let pengeluaranPage = 1;
+let pengeluaranPerPage = 10;
+let pengeluaranKeyword = '';
+let currentKategori = '';
+let isEditPengeluaran = false;
+let editPengeluaranId = null;
+
+/* =========================
+   ROUTING / APP.JS INTEGRATION
+========================= */
+window.openPengeluaran = function (kategori, btn) {
+    currentKategori = kategori;
+    setActiveMenu(btn);
+
+    // Load content view first
+    const mainContent = document.getElementById('mainContent');
+    mainContent.innerHTML = '<div class="flex items-center justify-center py-20"><i class="ph ph-spinner animate-spin text-4xl"></i></div>';
+
+    fetch('/dashboard/content/pengeluaran/' + kategori)
+        .then(res => res.text())
+        .then(html => {
+            mainContent.innerHTML = html;
+            initPengeluaran(kategori);
+        });
+};
+
+window.initPengeluaran = function (kategori) {
+    currentKategori = kategori;
+    pengeluaranPage = 1;
+    pengeluaranKeyword = '';
+
+    // Bind Nominal Input Logic
+    const nominalInput = document.getElementById('pengeluaranNominalDisplay');
+    const nominalHidden = document.getElementById('pengeluaranNominalValue');
+
+    if (nominalInput && nominalHidden) {
+        nominalInput.oninput = () => {
+            const val = parseAngka(nominalInput.value);
+            nominalHidden.value = val;
+        };
+        nominalInput.onblur = () => {
+            nominalInput.value = formatRibuan(nominalHidden.value);
+        };
+        nominalInput.onfocus = () => {
+            const val = parseAngka(nominalInput.value);
+            nominalInput.value = val === 0 ? '' : val.toString().replace('.', ',');
+        };
+    }
+
+    // Bind Search Input Logic
+    const searchInput = document.getElementById('searchPengeluaran');
+    if (searchInput) {
+        searchInput.oninput = (e) => window.handleSearchPengeluaran(e);
+    }
+
+    loadPengeluaran();
+}
+
+/* =========================
+   MODAL CONTROL
+========================= */
+window.openPengeluaranForm = function (kategori, id = null) {
+    const modal = document.getElementById('pengeluaranModal');
+    if (!modal) return;
+
+    modal.classList.add('show');
+    resetPengeluaranForm();
+
+    document.getElementById('pengeluaranKategori').value = kategori;
+
+    const titleEl = document.getElementById('pengeluaranModalTitle');
+    if (id) {
+        isEditPengeluaran = true;
+        editPengeluaranId = id;
+        titleEl.innerText = 'Edit Pengeluaran';
+        loadEditData(id);
+    } else {
+        isEditPengeluaran = false;
+        editPengeluaranId = null;
+        titleEl.innerText = 'Tambah Pengeluaran';
+        document.getElementById('pengeluaranTanggal').value = new Date().toISOString().split('T')[0];
+    }
+
+    loadRekeningPengeluaran(kategori);
+};
+
+window.closePengeluaranModal = function () {
+    const modal = document.getElementById('pengeluaranModal');
+    modal?.classList.remove('show');
+};
+
+function resetPengeluaranForm() {
+    const form = document.getElementById('formPengeluaran');
+    form?.reset();
+    document.getElementById('pengeluaranId').value = '';
+    document.getElementById('pengeluaranNominalValue').value = 0;
+    document.getElementById('pengeluaranNominalDisplay').value = '0';
+}
+
+/* =========================
+   DATA LOADING
+========================= */
+function loadPengeluaran(page = 1) {
+    pengeluaranPage = page;
+    const tbody = document.querySelector('#tablePengeluaran tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center">Memuat data...</td></tr>';
+
+
+
+    const params = new URLSearchParams({
+        kategori: currentKategori,
+        page: pengeluaranPage,
+        limit: pengeluaranPerPage,
+        search: pengeluaranKeyword,
+
+    });
+
+    fetch(`/dashboard/pengeluaran?${params.toString()}`, {
+        headers: { Accept: 'application/json' }
+    })
+        .then(res => {
+            if (!res.ok) throw new Error(res.statusText || 'Gagal memuat data');
+            return res.json();
+        })
+        .then(res => {
+            // Update Summary Cards
+            const countEl = document.getElementById('totalCountPengeluaran');
+            const totalEl = document.getElementById('totalNominalPengeluaran');
+
+            if (countEl && res.aggregates) countEl.innerText = res.aggregates.total_count.toLocaleString('id-ID');
+            if (totalEl && res.aggregates) totalEl.innerText = formatRupiah(res.aggregates.total_nominal);
+
+            const data = res.data || [];
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Belum ada data.</td></tr>';
+                renderPaginationPengeluaran(res); // Ensure pagination is reset/updated even if empty
+                return;
+            }
+
+            tbody.innerHTML = '';
+            let no = res.from || 1;
+            data.forEach(item => {
+                tbody.insertAdjacentHTML('beforeend', `
+                <tr>
+                    <td class="text-center">${no++}</td>
+                    <td>${formatTanggal(item.tanggal)}</td>
+                    <td><code>${item.kode_rekening?.kode ?? '-'}</code></td>
+                    <td>${item.kode_rekening?.nama ?? '-'}</td>
+                    <td>${escapeHtml(item.uraian)}</td>
+                    <td class="text-right font-bold">${formatRupiah(item.nominal)}</td>
+                    <td class="text-center">
+                        <div class="flex justify-center gap-2">
+                            <button class="btn-aksi detail" onclick="window.openPengeluaranDetail(${item.id})" title="Preview">
+                                <i class="ph ph-eye"></i>
+                            </button>
+                            ${(window.hasPermission('PENGELUARAN_UPDATE') || window.isAdmin) ? `
+                            <button class="btn-aksi edit" onclick="window.openPengeluaranForm('${currentKategori}', ${item.id})" title="Edit">
+                                <i class="ph ph-pencil-simple"></i>
+                            </button>` : ''}
+                            ${(window.hasPermission('PENGELUARAN_DELETE') || window.isAdmin) ? `
+                            <button class="btn-aksi delete" onclick="hapusPengeluaran(${item.id})" title="Hapus">
+                                <i class="ph ph-trash"></i>
+                            </button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `);
+            });
+
+            renderPaginationPengeluaran(res);
+        })
+        .catch(err => {
+            console.error(err);
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-red-500">Gagal memuat data: ${err.message}. Silakan coba lagi.</td></tr>`;
+        });
+}
+
+function renderPaginationPengeluaran(meta) {
+    const info = document.getElementById('paginationInfoPengeluaran');
+    if (info) info.innerText = `Menampilkan ${meta.from ?? 0}–${meta.to ?? 0} dari ${meta.total ?? 0} data`;
+
+    const pageInfo = document.getElementById('pageInfoPengeluaran');
+    if (pageInfo) pageInfo.innerText = `${meta.current_page} / ${meta.last_page}`;
+
+    const prev = document.getElementById('prevPagePengeluaran');
+    const next = document.getElementById('nextPagePengeluaran');
+
+    if (prev) {
+        prev.disabled = (meta.current_page === 1);
+        prev.onclick = () => loadPengeluaran(meta.current_page - 1);
+    }
+    if (next) {
+        next.disabled = (meta.current_page === meta.last_page);
+        next.onclick = () => loadPengeluaran(meta.current_page + 1);
+    }
+}
+
+function loadEditData(id) {
+    fetch(`/dashboard/pengeluaran/${id}`, { headers: { Accept: 'application/json' } })
+        .then(res => res.json())
+        .then(data => {
+            const idEl = document.getElementById('pengeluaranId');
+            if (!idEl) return; // Modal closed or elements missing
+
+            idEl.value = data.id;
+
+            if (data.tanggal) {
+                document.getElementById('pengeluaranTanggal').value = data.tanggal.substring(0, 10);
+            }
+
+            document.getElementById('pengeluaranUraian').value = data.uraian;
+            document.getElementById('pengeluaranKeterangan').value = data.keterangan || '';
+            document.getElementById('pengeluaranNominalValue').value = data.nominal;
+            document.getElementById('pengeluaranNominalDisplay').value = formatRibuan(data.nominal);
+
+            // Pilih rekening (nunggu loadRekeningPengeluaran selesai)
+            let attempts = 0;
+            const check = setInterval(() => {
+                const select = document.getElementById('pengeluaranRekening');
+                if (!select) {
+                    clearInterval(check); // Element gone
+                    return;
+                }
+
+                if (select.options.length > 1) {
+                    select.value = data.kode_rekening_id;
+                    clearInterval(check);
+                }
+
+                attempts++;
+                if (attempts > 50) clearInterval(check); // Stop after 5 seconds
+            }, 100);
+        })
+        .catch(err => {
+            console.error(err);
+            toast('Gagal memuat data edit', 'error');
+        });
+}
+
+async function loadRekeningPengeluaran(kategori) {
+    const select = document.getElementById('pengeluaranRekening');
+
+    // Selalu reload jika kategori berbeda atau belum dimuat
+    if (select.getAttribute('data-loaded-for') === kategori) return;
+
+    try {
+        const res = await fetch('/dashboard/master/kode-rekening?category=PENGELUARAN', {
+            headers: { 'Accept': 'application/json' }
+        });
+        const tree = await res.json();
+
+        select.innerHTML = '<option value="">-- Pilih Rekening --</option>';
+
+        function flatten(nodes) {
+            nodes.forEach(node => {
+                if (node.tipe === 'detail') {
+                    // Filter berdasarkan sumber_data yang cocok dengan kategori pengeluaran
+                    // Jika kode tersebut di-map ke kategori yang sedang dibuka (atau jika user ingin semua pengeluaran tampil, hapus if ini)
+                    if (node.sumber_data === kategori) {
+                        select.insertAdjacentHTML('beforeend', `<option value="${node.id}">${node.kode} — ${node.nama}</option>`);
+                    }
+                }
+                if (node.children && node.children.length > 0) {
+                    flatten(node.children);
+                }
+            });
+        }
+
+        flatten(tree);
+        select.setAttribute('data-loaded-for', kategori);
+
+        // Jika tidak ada yang cocok dengan mapping, tampilkan semua detail pengeluaran sebagai fallback
+        if (select.options.length <= 1) {
+            function flattenAll(nodes) {
+                nodes.forEach(node => {
+                    if (node.tipe === 'detail') {
+                        select.insertAdjacentHTML('beforeend', `<option value="${node.id}">${node.kode} — ${node.nama}</option>`);
+                    }
+                    if (node.children && node.children.length > 0) {
+                        flattenAll(node.children);
+                    }
+                });
+            }
+            flattenAll(tree);
+            select.setAttribute('data-loaded-for', 'ALL');
+        }
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+/* =========================
+   SUBMIT & ACTIONS
+========================= */
+window.submitPengeluaran = async function (event) {
+    event.preventDefault();
+    const form = document.getElementById('formPengeluaran');
+    const btn = document.getElementById('btnSimpanPengeluaran');
+
+    btn.disabled = true;
+    btn.innerText = 'Menyimpan...';
+
+    const formData = new FormData(form);
+    const id = formData.get('id');
+    const url = id ? `/dashboard/pengeluaran/${id}` : '/dashboard/pengeluaran';
+
+    if (id) formData.append('_method', 'PUT');
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+
+        if (!res.ok) throw new Error('Gagal menyimpan data');
+
+        toast('Data berhasil disimpan', 'success');
+        closePengeluaranModal();
+        loadPengeluaran();
+    } catch (err) {
+        toast(err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerText = 'Simpan';
+    }
+};
+
+window.handleSearchPengeluaran = function (e) {
+    const val = e.target.value.trim();
+    if (window.pengeluaranSearchTimer) clearTimeout(window.pengeluaranSearchTimer);
+    window.pengeluaranSearchTimer = setTimeout(() => {
+        pengeluaranKeyword = val;
+        loadPengeluaran(1);
+    }, 400);
+};
+
+window.hapusPengeluaran = function (id) {
+    openConfirm(
+        'Hapus Transaksi',
+        'Yakin ingin menghapus data pengeluaran ini? Data yang dihapus tidak dapat dikembalikan.',
+        () => {
+            fetch(`/dashboard/pengeluaran/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                }
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error();
+                    toast('Data berhasil dihapus', 'success');
+                    loadPengeluaran();
+                })
+                .catch(() => toast('Gagal menghapus data', 'error'));
+        }
+    );
+};
+
+/* =========================
+   INITIALIZATION
+========================= */
+
+
+window.openPengeluaranDetail = function (id) {
+    const modal = document.getElementById('pengeluaranDetailModal');
+    const content = document.getElementById('detailPengeluaranContent');
+    if (!modal || !content) return;
+
+    content.innerHTML = '<div class="col-span-2 text-center py-4"><i class="ph ph-spinner animate-spin text-2xl"></i></div>';
+    modal.classList.add('show');
+
+    fetch(`/dashboard/pengeluaran/${id}`, { headers: { Accept: 'application/json' } })
+        .then(res => res.json())
+        .then(data => {
+            content.innerHTML = `
+                <div class="detail-row">
+                    <span class="label">Tanggal</span>
+                    <span class="value">${formatTanggal(data.tanggal)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Kategori</span>
+                    <span class="value">${data.kategori}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Kode Rekening</span>
+                    <span class="value"><code>${data.kode_rekening?.kode ?? '-'}</code></span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Nama Rekening</span>
+                    <span class="value">${data.kode_rekening?.nama ?? '-'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Uraian</span>
+                    <span class="value">${escapeHtml(data.uraian)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Keterangan</span>
+                    <span class="value">${escapeHtml(data.keterangan || '-')}</span>
+                </div>
+                <div class="detail-total mt-4">
+                    <span>Nominal Pengeluaran</span>
+                    <strong>${formatRupiah(data.nominal)}</strong>
+                </div>
+            `;
+        })
+        .catch(err => {
+            content.innerHTML = '<div class="col-span-2 text-center text-red-500 py-4">Gagal memuat data</div>';
+        });
+};
+
+window.closeDetailPengeluaran = function () {
+    const modal = document.getElementById('pengeluaranDetailModal');
+    modal?.classList.remove('show');
+};

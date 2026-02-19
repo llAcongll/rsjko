@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\PendapatanUmum;
 use App\Models\Ruangan;
+use App\Models\ActivityLog;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -117,7 +118,16 @@ SUM(total) as grand_total
 
         $data['tahun'] = session('tahun_anggaran');
 
-        PendapatanUmum::create($data);
+        $pendapatan = PendapatanUmum::create($data);
+
+        ActivityLog::log(
+            'CREATE',
+            'PENDAPATAN_UMUM',
+            "Menambah pendapatan umum pasien {$pendapatan->nama_pasien}",
+            $pendapatan->id,
+            null,
+            $pendapatan->toArray()
+        );
 
         return response()->json(['success' => true]);
     }
@@ -167,7 +177,17 @@ SUM(total) as grand_total
             $data['pelayanan_tindakan'] +
             $data['pelayanan_obat'];
 
+        $oldValues = $pendapatan->toArray();
         $pendapatan->update($data);
+
+        ActivityLog::log(
+            'UPDATE',
+            'PENDAPATAN_UMUM',
+            "Mengubah pendapatan umum pasien {$pendapatan->nama_pasien}",
+            $pendapatan->id,
+            $oldValues,
+            $pendapatan->toArray()
+        );
 
         return response()->json(['success' => true]);
     }
@@ -187,7 +207,18 @@ SUM(total) as grand_total
     public function destroy($id)
     {
         abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD'), 403);
-        PendapatanUmum::findOrFail($id)->delete();
+        $pendapatan = PendapatanUmum::findOrFail($id);
+        $oldValues = $pendapatan->toArray();
+        $pendapatan->delete();
+
+        ActivityLog::log(
+            'DELETE',
+            'PENDAPATAN_UMUM',
+            "Menghapus pendapatan umum pasien {$pendapatan->nama_pasien}",
+            $id,
+            $oldValues,
+            null
+        );
 
         return response()->json(['success' => true]);
     }

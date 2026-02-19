@@ -100,3 +100,34 @@ window.formatDateIndo = function (dateStr) {
     year: 'numeric'
   });
 };
+
+window.renderPagination = function (elementId, meta, callbackName) {
+  const wrap = document.getElementById(elementId);
+  if (!wrap) return;
+
+  if (meta.total <= meta.per_page) {
+    wrap.innerHTML = '';
+    return;
+  }
+
+  let html = `
+    <div class="pagination-info">
+      Menampilkan ${meta.from ?? 0}–${meta.to ?? 0} dari ${meta.total ?? 0} data
+    </div>
+    <div class="pagination-actions">
+      <button class="btn-pagi" ${meta.current_page === 1 ? 'disabled' : ''} onclick="${callbackName}(${meta.current_page - 1})">
+        <i class="ph ph-caret-left"></i>
+      </button>
+      <span class="pagi-text">${meta.current_page} / ${meta.last_page}</span>
+      <button class="btn-pagi" ${meta.current_page === meta.last_page ? 'disabled' : ''} onclick="${callbackName}(${meta.current_page + 1})">
+        <i class="ph ph-caret-right"></i>
+      </button>
+    </div>
+  `;
+  wrap.innerHTML = html;
+};
+
+// Keep for compatibility if needed
+window.renderPaginationGeneric = function (meta, elementId, callback) {
+  window.renderPagination(elementId, meta, typeof callback === 'string' ? callback : callback.name);
+};

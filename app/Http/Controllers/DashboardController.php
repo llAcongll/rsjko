@@ -31,7 +31,7 @@ class DashboardController extends BaseController
                     'JAMINAN' => Auth::user()->hasPermission('PENDAPATAN_JAMINAN_VIEW') ? view('dashboard.pages.pendapatan.jaminan') : abort(403),
                     'KERJASAMA' => Auth::user()->hasPermission('PENDAPATAN_KERJA_VIEW') ? view('dashboard.pages.pendapatan.kerjasama') : abort(403),
                     'LAIN' => Auth::user()->hasPermission('PENDAPATAN_LAIN_VIEW') ? view('dashboard.pages.pendapatan.lainlain') : abort(403),
-                    'ANGGARAN' => Auth::user()->hasPermission('KODE_REKENING_VIEW') ? view('dashboard.pages.pendapatan.anggaran') : abort(403),
+                    'ANGGARAN' => (Auth::user()->hasPermission('KODE_REKENING_PENDAPATAN_VIEW') || Auth::user()->hasPermission('KODE_REKENING_VIEW')) ? view('dashboard.pages.pendapatan.anggaran') : abort(403),
                     default => abort(404),
                 },
 
@@ -41,19 +41,43 @@ class DashboardController extends BaseController
                     'PIUTANG' => (Auth::user()->hasPermission('LAPORAN_PIUTANG') || Auth::user()->hasPermission('LAPORAN_VIEW')) ? view('dashboard.pages.laporan.piutang') : abort(403),
                     'MOU' => (Auth::user()->hasPermission('LAPORAN_MOU') || Auth::user()->hasPermission('LAPORAN_VIEW')) ? view('dashboard.pages.laporan.mou') : abort(403),
                     'ANGGARAN' => (Auth::user()->hasPermission('LAPORAN_ANGGARAN') || Auth::user()->hasPermission('LAPORAN_VIEW')) ? view('dashboard.pages.laporan.anggaran') : abort(403),
+                    'PENGELUARAN' => (Auth::user()->hasPermission('LAPORAN_PENGELUARAN') || Auth::user()->hasPermission('LAPORAN_VIEW')) ? view('dashboard.pages.laporan.pengeluaran') : abort(403),
                     default => (Auth::user()->hasPermission('LAPORAN_PENDAPATAN') || Auth::user()->hasPermission('LAPORAN_VIEW')) ? view('dashboard.pages.laporan.pendapatan') : abort(403),
                 },
             'rekening' => Auth::user()->hasPermission('REKENING_VIEW') ? view('dashboard.pages.rekening') : abort(403),
 
-            'ruangan' => Auth::user()->hasPermission('MASTER_VIEW') ? view('dashboard.pages.ruangan') : abort(403),
-            'perusahaan' => Auth::user()->hasPermission('MASTER_VIEW') ? view('dashboard.pages.perusahaan') : abort(403),
-            'mou' => Auth::user()->hasPermission('MASTER_VIEW') ? view('dashboard.pages.mou') : abort(403),
+            'ruangan' => (Auth::user()->hasPermission('MASTER_RUANGAN_VIEW') || Auth::user()->hasPermission('MASTER_VIEW')) ? view('dashboard.pages.ruangan') : abort(403),
+            'perusahaan' => (Auth::user()->hasPermission('MASTER_PERUSAHAAN_VIEW') || Auth::user()->hasPermission('MASTER_VIEW')) ? view('dashboard.pages.perusahaan') : abort(403),
+            'mou' => (Auth::user()->hasPermission('MASTER_MOU_VIEW') || Auth::user()->hasPermission('MASTER_VIEW')) ? view('dashboard.pages.mou') : abort(403),
             'piutang' => Auth::user()->hasPermission('PIUTANG_VIEW') ? view('dashboard.pages.piutang') : abort(403),
             'penyesuaian' => Auth::user()->hasPermission('PENYESUAIAN_VIEW') ? view('dashboard.pages.penyesuaian') : abort(403),
 
             'master' => match ($param) {
-                    'kode-rekening' => Auth::user()->hasPermission('KODE_REKENING_VIEW') ? view('dashboard.master.kode-rekening.index') : abort(403),
-                    'kode-rekening-anggaran' => Auth::user()->hasPermission('KODE_REKENING_VIEW') ? view('dashboard.pages.pendapatan.anggaran') : abort(403),
+                    'kode-rekening' => (
+                        request('category') === 'PENGELUARAN'
+                        ? (Auth::user()->hasPermission('KODE_REKENING_PENGELUARAN_VIEW') || Auth::user()->hasPermission('KODE_REKENING_VIEW'))
+                        : (Auth::user()->hasPermission('KODE_REKENING_PENDAPATAN_VIEW') || Auth::user()->hasPermission('KODE_REKENING_VIEW'))
+                    ) ? (
+                        request('category') === 'PENGELUARAN'
+                        ? view('dashboard.master.kode-rekening.expenditure')
+                        : view('dashboard.master.kode-rekening.index')
+                    ) : abort(403),
+                    'kode-rekening-anggaran' => (
+                        request('category') === 'PENGELUARAN'
+                        ? (Auth::user()->hasPermission('KODE_REKENING_PENGELUARAN_VIEW') || Auth::user()->hasPermission('KODE_REKENING_VIEW'))
+                        : (Auth::user()->hasPermission('KODE_REKENING_PENDAPATAN_VIEW') || Auth::user()->hasPermission('KODE_REKENING_VIEW'))
+                    ) ? (
+                        request('category') === 'PENGELUARAN'
+                        ? view('dashboard.pages.pengeluaran.anggaran')
+                        : view('dashboard.pages.pendapatan.anggaran')
+                    ) : abort(403),
+                    'logs' => Auth::user()->isAdmin() ? view('dashboard.pages.master.logs') : abort(403),
+                    default => abort(404),
+                },
+
+            'pengeluaran' => match ($param) {
+                    'PEGAWAI', 'BARANG_JASA', 'MODAL' => Auth::user()->hasPermission('PENGELUARAN_VIEW') || Auth::user()->isAdmin() ? view('dashboard.pages.pengeluaran.index', ['param' => $param]) : abort(403),
+                    'ANGGARAN' => (Auth::user()->hasPermission('KODE_REKENING_PENGELUARAN_VIEW') || Auth::user()->hasPermission('KODE_REKENING_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.anggaran') : abort(403),
                     default => abort(404),
                 },
 
@@ -70,9 +94,19 @@ class DashboardController extends BaseController
             $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
             $tables = ['pendapatan_umum', 'pendapatan_bpjs', 'pendapatan_jaminan', 'pendapatan_kerjasama', 'pendapatan_lain'];
 
-            /* 1. TARGET ANGGARAN (Total dari Anggaran Rekening Tahun Ini) */
+            /* 1. TARGET ANGGARAN */
+            // Target Pendapatan (Hanya Kode Rekening Category PENDAPATAN)
             $targetPendapatan = DB::table('anggaran_rekening')
-                ->where('tahun', $tahunAnggaran)
+                ->join('kode_rekening', 'anggaran_rekening.kode_rekening_id', '=', 'kode_rekening.id')
+                ->where('anggaran_rekening.tahun', $tahunAnggaran)
+                ->where('kode_rekening.category', 'PENDAPATAN')
+                ->sum('nilai');
+
+            // Target Pengeluaran (Hanya Kode Rekening Category PENGELUARAN)
+            $targetPengeluaran = DB::table('anggaran_rekening')
+                ->join('kode_rekening', 'anggaran_rekening.kode_rekening_id', '=', 'kode_rekening.id')
+                ->where('anggaran_rekening.tahun', $tahunAnggaran)
+                ->where('kode_rekening.category', 'PENGELUARAN')
                 ->sum('nilai');
 
             /* 2. REALISASI & BREAKDOWN (RS vs PELAYANAN) */
@@ -100,18 +134,22 @@ class DashboardController extends BaseController
             $realisasiGross = $totalRS + $totalPelayanan;
             $realisasiNet = max(0, $realisasiGross - $totalPotongan);
 
-            /* 4. PERSENTASE CAPAIAN */
-            $persenCapaian = $targetPendapatan > 0 ? round(($realisasiNet / $targetPendapatan) * 100, 2) : 0;
+            /* 4. REALISASI PENGELUARAN */
+            $realisasiPengeluaran = DB::table('pengeluaran')
+                ->whereYear('tanggal', $tahunAnggaran)
+                ->sum('nominal');
 
-            /* 5. DISTRIBUSI PASIEN (Pie Chart) */
+            /* 5. PERSENTASE CAPAIAN */
+            $persenCapaian = $targetPendapatan > 0 ? round(($realisasiNet / $targetPendapatan) * 100, 2) : 0;
+            $persenCapaianPengeluaran = $targetPengeluaran > 0 ? round(($realisasiPengeluaran / $targetPengeluaran) * 100, 2) : 0;
+
+            /* 6. DISTRIBUSI PASIEN (Pie Chart) */
             $incUmum = DB::table('pendapatan_umum')->where('tahun', $tahunAnggaran)->sum('total');
             $incBpjs = DB::table('pendapatan_bpjs')->where('tahun', $tahunAnggaran)->sum('total');
             $incJaminan = DB::table('pendapatan_jaminan')->where('tahun', $tahunAnggaran)->sum('total');
             $incKerja = DB::table('pendapatan_kerjasama')->where('tahun', $tahunAnggaran)->sum('total');
             $incLain = DB::table('pendapatan_lain')->where('tahun', $tahunAnggaran)->sum('total');
 
-            // Apply specific deductions for BPJS and Jaminan if possible for more accuracy, 
-            // but for summary distribution we'll use gross ratios first or just simple sums.
             $totalForDist = $incUmum + $incBpjs + $incJaminan + $incKerja + $incLain;
 
             $distribution = [
@@ -129,6 +167,9 @@ class DashboardController extends BaseController
                     'targetPendapatan' => $targetPendapatan,
                     'realisasiPendapatan' => $realisasiNet,
                     'persenCapaian' => $persenCapaian,
+                    'targetPengeluaran' => $targetPengeluaran,
+                    'realisasiPengeluaran' => $realisasiPengeluaran,
+                    'persenCapaianPengeluaran' => $persenCapaianPengeluaran,
                 ],
                 'distribution' => $distribution,
             ]);
@@ -175,6 +216,41 @@ class DashboardController extends BaseController
         }
     }
 
+    public function chartExpenditure()
+    {
+        try {
+            $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
+
+            $results = DB::table('pengeluaran')
+                ->whereYear('tanggal', $tahunAnggaran)
+                ->select('kategori', DB::raw('SUM(nominal) as total'))
+                ->groupBy('kategori')
+                ->get();
+
+            $map = [
+                'PEGAWAI' => 'Belanja Pegawai',
+                'BARANG_JASA' => 'Belanja Barang & Jasa',
+                'MODAL' => 'Belanja Modal',
+            ];
+
+            $labels = [];
+            $values = [];
+
+            foreach ($results as $res) {
+                $labels[] = $map[$res->kategori] ?? $res->kategori;
+                $values[] = $res->total;
+            }
+
+            return response()->json([
+                'labels' => $labels,
+                'values' => $values,
+                'year' => $tahunAnggaran
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     /* =========================
        GRAFIK BULANAN (JAN-DES)
     ========================= */
@@ -188,9 +264,12 @@ class DashboardController extends BaseController
         $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         $labels = [];
         $values = [];
+        $valuesPengeluaran = [];
 
         for ($m = 1; $m <= 12; $m++) {
             $labels[] = $monthNames[$m - 1];
+
+            // 1. PENDAPATAN
             $monthTotal = 0;
             foreach ($tables as $tbl) {
                 // Deduct for BPJS and Jaminan in chart too
@@ -209,11 +288,19 @@ class DashboardController extends BaseController
                 $monthTotal += $raw;
             }
             $values[] = $monthTotal;
+
+            // 2. PENGELUARAN
+            $pengTotal = DB::table('pengeluaran')
+                ->whereYear('tanggal', $year)
+                ->whereMonth('tanggal', $m)
+                ->sum('nominal');
+            $valuesPengeluaran[] = $pengTotal;
         }
 
         return response()->json([
             'labels' => $labels,
             'values' => $values,
+            'valuesPengeluaran' => $valuesPengeluaran,
             'year' => $year
         ]);
     }

@@ -3,7 +3,7 @@
     {{-- HEADER --}}
     <div class="dashboard-header">
         <div class="dashboard-header-left">
-            <h2>Pendapatan Kerjasama</h2>
+            <h2><i class="ph ph-handshake"></i> Pendapatan Kerjasama</h2>
             <p>Kelola pendapatan dari kerjasama antar lembaga dan instansi</p>
         </div>
 

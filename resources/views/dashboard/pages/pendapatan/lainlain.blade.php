@@ -3,7 +3,7 @@
     {{-- HEADER --}}
     <div class="dashboard-header">
         <div class="dashboard-header-left">
-            <h2>Pendapatan Lain-lain</h2>
+            <h2><i class="ph ph-dots-three-circle"></i> Pendapatan Lain-lain</h2>
             <p>Kelola penerimaan dari sumber pendapatan lainnya</p>
         </div>
 

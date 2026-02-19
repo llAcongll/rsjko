@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="{{ asset('css/dashboard/pendapatan-umum.css') }}">
   <link rel="stylesheet" href="{{ asset('css/dashboard/pendapatan-bpjs.css') }}">
   <link rel="stylesheet" href="{{ asset('css/dashboard/anggaran.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/dashboard/pengeluaran.css') }}">
 
   <script>
     window.userRole = "{{ auth()->user()->role }}";
@@ -108,20 +109,62 @@
 
         <div class="submenu-child" id="submenuPendapatan">
           @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_VIEW'))
-            <button onclick="openPendapatan('UMUM', this)">Pasien Umum</button>
+            <button onclick="openPendapatan('UMUM', this)">
+              <i class="ph ph-user"></i>
+              <span>Pasien Umum</span>
+            </button>
           @endif
           @if(auth()->user()->hasPermission('PENDAPATAN_BPJS_VIEW'))
-            <button onclick="openPendapatan('BPJS', this)">BPJS</button>
+            <button onclick="openPendapatan('BPJS', this)">
+              <i class="ph ph-cardholder"></i>
+              <span>BPJS</span>
+            </button>
           @endif
           @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_VIEW'))
-            <button onclick="openPendapatan('JAMINAN', this)">Jaminan</button>
+            <button onclick="openPendapatan('JAMINAN', this)">
+              <i class="ph ph-shield-check"></i>
+              <span>Jaminan</span>
+            </button>
           @endif
           @if(auth()->user()->hasPermission('PENDAPATAN_KERJA_VIEW'))
-            <button onclick="openPendapatan('KERJASAMA', this)">Kerjasama</button>
+            <button onclick="openPendapatan('KERJASAMA', this)">
+              <i class="ph ph-handshake"></i>
+              <span>Kerjasama</span>
+            </button>
           @endif
           @if(auth()->user()->hasPermission('PENDAPATAN_LAIN_VIEW'))
-            <button onclick="openPendapatan('LAIN', this)">Lain-lain</button>
+            <button onclick="openPendapatan('LAIN', this)">
+              <i class="ph ph-dots-three-circle"></i>
+              <span>Lain-lain</span>
+            </button>
           @endif
+        </div>
+      @endif
+
+      @php
+        $hasAnyPengeluaran = auth()->user()->hasPermission('PENGELUARAN_VIEW') || auth()->user()->isAdmin();
+      @endphp
+
+      @if($hasAnyPengeluaran)
+        <button id="btnPengeluaran" onclick="togglePengeluaran(this)">
+          <i class="ph ph-hand-coins"></i>
+          <span>Pengeluaran</span>
+          <i class="ph ph-caret-down dropdown-icon"></i>
+        </button>
+
+        <div class="submenu-child" id="submenuPengeluaran">
+          <button onclick="openPengeluaran('PEGAWAI', this)">
+            <i class="ph ph-identification-card"></i>
+            <span>Pegawai</span>
+          </button>
+          <button onclick="openPengeluaran('BARANG_JASA', this)">
+            <i class="ph ph-package"></i>
+            <span>Barang dan Jasa</span>
+          </button>
+          <button onclick="openPengeluaran('MODAL', this)">
+            <i class="ph ph-bank"></i>
+            <span>Modal Aset Lainnya</span>
+          </button>
         </div>
       @endif
 
@@ -144,6 +187,9 @@
           @if(auth()->user()->hasPermission('LAPORAN_PENDAPATAN'))
             <button onclick="openLaporan('PENDAPATAN', this)">Laporan Pendapatan</button>
           @endif
+          @if(auth()->user()->hasPermission('LAPORAN_PENGELUARAN') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+            <button onclick="openLaporan('PENGELUARAN', this)">Laporan Pengeluaran</button>
+          @endif
           @if(auth()->user()->hasPermission('LAPORAN_REKON'))
             <button onclick="openLaporan('REKON', this)">Laporan Rekonsiliasi</button>
           @endif
@@ -161,6 +207,11 @@
 
       @php
         $hasAnyMaster = auth()->user()->hasPermission('MASTER_VIEW') ||
+          auth()->user()->hasPermission('MASTER_RUANGAN_VIEW') ||
+          auth()->user()->hasPermission('MASTER_PERUSAHAAN_VIEW') ||
+          auth()->user()->hasPermission('MASTER_MOU_VIEW') ||
+          auth()->user()->hasPermission('KODE_REKENING_PENDAPATAN_VIEW') ||
+          auth()->user()->hasPermission('KODE_REKENING_PENGELUARAN_VIEW') ||
           auth()->user()->hasPermission('KODE_REKENING_VIEW') ||
           auth()->user()->isAdmin();
       @endphp
@@ -174,17 +225,61 @@
         </button>
 
         <div class="submenu-child" id="submenuMaster">
-          @if(auth()->user()->hasPermission('KODE_REKENING_VIEW'))
-            <button onclick="openKodeRekening(this)">Kode Rekening</button>
-            <button onclick="openAnggaranRekening(this)">Anggaran</button>
+          @php
+            $hasPendapatanMaster = auth()->user()->hasPermission('KODE_REKENING_PENDAPATAN_VIEW') || auth()->user()->hasPermission('KODE_REKENING_VIEW');
+            $hasPengeluaranMaster = auth()->user()->hasPermission('KODE_REKENING_PENGELUARAN_VIEW') || auth()->user()->hasPermission('KODE_REKENING_VIEW');
+          @endphp
+
+          @if($hasPendapatanMaster)
+            <div class="submenu-header">Pendapatan</div>
+            <button onclick="openKodeRekening('PENDAPATAN', this)">
+              <i class="ph ph-list-numbers"></i>
+              <span>Kode Rekening</span>
+            </button>
+            <button onclick="openAnggaranRekening('PENDAPATAN', this)">
+              <i class="ph ph-calendar-check"></i>
+              <span>Anggaran</span>
+            </button>
           @endif
-          @if(auth()->user()->hasPermission('MASTER_VIEW'))
-            <button onclick="openRuangan(this)">Ruangan</button>
-            <button onclick="openPerusahaanPage(this)">Perusahaan</button>
-            <button onclick="openMouPage(this)">MOU</button>
+
+          @if($hasPengeluaranMaster)
+            <div class="submenu-header">Pengeluaran</div>
+            <button onclick="openKodeRekening('PENGELUARAN', this)">
+              <i class="ph ph-list-numbers"></i>
+              <span>Kode Rekening</span>
+            </button>
+            <button onclick="openAnggaranRekening('PENGELUARAN', this)">
+              <i class="ph ph-calendar-check"></i>
+              <span>Anggaran</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('MASTER_RUANGAN_VIEW') || auth()->user()->hasPermission('MASTER_VIEW'))
+            <button onclick="openRuangan(this)">
+              <i class="ph ph-door"></i>
+              <span>Ruangan</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('MASTER_PERUSAHAAN_VIEW') || auth()->user()->hasPermission('MASTER_VIEW'))
+            <button onclick="openPerusahaanPage(this)">
+              <i class="ph ph-buildings"></i>
+              <span>Perusahaan</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('MASTER_MOU_VIEW') || auth()->user()->hasPermission('MASTER_VIEW'))
+            <button onclick="openMouPage(this)">
+              <i class="ph ph-file-text"></i>
+              <span>MOU</span>
+            </button>
           @endif
           @if(auth()->user()->isAdmin())
-            <button onclick="openUsers(this)">Users</button>
+            <button onclick="openUsers(this)">
+              <i class="ph ph-users-three"></i>
+              <span>Users</span>
+            </button>
+            <button onclick="openActivityLogs(this)">
+              <i class="ph ph-fingerprint"></i>
+              <span>Log Aktivitas</span>
+            </button>
           @endif
         </div>
       @endif
@@ -268,6 +363,10 @@
   {{-- MODAL ANGGARAN REKENING --}}
   @include('dashboard.partials.anggaran-form')
 
+  {{-- MODAL PENGELUARAN --}}
+  @include('dashboard.partials.pengeluaran-form')
+  @include('dashboard.partials.pengeluaran-detail')
+
   {{-- JS --}}
   <script src="{{ asset('js/base.js') }}?v={{ filemtime(public_path('js/base.js')) }}"></script>
   <script src="{{ asset('js/dashboard/app.js') }}?v={{ filemtime(public_path('js/dashboard/app.js')) }}"></script>
@@ -300,7 +399,10 @@
   <script
     src="{{ asset('js/dashboard/kode-rekening.js') }}?v={{ filemtime(public_path('js/dashboard/kode-rekening.js')) }}"></script>
   <script
-    src="{{ asset('js/dashboard/anggaran-rekening.js') }}?v={{ filemtime(public_path('js/dashboard/anggaran-rekening.js')) }}"></script>
+    src=" {{ asset('js/dashboard/anggaran-rekening.js') }}?v={{ filemtime(public_path('js/dashboard/anggaran-rekening.js')) }}"></script>
+  <script
+    src="{{ asset('js/dashboard/pengeluaran.js') }}?v={{ filemtime(public_path('js/dashboard/pengeluaran.js')) }}"></script>
+  <script src="{{ asset('js/dashboard/logs.js') }}?v={{ filemtime(public_path('js/dashboard/logs.js')) }}"></script>
 
 </body>
 

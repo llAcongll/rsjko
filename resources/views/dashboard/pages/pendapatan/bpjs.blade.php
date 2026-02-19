@@ -3,7 +3,7 @@
     {{-- HEADER --}}
     <div class="dashboard-header">
         <div class="dashboard-header-left">
-            <h2>Pendapatan BPJS</h2>
+            <h2><i class="ph ph-cardholder"></i> Pendapatan BPJS</h2>
             <p>Kelola klaim dan penerimaan dari BPJS Kesehatan</p>
         </div>
 

@@ -2,7 +2,7 @@
     <div class="laporan-header">
         <div class="header-left">
             <h2><i class="ph ph-chart-line"></i> Laporan Realisasi Anggaran</h2>
-            <p>Perbandingan Pencapaian Pendapatan terhadap Target Anggaran Pendapatan</p>
+            <p id="lraDescription">Perbandingan Pencapaian Pendapatan terhadap Target Anggaran Pendapatan</p>
         </div>
         <div class="header-right">
             <div class="laporan-filter-group">
@@ -13,6 +13,14 @@
                 <div class="filter-item">
                     <label>Sampai Tanggal</label>
                     <input type="date" id="laporanEnd" class="filter-date-input">
+                </div>
+                <div class="filter-item">
+                    <label>Kategori</label>
+                    <select id="lraCategory" class="filter-date-input" style="width: 140px;">
+                        <option value="SEMUA" selected>SEMUA</option>
+                        <option value="PENDAPATAN">PENDAPATAN</option>
+                        <option value="PENGELUARAN">PENGELUARAN</option>
+                    </select>
                 </div>
                 <button class="btn-filter" onclick="loadLaporan('ANGGARAN')">
                     <i class="ph ph-magnifying-glass"></i>
@@ -29,31 +37,8 @@
     </div>
 
     <!-- SUMMARY CARDS -->
-    <div class="laporan-main-cards anggaran-summary">
-        <div class="laporan-card highlight-blue">
-            <div class="card-icon"><i class="ph ph-target"></i></div>
-            <div class="card-info">
-                <h3>TARGET ANGGARAN</h3>
-                <span id="totalTargetAnggaran" class="big">Rp 0</span>
-                <p>Estimasi pendapatan</p>
-            </div>
-        </div>
-        <div class="laporan-card highlight-green">
-            <div class="card-icon"><i class="ph ph-trend-up"></i></div>
-            <div class="card-info">
-                <h3>REALISASI</h3>
-                <span id="totalRealisasiAnggaran" class="big">Rp 0</span>
-                <p>Pendapatan terhimpun</p>
-            </div>
-        </div>
-        <div class="laporan-card highlight-orange">
-            <div class="card-icon"><i class="ph ph-percent"></i></div>
-            <div class="card-info">
-                <h3>CAPAIAN</h3>
-                <span id="totalPersentaseAnggaran" class="big">0%</span>
-                <p>Dari total target</p>
-            </div>
-        </div>
+    <div id="lraCardsContainer">
+        <!-- Dynamic Cards -->
     </div>
 
     <div class="laporan-section">

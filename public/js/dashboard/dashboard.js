@@ -7,6 +7,7 @@ let dashboardData = {
 
 let incomeChart = null;
 let roomChart = null;
+let expenditureChart = null;
 let patientPieChart = null;
 
 /* =========================
@@ -42,6 +43,7 @@ function renderDashboard() {
 
   loadIncomeChart();
   loadRoomChart();
+  loadExpenditureChart();
   renderPatientPieChart(dashboardData.distribution);
 }
 
@@ -51,11 +53,14 @@ function renderDashboard() {
 function renderSummaryCards() {
   const s = dashboardData.summary;
 
-  setText('[data-key="totalPendapatanRS"]', formatRupiah(s.totalPendapatanRS));
-  setText('[data-key="totalJasaPelayanan"]', formatRupiah(s.totalJasaPelayanan));
   setText('[data-key="targetPendapatan"]', formatRupiah(s.targetPendapatan));
   setText('[data-key="realisasiPendapatan"]', formatRupiah(s.realisasiPendapatan));
   setText('[data-key="persenCapaian"]', `(${s.persenCapaian || 0}%)`);
+
+  // New Pengeluaran fields
+  setText('[data-key="targetPengeluaran"]', formatRupiah(s.targetPengeluaran));
+  setText('[data-key="realisasiPengeluaran"]', formatRupiah(s.realisasiPengeluaran));
+  setText('[data-key="persenCapaianPengeluaran"]', `(${s.persenCapaianPengeluaran || 0}%)`);
 }
 
 /* =========================
@@ -80,21 +85,29 @@ function renderIncomeChart(data) {
     type: 'bar',
     data: {
       labels: data.labels,
-      datasets: [{
-        label: 'Pendapatan Bulanan',
-        data: data.values,
-        backgroundColor: '#3b82f6',
-        borderRadius: 4
-      }]
+      datasets: [
+        {
+          label: 'Pendapatan Bulanan',
+          data: data.values,
+          backgroundColor: '#3b82f6',
+          borderRadius: 4
+        },
+        {
+          label: 'Pengeluaran Bulanan',
+          data: data.valuesPengeluaran,
+          backgroundColor: '#ef4444',
+          borderRadius: 4
+        }
+      ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false },
+        legend: { display: true, position: 'top' },
         tooltip: {
           callbacks: {
-            label: (ctx) => formatRupiah(ctx.parsed.y)
+            label: (ctx) => `${ctx.dataset.label}: ${formatRupiah(ctx.parsed.y)}`
           }
         }
       },
@@ -127,6 +140,46 @@ function renderRoomChart(data) {
         label: 'Pendapatan Per Unit',
         data: data.values,
         backgroundColor: '#10b981',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => formatRupiah(ctx.parsed.x) } }
+      },
+      scales: {
+        x: { ticks: { callback: v => formatRupiah(v) }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function loadExpenditureChart() {
+  fetch('/dashboard/chart-expenditure')
+    .then(r => r.json())
+    .then(data => renderExpenditureChart(data))
+    .catch(err => console.error('Expenditure Chart Error:', err));
+}
+
+function renderExpenditureChart(data) {
+  const canvas = document.getElementById('expenditureChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  if (expenditureChart) expenditureChart.destroy();
+  const ctx = canvas.getContext('2d');
+
+  expenditureChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label: 'Total Pengeluaran',
+        data: data.values,
+        backgroundColor: '#ef4444',
         borderRadius: 4
       }]
     },

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\PendapatanBpjs;
 use App\Models\Ruangan;
 use App\Models\Perusahaan;
+use App\Models\ActivityLog;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -161,7 +162,16 @@ class PendapatanBpjsController extends Controller
 
         $data['tahun'] = session('tahun_anggaran');
 
-        PendapatanBpjs::create($data);
+        $pendapatan = PendapatanBpjs::create($data);
+
+        ActivityLog::log(
+            'CREATE',
+            'PENDAPATAN_BPJS',
+            "Menambah pendapatan BPJS pasien {$pendapatan->nama_pasien}",
+            $pendapatan->id,
+            null,
+            $pendapatan->toArray()
+        );
 
         return response()->json(['success' => true]);
     }
@@ -220,7 +230,17 @@ class PendapatanBpjsController extends Controller
             $data['pelayanan_tindakan'] +
             $data['pelayanan_obat'];
 
+        $oldValues = $pendapatan->toArray();
         $pendapatan->update($data);
+
+        ActivityLog::log(
+            'UPDATE',
+            'PENDAPATAN_BPJS',
+            "Mengubah pendapatan BPJS pasien {$pendapatan->nama_pasien}",
+            $pendapatan->id,
+            $oldValues,
+            $pendapatan->toArray()
+        );
 
         return response()->json(['success' => true]);
     }
@@ -240,7 +260,18 @@ class PendapatanBpjsController extends Controller
     public function destroy($id)
     {
         abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD'), 403);
-        PendapatanBpjs::findOrFail($id)->delete();
+        $pendapatan = PendapatanBpjs::findOrFail($id);
+        $oldValues = $pendapatan->toArray();
+        $pendapatan->delete();
+
+        ActivityLog::log(
+            'DELETE',
+            'PENDAPATAN_BPJS',
+            "Menghapus pendapatan BPJS pasien {$pendapatan->nama_pasien}",
+            $id,
+            $oldValues,
+            null
+        );
 
         return response()->json(['success' => true]);
     }

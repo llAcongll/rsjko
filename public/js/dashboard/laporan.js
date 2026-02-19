@@ -31,10 +31,18 @@ window.loadLaporan = async function (type) {
             case 'REKON': url = `/dashboard/laporan/rekon?start=${start}&end=${end}`; break;
             case 'PIUTANG': url = `/dashboard/laporan/piutang?start=${start}&end=${end}`; break;
             case 'MOU': url = `/dashboard/laporan/mou?start=${start}&end=${end}`; break;
-            case 'ANGGARAN': url = `/dashboard/laporan/anggaran?start=${start}&end=${end}`; break;
+            case 'ANGGARAN': {
+                const cat = document.getElementById('lraCategory')?.value || 'SEMUA';
+                url = `/dashboard/laporan/anggaran?start=${start}&end=${end}&category=${cat}`;
+                break;
+            }
+            case 'PENGELUARAN': url = `/dashboard/laporan/pengeluaran?start=${start}&end=${end}`; break;
         }
 
         const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) {
+            throw new Error(`Error ${res.status}: ${res.statusText}`);
+        }
         const data = await res.json();
         window.lastLaporanData = data;
 
@@ -43,10 +51,18 @@ window.loadLaporan = async function (type) {
         else if (type === 'PIUTANG') renderPiutang(data);
         else if (type === 'MOU') renderMou(data);
         else if (type === 'ANGGARAN') renderAnggaran(data);
+        else if (type === 'PENGELUARAN') {
+            if (data && data.summary) {
+                renderPengeluaran(data);
+            } else {
+                console.error('Invalid data structure for PENGELUARAN', data);
+                toast('Data laporan tidak valid', 'error');
+            }
+        }
 
     } catch (err) {
         console.error(err);
-        toast('Gagal memuat laporan', 'error');
+        toast(`Gagal memuat laporan: ${err.message}`, 'error');
     } finally {
         if (container) container.classList.remove('loading');
     }
@@ -318,20 +334,59 @@ function renderMou(data) {
 }
 
 function renderAnggaran(data) {
-    if (document.getElementById('totalTargetAnggaran')) document.getElementById('totalTargetAnggaran').innerText = formatRupiah(data.totals.target);
-    if (document.getElementById('totalRealisasiAnggaran')) document.getElementById('totalRealisasiAnggaran').innerText = formatRupiah(data.totals.realisasi_total);
+    const cardsContainer = document.getElementById('lraCardsContainer');
+    const desc = document.getElementById('lraDescription');
 
-    const capaianEl = document.getElementById('totalPersentaseAnggaran');
-    if (capaianEl) {
-        capaianEl.innerText = data.totals.persen + '%';
-        const cardVal = parseFloat(data.totals.persen);
-        const card = capaianEl.closest('.laporan-card');
-        if (card) {
-            card.classList.remove('highlight-orange', 'highlight-blue', 'highlight-green', 'highlight-purple');
-            if (cardVal >= 100) card.classList.add('highlight-purple');
-            else if (cardVal >= 80) card.classList.add('highlight-green');
-            else if (cardVal >= 50) card.classList.add('highlight-blue');
-            else card.classList.add('highlight-orange');
+    if (desc) {
+        if (data.category === 'PENDAPATAN') desc.innerText = 'Perbandingan Pencapaian Pendapatan terhadap Target Anggaran Pendapatan';
+        else if (data.category === 'PENGELUARAN') desc.innerText = 'Perbandingan Realisasi Belanja terhadap Target Anggaran Belanja (Expenditure)';
+        else desc.innerText = 'Perbandingan Realisasi Pendapatan dan Belanja (Surplus/Defisit)';
+    }
+
+    if (cardsContainer) {
+        cardsContainer.innerHTML = '';
+        const createRow = (titlePrefix, target, real, percent) => {
+            let progressClass = 'highlight-orange';
+            if (percent >= 100) progressClass = 'highlight-purple';
+            else if (percent >= 80) progressClass = 'highlight-green';
+            else if (percent >= 50) progressClass = 'highlight-blue';
+
+            return `
+                <div class="laporan-main-cards anggaran-summary" style="margin-bottom: 20px; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                    <div class="laporan-card highlight-blue">
+                        <div class="card-icon"><i class="ph ph-target"></i></div>
+                        <div class="card-info">
+                            <h3>TARGET ${titlePrefix}</h3>
+                            <span class="big">${formatRupiah(target)}</span>
+                            <p>Estimasi anggaran</p>
+                        </div>
+                    </div>
+                    <div class="laporan-card highlight-green">
+                        <div class="card-icon"><i class="ph ph-trend-up"></i></div>
+                        <div class="card-info">
+                            <h3>REALISASI ${titlePrefix}</h3>
+                            <span class="big">${formatRupiah(real)}</span>
+                            <p>Realisasi terhimpun</p>
+                        </div>
+                    </div>
+                    <div class="laporan-card ${progressClass}">
+                        <div class="card-icon"><i class="ph ph-percent"></i></div>
+                        <div class="card-info">
+                            <h3>CAPAIAN</h3>
+                            <span class="big">${percent}%</span>
+                            <p>Prosentase target</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        if (data.category === 'SEMUA') {
+            cardsContainer.insertAdjacentHTML('beforeend', createRow('PENDAPATAN', data.sub_totals.pendapatan.target, data.sub_totals.pendapatan.real, data.sub_totals.pendapatan.persen));
+            cardsContainer.insertAdjacentHTML('beforeend', createRow('BELANJA', data.sub_totals.pengeluaran.target, data.sub_totals.pengeluaran.real, data.sub_totals.pengeluaran.persen));
+        } else {
+            const label = data.category === 'PENDAPATAN' ? 'PENDAPATAN' : 'BELANJA';
+            cardsContainer.insertAdjacentHTML('beforeend', createRow(label, data.totals.target, data.totals.realisasi_total, data.totals.persen));
         }
     }
 
@@ -346,28 +401,105 @@ function renderAnggaran(data) {
         else if (item.persen >= 80) progressColor = '#10b981';
         else if (item.persen < 50) progressColor = '#f59e0b';
 
+        // Hide numeric values for Root Organization
+        const isRoot = item.nama && item.nama.includes('Rumah Sakit Khusus Jiwa dan Ketergantungan Obat');
+
+        const valTarget = isRoot ? '' : formatRupiah(item.target);
+        const valLalu = isRoot ? '' : formatRupiah(item.realisasi_lalu);
+        const valKini = isRoot ? '' : formatRupiah(item.realisasi_kini);
+        const valTotal = isRoot ? '' : formatRupiah(item.realisasi_total);
+        const valSelisih = isRoot ? '' : formatRupiah(item.selisih);
+        const valPersen = isRoot ? '' : item.persen + '%';
+        const valProgress = isRoot ? '' : `
+                    <div class="progress-track">
+                        <div class="progress-fill" style="width: ${Math.min(item.persen, 100)}%; background:${progressColor};"></div>
+                    </div>`;
+
         body.insertAdjacentHTML('beforeend', `
             <tr class="${isHeader ? 'row-header' : 'row-detail'}">
                 <td class="col-kode">${item.kode}</td>
                 <td class="col-uraian">
                     <span>${item.nama}</span>
                 </td>
-                <td class="col-mono text-right">${formatRupiah(item.target)}</td>
-                <td class="col-mono text-right" style="color:#64748b; font-size:12px;">${formatRupiah(item.realisasi_lalu)}</td>
-                <td class="col-mono text-right font-medium text-slate-700">${formatRupiah(item.realisasi_kini)}</td>
-                <td class="col-mono text-right font-bold text-slate-900">${formatRupiah(item.realisasi_total)}</td>
+                <td class="col-mono text-right">${valTarget}</td>
+                <td class="col-mono text-right" style="color:#64748b; font-size:12px;">${valLalu}</td>
+                <td class="col-mono text-right font-medium text-slate-700">${valKini}</td>
+                <td class="col-mono text-right font-bold text-slate-900">${valTotal}</td>
                 <td class="col-mono text-right ${item.selisih < 0 ? 'text-red-500' : 'text-slate-500'}">
-                    ${formatRupiah(item.selisih)}
+                    ${valSelisih}
                 </td>
-                <td class="text-center font-bold" style="color:${progressColor}">${item.persen}%</td>
+                <td class="text-center font-bold" style="color:${progressColor}">${valPersen}</td>
                 <td class="col-progress">
-                    <div class="progress-track">
-                        <div class="progress-fill" style="width: ${Math.min(item.persen, 100)}%; background:${progressColor};"></div>
-                    </div>
+                    ${valProgress}
                 </td>
             </tr>
         `);
     });
+}
+
+
+function renderPengeluaran(data) {
+    // 1. Render Cards
+    const cardContainer = document.getElementById('laporanPengeluaranCards');
+    if (cardContainer) {
+        cardContainer.innerHTML = '';
+        const types = {
+            'PEGAWAI': { label: 'Belanja Pegawai', icon: 'ph-user-gear', color: 'purple' },
+            'BARANG_JASA': { label: 'Belanja Barang & Jasa', icon: 'ph-package', color: 'blue' },
+            'MODAL': { label: 'Belanja Modal', icon: 'ph-office-building', color: 'green' }
+        };
+
+        Object.keys(types).forEach(key => {
+            const item = data.summary[key] || { total: 0, count: 0 };
+            const conf = types[key];
+            cardContainer.insertAdjacentHTML('beforeend', `
+                <div class="laporan-card highlight-${conf.color}">
+                    <div class="card-icon"><i class="ph ${conf.icon}"></i></div>
+                    <div class="card-info">
+                        <h3>${conf.label}</h3>
+                        <span class="big">${formatRupiah(item.total)}</span>
+                        <p>${item.count} Transaksi</p>
+                    </div>
+                </div>
+            `);
+        });
+    }
+
+    // 2. Render Table
+    const body = document.getElementById('laporanPengeluaranBody');
+    if (body) {
+        body.innerHTML = '';
+        if (data.data.length === 0) {
+            body.innerHTML = '<tr><td colspan="4" class="text-center">Tidak ada data pengeluaran.</td></tr>';
+            return;
+        }
+
+        let gTotal = 0;
+        let gCount = 0;
+
+        data.data.forEach(item => {
+            const total = parseFloat(item.total);
+            const count = parseInt(item.count);
+            gTotal += total;
+            gCount += count;
+            body.insertAdjacentHTML('beforeend', `
+                <tr>
+                    <td><code class="bg-slate-100 px-2 py-1 rounded">${item.kode}</code></td>
+                    <td>${item.nama}</td>
+                    <td class="text-right font-bold">${formatRupiah(total)}</td>
+                    <td class="text-center">${count}</td>
+                </tr>
+            `);
+        });
+
+        body.insertAdjacentHTML('beforeend', `
+            <tr class="bg-slate-50 font-extrabold">
+                <td colspan="2" class="text-right">TOTAL KESELURUHAN</td>
+                <td class="text-right">${formatRupiah(gTotal)}</td>
+                <td class="text-center">${gCount}</td>
+            </tr>
+        `);
+    }
 }
 
 window.exportLaporan = function (type) {
@@ -385,11 +517,17 @@ window.exportLaporan = function (type) {
         'REKON': 'rekon',
         'PIUTANG': 'piutang',
         'MOU': 'mou',
-        'ANGGARAN': 'anggaran'
+        'ANGGARAN': 'anggaran',
+        'PENGELUARAN': 'pengeluaran'
     };
 
     const endpoint = mapping[reportType] || 'pendapatan';
-    window.location.href = `/dashboard/laporan/export/${endpoint}?start=${start}&end=${end}`;
+    let url = `/dashboard/laporan/export/${endpoint}?start=${start}&end=${end}`;
+    if (reportType === 'ANGGARAN') {
+        const cat = document.getElementById('lraCategory')?.value || 'PENDAPATAN';
+        url += `&category=${cat}`;
+    }
+    window.location.href = url;
     toast(`⏳ Menyiapkan Unduh Excel ${reportType}...`, 'info');
 };
 
@@ -408,11 +546,17 @@ window.exportPdf = function (type) {
         'REKON': 'rekon-pdf',
         'PIUTANG': 'piutang-pdf',
         'MOU': 'mou-pdf',
-        'ANGGARAN': 'anggaran-pdf'
+        'ANGGARAN': 'anggaran-pdf',
+        'PENGELUARAN': 'pengeluaran-pdf'
     };
 
     const endpoint = mapping[reportType] || 'pendapatan-pdf';
-    window.location.href = `/dashboard/laporan/export/${endpoint}?start=${start}&end=${end}`;
+    let url = `/dashboard/laporan/export/${endpoint}?start=${start}&end=${end}`;
+    if (reportType === 'ANGGARAN') {
+        const cat = document.getElementById('lraCategory')?.value || 'PENDAPATAN';
+        url += `&category=${cat}`;
+    }
+    window.location.href = url;
     toast(`⏳ Menyiapkan Export PDF ${reportType}...`, 'info');
 };
 
@@ -440,7 +584,8 @@ window.openPreviewModal = function (type) {
         'REKON': 'LAPORAN REKONSILIASI',
         'PIUTANG': 'LAPORAN PIUTANG',
         'MOU': 'LAPORAN KERJASAMA / MOU',
-        'ANGGARAN': 'LAPORAN REALISASI ANGGARAN'
+        'ANGGARAN': 'LAPORAN REALISASI ANGGARAN',
+        'PENGELUARAN': 'LAPORAN REALISASI BELANJA'
     };
     const modalMainTitle = document.getElementById('previewMainTitle');
     if (modalMainTitle) modalMainTitle.innerText = titleMapping[reportType] || 'LAPORAN';
@@ -764,16 +909,18 @@ window.openPreviewModal = function (type) {
                 <tbody>`;
         data.data.forEach(item => {
             const isBold = item.level < 5;
+            const isRoot = item.nama && item.nama.includes('Rumah Sakit Khusus Jiwa dan Ketergantungan Obat');
+
             aggHtml += `
                 <tr style="${isBold ? 'font-weight:bold; background-color:#f8fafc;' : ''}">
                     <td style="border:1px solid #000; padding:5px;">${item.kode}</td>
                     <td style="border:1px solid #000; padding:5px;">${item.nama}</td>
-                    <td style="border:1px solid #000; padding:5px;">${fr(item.target)}</td>
-                    <td style="border:1px solid #000; padding:5px;">${fr(item.realisasi_lalu)}</td>
-                    <td style="border:1px solid #000; padding:5px;">${fr(item.realisasi_kini)}</td>
-                    <td style="border:1px solid #000; padding:5px;">${fr(item.realisasi_total)}</td>
-                    <td style="border:1px solid #000; padding:5px;">${fr(item.selisih)}</td>
-                    <td style="border:1px solid #000; padding:5px; text-align:center;">${item.persen}%</td>
+                    <td style="border:1px solid #000; padding:5px;">${isRoot ? '' : fr(item.target)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${isRoot ? '' : fr(item.realisasi_lalu)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${isRoot ? '' : fr(item.realisasi_kini)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${isRoot ? '' : fr(item.realisasi_total)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${isRoot ? '' : fr(item.selisih)}</td>
+                    <td style="border:1px solid #000; padding:5px; text-align:center;">${isRoot ? '' : item.persen + '%'}</td>
                 </tr>`;
         });
         aggHtml += `
@@ -787,6 +934,60 @@ window.openPreviewModal = function (type) {
                     <td style="border:1px solid #000; padding:5px; text-align:center;">${data.totals.persen}%</td>
                 </tr></tbody></table>`;
         tablesContainer.innerHTML = aggHtml;
+    } else if (reportType === 'PENGELUARAN') {
+        let expHtml = `
+            <h6 style="margin:20px 0 10px; font-weight:bold; border-left:4px solid #10b981; padding-left:10px; font-size:11pt;">1. RINGKASAN PER KATEGORI</h6>
+            <table style="width:100%; border-collapse:collapse; margin-bottom:25px; font-size:9pt;">
+                <thead style="background:#f8fafc;">
+                    <tr>
+                        <th style="border:1px solid #000; padding:8px; text-align:center;">Kategori Belanja</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center;">Jumlah Transaksi</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center;">Total Nominal</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        let gC = 0, gT = 0;
+        const labels = { 'PEGAWAI': 'Belanja Pegawai', 'BARANG_JASA': 'Belanja Barang & Jasa', 'MODAL': 'Belanja Modal' };
+        Object.keys(labels).forEach(key => {
+            const item = data.summary[key] || { count: 0, total: 0 };
+            gC += parseInt(item.count); gT += parseFloat(item.total);
+            expHtml += `
+                <tr>
+                    <td style="border:1px solid #000; padding:8px;">${labels[key]}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${item.count}</td>
+                    <td style="border:1px solid #000; padding:8px;">${fr(item.total)}</td>
+                </tr>`;
+        });
+        expHtml += `
+                <tr style="background:#f1f5f9; font-weight:bold;">
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">TOTAL KESELURUHAN</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${gC}</td>
+                    <td style="border:1px solid #000; padding:8px;">${fr(gT)}</td>
+                </tr></tbody></table>
+
+            <h6 style="margin:20px 0 10px; font-weight:bold; border-left:4px solid #3b82f6; padding-left:10px; font-size:11pt;">2. RINCIAN PER KODE REKENING</h6>
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                <thead style="background:#f8fafc;">
+                    <tr>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 15%;">Kode</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 50%;">Uraian Rekening</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 25%;">Total Nominal</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 10%;">Trans</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        data.data.forEach(item => {
+            expHtml += `
+                <tr>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;"><code>${item.kode}</code></td>
+                    <td style="border:1px solid #000; padding:8px;">${item.nama}</td>
+                    <td style="border:1px solid #000; padding:8px;">${fr(item.total)}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${item.count}</td>
+                </tr>`;
+        });
+        expHtml += `</tbody></table>`;
+        tablesContainer.innerHTML = expHtml;
     }
 
     const modal = document.getElementById('previewLaporanModal');
