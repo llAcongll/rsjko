@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>SIPBLUD EHD</title>
+  <title>SIPPBLUD EHD</title>
 
   <link rel="icon" href="https://drive.google.com/thumbnail?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&sz=w100"
     type="image/x-icon">

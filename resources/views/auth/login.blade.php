@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
-  <title>SIPBLUD EHD</title>
+  <title>SIPPBLUD EHD</title>
 
   <link rel="icon" href="https://drive.google.com/thumbnail?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&sz=w100"
     type="image/x-icon">
@@ -29,9 +29,9 @@
     <div class="login-card">
       <div class="login-header">
         <img src="https://drive.google.com/thumbnail?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&sz=w400" class="logo"
-          alt="Logo Provinsi Kepulauan Riau" title="SIPBLUD EHD">
+          alt="Logo Provinsi Kepulauan Riau" title="SIPPBLUD EHD">
         <div class="branding">
-          <h1>SISTEM INFORMASI PENDAPATAN</h1>
+          <h1>SISTEM INFORMASI<br>PENDAPATAN DAN PENGELUARAN BLUD</h1>
           <h2>RSJKO ENGKU HAJI DAUD</h2>
           <p class="instansi">Provinsi Kepulauan Riau</p>
         </div>
