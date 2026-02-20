@@ -92,12 +92,15 @@
 
                             <td colspan="2" class="text-right">{{ number_format($gTotal, 2, ',', '.') }}</td>
             </tr>
-            <tr><td colspan="4" style="border: none; height: 30px;"></td></tr>
-            <tr><th colspan="4" style="background-color: #cfe2f3; text-align: center;">2. RINCIAN PER KODE REKENING</th></tr>
+            <tr><td colspan="7" style="border: none; height: 30px;"></td></tr>
+            <tr><th colspan="7" style="background-color: #cfe2f3; text-align: center;">2. RINCIAN PER KODE REKENING</th></tr>
             <tr>
                 <th style="text-align: center;">Kode Rekening</th>
-                    <th style="text-align: center;">Nama Rekening</th>
-                <th style="text-align: center;">Transaksi</th>
+                <th style="text-align: center;">Nama Rekening</th>
+                <th style="text-align: center;">Uraian Belanja</th>
+                <th style="text-align: center;">Uang Persediaan</th>
+                <th style="text-align: center;">Ganti Uang</th>
+                <th style="text-align: center;">Langsung</th>
                 <th style="text-align: center;">Total Pengeluaran</th>
         </tr>
     </thead>
@@ -106,9 +109,11 @@
                 <tr>
                     <td class="text-center">{{ $item->kode }}</td>
                         <td>{{ $item->nama }}</td>
-                        <td class="text-center">{{ $item->count }}</td>
+                        <td>{{ $item->uraian }}</td>
+                        <td class="text-right">{{ number_format($item->up, 2, ',', '.') }}</td>
+                        <td class="text-right">{{ number_format($item->gu, 2, ',', '.') }}</td>
+                        <td class="text-right">{{ number_format($item->ls, 2, ',', '.') }}</td>
                         <td class="text-right">{{ number_format($item->total, 2, ',', '.') }}</td>
-
              </tr>
         @endforeach
         </tbody>

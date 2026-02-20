@@ -59,10 +59,13 @@
     <table class="table">
         <thead>
             <tr>
-                <th style="width: 20%;">Kode Rekening</th>
-                <th style="width: 45%;">Nama Rekening</th>
-                <th style="width: 15%;">Transaksi</th>
-                <th style="width: 20%;">Total Pengeluaran</th>
+                <th style="width: 15%;">Kode Rekening</th>
+                <th style="width: 25%;">Nama Rekening</th>
+                <th style="width: 20%;">Uraian Belanja</th>
+                <th style="width: 10%; text-align: right;">UP</th>
+                <th style="width: 10%; text-align: right;">GU</th>
+                <th style="width: 10%; text-align: right;">LS</th>
+                <th style="width: 10%; text-align: right;">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -70,7 +73,10 @@
                 <tr>
                     <td class="text-center"><code>{{ $item->kode }}</code></td>
                     <td>{{ $item->nama }}</td>
-                    <td class="text-center">{{ $item->count }}</td>
+                    <td>{{ $item->uraian }}</td>
+                    <td class="text-right">{{ number_format($item->up,2,',','.') }}</td>
+                    <td class="text-right">{{ number_format($item->gu,2,',','.') }}</td>
+                    <td class="text-right">{{ number_format($item->ls,2,',','.') }}</td>
                     <td class="text-right">{{ number_format($item->total,2,',','.') }}</td>
                 </tr>
             @endforeach

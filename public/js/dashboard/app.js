@@ -244,6 +244,27 @@ window.togglePengeluaran = function (btn) {
   }
 };
 
+window.openPengeluaran = async function (kategori, btn) {
+  if (!kategori) return;
+
+  const parentBtn = document.getElementById('btnPengeluaran');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  await loadContent(`pengeluaran/${kategori}`);
+
+  document
+    .querySelectorAll('#submenuPengeluaran button')
+    .forEach(b => b.classList.remove('active'));
+
+  if (btn) btn.classList.add('active');
+
+  // Let pengeluaran.js handle its own initialization since it loads dynamically
+  if (typeof window.initPengeluaran === 'function') {
+    window.initPengeluaran(kategori);
+  }
+};
+
 window.openPendapatan = async function (jenis, btn) {
   if (!jenis) return;
 
@@ -396,15 +417,24 @@ function doLogout() {
   }
 
   isLoggingOut = true;
-  const btn = form.querySelector('.btn-logout');
 
+  // Update sidebar button visually
+  const btn = form.querySelector('.btn-logout');
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> <span>Keluar...</span>';
   }
 
-  // Use native submit to bypass any potential overrides or event listeners
-  HTMLFormElement.prototype.submit.call(form);
+  // Tampilkan overlay global agar layar tidak bisa diklik (mencegah interaksi ganda)
+  const loader = document.getElementById('globalLoader');
+  if (loader) loader.classList.add('show');
+
+  // Gunakan metode submit standar
+  try {
+    form.submit();
+  } catch (err) {
+    HTMLFormElement.prototype.submit.call(form);
+  }
 }
 
 /* =========================

@@ -22,16 +22,20 @@ class LaporanController extends Controller
             ->whereYear('pengeluaran.tanggal', $tahun)
             ->whereBetween('pengeluaran.tanggal', [$start, $end]);
 
-        // Detail per Account
+        // Detail per Account and Uraian
         $details = (clone $query)
             ->select(
                 'kode_rekening.kode',
                 'kode_rekening.nama',
+                'pengeluaran.uraian',
                 DB::raw('SUM(nominal) as total'),
-                DB::raw('COUNT(*) as count')
+                DB::raw("SUM(CASE WHEN metode_pembayaran = 'UP' THEN nominal ELSE 0 END) as up"),
+                DB::raw("SUM(CASE WHEN metode_pembayaran = 'GU' THEN nominal ELSE 0 END) as gu"),
+                DB::raw("SUM(CASE WHEN metode_pembayaran = 'LS' THEN nominal ELSE 0 END) as ls")
             )
-            ->groupBy('kode_rekening.kode', 'kode_rekening.nama')
+            ->groupBy('kode_rekening.kode', 'kode_rekening.nama', 'pengeluaran.uraian')
             ->orderBy('kode_rekening.kode')
+            ->orderBy('pengeluaran.uraian')
             ->get();
 
         // Summary per Category
@@ -915,13 +919,13 @@ class LaporanController extends Controller
                 // Calculate Previous (Jan 1 to Start-1)
                 // If starts on Jan 1, previous is 0
                 if ($start > $startOfYear) {
-                    $realLalu = $this->calculateRealisasiDetail($node->sumber_data, $tahun, $startOfYear, $prevEnd);
+                    $realLalu = $this->calculateRealisasiDetail($node->sumber_data, $tahun, $startOfYear, $prevEnd, $node->id);
                 } else {
                     $realLalu = 0;
                 }
 
                 // Calculate Current (Start to End)
-                $realKini = $this->calculateRealisasiDetail($node->sumber_data, $tahun, $start, $end);
+                $realKini = $this->calculateRealisasiDetail($node->sumber_data, $tahun, $start, $end, $node->id);
 
                 $realTotal = $realLalu + $realKini;
             } elseif ($node->category === 'PENGELUARAN') {
@@ -973,7 +977,7 @@ class LaporanController extends Controller
         return $item;
     }
 
-    private function calculateRealisasiDetail($sumberData, $tahun, $startDate, $endDate)
+    private function calculateRealisasiDetail($sumberData, $tahun, $startDate, $endDate, $nodeId = null)
     {
         $total = 0;
         switch ($sumberData) {
@@ -1026,10 +1030,15 @@ class LaporanController extends Controller
             case 'PEGAWAI':
             case 'BARANG_JASA':
             case 'MODAL':
-                $total = DB::table('pengeluaran')
+                $query = DB::table('pengeluaran')
                     ->where('kategori', $sumberData)
-                    ->whereBetween('tanggal', [$startDate, $endDate])
-                    ->sum('nominal');
+                    ->whereBetween('tanggal', [$startDate, $endDate]);
+
+                if ($nodeId) {
+                    $query->where('kode_rekening_id', $nodeId);
+                }
+
+                $total = $query->sum('nominal');
                 break;
         }
         return $total;

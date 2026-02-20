@@ -297,17 +297,15 @@ class KodeRekeningController extends Controller
             }
 
             if ($rekening->category === 'PENGELUARAN') {
+                $query = DB::table('pengeluaran')
+                    ->where('kode_rekening_id', $rekening->id)
+                    ->whereYear('tanggal', $tahun);
+
                 if ($rekening->sumber_data) {
-                    return (int) DB::table('pengeluaran')
-                        ->where('kategori', $rekening->sumber_data)
-                        ->whereYear('tanggal', $tahun)
-                        ->sum('nominal');
+                    $query->where('kategori', $rekening->sumber_data);
                 }
 
-                return (int) DB::table('pengeluaran')
-                    ->where('kode_rekening_id', $rekening->id)
-                    ->whereYear('tanggal', $tahun)
-                    ->sum('nominal');
+                return (int) $query->sum('nominal');
             }
         }
 

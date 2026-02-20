@@ -17,6 +17,15 @@ class Pengeluaran extends Model
         'kode_rekening_id',
         'uraian',
         'nominal',
+        'metode_pembayaran',
+        'no_spm',
+        'no_sp2d',
+        'no_spp',
+        'no_spp_index',
+        'no_spp_metode_index',
+        'no_spm_index',
+        'no_spm_metode_index',
+        'no_sp2d_index',
         'keterangan',
     ];
 

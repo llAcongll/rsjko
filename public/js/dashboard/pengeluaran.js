@@ -12,21 +12,7 @@ let editPengeluaranId = null;
 /* =========================
    ROUTING / APP.JS INTEGRATION
 ========================= */
-window.openPengeluaran = function (kategori, btn) {
-    currentKategori = kategori;
-    setActiveMenu(btn);
 
-    // Load content view first
-    const mainContent = document.getElementById('mainContent');
-    mainContent.innerHTML = '<div class="flex items-center justify-center py-20"><i class="ph ph-spinner animate-spin text-4xl"></i></div>';
-
-    fetch('/dashboard/content/pengeluaran/' + kategori)
-        .then(res => res.text())
-        .then(html => {
-            mainContent.innerHTML = html;
-            initPengeluaran(kategori);
-        });
-};
 
 window.initPengeluaran = function (kategori) {
     currentKategori = kategori;
@@ -57,12 +43,42 @@ window.initPengeluaran = function (kategori) {
         searchInput.oninput = (e) => window.handleSearchPengeluaran(e);
     }
 
+    // Bind Auto SPP Logic (only for create, or if user explicitly wants)
+    const tglEl = document.getElementById('pengeluaranTanggal');
+    const mtdEl = document.getElementById('pengeluaranMetode');
+    if (tglEl) tglEl.addEventListener('change', () => updateAutoSpp());
+    if (mtdEl) mtdEl.addEventListener('change', () => updateAutoSpp());
+
     loadPengeluaran();
+}
+
+async function updateAutoSpp() {
+    if (isEditPengeluaran) return;
+
+    const tgl = document.getElementById('pengeluaranTanggal').value;
+    const mtd = document.getElementById('pengeluaranMetode').value;
+    const sppEl = document.getElementById('pengeluaranNoSPP');
+    const spmEl = document.getElementById('pengeluaranNoSPM');
+    const sp2dEl = document.getElementById('pengeluaranNoSP2D');
+
+    if (!tgl || !mtd || !sppEl) return;
+
+    try {
+        const res = await fetch(`/dashboard/pengeluaran/next-spp?tanggal=${tgl}&metode=${mtd}`, {
+            headers: { 'Accept': 'application/json' }
+        });
+        const data = await res.json();
+        if (sppEl) sppEl.value = data.no_spp;
+        if (spmEl) spmEl.value = data.no_spm;
+        if (sp2dEl) sp2dEl.value = data.no_sp2d;
+    } catch (err) {
+        console.error('Failed to gen numbers', err);
+    }
 }
 
 /* =========================
    MODAL CONTROL
-========================= */
+ ========================= */
 window.openPengeluaranForm = function (kategori, id = null) {
     const modal = document.getElementById('pengeluaranModal');
     if (!modal) return;
@@ -73,16 +89,35 @@ window.openPengeluaranForm = function (kategori, id = null) {
     document.getElementById('pengeluaranKategori').value = kategori;
 
     const titleEl = document.getElementById('pengeluaranModalTitle');
+    const sppEl = document.getElementById('pengeluaranNoSPP');
+    const spmEl = document.getElementById('pengeluaranNoSPM');
+    const sp2dEl = document.getElementById('pengeluaranNoSP2D');
+
     if (id) {
         isEditPengeluaran = true;
         editPengeluaranId = id;
         titleEl.innerText = 'Edit Pengeluaran';
+        [sppEl, spmEl, sp2dEl].forEach(el => {
+            if (el) {
+                el.readOnly = false;
+                el.style.background = '';
+                el.style.cursor = '';
+            }
+        });
         loadEditData(id);
     } else {
         isEditPengeluaran = false;
         editPengeluaranId = null;
         titleEl.innerText = 'Tambah Pengeluaran';
+        [sppEl, spmEl, sp2dEl].forEach(el => {
+            if (el) {
+                el.readOnly = true;
+                el.style.background = '#f8fafc';
+                el.style.cursor = 'not-allowed';
+            }
+        });
         document.getElementById('pengeluaranTanggal').value = new Date().toISOString().split('T')[0];
+        updateAutoSpp();
     }
 
     loadRekeningPengeluaran(kategori);
@@ -132,9 +167,26 @@ function loadPengeluaran(page = 1) {
             // Update Summary Cards
             const countEl = document.getElementById('totalCountPengeluaran');
             const totalEl = document.getElementById('totalNominalPengeluaran');
+            const upEl = document.getElementById('totalUP');
+            const guEl = document.getElementById('totalGU');
+            const lsEl = document.getElementById('totalLS');
 
-            if (countEl && res.aggregates) countEl.innerText = res.aggregates.total_count.toLocaleString('id-ID');
-            if (totalEl && res.aggregates) totalEl.innerText = formatRupiah(res.aggregates.total_nominal);
+            if (res.aggregates) {
+                if (countEl) countEl.innerText = res.aggregates.total_count.toLocaleString('id-ID') + ' Transaksi';
+                if (totalEl) totalEl.innerText = formatRupiah(res.aggregates.total_nominal);
+
+                if (upEl) upEl.innerText = formatRupiah(res.aggregates.total_up);
+                const countUPEl = document.getElementById('countUP');
+                if (countUPEl) countUPEl.innerText = res.aggregates.count_up.toLocaleString('id-ID') + ' Transaksi';
+
+                if (guEl) guEl.innerText = formatRupiah(res.aggregates.total_gu);
+                const countGUEl = document.getElementById('countGU');
+                if (countGUEl) countGUEl.innerText = res.aggregates.count_gu.toLocaleString('id-ID') + ' Transaksi';
+
+                if (lsEl) lsEl.innerText = formatRupiah(res.aggregates.total_ls);
+                const countLSEl = document.getElementById('countLS');
+                if (countLSEl) countLSEl.innerText = res.aggregates.count_ls.toLocaleString('id-ID') + ' Transaksi';
+            }
 
             const data = res.data || [];
             if (data.length === 0) {
@@ -218,6 +270,11 @@ function loadEditData(id) {
             document.getElementById('pengeluaranKeterangan').value = data.keterangan || '';
             document.getElementById('pengeluaranNominalValue').value = data.nominal;
             document.getElementById('pengeluaranNominalDisplay').value = formatRibuan(data.nominal);
+
+            document.getElementById('pengeluaranMetode').value = data.metode_pembayaran || '';
+            document.getElementById('pengeluaranNoSPP').value = data.no_spp || '';
+            document.getElementById('pengeluaranNoSPM').value = data.no_spm || '';
+            document.getElementById('pengeluaranNoSP2D').value = data.no_sp2d || '';
 
             // Pilih rekening (nunggu loadRekeningPengeluaran selesai)
             let attempts = 0;
@@ -323,7 +380,14 @@ window.submitPengeluaran = async function (event) {
             body: formData
         });
 
-        if (!res.ok) throw new Error('Gagal menyimpan data');
+        if (!res.ok) {
+            const err = await res.json();
+            if (err.errors) {
+                const firstErrorKey = Object.keys(err.errors)[0];
+                throw new Error(err.errors[firstErrorKey][0]);
+            }
+            throw new Error(err.message || 'Gagal menyimpan data');
+        }
 
         toast('Data berhasil disimpan', 'success');
         closePengeluaranModal();
@@ -407,6 +471,22 @@ window.openPengeluaranDetail = function (id) {
                 <div class="detail-row">
                     <span class="label">Keterangan</span>
                     <span class="value">${escapeHtml(data.keterangan || '-')}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Metode Pembayaran</span>
+                    <span class="value">${data.metode_pembayaran === 'UP' ? 'Uang Persediaan' : (data.metode_pembayaran === 'GU' ? 'Ganti Uang' : (data.metode_pembayaran === 'LS' ? 'Langsung' : '-'))}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">No. SPP</span>
+                    <span class="value">${data.no_spp ?? '-'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">No. SPM</span>
+                    <span class="value">${data.no_spm ?? '-'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">No. SP2D</span>
+                    <span class="value">${data.no_sp2d ?? '-'}</span>
                 </div>
                 <div class="detail-total mt-4">
                     <span>Nominal Pengeluaran</span>

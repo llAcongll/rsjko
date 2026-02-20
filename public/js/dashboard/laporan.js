@@ -470,33 +470,46 @@ function renderPengeluaran(data) {
     if (body) {
         body.innerHTML = '';
         if (data.data.length === 0) {
-            body.innerHTML = '<tr><td colspan="4" class="text-center">Tidak ada data pengeluaran.</td></tr>';
+            body.innerHTML = '<tr><td colspan="7" class="text-center">Tidak ada data pengeluaran.</td></tr>';
             return;
         }
 
         let gTotal = 0;
-        let gCount = 0;
+        let gUp = 0;
+        let gGu = 0;
+        let gLs = 0;
 
         data.data.forEach(item => {
             const total = parseFloat(item.total);
-            const count = parseInt(item.count);
+            const up = parseFloat(item.up) || 0;
+            const gu = parseFloat(item.gu) || 0;
+            const ls = parseFloat(item.ls) || 0;
+
             gTotal += total;
-            gCount += count;
+            gUp += up;
+            gGu += gu;
+            gLs += ls;
+
             body.insertAdjacentHTML('beforeend', `
                 <tr>
                     <td><code class="bg-slate-100 px-2 py-1 rounded">${item.kode}</code></td>
                     <td>${item.nama}</td>
+                    <td>${item.uraian || '-'}</td>
+                    <td class="text-right">${formatRupiah(up)}</td>
+                    <td class="text-right">${formatRupiah(gu)}</td>
+                    <td class="text-right">${formatRupiah(ls)}</td>
                     <td class="text-right font-bold">${formatRupiah(total)}</td>
-                    <td class="text-center">${count}</td>
                 </tr>
             `);
         });
 
         body.insertAdjacentHTML('beforeend', `
             <tr class="bg-slate-50 font-extrabold">
-                <td colspan="2" class="text-right">TOTAL KESELURUHAN</td>
+                <td colspan="3" class="text-right">TOTAL KESELURUHAN</td>
+                <td class="text-right">${formatRupiah(gUp)}</td>
+                <td class="text-right">${formatRupiah(gGu)}</td>
+                <td class="text-right">${formatRupiah(gLs)}</td>
                 <td class="text-right">${formatRupiah(gTotal)}</td>
-                <td class="text-center">${gCount}</td>
             </tr>
         `);
     }
@@ -971,9 +984,12 @@ window.openPreviewModal = function (type) {
                 <thead style="background:#f8fafc;">
                     <tr>
                         <th style="border:1px solid #000; padding:8px; text-align:center; width: 15%;">Kode</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 50%;">Uraian Rekening</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 25%;">Total Nominal</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 10%;">Trans</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 25%;">Nama Rekening</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">Uraian Belanja</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 10%;">UP</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 10%;">GU</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 10%;">LS</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 10%;">Total</th>
                     </tr>
                 </thead>
                 <tbody>`;
@@ -982,8 +998,11 @@ window.openPreviewModal = function (type) {
                 <tr>
                     <td style="border:1px solid #000; padding:8px; text-align:center;"><code>${item.kode}</code></td>
                     <td style="border:1px solid #000; padding:8px;">${item.nama}</td>
-                    <td style="border:1px solid #000; padding:8px;">${fr(item.total)}</td>
-                    <td style="border:1px solid #000; padding:8px; text-align:center;">${item.count}</td>
+                    <td style="border:1px solid #000; padding:8px;">${item.uraian || '-'}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.up || 0)}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.gu || 0)}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.ls || 0)}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.total)}</td>
                 </tr>`;
         });
         expHtml += `</tbody></table>`;

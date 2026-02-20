@@ -316,6 +316,13 @@
 
   <div id="toast" class="toast"></div>
 
+  <!-- GLOBAL LOADER OVERLAY -->
+  <div id="globalLoader" class="confirm-overlay" style="z-index: 9999; flex-direction: column;">
+    <i class="ph ph-spinner animate-spin" style="font-size: 40px; color: #fff;"></i>
+    <span
+      style="margin-top: 12px; color: #fff; font-size: 14px; font-weight: 600; letter-spacing: 0.5px;">Memproses...</span>
+  </div>
+
   {{-- MODAL DELETE --}}
   @include('dashboard.partials.confirm-delete')
 

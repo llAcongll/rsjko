@@ -316,8 +316,14 @@ window.editPendapatanUmum = function (id) {
     metode.dispatchEvent(new Event('change'));
 
     setTimeout(() => {
-      if (data.bank) form.querySelector('[name="bank"]').value = data.bank;
-      if (data.metode_detail) form.querySelector('[name="metode_detail"]').value = data.metode_detail;
+      if (data.bank) {
+        form.querySelector('[name="bank"]').value = data.bank;
+        form.querySelector('[name="bank"]').dispatchEvent(new Event('change'));
+      }
+      setTimeout(() => {
+        if (data.metode_detail) form.querySelector('[name="metode_detail"]').value = data.metode_detail;
+        cekSiapSimpan();
+      }, 50);
     }, 100);
 
     form.querySelector('[name="rs_tindakan"]').value = data.rs_tindakan;
@@ -407,12 +413,8 @@ window.initPendapatanUmum = function () {
     ['tanggal', 'nama_pasien', 'ruangan_id'].forEach(name => {
       form.querySelector(`[name="${name}"]`)?.addEventListener('input', cekSiapSimpan);
     });
-    ['metode_pembayaran', 'bank', 'metode_detail'].forEach(id => {
-      if (id === 'metode_pembayaran') {
-        form.querySelector('[name="metode_pembayaran"]')?.addEventListener('change', cekSiapSimpan);
-      } else {
-        document.getElementById(id)?.addEventListener('change', cekSiapSimpan);
-      }
+    ['metode_pembayaran', 'bank', 'metode_detail'].forEach(name => {
+      form.querySelector(`[name="${name}"]`)?.addEventListener('change', cekSiapSimpan);
     });
   }
 
@@ -533,7 +535,7 @@ function setupBankLogic() {
 
   if (!metode || !bank || !detail) return;
 
-  metode.onchange = () => {
+  metode.addEventListener('change', () => {
     resetSelect(bank, '-- Pilih Bank --');
     resetSelect(detail, '-- Metode Detail --');
 
@@ -546,18 +548,33 @@ function setupBankLogic() {
       detail.value = 'SETOR_TUNAI';
     } else if (metode.value === 'NON_TUNAI') {
       bank.disabled = false;
-      detail.disabled = false;
-
       bank.removeAttribute('readonly');
-      detail.removeAttribute('readonly');
+      detail.disabled = true; // Wait for bank to be chosen
 
       addOption(bank, { value: 'BRK', label: 'Bank Riau Kepri Syariah' });
       addOption(bank, { value: 'BSI', label: 'Bank Syariah Indonesia' });
-      addOption(detail, { value: 'QRIS', label: 'QRIS' });
-      addOption(detail, { value: 'TRANSFER', label: 'Transfer' });
+    } else {
+      bank.disabled = true;
+      detail.disabled = true;
     }
     cekSiapSimpan();
-  };
+  });
+
+  bank.addEventListener('change', () => {
+    if (metode.value !== 'NON_TUNAI') return;
+
+    resetSelect(detail, '-- Metode Detail --');
+
+    if (bank.value) {
+      detail.disabled = false;
+      detail.removeAttribute('readonly');
+      addOption(detail, { value: 'QRIS', label: 'QRIS' });
+      addOption(detail, { value: 'TRANSFER', label: 'Transfer' });
+    } else {
+      detail.disabled = true;
+    }
+    cekSiapSimpan();
+  });
 }
 
 async function loadRuangan() {

@@ -44,13 +44,16 @@
                     <tr>
                         <th style="width: 150px;">Sub Kode Rekening</th>
                         <th>Nama Rekening</th>
+                        <th>Uraian Belanja</th>
+                        <th style="text-align:right">Uang Persediaan</th>
+                        <th style="text-align:right">Ganti Uang</th>
+                        <th style="text-align:right">Langsung</th>
                         <th style="text-align:right">Total Pengeluaran</th>
-                        <th style="text-align:center">Jumlah Transaksi</th>
                     </tr>
                 </thead>
                 <tbody id="laporanPengeluaranBody">
                     <tr>
-                        <td colspan="4" class="text-center">Klik Tampilkan untuk memuat data.</td>
+                        <td colspan="7" class="text-center">Klik Tampilkan untuk memuat data.</td>
                     </tr>
                 </tbody>
             </table>

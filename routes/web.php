@@ -294,6 +294,7 @@ Route::middleware(['auth', 'role:ADMIN,USER'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('dashboard/pengeluaran')->group(function () {
+        Route::get('/next-spp', [PengeluaranController::class, 'generateNextSppNumber']);
         Route::get('/', [PengeluaranController::class, 'index']);
         Route::post('/', [PengeluaranController::class, 'store']);
         Route::get('/{id}', [PengeluaranController::class, 'show']);

@@ -26,26 +26,48 @@
     </div>
 
     {{-- SUMMARY CARDS --}}
-    <div class="dashboard-cards">
+    <div class="dashboard-cards" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
         <div class="dash-card purple">
             <div class="dash-card-icon">
-                <i class="ph ph-bank"></i>
+                <i class="ph ph-wallet"></i>
             </div>
             <div class="dash-card-content">
-                <span class="label">Jumlah Transaksi</span>
-                <h3 id="totalCountPengeluaran">0</h3>
-                <small>Transaksi Tercatat</small>
+                <span class="label">Uang Persediaan</span>
+                <h3 id="totalUP">Rp 0</h3>
+                <small id="countUP">0 Transaksi</small>
+            </div>
+        </div>
+
+        <div class="dash-card orange">
+            <div class="dash-card-icon">
+                <i class="ph ph-arrows-counter-clockwise"></i>
+            </div>
+            <div class="dash-card-content">
+                <span class="label">Ganti Uang</span>
+                <h3 id="totalGU">Rp 0</h3>
+                <small id="countGU">0 Transaksi</small>
             </div>
         </div>
 
         <div class="dash-card green">
             <div class="dash-card-icon">
-                <i class="ph ph-hand-holding-money"></i>
+                <i class="ph ph-lightning"></i>
             </div>
             <div class="dash-card-content">
-                <span class="label">Total Belanja {{ str_replace('Pengeluaran ', '', $title) }}</span>
-                <h3 id="totalNominalPengeluaran" style="color: #16a34a;">Rp 0</h3>
-                <small>Terakumulasi</small>
+                <span class="label">Langsung</span>
+                <h3 id="totalLS">Rp 0</h3>
+                <small id="countLS">0 Transaksi</small>
+            </div>
+        </div>
+
+        <div class="dash-card blue">
+            <div class="dash-card-icon">
+                <i class="ph ph-bank"></i>
+            </div>
+            <div class="dash-card-content">
+                <span class="label">Total Belanja</span>
+                <h3 id="totalNominalPengeluaran">Rp 0</h3>
+                <small id="totalCountPengeluaran">0 Transaksi</small>
             </div>
         </div>
     </div>
