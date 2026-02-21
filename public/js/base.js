@@ -46,10 +46,27 @@ window.formatRupiah = function (num) {
   });
 };
 
+window.formatRupiahTable = function (num) {
+  const val = Number(num || 0).toLocaleString('id-ID', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+  return `
+    <div style="display: flex; justify-content: space-between; width: 100%; gap: 10px;">
+        <span style="font-weight: 500; opacity: 0.7;">Rp</span>
+        <span style="font-weight: 700;">${val}</span>
+    </div>
+  `;
+};
+
 window.formatTanggal = function (dateStr) {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
-  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('id-ID');
+  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
 };
 
 window.escapeHtml = function (str = '') {

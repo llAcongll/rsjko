@@ -60,8 +60,7 @@
         <thead>
             <tr>
                 <th style="width: 15%;">Kode Rekening</th>
-                <th style="width: 25%;">Nama Rekening</th>
-                <th style="width: 20%;">Uraian Belanja</th>
+                <th style="width: 45%;">Nama Rekening</th>
                 <th style="width: 10%; text-align: right;">UP</th>
                 <th style="width: 10%; text-align: right;">GU</th>
                 <th style="width: 10%; text-align: right;">LS</th>
@@ -73,7 +72,6 @@
                 <tr>
                     <td class="text-center"><code>{{ $item->kode }}</code></td>
                     <td>{{ $item->nama }}</td>
-                    <td>{{ $item->uraian }}</td>
                     <td class="text-right">{{ number_format($item->up,2,',','.') }}</td>
                     <td class="text-right">{{ number_format($item->gu,2,',','.') }}</td>
                     <td class="text-right">{{ number_format($item->ls,2,',','.') }}</td>
@@ -81,6 +79,44 @@
                 </tr>
             @endforeach
         </tbody>
+    </table>
+    <table style="width: 100%; border: none; margin-top: 50px;">
+        <tr>
+            <td style="width: 33%; border: none; text-align: center; vertical-align: top;">
+                @if($ptKiri)
+                    <p style="margin: 0; min-height: 1.25em;">&nbsp;</p>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptKiri->jabatan }}</p>
+                    <div style="height: 60px;"></div>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptKiri->nama }}</p>
+                    <p style="margin: 0;">NIP. {{ $ptKiri->nip }}</p>
+                @endif
+            </td>
+            <td style="width: 34%; border: none; text-align: center; vertical-align: top;">
+                @if($ptTengah)
+                    <p style="margin: 0; min-height: 1.25em;">&nbsp;</p>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptTengah->jabatan }}</p>
+                    <div style="height: 60px;"></div>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptTengah->nama }}</p>
+                    <p style="margin: 0;">NIP. {{ $ptTengah->nip }}</p>
+                @endif
+            </td>
+            <td style="width: 33%; border: none; text-align: center; vertical-align: top;">
+                @if($ptKanan)
+                    <p style="margin: 0;">Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptKanan->jabatan }}</p>
+                    <div style="height: 60px;"></div>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptKanan->nama }}</p>
+                    <p style="margin: 0;">NIP. {{ $ptKanan->nip }}</p>
+                @else
+                    <p style="margin: 0;">Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+                    <p style="margin: 0; font-weight: bold;">&nbsp;</p>
+                    <p style="margin: 0;">&nbsp;</p>
+                    <div style="height: 60px;"></div>
+                    <p style="margin: 0; font-weight: bold;">...................................</p>
+                    <p style="margin: 0;">NIP. ...................................</p>
+                @endif
+            </td>
+        </tr>
     </table>
 </body>
 </html>

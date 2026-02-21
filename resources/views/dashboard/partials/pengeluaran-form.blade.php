@@ -71,13 +71,38 @@
                     placeholder="Tambahkan catatan tambahan..."></textarea>
             </div>
 
+            <div class="form-grid grid-2">
+                <div class="form-group">
+                    <label>Jumlah yang diminta</label>
+                    <div class="input-group">
+                        <span class="input-group-text">Rp</span>
+                        <input type="text" id="pengeluaranNominalDisplay" class="form-input nominal-display"
+                            placeholder="0" inputmode="numeric" required>
+                        <input type="hidden" name="nominal" id="pengeluaranNominalValue" class="nominal-value"
+                            value="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Potongan Pajak</label>
+                    <div class="input-group">
+                        <span class="input-group-text">Rp</span>
+                        <input type="text" id="pengeluaranPotonganPajakDisplay" class="form-input nominal-display"
+                            placeholder="0" inputmode="numeric">
+                        <input type="hidden" name="potongan_pajak" id="pengeluaranPotonganPajakValue"
+                            class="nominal-value" value="0">
+                    </div>
+                </div>
+            </div>
+
             <div class="form-group">
-                <label>Nominal</label>
+                <label>Total Dibayarkan</label>
                 <div class="input-group">
                     <span class="input-group-text">Rp</span>
-                    <input type="text" id="pengeluaranNominalDisplay" class="form-input nominal-display" placeholder="0"
-                        inputmode="numeric" required>
-                    <input type="hidden" name="nominal" id="pengeluaranNominalValue" class="nominal-value" value="0">
+                    <input type="text" id="pengeluaranTotalDibayarkanDisplay" class="form-input" placeholder="0"
+                        readonly
+                        style="background: #f8fafc; cursor: not-allowed; font-weight: bold; color: #16a34a; font-size: 16px;">
+                    <input type="hidden" name="total_dibayarkan" id="pengeluaranTotalDibayarkanValue" value="0">
                 </div>
             </div>
 

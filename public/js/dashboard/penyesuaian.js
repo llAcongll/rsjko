@@ -57,9 +57,19 @@ async function loadPenyesuaian() {
 
         renderPenyesuaianTable(data.data, data.from);
         updatePaginationPenyesuaian(data);
+        updateSummaryPenyesuaian(data.aggregates);
     } catch (err) {
         tbody.innerHTML = `<tr><td colspan="8" class="text-center text-red-500">Error: ${err.message}</td></tr>`;
     }
+}
+
+function updateSummaryPenyesuaian(agg) {
+    if (!agg) return;
+    const potEl = document.getElementById('summaryTotalPotonganPenyesuaian');
+    if (potEl) potEl.innerText = formatRupiah(agg.total_potongan || 0);
+
+    const admEl = document.getElementById('summaryTotalAdmPenyesuaian');
+    if (admEl) admEl.innerText = formatRupiah(agg.total_adm_bank || 0);
 }
 
 function renderPenyesuaianTable(items, from) {
@@ -76,14 +86,14 @@ function renderPenyesuaianTable(items, from) {
         const subKategori = item.sub_kategori ? ` <small class="text-slate-500">(${item.sub_kategori})</small>` : '';
         tr.innerHTML = `
             <td class="text-center">${from + index}</td>
-            <td>${formatDateIndo(item.tanggal)}</td>
+            <td class="text-center">${formatDateIndo(item.tanggal)}</td>
             <td>
                 <span class="badge ${item.kategori === 'BPJS' ? 'badge-primary' : 'badge-info'}">${item.kategori}</span>
                 ${subKategori}
             </td>
             <td>${item.perusahaan ? item.perusahaan.nama : '-'}</td>
-            <td class="text-right text-red-600">${formatRupiah(item.potongan)}</td>
-            <td class="text-right text-red-600">${formatRupiah(item.administrasi_bank)}</td>
+            <td class="text-red-600">${formatRupiahTable(item.potongan)}</td>
+            <td class="text-red-600">${formatRupiahTable(item.administrasi_bank)}</td>
             <td class="text-sm font-medium text-slate-600">${item.keterangan || '-'}</td>
             <td class="text-center">
                 <div class="flex justify-center gap-2">

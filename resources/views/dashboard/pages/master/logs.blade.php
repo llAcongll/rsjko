@@ -51,12 +51,12 @@
         <table class="table" id="logTable">
             <thead>
                 <tr>
-                    <th>Waktu</th>
-                    <th>User</th>
-                    <th style="width: 120px;">Aksi</th>
-                    <th style="width: 150px;">Modul</th>
-                    <th>Deskripsi</th>
-                    <th style="width: 130px;">IP Address</th>
+                    <th class="text-center">Waktu</th>
+                    <th class="text-center">User</th>
+                    <th class="text-center" style="width: 120px;">Aksi</th>
+                    <th class="text-center" style="width: 150px;">Modul</th>
+                    <th class="text-center">Deskripsi</th>
+                    <th class="text-center" style="width: 130px;">IP Address</th>
                     <th style="width: 120px;" class="text-center">Aksi</th>
                 </tr>
             </thead>

@@ -36,15 +36,15 @@
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th style="width: 50px; text-align: center;">No</th>
-                        <th>Nama MOU / Instansi</th>
-                        <th style="text-align:center">Trans</th>
-                        <th style="text-align:right">Jasa RS</th>
-                        <th style="text-align:right">Jasa Pelayanan</th>
-                        <th style="text-align:right">Gross Total</th>
-                        <th style="text-align:right">Potongan</th>
-                        <th style="text-align:right">Adm Bank</th>
-                        <th style="text-align:right">Total Netto</th>
+                        <th class="text-center" style="width: 50px; text-align: center;">No</th>
+                        <th class="text-center">Nama MOU / Instansi</th>
+                        <th class="text-center" style="text-align:center">Trans</th>
+                        <th class="text-center" style="text-align:right">Jasa RS</th>
+                        <th class="text-center" style="text-align:right">Jasa Pelayanan</th>
+                        <th class="text-center" style="text-align:right">Gross Total</th>
+                        <th class="text-center" style="text-align:right">Potongan</th>
+                        <th class="text-center" style="text-align:right">Adm Bank</th>
+                        <th class="text-center" style="text-align:right">Total Netto</th>
                     </tr>
                 </thead>
                 <tbody id="laporanMouBody">

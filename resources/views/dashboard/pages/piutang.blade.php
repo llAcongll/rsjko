@@ -18,15 +18,60 @@
     </div>
 
     {{-- SUMMARY CARDS --}}
-    <div class="dashboard-cards">
-        <div class="dash-card blue">
-            <div class="dash-card-icon">
-                <i class="ph ph-money"></i>
+    <style>
+        /* Tighten page layout */
+        .dashboard {
+            gap: 16px !important;
+        }
+
+        .piutang-summary-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .piutang-summary-container .dashboard-cards {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            width: 100%;
+            max-width: 850px;
+            /* Three cards centered */
+            gap: 16px;
+        }
+    </style>
+
+    <div class="piutang-summary-container">
+        <div class="dashboard-cards">
+            <div class="dash-card blue">
+                <div class="dash-card-icon">
+                    <i class="ph ph-file-text"></i>
+                </div>
+                <div class="dash-card-content">
+                    <span class="label">Total Piutang Berjalan</span>
+                    <h3 id="summaryTotalPiutang">Rp 0</h3>
+                    <small>Akumulasi tagihan</small>
+                </div>
             </div>
-            <div class="dash-card-content">
-                <span class="label">Total Piutang Berjalan</span>
-                <h3 id="summaryTotalPiutang">Rp 0</h3>
-                <small>Akumulasi tagihan</small>
+
+            <div class="dash-card indigo">
+                <div class="dash-card-icon">
+                    <i class="ph ph-scissors"></i>
+                </div>
+                <div class="dash-card-content">
+                    <span class="label">Potongan Tagihan</span>
+                    <h3 id="summaryTotalPotongan">Rp 0</h3>
+                    <small>Potongan piutang</small>
+                </div>
+            </div>
+
+            <div class="dash-card orange">
+                <div class="dash-card-icon">
+                    <i class="ph ph-bank"></i>
+                </div>
+                <div class="dash-card-content">
+                    <span class="label">Administrasi Bank</span>
+                    <h3 id="summaryTotalAdm">Rp 0</h3>
+                    <small>Biaya admin bank</small>
+                </div>
             </div>
         </div>
     </div>
@@ -34,30 +79,34 @@
     {{-- MAIN CONTENT --}}
     <div class="dashboard-box">
         <div class="box-header">
-            <div class="toolbar-row">
-                <div class="search-wrapper">
+            <div class="flex items-center gap-4" style="width: 100%;">
+                <div class="search-wrapper flex-1">
                     <div class="input-group" style="position: relative;">
                         <i class="ph ph-magnifying-glass"
                             style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px;"></i>
                         <input type="text" id="searchPiutang" placeholder="Cari perusahaan, bulan, keterangan..."
-                            style="width: 100%; height: 44px; padding-left: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
+                            style="width: 100%; height: 48px; padding-left: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
                     </div>
-                </div>
-
-                <div class="toolbar-actions">
                 </div>
             </div>
         </div>
 
         <div class="table-container">
+            <style>
+                #piutangTable th,
+                #piutangTable td {
+                    font-size: 11px !important;
+                    white-space: nowrap !important;
+                }
+            </style>
             <table id="piutangTable">
                 <thead>
                     <tr>
                         <th class="text-center" style="width: 50px;">No</th>
-                        <th style="width: 110px;">Tanggal</th>
-                        <th>Perusahaan / Debitur</th>
-                        <th>Bulan Pelayanan</th>
-                        <th class="text-right">Jumlah Tagihan</th>
+                        <th class="text-center" style="width: 110px;">Tanggal</th>
+                        <th class="text-center">Perusahaan / Debitur</th>
+                        <th class="text-center">Bulan Pelayanan</th>
+                        <th class="text-center">Jumlah Tagihan</th>
                         <th class="text-center">Status</th>
                         <th class="text-center" style="width: 100px;">Aksi</th>
                     </tr>

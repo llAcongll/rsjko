@@ -22,20 +22,18 @@ class LaporanController extends Controller
             ->whereYear('pengeluaran.tanggal', $tahun)
             ->whereBetween('pengeluaran.tanggal', [$start, $end]);
 
-        // Detail per Account and Uraian
+        // Detail per Account (Grouped)
         $details = (clone $query)
             ->select(
                 'kode_rekening.kode',
                 'kode_rekening.nama',
-                'pengeluaran.uraian',
                 DB::raw('SUM(nominal) as total'),
                 DB::raw("SUM(CASE WHEN metode_pembayaran = 'UP' THEN nominal ELSE 0 END) as up"),
                 DB::raw("SUM(CASE WHEN metode_pembayaran = 'GU' THEN nominal ELSE 0 END) as gu"),
                 DB::raw("SUM(CASE WHEN metode_pembayaran = 'LS' THEN nominal ELSE 0 END) as ls")
             )
-            ->groupBy('kode_rekening.kode', 'kode_rekening.nama', 'pengeluaran.uraian')
+            ->groupBy('kode_rekening.kode', 'kode_rekening.nama')
             ->orderBy('kode_rekening.kode')
-            ->orderBy('pengeluaran.uraian')
             ->get();
 
         // Summary per Category
@@ -59,6 +57,89 @@ class LaporanController extends Controller
                 'end' => $end
             ]
         ]);
+    }
+
+    public function getDpa(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_ANGGARAN') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
+        $tahun = session('tahun_anggaran');
+
+        $rootNodes = KodeRekening::whereNull('parent_id')
+            ->orderBy('kode')
+            ->get();
+
+        $flatList = [];
+        foreach ($rootNodes as $node) {
+            $this->processDpaNode($node, $tahun, $flatList);
+        }
+
+        return response()->json([
+            'data' => $flatList,
+            'tahun' => $tahun
+        ]);
+    }
+
+    private function processDpaNode($node, $tahun, &$flatList)
+    {
+        $total = 0;
+        $childList = [];
+
+        if ($node->tipe === 'detail') {
+            // Get rincian
+            $rincian = DB::table('anggaran_rincian')
+                ->join('anggaran_rekening', 'anggaran_rincian.anggaran_rekening_id', '=', 'anggaran_rekening.id')
+                ->where('anggaran_rekening.kode_rekening_id', $node->id)
+                ->where('anggaran_rekening.tahun', $tahun)
+                ->select(
+                    'anggaran_rincian.uraian',
+                    'anggaran_rincian.volume',
+                    'anggaran_rincian.satuan',
+                    'anggaran_rincian.tarif',
+                    'anggaran_rincian.subtotal'
+                )
+                ->get();
+
+            foreach ($rincian as $r) {
+                $total += $r->subtotal;
+                $childList[] = (object) [
+                    'tipe' => 'rincian',
+                    'kode_rekening' => '',
+                    'uraian' => $r->uraian,
+                    'volume' => $r->volume,
+                    'satuan' => $r->satuan,
+                    'tarif' => $r->tarif,
+                    'subtotal' => $r->subtotal,
+                    'level' => $node->level + 1
+                ];
+            }
+        } else {
+            foreach ($node->children as $child) {
+                $res = $this->processDpaNode($child, $tahun, $childList);
+                $total += $res['total'];
+            }
+        }
+
+        // Header node
+        $item = (object) [
+            'tipe' => 'header',
+            'kode_rekening' => $node->kode,
+            'uraian' => $node->nama,
+            'volume' => null,
+            'satuan' => null,
+            'tarif' => 0,
+            'subtotal' => $total,
+            'level' => $node->level
+        ];
+
+        // Only add if there is subtotal
+        if ($total > 0) {
+            $flatList[] = $item;
+            foreach ($childList as $cl) {
+                $flatList[] = $cl;
+            }
+        }
+
+        return ['total' => $total];
     }
 
     public function index(Request $request)
@@ -133,38 +214,9 @@ class LaporanController extends Controller
         }
 
         // Get breakdown by Room
-        $roomStats = [];
-        foreach ($tables as $table) {
-            $rooms = DB::table($table)
-                ->join('ruangans', "$table.ruangan_id", '=', 'ruangans.id')
-                ->select('ruangans.nama', DB::raw('SUM(total) as total'))
-                ->whereBetween('tanggal', [$start, $end])
-                ->where("$table.tahun", session('tahun_anggaran'))
-                ->groupBy('ruangans.nama')
-                ->get();
-
-            foreach ($rooms as $r) {
-                $roomStats[$r->nama] = ($roomStats[$r->nama] ?? 0) + $r->total;
-            }
-        }
-        arsort($roomStats);
-
-        // Patient Stats per Room (following roomStats logic)
-        $roomPatientStats = [];
-        foreach ($tables as $table) {
-            $rooms = DB::table($table)
-                ->join('ruangans', "$table.ruangan_id", '=', 'ruangans.id')
-                ->select('ruangans.nama', DB::raw('COUNT(*) as count'))
-                ->whereBetween('tanggal', [$start, $end])
-                ->where("$table.tahun", session('tahun_anggaran'))
-                ->groupBy('ruangans.nama')
-                ->get();
-
-            foreach ($rooms as $r) {
-                $roomPatientStats[$r->nama] = ($roomPatientStats[$r->nama] ?? 0) + $r->count;
-            }
-        }
-        arsort($roomPatientStats);
+        $roomData = $this->getRoomStatsWithDeductions($start, $end, session('tahun_anggaran'));
+        $roomStats = $roomData['flat_total'];
+        $roomPatientStats = $roomData['flat_count'];
 
         // Simple Patient Stats by Type
         $patientStats = [
@@ -289,25 +341,8 @@ class LaporanController extends Controller
         }
 
         // Room Stats
-        $roomStats = [];
-        foreach ($tables as $table) {
-            $rooms = DB::table($table)
-                ->join('ruangans', "$table.ruangan_id", '=', 'ruangans.id')
-                ->select('ruangans.nama', DB::raw('SUM(total) as total'), DB::raw('COUNT(*) as count'))
-                ->whereBetween('tanggal', [$start, $end])
-                ->where("$table.tahun", $tahun)
-                ->groupBy('ruangans.nama')
-                ->get();
-
-            foreach ($rooms as $r) {
-                if (!isset($roomStats[$r->nama])) {
-                    $roomStats[$r->nama] = ['total' => 0, 'count' => 0];
-                }
-                $roomStats[$r->nama]['total'] += $r->total;
-                $roomStats[$r->nama]['count'] += $r->count;
-            }
-        }
-        uasort($roomStats, fn($a, $b) => $b['total'] <=> $a['total']);
+        $roomData = $this->getRoomStatsWithDeductions($start, $end, $tahun);
+        $roomStats = $roomData['stats'];
 
         $filename = "Laporan_Pendapatan_{$start}_to_{$end}.xls";
 
@@ -316,13 +351,21 @@ class LaporanController extends Controller
         header("Pragma: no-cache");
         header("Expires: 0");
 
+        // Penanda Tangan
+        $ptKiri = $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null;
+        $ptTengah = $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null;
+        $ptKanan = $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null;
+
         return view('dashboard.exports.pendapatan', [
             'start' => $start,
             'end' => $end,
             'summary' => $summary,
             'breakdown' => $breakdown,
             'rooms' => $roomStats,
-            'tahun' => $tahun
+            'tahun' => $tahun,
+            'ptKiri' => $ptKiri,
+            'ptTengah' => $ptTengah,
+            'ptKanan' => $ptKanan
         ]);
     }
 
@@ -397,32 +440,24 @@ class LaporanController extends Controller
             $breakdown[$key] = array_merge($meta, $stats);
         }
 
-        $roomStats = [];
-        foreach ($tables as $table) {
-            $rooms = DB::table($table)
-                ->join('ruangans', "$table.ruangan_id", '=', 'ruangans.id')
-                ->select('ruangans.nama', DB::raw('SUM(total) as total'), DB::raw('COUNT(*) as count'))
-                ->whereBetween('tanggal', [$start, $end])
-                ->where("$table.tahun", $tahun)
-                ->groupBy('ruangans.nama')
-                ->get();
+        // Room Stats
+        $roomData = $this->getRoomStatsWithDeductions($start, $end, $tahun);
+        $roomStats = $roomData['stats'];
 
-            foreach ($rooms as $r) {
-                if (!isset($roomStats[$r->nama])) {
-                    $roomStats[$r->nama] = ['total' => 0, 'count' => 0];
-                }
-                $roomStats[$r->nama]['total'] += $r->total;
-                $roomStats[$r->nama]['count'] += $r->count;
-            }
-        }
-        uasort($roomStats, fn($a, $b) => $b['total'] <=> $a['total']);
+        // Penanda Tangan
+        $ptKiri = $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null;
+        $ptTengah = $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null;
+        $ptKanan = $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null;
 
         $pdf = Pdf::loadView('dashboard.exports.pendapatan_pdf', [
             'start' => $start,
             'end' => $end,
             'summary' => $summary,
             'breakdown' => $breakdown,
-            'rooms' => $roomStats
+            'rooms' => $roomStats,
+            'ptKiri' => $ptKiri,
+            'ptTengah' => $ptTengah,
+            'ptKanan' => $ptKanan
         ]);
 
         return $pdf->download("Laporan_Pendapatan_{$start}_to_{$end}.pdf");
@@ -447,9 +482,12 @@ class LaporanController extends Controller
                     ->whereIn('kategori', ['BPJS', 'JAMINAN'])
                     ->whereBetween('tanggal', [$start, $end])
                     ->where('tahun', $tahun)
-                    ->selectRaw('SUM(IFNULL(potongan, 0) + IFNULL(administrasi_bank, 0)) as total_ded')
+                    ->selectRaw('SUM(potongan) as total_potongan, SUM(administrasi_bank) as total_adm')
                     ->first();
-                $deductions = $ded->total_ded ?? 0;
+                $deductions = [
+                    'potongan' => $ded->total_potongan ?? 0,
+                    'adm' => $ded->total_adm ?? 0
+                ];
 
                 return $this->mergeStats($bpjs, $jam, $deductions);
 
@@ -489,9 +527,94 @@ class LaporanController extends Controller
         return $this->emptyStats();
     }
 
+    private function getRoomStatsWithDeductions($start, $end, $tahun)
+    {
+        $tables = [
+            'UMUM' => 'pendapatan_umum',
+            'BPJS' => 'pendapatan_bpjs',
+            'JAMINAN' => 'pendapatan_jaminan',
+            'KERJASAMA' => 'pendapatan_kerjasama',
+            'LAIN' => 'pendapatan_lain'
+        ];
+
+        // Hitung pengurang proporsional per tabel BPJS & Jaminan
+        $tableDeductions = [];
+        foreach (['BPJS' => 'pendapatan_bpjs', 'JAMINAN' => 'pendapatan_jaminan'] as $key => $table) {
+            $ded = DB::table('penyesuaian_pendapatans')
+                ->where('kategori', $key)
+                ->whereBetween('tanggal', [$start, $end])
+                ->where('tahun', $tahun)
+                ->selectRaw('SUM(potongan) as total_potongan, SUM(administrasi_bank) as total_adm')
+                ->first();
+
+            $totalDed = ($ded->total_potongan ?? 0) + ($ded->total_adm ?? 0);
+
+            if ($totalDed > 0) {
+                $gross = DB::table($table)->whereBetween('tanggal', [$start, $end])->where('tahun', $tahun)->sum('total');
+                $tableDeductions[$table] = [
+                    'gross' => $gross,
+                    'deduction' => $totalDed
+                ];
+            }
+        }
+
+        $roomStats = [];
+        $roomPatientStats = [];
+
+        foreach ($tables as $table) {
+            $rooms = DB::table($table)
+                ->join('ruangans', "$table.ruangan_id", '=', 'ruangans.id')
+                ->select('ruangans.nama', DB::raw('SUM(total) as gross_total'), DB::raw('COUNT(*) as count'))
+                ->whereBetween('tanggal', [$start, $end])
+                ->where("$table.tahun", $tahun)
+                ->groupBy('ruangans.nama')
+                ->get();
+
+            foreach ($rooms as $r) {
+                if (!isset($roomStats[$r->nama])) {
+                    $roomStats[$r->nama] = ['total' => 0, 'count' => 0];
+                }
+
+                $netRoomTotal = $r->gross_total;
+
+                // Proporsional pengurangan
+                if (isset($tableDeductions[$table]) && $tableDeductions[$table]['gross'] > 0) {
+                    $ratio = $r->gross_total / $tableDeductions[$table]['gross'];
+                    $roomDed = $tableDeductions[$table]['deduction'] * $ratio;
+                    $netRoomTotal -= $roomDed;
+                }
+
+                $roomStats[$r->nama]['total'] += $netRoomTotal;
+                $roomStats[$r->nama]['count'] += $r->count;
+
+                $roomPatientStats[$r->nama] = ($roomPatientStats[$r->nama] ?? 0) + $r->count;
+            }
+        }
+
+        // Sort by highest total 
+        uasort($roomStats, fn($a, $b) => $b['total'] <=> $a['total']);
+
+        $flatRoomTotal = [];
+        foreach ($roomStats as $nama => $data) {
+            $flatRoomTotal[$nama] = $data['total'];
+        }
+
+        return [
+            'stats' => $roomStats,
+            'flat_total' => $flatRoomTotal,
+            'flat_count' => $roomPatientStats
+        ];
+    }
+
     private function getStatsFromQuery($query)
     {
-        $data = $query->select('metode_pembayaran', 'bank', DB::raw('SUM(total) as total'))
+        $data = $query->select(
+            'metode_pembayaran',
+            'bank',
+            DB::raw('SUM(total) as total'),
+            DB::raw('SUM(IFNULL(rs_tindakan, 0) + IFNULL(rs_obat, 0)) as total_rs'),
+            DB::raw('SUM(IFNULL(pelayanan_tindakan, 0) + IFNULL(pelayanan_obat, 0)) as total_pelayanan')
+        )
             ->groupBy('metode_pembayaran', 'bank')
             ->get();
 
@@ -499,8 +622,13 @@ class LaporanController extends Controller
         $nonTunai = 0;
         $brk = 0;
         $bsi = 0;
+        $rs = 0;
+        $pelayanan = 0;
 
         foreach ($data as $row) {
+            $rs += $row->total_rs;
+            $pelayanan += $row->total_pelayanan;
+
             if ($row->metode_pembayaran === 'TUNAI') {
                 $tunai += $row->total;
                 $brk += $row->total; // TUNAI goes to BRK
@@ -515,6 +643,7 @@ class LaporanController extends Controller
         }
 
         return [
+            'jasa' => ['RS' => $rs, 'PELAYANAN' => $pelayanan, 'TOTAL' => $rs + $pelayanan],
             'payments' => ['TUNAI' => $tunai, 'NON_TUNAI' => $nonTunai, 'TOTAL' => $tunai + $nonTunai],
             'banks' => ['BRK' => $brk, 'BSI' => $bsi, 'TOTAL' => $brk + $bsi]
         ];
@@ -522,7 +651,15 @@ class LaporanController extends Controller
 
     private function mergeStats($s1, $s2, $deductions = 0)
     {
+        $potongan = is_array($deductions) ? ($deductions['potongan'] ?? 0) : 0;
+        $adm = is_array($deductions) ? ($deductions['adm'] ?? 0) : (!is_array($deductions) ? $deductions : 0);
+        $totalDed = $potongan + $adm;
+
         $res = [
+            'jasa' => [
+                'RS' => $s1['jasa']['RS'] + $s2['jasa']['RS'],
+                'PELAYANAN' => $s1['jasa']['PELAYANAN'] + $s2['jasa']['PELAYANAN'],
+            ],
             'payments' => [
                 'TUNAI' => $s1['payments']['TUNAI'] + $s2['payments']['TUNAI'],
                 'NON_TUNAI' => $s1['payments']['NON_TUNAI'] + $s2['payments']['NON_TUNAI'],
@@ -533,10 +670,18 @@ class LaporanController extends Controller
             ]
         ];
 
-        // Deduct from NON_TUNAI and BRK reception (assuming deductions affect bank receipts)
-        $res['payments']['NON_TUNAI'] -= $deductions;
-        $res['banks']['BRK'] -= $deductions;
+        // Apply Deductions to Jasa as done in Summary table:
+        if ($potongan > 0 || $adm > 0) {
+            $res['jasa']['RS'] -= round($potongan * 0.7, 2);
+            $res['jasa']['PELAYANAN'] -= round($potongan * 0.3, 2);
+            $res['jasa']['RS'] -= $adm;
+        }
 
+        // Deduct from NON_TUNAI and BRK reception (assuming deductions affect bank receipts)
+        $res['payments']['NON_TUNAI'] -= $totalDed;
+        $res['banks']['BRK'] -= $totalDed;
+
+        $res['jasa']['TOTAL'] = $res['jasa']['RS'] + $res['jasa']['PELAYANAN'];
         $res['payments']['TOTAL'] = $res['payments']['TUNAI'] + $res['payments']['NON_TUNAI'];
         $res['banks']['TOTAL'] = $res['banks']['BRK'] + $res['banks']['BSI'];
 
@@ -546,6 +691,7 @@ class LaporanController extends Controller
     private function emptyStats()
     {
         return [
+            'jasa' => ['RS' => 0, 'PELAYANAN' => 0, 'TOTAL' => 0],
             'payments' => ['TUNAI' => 0, 'NON_TUNAI' => 0, 'TOTAL' => 0],
             'banks' => ['BRK' => 0, 'BSI' => 0, 'TOTAL' => 0]
         ];
@@ -554,65 +700,71 @@ class LaporanController extends Controller
     public function getRekon(Request $request)
     {
         abort_unless(auth()->user()->hasPermission('LAPORAN_REKON') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
-        $start = $request->get('start', '2026-01-01');
-        $end = $request->get('end', Carbon::now()->toDateString());
+        $tahun = session('tahun_anggaran');
 
         $rekKoran = DB::table('rekening_korans')
-            ->whereBetween('tanggal', [$start, $end])
-            ->where('tahun', session('tahun_anggaran'))
+            ->where('tahun', $tahun)
             ->where('cd', 'C')
-            ->select(DB::raw('DATE(tanggal) as tgl'), DB::raw('SUM(jumlah) as total'))
-            ->groupBy('tgl')
+            ->select(DB::raw('MONTH(tanggal) as bulan'), DB::raw('SUM(jumlah) as total'))
+            ->groupBy('bulan')
             ->get()
-            ->pluck('total', 'tgl');
+            ->pluck('total', 'bulan');
 
         $tables = ['pendapatan_umum', 'pendapatan_bpjs', 'pendapatan_jaminan', 'pendapatan_kerjasama', 'pendapatan_lain'];
         $revenues = [];
         foreach ($tables as $table) {
             $data = DB::table($table)
-                ->whereBetween('tanggal', [$start, $end])
-                ->where('tahun', session('tahun_anggaran'))
-                ->select(DB::raw('DATE(tanggal) as tgl'), DB::raw('SUM(total) as total'))
-                ->groupBy('tgl')
+                ->where('tahun', $tahun)
+                ->select(DB::raw('MONTH(tanggal) as bulan'), DB::raw('SUM(total) as total'))
+                ->groupBy('bulan')
                 ->get();
             foreach ($data as $d) {
-                $revenues[$d->tgl] = ($revenues[$d->tgl] ?? 0) + $d->total;
+                $revenues[$d->bulan] = ($revenues[$d->bulan] ?? 0) + $d->total;
             }
         }
 
         // Subtract Deductions (Potongan & Adm Bank) from revenues to match bank
         $deductions = DB::table('penyesuaian_pendapatans')
-            ->whereBetween('tanggal', [$start, $end])
-            ->where('tahun', session('tahun_anggaran'))
-            ->select(DB::raw('DATE(tanggal) as tgl'), DB::raw('SUM(IFNULL(potongan, 0) + IFNULL(administrasi_bank, 0)) as total_ded'))
-            ->groupBy('tgl')
+            ->where('tahun', $tahun)
+            ->select(DB::raw('MONTH(tanggal) as bulan'), DB::raw('SUM(IFNULL(potongan, 0) + IFNULL(administrasi_bank, 0)) as total_ded'))
+            ->groupBy('bulan')
             ->get()
-            ->pluck('total_ded', 'tgl');
+            ->pluck('total_ded', 'bulan');
 
-        foreach ($deductions as $tgl => $totalDed) {
-            if (isset($revenues[$tgl])) {
-                $revenues[$tgl] -= $totalDed;
+        foreach ($deductions as $bulan => $totalDed) {
+            if (isset($revenues[$bulan])) {
+                $revenues[$bulan] -= $totalDed;
             } else {
-                // If there's a deduction on a day without gross revenue recorded in those tables 
-                // (e.g., historical piutang payment with just deduction recorded), we treat it as negative revenue adjustment
-                $revenues[$tgl] = -$totalDed;
+                $revenues[$bulan] = -$totalDed;
             }
         }
-
-        // Sort ASC for cumulative calculation
-        $dates = collect(array_keys($rekKoran->toArray()))->merge(array_keys($revenues))->unique()->sort();
 
         $rekonData = [];
         $cumulativeDiff = 0;
 
-        foreach ($dates as $date) {
-            $bank = (float) ($rekKoran[$date] ?? 0);
-            $pend = (float) ($revenues[$date] ?? 0);
+        $namaBulan = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember'
+        ];
+
+        for ($i = 1; $i <= 12; $i++) {
+            $bank = (float) ($rekKoran[$i] ?? 0);
+            $pend = (float) ($revenues[$i] ?? 0);
             $diff = $bank - $pend;
             $cumulativeDiff += $diff;
 
             $rekonData[] = [
-                'tanggal' => $date,
+                'tanggal' => $namaBulan[$i],
                 'bank' => $bank,
                 'pendapatan' => $pend,
                 'selisih' => (float) $diff,
@@ -620,7 +772,8 @@ class LaporanController extends Controller
             ];
         }
 
-        // Return reversed (latest first) for better UI presentation
+        // Sort descending to keep UI behavior the same? 
+        // Or keep ascending (Jan to Dec). Currently it displays in reverse on the original code due to dates sort but UI might handle reverse. Let's just return ASC for now.
         return response()->json($rekonData);
     }
 
@@ -1051,9 +1204,13 @@ class LaporanController extends Controller
         $end = $request->get('end', Carbon::now()->toDateString());
         $data = $this->getRekon($request)->getData();
 
+        $ptKiri = $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null;
+        $ptTengah = $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null;
+        $ptKanan = $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null;
+
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=\"Laporan_Rekon_{$start}_to_{$end}.xls\"");
-        return view('dashboard.exports.rekon', ['data' => $data, 'start' => $start, 'end' => $end]);
+        return view('dashboard.exports.rekon', ['data' => $data, 'start' => $start, 'end' => $end, 'ptKiri' => $ptKiri, 'ptTengah' => $ptTengah, 'ptKanan' => $ptKanan]);
     }
 
     public function exportRekonPdf(Request $request)
@@ -1063,7 +1220,11 @@ class LaporanController extends Controller
         $end = $request->get('end', Carbon::now()->toDateString());
         $data = $this->getRekon($request)->getData();
 
-        $pdf = Pdf::loadView('dashboard.exports.rekon_pdf', ['data' => $data, 'start' => $start, 'end' => $end]);
+        $ptKiri = $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null;
+        $ptTengah = $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null;
+        $ptKanan = $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null;
+
+        $pdf = Pdf::loadView('dashboard.exports.rekon_pdf', ['data' => $data, 'start' => $start, 'end' => $end, 'ptKiri' => $ptKiri, 'ptTengah' => $ptTengah, 'ptKanan' => $ptKanan]);
         return $pdf->download("Laporan_Rekon_{$start}_to_{$end}.pdf");
     }
 
@@ -1074,9 +1235,13 @@ class LaporanController extends Controller
         $end = $request->get('end', Carbon::now()->toDateString());
         $res = $this->getPiutang($request)->getData();
 
+        $ptKiri = $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null;
+        $ptTengah = $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null;
+        $ptKanan = $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null;
+
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=\"Laporan_Piutang_{$start}_to_{$end}.xls\"");
-        return view('dashboard.exports.piutang', ['data' => $res->data, 'totals' => $res->totals, 'start' => $start, 'end' => $end]);
+        return view('dashboard.exports.piutang', ['data' => $res->data, 'totals' => $res->totals, 'start' => $start, 'end' => $end, 'ptKiri' => $ptKiri, 'ptTengah' => $ptTengah, 'ptKanan' => $ptKanan]);
     }
 
     public function exportPiutangPdf(Request $request)
@@ -1086,7 +1251,11 @@ class LaporanController extends Controller
         $end = $request->get('end', Carbon::now()->toDateString());
         $res = $this->getPiutang($request)->getData();
 
-        $pdf = Pdf::loadView('dashboard.exports.piutang_pdf', ['data' => $res->data, 'totals' => $res->totals, 'start' => $start, 'end' => $end]);
+        $ptKiri = $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null;
+        $ptTengah = $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null;
+        $ptKanan = $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null;
+
+        $pdf = Pdf::loadView('dashboard.exports.piutang_pdf', ['data' => $res->data, 'totals' => $res->totals, 'start' => $start, 'end' => $end, 'ptKiri' => $ptKiri, 'ptTengah' => $ptTengah, 'ptKanan' => $ptKanan]);
         return $pdf->download("Laporan_Piutang_{$start}_to_{$end}.pdf");
     }
 
@@ -1097,9 +1266,13 @@ class LaporanController extends Controller
         $end = $request->get('end', Carbon::now()->toDateString());
         $data = $this->getMou($request)->getData();
 
+        $ptKiri = $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null;
+        $ptTengah = $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null;
+        $ptKanan = $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null;
+
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=\"Laporan_MOU_{$start}_to_{$end}.xls\"");
-        return view('dashboard.exports.mou', ['data' => $data, 'start' => $start, 'end' => $end]);
+        return view('dashboard.exports.mou', ['data' => $data, 'start' => $start, 'end' => $end, 'ptKiri' => $ptKiri, 'ptTengah' => $ptTengah, 'ptKanan' => $ptKanan]);
     }
 
     public function exportMouPdf(Request $request)
@@ -1109,7 +1282,11 @@ class LaporanController extends Controller
         $end = $request->get('end', Carbon::now()->toDateString());
         $data = $this->getMou($request)->getData();
 
-        $pdf = Pdf::loadView('dashboard.exports.mou_pdf', ['data' => $data, 'start' => $start, 'end' => $end]);
+        $ptKiri = $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null;
+        $ptTengah = $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null;
+        $ptKanan = $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null;
+
+        $pdf = Pdf::loadView('dashboard.exports.mou_pdf', ['data' => $data, 'start' => $start, 'end' => $end, 'ptKiri' => $ptKiri, 'ptTengah' => $ptTengah, 'ptKanan' => $ptKanan]);
         return $pdf->download("Laporan_MOU_{$start}_to_{$end}.pdf");
     }
 
@@ -1120,6 +1297,10 @@ class LaporanController extends Controller
         $end = $request->get('end', Carbon::now()->toDateString());
         $res = $this->getAnggaran($request)->getData();
 
+        $ptKiri = $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null;
+        $ptTengah = $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null;
+        $ptKanan = $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null;
+
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=\"Laporan_Realisasi_Anggaran_{$start}_to_{$end}.xls\"");
         return view('dashboard.exports.anggaran', [
@@ -1127,7 +1308,10 @@ class LaporanController extends Controller
             'totals' => $res->totals,
             'start' => $start,
             'end' => $end,
-            'category' => $request->get('category', 'PENDAPATAN')
+            'category' => $request->get('category', 'PENDAPATAN'),
+            'ptKiri' => $ptKiri,
+            'ptTengah' => $ptTengah,
+            'ptKanan' => $ptKanan
         ]);
     }
 
@@ -1138,12 +1322,19 @@ class LaporanController extends Controller
         $end = $request->get('end', Carbon::now()->toDateString());
         $res = $this->getAnggaran($request)->getData();
 
+        $ptKiri = $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null;
+        $ptTengah = $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null;
+        $ptKanan = $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null;
+
         $pdf = Pdf::loadView('dashboard.exports.anggaran_pdf', [
             'data' => $res->data,
             'totals' => $res->totals,
             'start' => $start,
             'end' => $end,
-            'category' => $request->get('category', 'PENDAPATAN')
+            'category' => $request->get('category', 'PENDAPATAN'),
+            'ptKiri' => $ptKiri,
+            'ptTengah' => $ptTengah,
+            'ptKanan' => $ptKanan
         ]);
         return $pdf->download("Laporan_Realisasi_Anggaran_{$start}_to_{$end}.pdf");
     }
@@ -1155,9 +1346,13 @@ class LaporanController extends Controller
         $end = $request->get('end', Carbon::now()->toDateString());
         $res = $this->getPengeluaran($request)->getData();
 
+        $ptKiri = $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null;
+        $ptTengah = $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null;
+        $ptKanan = $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null;
+
         header("Content-Type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename=\"Laporan_Pengeluaran_{$start}_to_{$end}.xls\"");
-        return view('dashboard.exports.pengeluaran', ['data' => $res->data, 'summary' => $res->summary, 'start' => $start, 'end' => $end]);
+        return view('dashboard.exports.pengeluaran', ['data' => $res->data, 'summary' => $res->summary, 'start' => $start, 'end' => $end, 'ptKiri' => $ptKiri, 'ptTengah' => $ptTengah, 'ptKanan' => $ptKanan]);
     }
 
     public function exportPengeluaranPdf(Request $request)
@@ -1167,7 +1362,40 @@ class LaporanController extends Controller
         $end = $request->get('end', Carbon::now()->toDateString());
         $res = $this->getPengeluaran($request)->getData();
 
-        $pdf = Pdf::loadView('dashboard.exports.pengeluaran_pdf', ['data' => $res->data, 'summary' => (array) $res->summary, 'start' => $start, 'end' => $end]);
+        $ptKiri = $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null;
+        $ptTengah = $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null;
+        $ptKanan = $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null;
+
+        $pdf = Pdf::loadView('dashboard.exports.pengeluaran_pdf', ['data' => $res->data, 'summary' => (array) $res->summary, 'start' => $start, 'end' => $end, 'ptKiri' => $ptKiri, 'ptTengah' => $ptTengah, 'ptKanan' => $ptKanan]);
         return $pdf->download("Laporan_Pengeluaran_{$start}_to_{$end}.pdf");
+    }
+
+    public function exportDpa(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT'), 403);
+        $tahun = session('tahun_anggaran');
+        $res = $this->getDpa($request)->getData();
+
+        $ptKiri = $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null;
+        $ptTengah = $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null;
+        $ptKanan = $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null;
+
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=\"Laporan_DPA_{$tahun}.xls\"");
+        return view('dashboard.exports.dpa', ['data' => $res->data, 'tahun' => $tahun, 'ptKiri' => $ptKiri, 'ptTengah' => $ptTengah, 'ptKanan' => $ptKanan]);
+    }
+
+    public function exportDpaPdf(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'), 403);
+        $tahun = session('tahun_anggaran');
+        $res = $this->getDpa($request)->getData();
+
+        $ptKiri = $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null;
+        $ptTengah = $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null;
+        $ptKanan = $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null;
+
+        $pdf = Pdf::loadView('dashboard.exports.dpa_pdf', ['data' => $res->data, 'tahun' => $tahun, 'ptKiri' => $ptKiri, 'ptTengah' => $ptTengah, 'ptKanan' => $ptKanan]);
+        return $pdf->download("Laporan_DPA_{$tahun}.pdf");
     }
 }

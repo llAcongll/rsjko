@@ -17,6 +17,8 @@ class Pengeluaran extends Model
         'kode_rekening_id',
         'uraian',
         'nominal',
+        'potongan_pajak',
+        'total_dibayarkan',
         'metode_pembayaran',
         'no_spm',
         'no_sp2d',
@@ -32,6 +34,8 @@ class Pengeluaran extends Model
     protected $casts = [
         'tanggal' => 'date',
         'nominal' => 'decimal:2',
+        'potongan_pajak' => 'decimal:2',
+        'total_dibayarkan' => 'decimal:2',
     ];
 
     public function kodeRekening()

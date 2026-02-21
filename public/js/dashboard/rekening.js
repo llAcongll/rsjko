@@ -243,12 +243,12 @@ function renderRekeningTable(data) {
     tbody.innerHTML += `
       <tr>
         <td>${start + i + 1}</td>
-        <td>${formatDate(row.tanggal)}</td>
+        <td class="text-center">${formatDate(row.tanggal)}</td>
         <td class="ellipsis" title="${row.bank}">${row.bank}</td>
         <td><div class="ellipsis-content" title="${row.keterangan}">${row.keterangan}</div></td>
         <td class="cd ${row.cd === 'C' ? 'credit' : 'debit'}">${row.cd}</td>
-        <td class="amount">${formatRupiah(jumlah)}</td>
-        <td class="amount">${formatRupiah(saldoRunning)}</td>
+        <td class="amount">${formatRupiahTable(jumlah)}</td>
+        <td class="amount">${formatRupiahTable(saldoRunning)}</td>
         <td>
           <div class="flex justify-center gap-2">
             <button class="btn-aksi detail" onclick="detailRekening(${row.id})" title="Lihat Detail">
@@ -314,8 +314,15 @@ window.applyRekeningFilter = function () {
 /* =========================
    HELPERS
 ========================= */
-window.formatDate = d =>
-  d ? new Date(d).toLocaleDateString('id-ID') : '-';
+window.formatDate = d => {
+  if (!d) return '-';
+  const date = new Date(d);
+  return isNaN(date.getTime()) ? '-' : date.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+};
 
 
 

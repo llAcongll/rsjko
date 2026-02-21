@@ -27,6 +27,9 @@ class PengeluaranController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('uraian', 'like', "%$search%")
+                    ->orWhere('no_spp', 'like', "%$search%")
+                    ->orWhere('no_spm', 'like', "%$search%")
+                    ->orWhere('no_sp2d', 'like', "%$search%")
                     ->orWhereHas('kodeRekening', function ($qr) use ($search) {
                         $qr->where('nama', 'like', "%$search%")
                             ->orWhere('kode', 'like', "%$search%");
@@ -49,11 +52,13 @@ class PengeluaranController extends Controller
             ->keyBy('metode_pembayaran')
             ->toArray();
 
-        $data = $query->orderBy('tanggal', 'desc')->paginate($limit);
+        $data = $query->orderBy('tanggal', 'asc')->paginate($limit);
 
         $response = $data->toArray();
         $response['aggregates'] = [
             'total_nominal' => $totalNominal,
+            'total_pajak' => (float) $query->sum('potongan_pajak'),
+            'total_dibayarkan' => (float) $query->sum('total_dibayarkan'),
             'total_count' => $totalCount,
             'total_up' => (float) ($aggMetode['UP']['total'] ?? 0),
             'count_up' => (int) ($aggMetode['UP']['count'] ?? 0),
@@ -131,6 +136,8 @@ class PengeluaranController extends Controller
             'kode_rekening_id' => 'required|exists:kode_rekening,id',
             'uraian' => 'required|string|max:255',
             'nominal' => 'required|numeric|min:0',
+            'potongan_pajak' => 'nullable|numeric|min:0',
+            'total_dibayarkan' => 'nullable|numeric|min:0',
             'metode_pembayaran' => 'nullable|in:UP,GU,LS',
             'no_spm' => 'nullable|string|max:100',
             'no_sp2d' => 'nullable|string|max:100',
@@ -142,6 +149,9 @@ class PengeluaranController extends Controller
         $month = (int) date('m', strtotime($data['tanggal']));
         $monthRoman = $this->getRoman($month);
         $metode = $data['metode_pembayaran'];
+
+        $data['potongan_pajak'] = $data['potongan_pajak'] ?? 0;
+        $data['total_dibayarkan'] = max(0, $data['nominal'] - $data['potongan_pajak']);
 
         // Cek Anggaran vs Realisasi
         $anggaran = \App\Models\AnggaranRekening::where('tahun', $year)
@@ -222,6 +232,8 @@ class PengeluaranController extends Controller
             'kode_rekening_id' => 'required|exists:kode_rekening,id',
             'uraian' => 'required|string|max:255',
             'nominal' => 'required|numeric|min:0',
+            'potongan_pajak' => 'nullable|numeric|min:0',
+            'total_dibayarkan' => 'nullable|numeric|min:0',
             'metode_pembayaran' => 'nullable|in:UP,GU,LS',
             'no_spm' => 'nullable|string|max:100',
             'no_sp2d' => 'nullable|string|max:100',
@@ -230,6 +242,9 @@ class PengeluaranController extends Controller
         ]);
 
         $year = date('Y', strtotime($data['tanggal']));
+
+        $data['potongan_pajak'] = $data['potongan_pajak'] ?? 0;
+        $data['total_dibayarkan'] = max(0, $data['nominal'] - $data['potongan_pajak']);
 
         // Cek Anggaran vs Realisasi
         $anggaran = \App\Models\AnggaranRekening::where('tahun', $year)

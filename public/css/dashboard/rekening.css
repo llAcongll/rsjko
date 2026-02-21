@@ -137,7 +137,7 @@
 .rekening-table thead th {
   background: #f8fafc;
   padding: 16px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: #475569;
   text-transform: uppercase;
@@ -147,10 +147,11 @@
 
 .rekening-table tbody td {
   padding: 16px;
-  font-size: 14px;
+  font-size: 11px;
   color: #1e293b;
   border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 /* Column Widths (Nth-Child) */
@@ -185,14 +186,12 @@
 
 .rekening-table th:nth-child(6),
 .rekening-table td:nth-child(6) {
-  width: 140px;
-  text-align: right;
+  width: 160px;
 }
 
 .rekening-table th:nth-child(7),
 .rekening-table td:nth-child(7) {
-  width: 140px;
-  text-align: right;
+  width: 160px;
 }
 
 .rekening-table th:nth-child(8),

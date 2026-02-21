@@ -7,18 +7,6 @@
       <p>Target dan realisasi anggaran pendapatan tahunan</p>
     </div>
 
-    <div class="dashboard-header-right">
-      <div class="filter-group"
-        style="display: flex; align-items: center; gap: 10px; background: #fff; padding: 4px 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
-        <label for="anggaranTahun" style="font-size: 13px; font-weight: 600; color: #64748b;">Tahun:</label>
-        <select id="anggaranTahun" onchange="reloadAnggaran()"
-          style="border: none; font-weight: 700; color: #1e293b; outline: none; cursor: pointer;">
-          @for($y = 2026; $y <= 2030; $y++)
-            <option value="{{ $y }}">{{ $y }}</option>
-          @endfor
-        </select>
-      </div>
-    </div>
   </div>
 
   {{-- MAIN BOX --}}

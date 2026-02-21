@@ -6,13 +6,9 @@
         </div>
         <div class="header-right">
             <div class="laporan-filter-group">
-                <div class="filter-item">
-                    <label>Dari</label>
-                    <input type="date" id="laporanStart" class="filter-date-input">
-                </div>
-                <div class="filter-item">
-                    <label>Sampai</label>
-                    <input type="date" id="laporanEnd" class="filter-date-input">
+                <div class="filter-item"
+                    style="padding: 10px 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; font-weight: 600; color: #475569;">
+                    Tahun Anggaran: {{ session('tahun_anggaran') }}
                 </div>
                 <button class="btn-filter" onclick="loadLaporan('REKON')">
                     <i class="ph ph-magnifying-glass"></i>
@@ -29,26 +25,61 @@
     </div>
 
     <!-- RECONCILIATION SUMMARY -->
-    <div class="dashboard-cards" style="margin-bottom: 24px; grid-template-columns: repeat(3, 1fr);">
-        <div class="dash-card blue">
-            <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
-            <div class="dash-card-content">
-                <span class="label">Total Bank</span>
-                <h3 id="rekonTotalBank">Rp 0</h3>
+    <style>
+        /* Tighten page layout */
+        .laporan {
+            display: flex;
+            flex-direction: column;
+            gap: 16px !important;
+        }
+
+        .rekon-summary-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .rekon-summary-container .dashboard-cards {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            width: 100%;
+            max-width: 850px;
+            gap: 16px;
+        }
+    </style>
+
+    <div class="rekon-summary-container">
+        <div class="dashboard-cards">
+            <div class="dash-card blue">
+                <div class="dash-card-icon">
+                    <i class="ph ph-bank"></i>
+                </div>
+                <div class="dash-card-content">
+                    <span class="label">Total Bank</span>
+                    <h3 id="rekonTotalBank">Rp 0</h3>
+                    <small>Histori Rekening Koran</small>
+                </div>
             </div>
-        </div>
-        <div class="dash-card purple">
-            <div class="dash-card-icon"><i class="ph ph-hand-coins"></i></div>
-            <div class="dash-card-content">
-                <span class="label">Total Pendapatan</span>
-                <h3 id="rekonTotalPend">Rp 0</h3>
+
+            <div class="dash-card purple">
+                <div class="dash-card-icon">
+                    <i class="ph ph-hand-coins"></i>
+                </div>
+                <div class="dash-card-content">
+                    <span class="label">Total Pendapatan</span>
+                    <h3 id="rekonTotalPend">Rp 0</h3>
+                    <small>Berdasarkan Modul</small>
+                </div>
             </div>
-        </div>
-        <div class="dash-card orange">
-            <div class="dash-card-icon"><i class="ph ph-warning"></i></div>
-            <div class="dash-card-content">
-                <span class="label">Net Selisih</span>
-                <h3 id="rekonTotalDiff">Rp 0</h3>
+
+            <div class="dash-card orange">
+                <div class="dash-card-icon">
+                    <i class="ph ph-warning"></i>
+                </div>
+                <div class="dash-card-content">
+                    <span class="label">Net Selisih</span>
+                    <h3 id="rekonTotalDiff">Rp 0</h3>
+                    <small>Selisih Akumulasi</small>
+                </div>
             </div>
         </div>
     </div>
@@ -59,11 +90,11 @@
             <table class="report-table" id="laporanRekonTable">
                 <thead>
                     <tr>
-                        <th style="width: 120px;">Tanggal</th>
-                        <th style="text-align:right">Bank (Kredit)</th>
-                        <th style="text-align:right">Modul Netto</th>
-                        <th style="text-align:right">Selisih Harian</th>
-                        <th style="text-align:right">Selisih Kumulatif</th>
+                        <th class="text-center" style="width: 120px;">Bulan</th>
+                        <th class="text-center" style="text-align:right">Bank (Kredit)</th>
+                        <th class="text-center" style="text-align:right">Modul Netto</th>
+                        <th class="text-center" style="text-align:right">Selisih Harian</th>
+                        <th class="text-center" style="text-align:right">Selisih Kumulatif</th>
                         <th style="text-align:center; width: 120px;">Status</th>
                     </tr>
                 </thead>

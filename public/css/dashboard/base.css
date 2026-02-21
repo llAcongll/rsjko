@@ -26,7 +26,7 @@ body {
    SIDEBAR
  ===================== */
 .sidebar {
-  width: 280px;
+  width: 65px;
   background: var(--sidebar-bg);
   color: #fff;
   display: flex;
@@ -34,8 +34,16 @@ body {
   position: fixed;
   height: 100vh;
   z-index: 1000;
-  transition: transform var(--transition-speed) ease;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform var(--transition-speed) ease, box-shadow 0.4s ease;
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+  overflow-x: hidden;
+}
+
+@media (min-width: 1025px) {
+  .sidebar:hover {
+    width: 280px;
+    box-shadow: 12px 0 32px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .sidebar-header {
@@ -112,6 +120,7 @@ body {
 
 .sidebar button i {
   font-size: 20px;
+  flex-shrink: 0;
   transition: transform 0.2s ease;
 }
 
@@ -211,6 +220,7 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 20px;
+  flex-shrink: 0;
 }
 
 .user-details .username {
@@ -280,10 +290,74 @@ body {
  ===================== */
 .main {
   flex: 1;
-  margin-left: 280px;
+  margin-left: 65px;
   padding: 32px;
   min-height: 100vh;
-  transition: margin-left var(--transition-speed) ease;
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =====================
+   SIDEBAR AUTO-HIDE LOGICS
+ ===================== */
+@media (min-width: 1025px) {
+
+  /* Lock width so contents do not compress when sidebar shrinks to 65px */
+  .sidebar-header,
+  .sidebar-content,
+  .sidebar-footer {
+    width: 280px;
+  }
+
+  /* 16.5px exactly centers the 32px hospital logo in the 65px wide sidebar */
+  .sidebar-header {
+    padding: 32px 16.5px 20px;
+  }
+
+  /* 16px (sidebar-content) + 6.5px (button left) = 22.5px. 
+     Exactly centers a 20px icon in the 65px wide sidebar */
+  .sidebar button {
+    padding: 12px 6.5px;
+  }
+
+  /* Make submenu items still indented but properly padded */
+  .submenu-child button {
+    padding: 10px 16px 10px 16px;
+  }
+
+  /* 12.5px exactly centers the 40px user avatar in the 65px wide sidebar */
+  .sidebar-footer {
+    padding: 24px 12.5px;
+  }
+
+  .sidebar .btn-logout {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .sidebar .logo-wrapper span,
+  .sidebar .logo-wrapper small,
+  .sidebar button span,
+  .sidebar .dropdown-icon,
+  .sidebar .menu-divider,
+  .sidebar .submenu-header,
+  .sidebar .user-details {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .sidebar:hover .logo-wrapper span,
+  .sidebar:hover .logo-wrapper small,
+  .sidebar:hover button span,
+  .sidebar:hover .dropdown-icon,
+  .sidebar:hover .menu-divider,
+  .sidebar:hover .submenu-header,
+  .sidebar:hover .user-details {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0.15s;
+  }
 }
 
 #mainContent {
@@ -435,6 +509,44 @@ table tbody td {
 .badge-info {
   background: #dbeafe;
   color: #1d4ed8;
+}
+
+.badge-mini {
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  letter-spacing: 0.02em;
+  line-height: normal;
+}
+
+.bg-blue-100 {
+  background-color: #dbeafe !important;
+}
+
+.text-blue-700 {
+  color: #1d4ed8 !important;
+}
+
+.bg-emerald-100 {
+  background-color: #d1fae5 !important;
+}
+
+.text-emerald-700 {
+  color: #047857 !important;
+}
+
+.bg-purple-100 {
+  background-color: #f3e8ff !important;
+}
+
+.text-purple-700 {
+  color: #7e22ce !important;
 }
 
 /* =========================
@@ -1478,6 +1590,7 @@ body {
 
   /* SIDEBAR AS DRAWER */
   .sidebar {
+    width: 280px;
     transform: translateX(-100%);
   }
 

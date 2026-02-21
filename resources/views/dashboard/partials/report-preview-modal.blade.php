@@ -48,15 +48,78 @@
                 <div id="previewTables" style="font-size: 9pt; color: #000;">
                     {{-- DYNAMIC TABLES HERE --}}
                 </div>
+
+                {{-- SIGNATURE AREA --}}
+                <div
+                    style="margin-top: 50px; display: flex; justify-content: space-between; align-items: flex-start; gap: 15px;">
+                    {{-- LEFT SIGNATORY SLOT --}}
+                    <div id="ptPreviewAreaKiri" style="width: 32%; text-align: center; visibility: hidden;">
+                        <p style="margin: 0; min-height: 1.25em;">&nbsp;</p>
+                        <p id="previewPtJabatanKiri" style="margin: 0; font-weight: bold; min-height: 1.2em;"></p>
+                        <div style="height: 60px;"></div>
+                        <p id="previewPtNamaKiri" style="margin: 0; font-weight: bold;">
+                            ...................................</p>
+                        <p id="previewPtNipKiri" style="margin: 0;">NIP. ...................................</p>
+                    </div>
+
+                    {{-- MIDDLE SIGNATORY SLOT --}}
+                    <div id="ptPreviewAreaTengah" style="width: 32%; text-align: center; visibility: hidden;">
+                        <p style="margin: 0; min-height: 1.25em;">&nbsp;</p>
+                        <p id="previewPtJabatanTengah" style="margin: 0; font-weight: bold; min-height: 1.2em;"></p>
+                        <div style="height: 60px;"></div>
+                        <p id="previewPtNamaTengah" style="margin: 0; font-weight: bold;">
+                            ...................................</p>
+                        <p id="previewPtNipTengah" style="margin: 0;">NIP. ...................................</p>
+                    </div>
+
+                    {{-- RIGHT SIGNATORY SLOT --}}
+                    <div id="ptPreviewAreaKanan" style="width: 32%; text-align: center;">
+                        <p style="margin: 0;">Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+                        <p id="previewPtJabatanKanan" style="margin: 0; font-weight: bold; min-height: 1.2em;"></p>
+                        <div style="height: 60px;"></div>
+                        <p id="previewPtNamaKanan" style="margin: 0; font-weight: bold;">
+                            ...................................</p>
+                        <p id="previewPtNipKanan" style="margin: 0;">NIP. ...................................</p>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div
             style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 20px;">
-            <button class="btn-preview" style="background: #64748b; border-color: #64748b; color: white;"
-                onclick="closePreviewModal()">
-                <i class="ph ph-x-circle"></i> Tutup
-            </button>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="btn-preview" style="background: #64748b; border-color: #64748b; color: white;"
+                    onclick="closePreviewModal()">
+                    <i class="ph ph-x-circle"></i> Tutup
+                </button>
+
+                <div
+                    style="display: flex; gap: 10px; background: #f8fafc; padding: 6px 12px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <div class="filter-item" style="display: flex; align-items: center; gap: 5px;">
+                        <label style="font-size: 10px; font-weight: 700; color: #475569;">PT. KIRI:</label>
+                        <select id="ptSelectKiri" onchange="updateSignatory('Kiri')"
+                            style="height: 30px; padding: 0 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 10px; min-width: 140px; background: #fff;">
+                            <option value="">-- Kosong --</option>
+                        </select>
+                    </div>
+                    <div class="divider" style="width: 1px; height: 25px; background: #e2e8f0;"></div>
+                    <div class="filter-item" style="display: flex; align-items: center; gap: 5px;">
+                        <label style="font-size: 10px; font-weight: 700; color: #475569;">PT. TENGAH:</label>
+                        <select id="ptSelectTengah" onchange="updateSignatory('Tengah')"
+                            style="height: 30px; padding: 0 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 10px; min-width: 140px; background: #fff;">
+                            <option value="">-- Kosong --</option>
+                        </select>
+                    </div>
+                    <div class="divider" style="width: 1px; height: 25px; background: #e2e8f0;"></div>
+                    <div class="filter-item" style="display: flex; align-items: center; gap: 5px;">
+                        <label style="font-size: 10px; font-weight: 700; color: #475569;">PT. KANAN:</label>
+                        <select id="ptSelectKanan" onchange="updateSignatory('Kanan')"
+                            style="height: 30px; padding: 0 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 10px; min-width: 140px; background: #fff;">
+                            <option value="">-- Kosong --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
             <div style="display: flex; gap: 12px;">
                 @if(auth()->user()->hasPermission('LAPORAN_EXPORT'))
                     <button class="btn-filter" style="background: #10b981; border-color: #10b981; color: white;"

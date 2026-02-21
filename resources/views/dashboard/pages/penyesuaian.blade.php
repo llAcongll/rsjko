@@ -17,16 +17,63 @@
         </div>
     </div>
 
+    {{-- SUMMARY CARDS --}}
+    <style>
+        /* Tighten page layout */
+        .dashboard {
+            gap: 16px !important;
+        }
+
+        .penyesuaian-summary-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .penyesuaian-summary-container .dashboard-cards {
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            width: 100%;
+            max-width: 600px;
+            gap: 16px;
+        }
+    </style>
+
+    <div class="penyesuaian-summary-container">
+        <div class="dashboard-cards">
+            <div class="dash-card indigo">
+                <div class="dash-card-icon">
+                    <i class="ph ph-scissors"></i>
+                </div>
+                <div class="dash-card-content">
+                    <span class="label">Total Potongan</span>
+                    <h3 id="summaryTotalPotonganPenyesuaian">Rp 0</h3>
+                    <small>Potongan piutang</small>
+                </div>
+            </div>
+
+            <div class="dash-card orange">
+                <div class="dash-card-icon">
+                    <i class="ph ph-bank"></i>
+                </div>
+                <div class="dash-card-content">
+                    <span class="label">Total Biaya Admin</span>
+                    <h3 id="summaryTotalAdmPenyesuaian">Rp 0</h3>
+                    <small>Administrasi bank</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- MAIN CONTENT --}}
     <div class="dashboard-box">
         <div class="box-header">
-            <div class="toolbar-row">
-                <div class="search-wrapper">
+            <div class="flex items-center gap-4" style="width: 100%;">
+                <div class="search-wrapper flex-1">
                     <div class="input-group" style="position: relative;">
                         <i class="ph ph-magnifying-glass"
                             style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px;"></i>
                         <input type="text" id="searchPenyesuaian" placeholder="Cari keterangan atau perusahaan..."
-                            style="width: 100%; height: 44px; padding-left: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
+                            style="width: 100%; height: 48px; padding-left: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
                     </div>
                 </div>
 
@@ -41,16 +88,23 @@
         </div>
 
         <div class="table-container">
+            <style>
+                #penyesuaianTable th,
+                #penyesuaianTable td {
+                    font-size: 11px !important;
+                    white-space: nowrap !important;
+                }
+            </style>
             <table id="penyesuaianTable">
                 <thead>
                     <tr>
                         <th class="text-center" style="width: 50px;">No</th>
-                        <th style="width: 110px;">Tanggal</th>
-                        <th>Kategori</th>
-                        <th>Perusahaan</th>
-                        <th class="text-right">Potongan</th>
-                        <th class="text-right">Adm Bank</th>
-                        <th>Keterangan</th>
+                        <th class="text-center" style="width: 110px;">Tanggal</th>
+                        <th class="text-center">Kategori</th>
+                        <th class="text-center">Perusahaan</th>
+                        <th class="text-center">Potongan</th>
+                        <th class="text-center">Adm Bank</th>
+                        <th class="text-center">Keterangan</th>
                         <th class="text-center" style="width: 100px;">Aksi</th>
                     </tr>
                 </thead>

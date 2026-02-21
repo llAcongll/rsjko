@@ -12,7 +12,8 @@
     <div style="text-align: center;">
         <h3>LAPORAN PIUTANG</h3>
         <p>Periode: {{ Carbon::parse($start)->translatedFormat('d F Y') }} s/d
-            {{ Carbon::parse($end)->translatedFormat('d F Y') }}</p>
+            {{ Carbon::parse($end)->translatedFormat('d F Y') }}
+        </p>
     </div>
 
     <table border="1">
@@ -43,7 +44,41 @@
                 <td align="right">Rp {{ number_format($totals->dibayar, 2, ',', '.') }}</td>
             </tr>
         </tbody>
-    </table>
+        <table style="border: none;">
+            <tr>
+                <td align="center">
+                    @if($ptKiri)
+                        <br>
+                        <b>{{ $ptKiri->jabatan }}</b><br><br><br><br>
+                        <b>{{ $ptKiri->nama }}</b><br>
+                        NIP. {{ $ptKiri->nip }}
+                    @endif
+                </td>
+                <td></td>
+                <td align="center">
+                    @if($ptTengah)
+                        <br>
+                        <b>{{ $ptTengah->jabatan }}</b><br><br><br><br>
+                        <b>{{ $ptTengah->nama }}</b><br>
+                        NIP. {{ $ptTengah->nip }}
+                    @endif
+                </td>
+                <td></td>
+                <td align="center">
+                    Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
+                    @if($ptKanan)
+                        <b>{{ $ptKanan->jabatan }}</b><br><br><br><br>
+                        <b>{{ $ptKanan->nama }}</b><br>
+                        NIP. {{ $ptKanan->nip }}
+                    @else
+                        <b>&nbsp;</b><br>
+                        &nbsp;<br><br><br><br>
+                        <b>...................................</b><br>
+                        NIP. ...................................
+                    @endif
+                </td>
+            </tr>
+        </table>
 </body>
 
 </html>

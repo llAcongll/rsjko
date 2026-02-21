@@ -83,9 +83,19 @@ class PendapatanBpjsController extends Controller
             $adm = $ded->total_adm ?? 0;
 
             if ($potongan > 0 || $adm > 0) {
-                $rs -= round($potongan * 0.7, 2);
-                $pelayanan -= round($potongan * 0.3, 2);
-                $rs -= $adm;
+                $grossQuery = DB::table('pendapatan_bpjs')->where('tahun', session('tahun_anggaran'));
+                if ($jenisBpjs) {
+                    $grossQuery->where('jenis_bpjs', $jenisBpjs);
+                }
+                $grossYearly = $grossQuery->sum('total');
+
+                $ratio = $grossYearly > 0 ? ($total / $grossYearly) : 0;
+                $dedPotongan = $potongan * $ratio;
+                $dedAdm = $adm * $ratio;
+
+                $rs -= round($dedPotongan * 0.7, 2);
+                $pelayanan -= round($dedPotongan * 0.3, 2);
+                $rs -= $dedAdm;
                 $total = $rs + $pelayanan;
             }
 

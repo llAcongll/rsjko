@@ -60,7 +60,8 @@
 
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="logo-wrapper">
+      <div class="logo-wrapper" style="flex-direction: row; gap: 12px; align-items: center;">
+        <i class="ph-fill ph-hospital" style="font-size: 32px; color: var(--accent-blue); min-width: 32px;"></i>
         <span>RSJKO EHD</span>
       </div>
     </div>
@@ -185,22 +186,44 @@
 
         <div class="submenu-child" id="submenuLaporan">
           @if(auth()->user()->hasPermission('LAPORAN_PENDAPATAN'))
-            <button onclick="openLaporan('PENDAPATAN', this)">Laporan Pendapatan</button>
+            <button onclick="openLaporan('PENDAPATAN', this)">
+              <i class="ph ph-money"></i>
+              <span>Laporan Pendapatan</span>
+            </button>
           @endif
           @if(auth()->user()->hasPermission('LAPORAN_PENGELUARAN') || auth()->user()->hasPermission('LAPORAN_VIEW'))
-            <button onclick="openLaporan('PENGELUARAN', this)">Laporan Pengeluaran</button>
+            <button onclick="openLaporan('PENGELUARAN', this)">
+              <i class="ph ph-hand-coins"></i>
+              <span>Laporan Pengeluaran</span>
+            </button>
           @endif
           @if(auth()->user()->hasPermission('LAPORAN_REKON'))
-            <button onclick="openLaporan('REKON', this)">Laporan Rekonsiliasi</button>
+            <button onclick="openLaporan('REKON', this)">
+              <i class="ph ph-arrows-left-right"></i>
+              <span>Laporan Rekonsiliasi</span>
+            </button>
           @endif
           @if(auth()->user()->hasPermission('LAPORAN_PIUTANG'))
-            <button onclick="openLaporan('PIUTANG', this)">Laporan Piutang</button>
+            <button onclick="openLaporan('PIUTANG', this)">
+              <i class="ph ph-invoice"></i>
+              <span>Laporan Piutang</span>
+            </button>
           @endif
           @if(auth()->user()->hasPermission('LAPORAN_MOU'))
-            <button onclick="openLaporan('MOU', this)">Laporan MOU</button>
+            <button onclick="openLaporan('MOU', this)">
+              <i class="ph ph-file-text"></i>
+              <span>Laporan MOU</span>
+            </button>
           @endif
           @if(auth()->user()->hasPermission('LAPORAN_ANGGARAN'))
-            <button onclick="openLaporan('ANGGARAN', this)">Realisasi Anggaran</button>
+            <button onclick="openLaporan('ANGGARAN', this)">
+              <i class="ph ph-chart-pie-slice"></i>
+              <span>Realisasi Anggaran</span>
+            </button>
+            <button onclick="openLaporan('DPA', this)">
+              <i class="ph ph-article"></i>
+              <span>Laporan DPA</span>
+            </button>
           @endif
         </div>
       @endif
@@ -219,7 +242,7 @@
       @if(auth()->check() && $hasAnyMaster)
         <div class="menu-divider">Master Data</div>
         <button id="btnMaster" onclick="toggleMaster(this)">
-          <i class="ph ph-folder-notched"></i>
+          <i class="ph ph-gear"></i>
           <span>Pengaturan</span>
           <i class="ph ph-caret-down dropdown-icon"></i>
         </button>
@@ -269,6 +292,12 @@
             <button onclick="openMouPage(this)">
               <i class="ph ph-file-text"></i>
               <span>MOU</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('MASTER_VIEW') || auth()->user()->isAdmin())
+            <button onclick="openPenandaTangan(this)">
+              <i class="ph ph-signature"></i>
+              <span>Penanda Tangan</span>
             </button>
           @endif
           @if(auth()->user()->isAdmin())
@@ -342,6 +371,9 @@
   {{-- MODAL MOU --}}
   @include('dashboard.partials.mou-form')
 
+  {{-- MODAL PENANDA TANGAN --}}
+  @include('dashboard.partials.penanda-tangan-form')
+
   {{-- MODAL REKENING --}}
   @include('dashboard.partials.rekening-form')
 
@@ -385,6 +417,8 @@
   <script
     src="{{ asset('js/dashboard/perusahaan.js') }}?v={{ filemtime(public_path('js/dashboard/perusahaan.js')) }}"></script>
   <script src="{{ asset('js/dashboard/mou.js') }}?v={{ filemtime(public_path('js/dashboard/mou.js')) }}"></script>
+  <script
+    src="{{ asset('js/dashboard/penanda-tangan.js') }}?v={{ filemtime(public_path('js/dashboard/penanda-tangan.js')) }}"></script>
   <script
     src="{{ asset('js/dashboard/rekening.js') }}?v={{ filemtime(public_path('js/dashboard/rekening.js')) }}"></script>
   <script

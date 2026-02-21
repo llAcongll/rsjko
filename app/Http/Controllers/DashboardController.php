@@ -42,6 +42,7 @@ class DashboardController extends BaseController
                     'MOU' => (Auth::user()->hasPermission('LAPORAN_MOU') || Auth::user()->hasPermission('LAPORAN_VIEW')) ? view('dashboard.pages.laporan.mou') : abort(403),
                     'ANGGARAN' => (Auth::user()->hasPermission('LAPORAN_ANGGARAN') || Auth::user()->hasPermission('LAPORAN_VIEW')) ? view('dashboard.pages.laporan.anggaran') : abort(403),
                     'PENGELUARAN' => (Auth::user()->hasPermission('LAPORAN_PENGELUARAN') || Auth::user()->hasPermission('LAPORAN_VIEW')) ? view('dashboard.pages.laporan.pengeluaran') : abort(403),
+                    'DPA' => (Auth::user()->hasPermission('LAPORAN_ANGGARAN') || Auth::user()->hasPermission('LAPORAN_VIEW')) ? view('dashboard.pages.laporan.dpa') : abort(403),
                     default => (Auth::user()->hasPermission('LAPORAN_PENDAPATAN') || Auth::user()->hasPermission('LAPORAN_VIEW')) ? view('dashboard.pages.laporan.pendapatan') : abort(403),
                 },
             'rekening' => Auth::user()->hasPermission('REKENING_VIEW') ? view('dashboard.pages.rekening') : abort(403),
@@ -49,6 +50,7 @@ class DashboardController extends BaseController
             'ruangan' => (Auth::user()->hasPermission('MASTER_RUANGAN_VIEW') || Auth::user()->hasPermission('MASTER_VIEW')) ? view('dashboard.pages.ruangan') : abort(403),
             'perusahaan' => (Auth::user()->hasPermission('MASTER_PERUSAHAAN_VIEW') || Auth::user()->hasPermission('MASTER_VIEW')) ? view('dashboard.pages.perusahaan') : abort(403),
             'mou' => (Auth::user()->hasPermission('MASTER_MOU_VIEW') || Auth::user()->hasPermission('MASTER_VIEW')) ? view('dashboard.pages.mou') : abort(403),
+            'penanda_tangan' => (Auth::user()->hasPermission('MASTER_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.penanda_tangan') : abort(403),
             'piutang' => Auth::user()->hasPermission('PIUTANG_VIEW') ? view('dashboard.pages.piutang') : abort(403),
             'penyesuaian' => Auth::user()->hasPermission('PENYESUAIAN_VIEW') ? view('dashboard.pages.penyesuaian') : abort(403),
 

@@ -34,8 +34,8 @@
                 <thead>
                     <tr>
                         <th data-sort="number" style="width: 60px;" class="text-center">No</th>
-                        <th data-sort="string" style="width: 140px;">Kode</th>
-                        <th data-sort="string">Nama Instansi</th>
+                        <th data-sort="string" style="width: 140px;" class="text-center">Kode</th>
+                        <th data-sort="string" class="text-center">Nama Instansi</th>
                         <th style="width: 120px;" class="text-center">Aksi</th>
                     </tr>
                 </thead>

@@ -40,14 +40,13 @@
 <body>
     <div style="text-align: center; margin-bottom: 20px;">
         <h3>LAPORAN REKONSILIASI</h3>
-        <p>Periode: {{ Carbon::parse($start)->translatedFormat('d F Y') }} s/d
-            {{ Carbon::parse($end)->translatedFormat('d F Y') }}</p>
+        <p>Tahun Anggaran: {{ session('tahun_anggaran') }}</p>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>Tanggal</th>
+                <th>Bulan</th>
                 <th>Bank (Kredit)</th>
                 <th>Modul Netto</th>
                 <th>Selisih Harian</th>
@@ -57,7 +56,7 @@
         <tbody>
             @foreach($data as $item)
                 <tr>
-                    <td class="text-center">{{ Carbon::parse($item->tanggal)->translatedFormat('d/m/Y') }}</td>
+                    <td class="text-center">{{ $item->tanggal }}</td>
                     <td class="text-right">Rp {{ number_format($item->bank, 2, ',', '.') }}</td>
                     <td class="text-right">Rp {{ number_format($item->pendapatan, 2, ',', '.') }}</td>
                     <td class="text-right">Rp {{ number_format($item->selisih, 2, ',', '.') }}</td>
@@ -65,7 +64,41 @@
                 </tr>
             @endforeach
         </tbody>
-    </table>
+        <table style="border: none;">
+            <tr>
+                <td align="center">
+                    @if($ptKiri)
+                        <br>
+                        <b>{{ $ptKiri->jabatan }}</b><br><br><br><br>
+                        <b>{{ $ptKiri->nama }}</b><br>
+                        NIP. {{ $ptKiri->nip }}
+                    @endif
+                </td>
+                <td></td>
+                <td align="center">
+                    @if($ptTengah)
+                        <br>
+                        <b>{{ $ptTengah->jabatan }}</b><br><br><br><br>
+                        <b>{{ $ptTengah->nama }}</b><br>
+                        NIP. {{ $ptTengah->nip }}
+                    @endif
+                </td>
+                <td></td>
+                <td align="center">
+                    Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
+                    @if($ptKanan)
+                        <b>{{ $ptKanan->jabatan }}</b><br><br><br><br>
+                        <b>{{ $ptKanan->nama }}</b><br>
+                        NIP. {{ $ptKanan->nip }}
+                    @else
+                        <b>&nbsp;</b><br>
+                        &nbsp;<br><br><br><br>
+                        <b>...................................</b><br>
+                        NIP. ...................................
+                    @endif
+                </td>
+            </tr>
+        </table>
 </body>
 
 </html>

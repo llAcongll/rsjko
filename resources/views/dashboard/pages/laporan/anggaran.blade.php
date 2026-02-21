@@ -49,15 +49,15 @@
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th style="width: 150px; vertical-align: middle;">Kode Rekening</th>
-                        <th style="vertical-align: middle;">Uraian</th>
-                        <th style="text-align:right; vertical-align: middle;">Target Anggaran</th>
-                        <th style="text-align:center">Realisasi (Lalu)</th>
-                        <th style="text-align:center">Realisasi (Kini)</th>
-                        <th style="text-align:center">Realisasi (Total)</th>
-                        <th style="text-align:right; vertical-align: middle;">Selisih</th>
-                        <th style="text-align:center; vertical-align: middle;">%</th>
-                        <th style="width: 120px; vertical-align: middle;">Progres</th>
+                        <th class="text-center" style="width: 150px; vertical-align: middle;">Kode Rekening</th>
+                        <th class="text-center" style="vertical-align: middle;">Uraian</th>
+                        <th class="text-center" style="text-align:right; vertical-align: middle;">Target Anggaran</th>
+                        <th class="text-center" style="text-align:center">Realisasi (Lalu)</th>
+                        <th class="text-center" style="text-align:center">Realisasi (Kini)</th>
+                        <th class="text-center" style="text-align:center">Realisasi (Total)</th>
+                        <th class="text-center" style="text-align:right; vertical-align: middle;">Selisih</th>
+                        <th class="text-center" style="text-align:center; vertical-align: middle;">%</th>
+                        <th class="text-center" style="width: 120px; vertical-align: middle;">Progres</th>
                     </tr>
                 </thead>
                 <tbody id="laporanAnggaranBody">

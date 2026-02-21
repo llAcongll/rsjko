@@ -35,6 +35,29 @@
     </div>
 
     <div class="laporan-grid" style="grid-template-columns: 1fr; gap: 24px;">
+        <!-- JASA Section -->
+        <div class="laporan-section table-section">
+            <div class="section-header">
+                <h3><i class="ph ph-stethoscope"></i> Metode Jasa (Jasa Rumah Sakit & Jasa Pelayanan)</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 200px;">Sub Kode Rekening</th>
+                            <th class="text-center">Nama Akun</th>
+                            <th class="text-center" style="text-align:right">Jasa Rumah Sakit</th>
+                            <th class="text-center" style="text-align:right">Jasa Pelayanan</th>
+                            <th class="text-center" style="text-align:right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="laporanJasaDetailedBody">
+                        <!-- Dynamic -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- PAYMENT METHOD Section -->
         <div class="laporan-section table-section">
             <div class="section-header">
@@ -44,11 +67,11 @@
                 <table class="report-table">
                     <thead>
                         <tr>
-                            <th style="width: 200px;">Sub Kode Rekening</th>
-                            <th>Nama Akun</th>
-                            <th style="text-align:right">Tunai</th>
-                            <th style="text-align:right">Non-Tunai</th>
-                            <th style="text-align:right">Total</th>
+                            <th class="text-center" style="width: 200px;">Sub Kode Rekening</th>
+                            <th class="text-center">Nama Akun</th>
+                            <th class="text-center" style="text-align:right">Tunai</th>
+                            <th class="text-center" style="text-align:right">Non-Tunai</th>
+                            <th class="text-center" style="text-align:right">Total</th>
                         </tr>
                     </thead>
                     <tbody id="laporanPaymentDetailedBody">
@@ -67,11 +90,11 @@
                 <table class="report-table">
                     <thead>
                         <tr>
-                            <th style="width: 200px;">Sub Kode Rekening</th>
-                            <th>Nama Akun</th>
-                            <th style="text-align:right">BRK (Tunai + Transfer)</th>
-                            <th style="text-align:right">BSI (Transfer)</th>
-                            <th style="text-align:right">Total</th>
+                            <th class="text-center" style="width: 200px;">Sub Kode Rekening</th>
+                            <th class="text-center">Nama Akun</th>
+                            <th class="text-center" style="text-align:right">BRK (Tunai + Transfer)</th>
+                            <th class="text-center" style="text-align:right">BSI (Transfer)</th>
+                            <th class="text-center" style="text-align:right">Total</th>
                         </tr>
                     </thead>
                     <tbody id="laporanBankDetailedBody">

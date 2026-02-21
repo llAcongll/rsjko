@@ -209,12 +209,27 @@ function loadPendapatanBpjs(page = bpjsPage) {
                 tbody.insertAdjacentHTML('beforeend', `
                 <tr>
                     <td class="text-center">${res.from + index}</td>
-                    <td>${formatTanggal(item.tanggal)}</td>
+                    <td class="text-center">${formatTanggal(item.tanggal)}</td>
                     ${noSepCol}
                     <td class="font-medium">${escapeHtml(item.nama_pasien ?? '-')}</td>
                     <td>${escapeHtml(item.perusahaan?.nama ?? item.transaksi ?? '-')}</td>
                     <td><span class="badge badge-info">${item.ruangan?.nama ?? '-'}</span></td>
-                    <td class="text-right font-bold" style="color: #0f172a;">${formatRupiah(item.total)}</td>
+                    <td class="text-right">
+                        <div class="nominal-group">
+                            <div class="nom-row">
+                                <div class="nom-val val-rs">${formatRupiahTable((parseFloat(item.rs_tindakan) || 0) + (parseFloat(item.rs_obat) || 0))}</div>
+                                <span class="nom-label label-rs">Rs</span>
+                            </div>
+                            <div class="nom-row">
+                                <div class="nom-val val-pelayanan">${formatRupiahTable((parseFloat(item.pelayanan_tindakan) || 0) + (parseFloat(item.pelayanan_obat) || 0))}</div>
+                                <span class="nom-label label-pelayanan">Pelayanan</span>
+                            </div>
+                            <div class="nom-row" style="margin-top: 2px; padding-top: 2px; border-top: 1px dashed #e2e8f0;">
+                                <div class="nom-val val-total">${formatRupiahTable(item.total)}</div>
+                                <span class="nom-label label-total">Total</span>
+                            </div>
+                        </div>
+                    </td>
                     <td class="text-center">
                         <div class="flex justify-center gap-2">
                             <button class="btn-aksi detail" onclick="detailPendapatanBpjs(${item.id})" title="Lihat Detail">

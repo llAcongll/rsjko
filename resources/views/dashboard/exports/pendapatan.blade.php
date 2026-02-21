@@ -146,10 +146,57 @@
             <td colspan="5" style="border: none; height: 30px;"></td>
         </tr>
 
-        <!-- SECTION 2: METODE PEMBAYARAN -->
+        <!-- SECTION 2: METODE JASA -->
         <thead>
             <tr>
-                <th colspan="5" style="background-color: #cfe2f3; font-size: 12pt; text-align: center;">2. RINCIAN METODE PEMBAYARAN (TUNAI
+                <th colspan="5" style="background-color: #fce5cd; font-size: 12pt; text-align: center;">2. RINCIAN METODE JASA (RS & PELAYANAN)</th>
+            </tr>
+            <tr>
+                <th style="text-align: center;">Kode Rekening</th>
+                <th style="text-align: center;">Uraian Akun Pendapatan</th>
+                <th style="text-align: center;">Jasa Rumah Sakit</th>
+                <th style="text-align: center;">Jasa Pelayanan</th>
+                <th style="text-align: center;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $tJrs = 0;
+                $tJpel = 0;
+            $tJTotal = 0; @endphp
+            @foreach($breakdown as $key => $item)
+                @php
+                    $jrs = $item['jasa']['RS'] ?? 0;
+                    $jpel = $item['jasa']['PELAYANAN'] ?? 0;
+                    $jtot = $item['jasa']['TOTAL'] ?? 0;
+                    $tJrs += $jrs;
+                    $tJpel += $jpel;
+                    $tJTotal += $jtot;
+                @endphp
+                <tr>
+                    <td class="text-center">{{ $item['kode'] }}</td>
+                    <td>{{ $item['nama'] }}</td>
+                    <td class="text-right">{{ number_format($jrs, 2, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($jpel, 2, ',', '.') }}</td>
+                    <td class="text-right font-bold">{{ number_format($jtot, 2, ',', '.') }}</td>
+                </tr>
+            @endforeach
+            <tr class="font-bold bg-gray">
+                <td colspan="2" style="text-align: center;">JUMLAH KESELURUHAN</td>
+                <td style="text-align: right;">{{ number_format($tJrs, 2, ',', '.') }}</td>
+                <td style="text-align: right;">{{ number_format($tJpel, 2, ',', '.') }}</td>
+                <td style="text-align: right;">{{ number_format($tJTotal, 2, ',', '.') }}</td>
+            </tr>
+        </tbody>
+
+        <!-- SPACER -->
+        <tr>
+            <td colspan="5" style="border: none; height: 30px;"></td>
+        </tr>
+
+        <!-- SECTION 3: METODE PEMBAYARAN -->
+        <thead>
+            <tr>
+                <th colspan="5" style="background-color: #cfe2f3; font-size: 12pt; text-align: center;">3. RINCIAN METODE PEMBAYARAN (TUNAI
                     & NON-TUNAI)</th>
             </tr>
             <tr>
@@ -191,10 +238,10 @@
             <td colspan="5" style="border: none; height: 30px;"></td>
         </tr>
 
-        <!-- SECTION 3: BANK -->
+        <!-- SECTION 4: BANK -->
         <thead>
             <tr>
-                <th colspan="5" style="background-color: #fff2cc; font-size: 12pt; text-align: center;">3. RINCIAN PENERIMAAN BANK (RECON)
+                <th colspan="5" style="background-color: #fff2cc; font-size: 12pt; text-align: center;">4. RINCIAN PENERIMAAN BANK (RECON)
                 </th>
             </tr>
             <tr>
@@ -236,10 +283,10 @@
             <td colspan="5" style="border: none; height: 30px;"></td>
         </tr>
 
-        <!-- SECTION 4: ROOMS -->
+        <!-- SECTION 5: ROOMS -->
         <thead>
             <tr>
-                <th colspan="5" style="background-color: #ead1dc; font-size: 12pt; text-align: center;">4. PENDAPATAN & PASIEN PER RUANGAN
+                <th colspan="5" style="background-color: #ead1dc; font-size: 12pt; text-align: center;">5. PENDAPATAN & PASIEN PER RUANGAN
                 </th>
             </tr>
             <tr>
@@ -266,6 +313,40 @@
                 <td colspan="2" style="text-align: right;">{{ number_format($tRTotal, 2, ',', '.') }}</td>
             </tr>
         </tbody>
+    <table style="border: none;">
+        <tr>
+            <td align="center">
+                @if($ptKiri)
+                    <br>
+                    <b>{{ $ptKiri->jabatan }}</b><br><br><br><br>
+                    <b>{{ $ptKiri->nama }}</b><br>
+                    NIP. {{ $ptKiri->nip }}
+                @endif
+            </td>
+            <td></td>
+            <td align="center">
+                @if($ptTengah)
+                    <br>
+                    <b>{{ $ptTengah->jabatan }}</b><br><br><br><br>
+                    <b>{{ $ptTengah->nama }}</b><br>
+                    NIP. {{ $ptTengah->nip }}
+                @endif
+            </td>
+            <td></td>
+            <td align="center">
+                Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
+                @if($ptKanan)
+                    <b>{{ $ptKanan->jabatan }}</b><br><br><br><br>
+                    <b>{{ $ptKanan->nama }}</b><br>
+                    NIP. {{ $ptKanan->nip }}
+                @else
+                    <b>&nbsp;</b><br>
+                    &nbsp;<br><br><br><br>
+                    <b>...................................</b><br>
+                    NIP. ...................................
+                @endif
+            </td>
+        </tr>
     </table>
 </body>
 

@@ -60,37 +60,59 @@
 
 
   {{-- SUMMARY CARDS --}}
-  <div class="dashboard-cards">
-    <div class="dash-card blue">
-      <div class="dash-card-icon">
-        <i class="ph ph-bank"></i>
-      </div>
-      <div class="dash-card-content">
-        <span class="label">Saldo BRK Syariah</span>
-        <h3 id="saldoBRKS">Rp 0</h3>
-        <small id="percentBRKS">0% dari total</small>
-      </div>
-    </div>
+  <style>
+    /* Tighten page layout */
+    .dashboard {
+      gap: 16px !important;
+    }
 
-    <div class="dash-card purple">
-      <div class="dash-card-icon">
-        <i class="ph ph-bank"></i>
-      </div>
-      <div class="dash-card-content">
-        <span class="label">Saldo BSI</span>
-        <h3 id="saldoBSI">Rp 0</h3>
-        <small id="percentBSI">0% dari total</small>
-      </div>
-    </div>
+    .rekening-summary-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 0px;
+    }
 
-    <div class="dash-card green">
-      <div class="dash-card-icon">
-        <i class="ph ph-wallet"></i>
+    .rekening-summary-container .dashboard-cards {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      width: 100%;
+      max-width: 900px;
+      gap: 16px;
+    }
+  </style>
+
+  <div class="rekening-summary-container">
+    <div class="dashboard-cards">
+      <div class="dash-card blue">
+        <div class="dash-card-icon">
+          <i class="ph ph-bank"></i>
+        </div>
+        <div class="dash-card-content">
+          <span class="label">Saldo BRK Syariah</span>
+          <h3 id="saldoBRKS">Rp 0</h3>
+          <small id="percentBRKS" class="growth-up">0% dari total</small>
+        </div>
       </div>
-      <div class="dash-card-content">
-        <span class="label">Total Saldo</span>
-        <h3 id="saldoTotal" style="color: #16a34a;">Rp 0</h3>
-        <small>Terakumulasi</small>
+
+      <div class="dash-card purple">
+        <div class="dash-card-icon">
+          <i class="ph ph-bank"></i>
+        </div>
+        <div class="dash-card-content">
+          <span class="label">Saldo BSI</span>
+          <h3 id="saldoBSI">Rp 0</h3>
+          <small id="percentBSI" class="growth-up">0% dari total</small>
+        </div>
+      </div>
+
+      <div class="dash-card green">
+        <div class="dash-card-icon">
+          <i class="ph ph-wallet"></i>
+        </div>
+        <div class="dash-card-content">
+          <span class="label">Total Saldo</span>
+          <h3 id="saldoTotal" style="color: #16a34a;">Rp 0</h3>
+          <small>Terakumulasi</small>
+        </div>
       </div>
     </div>
   </div>
@@ -101,14 +123,14 @@
       <table class="users-table rekening-table" id="rekeningTable">
         <thead>
           <tr>
-            <th>No</th>
-            <th>Tanggal</th>
-            <th>Bank</th>
-            <th>Keterangan</th>
-            <th>C/D</th>
-            <th>Jumlah</th>
-            <th>Saldo</th>
-            <th>Aksi</th>
+            <th class="text-center">No</th>
+            <th class="text-center">Tanggal</th>
+            <th class="text-center">Bank</th>
+            <th class="text-center">Keterangan</th>
+            <th class="text-center">C/D</th>
+            <th class="text-center">Jumlah</th>
+            <th class="text-center">Saldo</th>
+            <th class="text-center">Aksi</th>
           </tr>
         </thead>
 

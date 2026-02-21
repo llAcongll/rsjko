@@ -44,37 +44,59 @@
     </div>
 
     {{-- SUMMARY CARDS --}}
-    <div class="dashboard-cards">
-        <div class="dash-card blue">
-            <div class="dash-card-icon">
-                <i class="ph ph-hospital"></i>
-            </div>
-            <div class="dash-card-content">
-                <span class="label">Jasa Rumah Sakit</span>
-                <h3 data-summary-bpjs="rs">Rp 0</h3>
-                <small data-summary-percent-bpjs="rs" class="growth-up">0% dari total</small>
-            </div>
-        </div>
+    <style>
+        /* Tighten page layout */
+        .dashboard {
+            gap: 16px !important;
+        }
 
-        <div class="dash-card purple">
-            <div class="dash-card-icon">
-                <i class="ph ph-user-gear"></i>
-            </div>
-            <div class="dash-card-content">
-                <span class="label">Jasa Pelayanan</span>
-                <h3 data-summary-bpjs="pelayanan">Rp 0</h3>
-                <small data-summary-percent-bpjs="pelayanan" class="growth-up">0% dari total</small>
-            </div>
-        </div>
+        .pendapatan-summary-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 0px;
+        }
 
-        <div class="dash-card green">
-            <div class="dash-card-icon">
-                <i class="ph ph-bank"></i>
+        .pendapatan-summary-container .dashboard-cards {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            width: 100%;
+            max-width: 850px;
+            gap: 16px;
+        }
+    </style>
+
+    <div class="pendapatan-summary-container">
+        <div class="dashboard-cards">
+            <div class="dash-card blue">
+                <div class="dash-card-icon">
+                    <i class="ph ph-hospital"></i>
+                </div>
+                <div class="dash-card-content">
+                    <span class="label">Jasa Rumah Sakit</span>
+                    <h3 data-summary-bpjs="rs">Rp 0</h3>
+                    <small data-summary-percent-bpjs="rs" class="growth-up">0% dari total</small>
+                </div>
             </div>
-            <div class="dash-card-content">
-                <span class="label">Total Klaim</span>
-                <h3 data-summary-bpjs="total" style="color: #16a34a;">Rp 0</h3>
-                <small>Terakumulasi</small>
+
+            <div class="dash-card purple">
+                <div class="dash-card-icon">
+                    <i class="ph ph-user-gear"></i>
+                </div>
+                <div class="dash-card-content">
+                    <span class="label">Jasa Pelayanan</span>
+                    <h3 data-summary-bpjs="pelayanan">Rp 0</h3>
+                    <small data-summary-percent-bpjs="pelayanan" class="growth-up">0% dari total</small>
+                </div>
+            </div>
+
+            <div class="dash-card green">
+                <div class="dash-card-icon">
+                    <i class="ph ph-bank"></i>
+                </div>
+                <div class="dash-card-content">
+                    <span class="label">Total Klaim</span>
+                    <h3 data-summary-bpjs="total" style="color: #16a34a;">Rp 0</h3>
+                    <small>Terakumulasi</small>
+                </div>
             </div>
         </div>
     </div>
@@ -116,17 +138,86 @@
         </div>
 
         <div class="table-container">
+            <style>
+                #pendapatanBpjsTable th,
+                #pendapatanBpjsTable td {
+                    font-size: 11px !important;
+                    white-space: nowrap !important;
+                }
+
+                .nominal-group {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: stretch;
+                    gap: 4px;
+                    width: 100%;
+                }
+
+                .nom-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    width: 100%;
+                }
+
+                .nom-label {
+                    font-size: 8px;
+                    font-weight: 700;
+                    padding: 2px 0;
+                    border-radius: 3px;
+                    text-transform: uppercase;
+                    width: 45px;
+                    text-align: center;
+                    flex-shrink: 0;
+                }
+
+                .nom-val {
+                    font-family: 'JetBrains Mono', monospace;
+                    flex-grow: 1;
+                }
+
+                .label-rs {
+                    background: #eff6ff;
+                    color: #2563eb;
+                }
+
+                .label-pelayanan {
+                    background: #fdf4ff;
+                    color: #a21caf;
+                }
+
+                .label-total {
+                    background: #ecfdf5;
+                    color: #059669;
+                }
+
+                .val-rs {
+                    font-weight: 600;
+                    color: #2563eb;
+                }
+
+                .val-pelayanan {
+                    font-weight: 600;
+                    color: #a21caf;
+                }
+
+                .val-total {
+                    font-weight: 800;
+                    color: #059669;
+                    font-size: 12px;
+                }
+            </style>
             <table id="pendapatanBpjsTable">
                 <thead>
                     <tr>
                         <th class="text-center" style="width: 60px;">No</th>
-                        <th style="width: 120px;">Tanggal</th>
-                        <th id="thNoSep" style="width: 160px;">No SEP</th>
-                        <th>Nama Pasien</th>
-                        <th>Perusahaan</th>
-                        <th>Ruangan</th>
-                        <th class="text-right" style="width: 160px;">Jumlah</th>
-                        <th class="text-center" style="width: 120px;">Aksi</th>
+                        <th class="text-center" style="width: 120px;">Tanggal</th>
+                        <th id="thNoSep" class="text-center" style="width: 160px;">No SEP</th>
+                        <th class="text-center">Nama Pasien</th>
+                        <th class="text-center">Perusahaan</th>
+                        <th class="text-center">Ruangan</th>
+                        <th class="text-right" style="width: 240px;">Rincian Nominal (RS/Pelayanan/Total)</th>
+                        <th class="text-center" style="width: 80px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="pendapatanBpjsBody">

@@ -21,6 +21,7 @@ use App\Http\Controllers\PiutangController;
 use App\Http\Controllers\PenyesuaianPendapatanController;
 use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\PenandaTanganController;
 
 Route::get('/health', function () {
     return response('OK', 200);
@@ -158,6 +159,27 @@ Route::middleware('auth')
                 Route::put('/{mou}', [MouController::class, 'update']);
                 Route::delete('/{mou}', [MouController::class, 'destroy']);
                 Route::get('/next-kode', [MouController::class, 'nextKode']);
+            });
+    });
+
+/*
+|--------------------------------------------------------------------------
+| PENANDA TANGAN
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')
+    ->prefix('dashboard')
+    ->group(function () {
+
+        Route::get('/penanda-tangan-list', [PenandaTanganController::class, 'list']);
+
+        Route::middleware('role:ADMIN,USER')
+            ->prefix('penanda-tangans')
+            ->group(function () {
+                Route::get('/', [PenandaTanganController::class, 'index']);
+                Route::post('/', [PenandaTanganController::class, 'store']);
+                Route::put('/{penandaTangan}', [PenandaTanganController::class, 'update']);
+                Route::delete('/{penandaTangan}', [PenandaTanganController::class, 'destroy']);
             });
     });
 
@@ -374,8 +396,12 @@ Route::get('/dashboard/laporan/piutang', [LaporanController::class, 'getPiutang'
 Route::get('/dashboard/laporan/mou', [LaporanController::class, 'getMou'])->middleware('auth');
 Route::get('/dashboard/laporan/anggaran', [LaporanController::class, 'getAnggaran'])->middleware('auth');
 Route::get('/dashboard/laporan/pengeluaran', [LaporanController::class, 'getPengeluaran'])->middleware('auth');
+Route::get('/dashboard/laporan/dpa', [LaporanController::class, 'getDpa'])->middleware('auth');
 Route::get('/dashboard/laporan/export/pengeluaran', [LaporanController::class, 'exportPengeluaran'])->middleware('auth');
 Route::get('/dashboard/laporan/export/pengeluaran-pdf', [LaporanController::class, 'exportPengeluaranPdf'])->middleware('auth');
+
+Route::get('/dashboard/laporan/export/dpa', [LaporanController::class, 'exportDpa'])->middleware('auth');
+Route::get('/dashboard/laporan/export/dpa-pdf', [LaporanController::class, 'exportDpaPdf'])->middleware('auth');
 
 Route::get(
     '/dashboard/pendapatan/anggaran',

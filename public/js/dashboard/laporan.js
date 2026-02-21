@@ -16,7 +16,7 @@ window.loadLaporan = async function (type) {
 
     window.lastLaporanType = type;
 
-    if (!end) {
+    if (!end && type !== 'REKON' && type !== 'DPA') {
         toast('Pilih tanggal!', 'error');
         return;
     }
@@ -37,6 +37,7 @@ window.loadLaporan = async function (type) {
                 break;
             }
             case 'PENGELUARAN': url = `/dashboard/laporan/pengeluaran?start=${start}&end=${end}`; break;
+            case 'DPA': url = `/dashboard/laporan/dpa`; break;
         }
 
         const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
@@ -59,6 +60,7 @@ window.loadLaporan = async function (type) {
                 toast('Data laporan tidak valid', 'error');
             }
         }
+        else if (type === 'DPA') renderDPA(data);
 
     } catch (err) {
         console.error(err);
@@ -110,6 +112,42 @@ function renderPendapatan(data) {
         'STUDY_BANDING',
     ];
 
+    // 1b. Render Jasa RS & Pelayanan Breakdown Table
+    const jasaTableBody = document.getElementById('laporanJasaDetailedBody');
+    if (jasaTableBody) {
+        jasaTableBody.innerHTML = '';
+        let totalRs = 0, totalPelayanan = 0, totalJasaAll = 0;
+
+        categoryKeys.forEach(key => {
+            const item = data.breakdown[key];
+            if (!item || !item.jasa) return;
+
+            const row = item.jasa;
+            totalRs += row.RS;
+            totalPelayanan += row.PELAYANAN;
+            totalJasaAll += row.TOTAL;
+
+            jasaTableBody.insertAdjacentHTML('beforeend', `
+                <tr>
+                    <td class="text-center"><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:12px;">${item.kode}</code></td>
+                    <td>${item.nama}</td>
+                    <td style="text-align:right">${formatRupiahTable(row.RS)}</td>
+                    <td style="text-align:right">${formatRupiahTable(row.PELAYANAN)}</td>
+                    <td style="text-align:right; font-weight:700;">${formatRupiahTable(row.TOTAL)}</td>
+                </tr>
+            `);
+        });
+
+        jasaTableBody.insertAdjacentHTML('beforeend', `
+            <tr style="background:#f8fafc; font-weight:800;">
+                <td colspan="2" style="text-align:center">TOTAL KESELURUHAN</td>
+                <td style="text-align:right">${formatRupiahTable(totalRs)}</td>
+                <td style="text-align:right">${formatRupiahTable(totalPelayanan)}</td>
+                <td style="text-align:right">${formatRupiahTable(totalJasaAll)}</td>
+            </tr>
+        `);
+    }
+
     // 2. Render Payment Method Table
     const payTableBody = document.getElementById('laporanPaymentDetailedBody');
     if (payTableBody) {
@@ -127,21 +165,21 @@ function renderPendapatan(data) {
 
             payTableBody.insertAdjacentHTML('beforeend', `
                 <tr>
-                    <td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:12px;">${item.kode}</code></td>
+                    <td class="text-center"><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:12px;">${item.kode}</code></td>
                     <td>${item.nama}</td>
-                    <td style="text-align:right">${formatRupiah(row.TUNAI)}</td>
-                    <td style="text-align:right">${formatRupiah(row.NON_TUNAI)}</td>
-                    <td style="text-align:right; font-weight:700;">${formatRupiah(row.TOTAL)}</td>
+                    <td style="text-align:right">${formatRupiahTable(row.TUNAI)}</td>
+                    <td style="text-align:right">${formatRupiahTable(row.NON_TUNAI)}</td>
+                    <td style="text-align:right; font-weight:700;">${formatRupiahTable(row.TOTAL)}</td>
                 </tr>
             `);
         });
 
         payTableBody.insertAdjacentHTML('beforeend', `
             <tr style="background:#f8fafc; font-weight:800;">
-                <td colspan="2" style="text-align:right">TOTAL KESELURUHAN</td>
-                <td style="text-align:right">${formatRupiah(totalTunai)}</td>
-                <td style="text-align:right">${formatRupiah(totalNon)}</td>
-                <td style="text-align:right">${formatRupiah(totalAll)}</td>
+                <td colspan="2" style="text-align:center">TOTAL KESELURUHAN</td>
+                <td style="text-align:right">${formatRupiahTable(totalTunai)}</td>
+                <td style="text-align:right">${formatRupiahTable(totalNon)}</td>
+                <td style="text-align:right">${formatRupiahTable(totalAll)}</td>
             </tr>
         `);
     }
@@ -163,21 +201,21 @@ function renderPendapatan(data) {
 
             bankTableBody.insertAdjacentHTML('beforeend', `
                 <tr>
-                    <td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:12px;">${item.kode}</code></td>
+                    <td class="text-center"><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:12px;">${item.kode}</code></td>
                     <td>${item.nama}</td>
-                    <td style="text-align:right">${formatRupiah(row.BRK)}</td>
-                    <td style="text-align:right">${formatRupiah(row.BSI)}</td>
-                    <td style="text-align:right; font-weight:700;">${formatRupiah(row.TOTAL)}</td>
+                    <td style="text-align:right">${formatRupiahTable(row.BRK)}</td>
+                    <td style="text-align:right">${formatRupiahTable(row.BSI)}</td>
+                    <td style="text-align:right; font-weight:700;">${formatRupiahTable(row.TOTAL)}</td>
                 </tr>
             `);
         });
 
         bankTableBody.insertAdjacentHTML('beforeend', `
             <tr style="background:#f8fafc; font-weight:800;">
-                <td colspan="2" style="text-align:right">TOTAL PENERIMAAN BANK</td>
-                <td style="text-align:right">${formatRupiah(totalBRK)}</td>
-                <td style="text-align:right">${formatRupiah(totalBSI)}</td>
-                <td style="text-align:right">${formatRupiah(totalAllBank)}</td>
+                <td colspan="2" style="text-align:center">TOTAL PENERIMAAN BANK</td>
+                <td style="text-align:right">${formatRupiahTable(totalBRK)}</td>
+                <td style="text-align:right">${formatRupiahTable(totalBSI)}</td>
+                <td style="text-align:right">${formatRupiahTable(totalAllBank)}</td>
             </tr>
         `);
     }
@@ -234,18 +272,19 @@ function renderRekon(data) {
     const sumPend = document.getElementById('rekonTotalPend');
     const sumDiff = document.getElementById('rekonTotalDiff');
 
-    if (data.length === 0) {
+    let totalBank = 0;
+    let totalPend = 0;
+
+    body.innerHTML = '';
+
+    // Check if data is not empty before mapping 
+    if (!data || data.length === 0) {
         body.innerHTML = '<tr><td colspan="6" style="text-align:center">📭 Tidak ada data transaksi</td></tr>';
         if (sumBank) sumBank.innerText = 'Rp 0';
         if (sumPend) sumPend.innerText = 'Rp 0';
         if (sumDiff) sumDiff.innerText = 'Rp 0';
         return;
     }
-
-    let totalBank = 0;
-    let totalPend = 0;
-
-    body.innerHTML = '';
     data.forEach(item => {
         totalBank += Number(item.bank);
         totalPend += Number(item.pendapatan);
@@ -269,11 +308,11 @@ function renderRekon(data) {
 
         body.insertAdjacentHTML('beforeend', `
             <tr>
-                <td>${formatTanggal(item.tanggal)}</td>
-                <td style="text-align:right">${formatRupiah(item.bank)}</td>
-                <td style="text-align:right">${formatRupiah(item.pendapatan)}</td>
-                <td style="text-align:right; font-weight:600; color:${selisihColor}">${formatRupiah(item.selisih)}</td>
-                <td style="text-align:right; font-weight:600; color:${kumulatifColor}">${formatRupiah(item.kumulatif)}</td>
+                <td class="text-center" style="font-weight:600;">${item.tanggal}</td>
+                <td style="text-align:right">${formatRupiahTable(item.bank)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.pendapatan)}</td>
+                <td style="text-align:right; font-weight:600; color:${selisihColor}">${formatRupiahTable(item.selisih)}</td>
+                <td style="text-align:right; font-weight:600; color:${kumulatifColor}">${formatRupiahTable(item.kumulatif)}</td>
                 <td style="text-align:center"><span class="badge ${statusClass}">${statusText}</span></td>
             </tr>
         `);
@@ -302,11 +341,11 @@ function renderPiutang(data) {
         body.insertAdjacentHTML('beforeend', `
             <tr>
                 <td><strong>${item.nama_perusahaan}</strong></td>
-                <td style="text-align:right">${formatRupiah(item.total_piutang)}</td>
-                <td style="text-align:right">${formatRupiah(item.total_potongan)}</td>
-                <td style="text-align:right">${formatRupiah(item.total_adm_bank)}</td>
-                <td style="text-align:right">${formatRupiah(item.total_dibayar)}</td>
-                <td style="text-align:right; font-weight:700;">${formatRupiah(sisa)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.total_piutang)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.total_potongan)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.total_adm_bank)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.total_dibayar)}</td>
+                <td style="text-align:right; font-weight:700;">${formatRupiahTable(sisa)}</td>
             </tr>
         `);
     });
@@ -322,12 +361,12 @@ function renderMou(data) {
                 <td style="text-align:center">${index + 1}</td>
                 <td><strong>${item.nama_mou}</strong></td>
                 <td style="text-align:center">${item.count}</td>
-                <td style="text-align:right">${formatRupiah(item.rs)}</td>
-                <td style="text-align:right">${formatRupiah(item.pelayanan)}</td>
-                <td style="text-align:right">${formatRupiah(item.gross)}</td>
-                <td style="text-align:right; color:#ef4444">${formatRupiah(item.potongan)}</td>
-                <td style="text-align:right; color:#ef4444">${formatRupiah(item.adm_bank)}</td>
-                <td style="text-align:right; font-weight:700; color:#16a34a">${formatRupiah(item.total)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.rs)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.pelayanan)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.gross)}</td>
+                <td style="text-align:right; color:#ef4444">${formatRupiahTable(item.potongan)}</td>
+                <td style="text-align:right; color:#ef4444">${formatRupiahTable(item.adm_bank)}</td>
+                <td style="text-align:right; font-weight:700; color:#16a34a">${formatRupiahTable(item.total)}</td>
             </tr>
         `);
     });
@@ -421,11 +460,11 @@ function renderAnggaran(data) {
                 <td class="col-uraian">
                     <span>${item.nama}</span>
                 </td>
-                <td class="col-mono text-right">${valTarget}</td>
-                <td class="col-mono text-right" style="color:#64748b; font-size:12px;">${valLalu}</td>
-                <td class="col-mono text-right font-medium text-slate-700">${valKini}</td>
-                <td class="col-mono text-right font-bold text-slate-900">${valTotal}</td>
-                <td class="col-mono text-right ${item.selisih < 0 ? 'text-red-500' : 'text-slate-500'}">
+                <td class="col-mono ">${valTarget}</td>
+                <td class="col-mono " style="color:#64748b; font-size:12px;">${valLalu}</td>
+                <td class="col-mono font-medium text-slate-700">${valKini}</td>
+                <td class="col-mono font-bold text-slate-900">${valTotal}</td>
+                <td class="col-mono ${item.selisih < 0 ? 'text-red-500' : 'text-slate-500'}">
                     ${valSelisih}
                 </td>
                 <td class="text-center font-bold" style="color:${progressColor}">${valPersen}</td>
@@ -453,12 +492,14 @@ function renderPengeluaran(data) {
             const item = data.summary[key] || { total: 0, count: 0 };
             const conf = types[key];
             cardContainer.insertAdjacentHTML('beforeend', `
-                <div class="laporan-card highlight-${conf.color}">
-                    <div class="card-icon"><i class="ph ${conf.icon}"></i></div>
-                    <div class="card-info">
-                        <h3>${conf.label}</h3>
-                        <span class="big">${formatRupiah(item.total)}</span>
-                        <p>${item.count} Transaksi</p>
+                <div class="dash-card ${conf.color}">
+                    <div class="dash-card-icon">
+                        <i class="ph ${conf.icon}"></i>
+                    </div>
+                    <div class="dash-card-content">
+                        <span class="label">${conf.label}</span>
+                        <h3>${formatRupiahTable(item.total)}</h3>
+                        <small>${item.count} Transaksi</small>
                     </div>
                 </div>
             `);
@@ -470,7 +511,7 @@ function renderPengeluaran(data) {
     if (body) {
         body.innerHTML = '';
         if (data.data.length === 0) {
-            body.innerHTML = '<tr><td colspan="7" class="text-center">Tidak ada data pengeluaran.</td></tr>';
+            body.innerHTML = '<tr><td colspan="6" class="text-center">Tidak ada data pengeluaran.</td></tr>';
             return;
         }
 
@@ -492,24 +533,23 @@ function renderPengeluaran(data) {
 
             body.insertAdjacentHTML('beforeend', `
                 <tr>
-                    <td><code class="bg-slate-100 px-2 py-1 rounded">${item.kode}</code></td>
+                    <td class="text-center"><code class="bg-slate-100 px-2 py-1 rounded">${item.kode}</code></td>
                     <td>${item.nama}</td>
-                    <td>${item.uraian || '-'}</td>
-                    <td class="text-right">${formatRupiah(up)}</td>
-                    <td class="text-right">${formatRupiah(gu)}</td>
-                    <td class="text-right">${formatRupiah(ls)}</td>
-                    <td class="text-right font-bold">${formatRupiah(total)}</td>
+                    <td class="">${formatRupiahTable(up)}</td>
+                    <td class="">${formatRupiahTable(gu)}</td>
+                    <td class="">${formatRupiahTable(ls)}</td>
+                    <td class="font-bold">${formatRupiahTable(total)}</td>
                 </tr>
             `);
         });
 
         body.insertAdjacentHTML('beforeend', `
             <tr class="bg-slate-50 font-extrabold">
-                <td colspan="3" class="text-right">TOTAL KESELURUHAN</td>
-                <td class="text-right">${formatRupiah(gUp)}</td>
-                <td class="text-right">${formatRupiah(gGu)}</td>
-                <td class="text-right">${formatRupiah(gLs)}</td>
-                <td class="text-right">${formatRupiah(gTotal)}</td>
+                <td colspan="2" class="text-center">TOTAL KESELURUHAN</td>
+                <td class="">${formatRupiahTable(gUp)}</td>
+                <td class="">${formatRupiahTable(gGu)}</td>
+                <td class="">${formatRupiahTable(gLs)}</td>
+                <td class="">${formatRupiahTable(gTotal)}</td>
             </tr>
         `);
     }
@@ -520,7 +560,7 @@ window.exportLaporan = function (type) {
     const start = document.getElementById('laporanStart')?.value;
     const end = document.getElementById('laporanEnd')?.value;
 
-    if (!end) {
+    if (!end && reportType !== 'DPA' && reportType !== 'REKON') {
         toast('Pilih tanggal!', 'error');
         return;
     }
@@ -531,11 +571,16 @@ window.exportLaporan = function (type) {
         'PIUTANG': 'piutang',
         'MOU': 'mou',
         'ANGGARAN': 'anggaran',
-        'PENGELUARAN': 'pengeluaran'
+        'PENGELUARAN': 'pengeluaran',
+        'DPA': 'dpa'
     };
 
+    const ptKiri = document.getElementById('ptSelectKiri')?.value || '';
+    const ptTengah = document.getElementById('ptSelectTengah')?.value || '';
+    const ptKanan = document.getElementById('ptSelectKanan')?.value || '';
+
     const endpoint = mapping[reportType] || 'pendapatan';
-    let url = `/dashboard/laporan/export/${endpoint}?start=${start}&end=${end}`;
+    let url = `/dashboard/laporan/export/${endpoint}?start=${start}&end=${end}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
     if (reportType === 'ANGGARAN') {
         const cat = document.getElementById('lraCategory')?.value || 'PENDAPATAN';
         url += `&category=${cat}`;
@@ -549,7 +594,7 @@ window.exportPdf = function (type) {
     const start = document.getElementById('laporanStart')?.value;
     const end = document.getElementById('laporanEnd')?.value;
 
-    if (!end) {
+    if (!end && reportType !== 'DPA' && reportType !== 'REKON') {
         toast('Pilih tanggal!', 'error');
         return;
     }
@@ -560,11 +605,16 @@ window.exportPdf = function (type) {
         'PIUTANG': 'piutang-pdf',
         'MOU': 'mou-pdf',
         'ANGGARAN': 'anggaran-pdf',
-        'PENGELUARAN': 'pengeluaran-pdf'
+        'PENGELUARAN': 'pengeluaran-pdf',
+        'DPA': 'dpa-pdf'
     };
 
+    const ptKiri = document.getElementById('ptSelectKiri')?.value || '';
+    const ptTengah = document.getElementById('ptSelectTengah')?.value || '';
+    const ptKanan = document.getElementById('ptSelectKanan')?.value || '';
+
     const endpoint = mapping[reportType] || 'pendapatan-pdf';
-    let url = `/dashboard/laporan/export/${endpoint}?start=${start}&end=${end}`;
+    let url = `/dashboard/laporan/export/${endpoint}?start=${start}&end=${end}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
     if (reportType === 'ANGGARAN') {
         const cat = document.getElementById('lraCategory')?.value || 'PENDAPATAN';
         url += `&category=${cat}`;
@@ -583,13 +633,36 @@ window.openPreviewModal = function (type) {
         return;
     }
 
+    // --- Load Penanda Tangan Dropdowns (Kiri, Tengah & Kanan) ---
+    fetch('/dashboard/penanda-tangan-list')
+        .then(res => res.json())
+        .then(list => {
+            ['Kiri', 'Tengah', 'Kanan'].forEach(side => {
+                const select = document.getElementById(`ptSelect${side}`);
+                if (select) {
+                    const currentVal = select.value;
+                    select.innerHTML = '<option value="">-- Kosong --</option>';
+                    list.forEach(item => {
+                        select.insertAdjacentHTML('beforeend', `<option value="${item.id}" data-jabatan="${item.jabatan}" data-pangkat="${item.pangkat}" data-nama="${item.nama}" data-nip="${item.nip}">${item.jabatan} - ${item.nama}</option>`);
+                    });
+                    select.value = currentVal;
+                }
+            });
+        });
+
     const data = window.lastLaporanData;
     const periodeEl = document.getElementById('previewPeriode');
     const tahunEl = document.getElementById('previewTahun');
     const tahunContainer = document.getElementById('previewTahunContainer');
 
     if (periodeEl) {
-        periodeEl.innerText = `Periode: ${formatTanggal(start)} s/d ${formatTanggal(end)}`;
+        if (reportType === 'REKON') {
+            periodeEl.innerText = `Laporan Tahunan (Tahun Anggaran Berjalan)`;
+        } else if (reportType === 'DPA') {
+            periodeEl.innerText = `Tahun Anggaran: ${data.tahun || window.tahunAnggaran}`;
+        } else {
+            periodeEl.innerText = `Periode: ${formatTanggal(start)} s/d ${formatTanggal(end)}`;
+        }
     }
 
     const titleMapping = {
@@ -598,7 +671,8 @@ window.openPreviewModal = function (type) {
         'PIUTANG': 'LAPORAN PIUTANG',
         'MOU': 'LAPORAN KERJASAMA / MOU',
         'ANGGARAN': 'LAPORAN REALISASI ANGGARAN',
-        'PENGELUARAN': 'LAPORAN REALISASI BELANJA'
+        'PENGELUARAN': 'LAPORAN REALISASI BELANJA',
+        'DPA': 'LAPORAN DOKUMEN PELAKSANAAN ANGGARAN (DPA)'
     };
     const modalMainTitle = document.getElementById('previewMainTitle');
     if (modalMainTitle) modalMainTitle.innerText = titleMapping[reportType] || 'LAPORAN';
@@ -674,9 +748,47 @@ window.openPreviewModal = function (type) {
                         </tr></tbody></table>`;
         tablesContainer.innerHTML += summaryHtml;
 
+        // 1b. JASA RS & PELAYANAN Table
+        let jasaHtml = `
+            <h6 style="margin:25px 0 10px; font-weight:bold; border-left:4px solid #f59e0b; padding-left:10px; font-size:11pt;">2. RINCIAN METODE JASA (RS & PELAYANAN)</h6>
+                                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                                    <thead style="background:#f8fafc;">
+                                        <tr>
+                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 40%;">Uraian Akun</th>
+                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">Jasa Rumah Sakit</th>
+                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">Jasa Pelayanan</th>
+                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+
+        let tjRs = 0, tjPel = 0, tjAll = 0;
+        categoryKeys.forEach(key => {
+            const item = data.breakdown[key];
+            if (!item || !item.jasa) return;
+            const jrs = parseFloat(item.jasa.RS) || 0;
+            const jpel = parseFloat(item.jasa.PELAYANAN) || 0;
+            const jtot = parseFloat(item.jasa.TOTAL) || 0;
+            tjRs += jrs; tjPel += jpel; tjAll += jtot;
+            jasaHtml += `
+                                        <tr>
+                                            <td style="border:1px solid #000; padding:8px;">${item.nama}</td>
+                                            <td style="border:1px solid #000; padding:8px;">${fr(jrs)}</td>
+                                            <td style="border:1px solid #000; padding:8px;">${fr(jpel)}</td>
+                                            <td style="border:1px solid #000; padding:8px; font-weight:bold;">${fr(jtot)}</td>
+                                        </tr>`;
+        });
+        jasaHtml += `<tr style="background:#f1f5f9; font-weight:bold;">
+                                            <td style="border:1px solid #000; padding:8px; text-align:center;">JUMLAH KESELURUHAN</td>
+                                            <td style="border:1px solid #000; padding:8px;">${fr(tjRs)}</td>
+                                            <td style="border:1px solid #000; padding:8px;">${fr(tjPel)}</td>
+                                            <td style="border:1px solid #000; padding:8px;">${fr(tjAll)}</td>
+                                        </tr></tbody></table>`;
+        tablesContainer.innerHTML += jasaHtml;
+
         // 2. METODE PEMBAYARAN Table
         let breakdownHtml = `
-            <h6 style="margin:25px 0 10px; font-weight:bold; border-left:4px solid #10b981; padding-left:10px; font-size:11pt;">2. RINCIAN METODE PEMBAYARAN</h6>
+            <h6 style="margin:25px 0 10px; font-weight:bold; border-left:4px solid #10b981; padding-left:10px; font-size:11pt;">3. RINCIAN METODE PEMBAYARAN</h6>
                                 <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
                                     <thead style="background:#f8fafc;">
                                         <tr>
@@ -712,9 +824,9 @@ window.openPreviewModal = function (type) {
                                         </tr></tbody></table>`;
         tablesContainer.innerHTML += breakdownHtml;
 
-        // 3. BANK RECEPTION Table
+        // 4. BANK RECEPTION Table
         let bankHtml = `
-            <h6 style="margin:25px 0 10px; font-weight:bold; border-left:4px solid #3b82f6; padding-left:10px; font-size:11pt;">3. RINCIAN PENERIMAAN BANK</h6>
+            <h6 style="margin:25px 0 10px; font-weight:bold; border-left:4px solid #3b82f6; padding-left:10px; font-size:11pt;">4. RINCIAN PENERIMAAN BANK</h6>
                                                 <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
                                                     <thead style="background:#f8fafc;">
                                                         <tr>
@@ -750,9 +862,9 @@ window.openPreviewModal = function (type) {
                                                         </tr></tbody></table>`;
         tablesContainer.innerHTML += bankHtml;
 
-        // 4. ROOMS Section
+        // 5. ROOMS Section
         let roomHtml = `
-            <h6 style="margin:25px 0 10px; font-weight:bold; border-left:4px solid #f43f5e; padding-left:10px; font-size:11pt;">4. PENDAPATAN PER RUANGAN</h6>
+            <h6 style="margin:25px 0 10px; font-weight:bold; border-left:4px solid #f43f5e; padding-left:10px; font-size:11pt;">5. PENDAPATAN PER RUANGAN</h6>
                                                                 <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
                                                                     <thead style="background:#f8fafc;">
                                                                         <tr>
@@ -984,12 +1096,11 @@ window.openPreviewModal = function (type) {
                 <thead style="background:#f8fafc;">
                     <tr>
                         <th style="border:1px solid #000; padding:8px; text-align:center; width: 15%;">Kode</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 25%;">Nama Rekening</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">Uraian Belanja</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 10%;">UP</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 10%;">GU</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 10%;">LS</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 10%;">Total</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 35%;">Nama Rekening</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 12.5%;">UP</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 12.5%;">GU</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 12.5%;">LS</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 12.5%;">Total</th>
                     </tr>
                 </thead>
                 <tbody>`;
@@ -998,22 +1109,169 @@ window.openPreviewModal = function (type) {
                 <tr>
                     <td style="border:1px solid #000; padding:8px; text-align:center;"><code>${item.kode}</code></td>
                     <td style="border:1px solid #000; padding:8px;">${item.nama}</td>
-                    <td style="border:1px solid #000; padding:8px;">${item.uraian || '-'}</td>
                     <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.up || 0)}</td>
                     <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.gu || 0)}</td>
                     <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.ls || 0)}</td>
                     <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.total)}</td>
                 </tr>`;
         });
-        expHtml += `</tbody></table>`;
+        expHtml += `
+                <tr style="background:#f1f5f9; font-weight:bold;">
+                    <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center;">TOTAL KESELURUHAN</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(data.data.reduce((a, b) => a + (parseFloat(b.up) || 0), 0))}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(data.data.reduce((a, b) => a + (parseFloat(b.gu) || 0), 0))}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(data.data.reduce((a, b) => a + (parseFloat(b.ls) || 0), 0))}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(data.data.reduce((a, b) => a + (parseFloat(b.total) || 0), 0))}</td>
+                </tr>
+            </tbody></table>`;
         tablesContainer.innerHTML = expHtml;
+    } else if (reportType === 'DPA') {
+        let html = `
+            <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:9pt;">
+                <thead style="background:#f8fafc;">
+                    <tr>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 15%;">Kode Rekening</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center;">Uraian Rekening / Komponen</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 8%;">Vol</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 10%;">Satuan</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 18%;">Tarif Satuan</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 18%;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        let gTotal = 0;
+        data.data.forEach(item => {
+            const isHeader = item.tipe === 'header';
+            const indent = (item.level - 1) * 15;
+
+            if (isHeader && item.level === 1) {
+                gTotal += parseFloat(item.subtotal) || 0;
+            }
+
+            const valVolume = isHeader ? '' : (item.volume ? parseFloat(item.volume) : '');
+            const valSatuan = isHeader ? '' : (item.satuan || '');
+            const valTarif = isHeader ? '' : fr(item.tarif);
+
+            html += `
+                <tr style="${isHeader ? 'background:#f8fafc; font-weight:bold;' : ''}">
+                    <td style="border:1px solid #000; padding:8px; text-align:left; font-family:monospace;">
+                        ${item.kode_rekening || ''}
+                    </td>
+                    <td style="border:1px solid #000; padding:8px; text-align:left;">
+                        ${escapeHtml(item.uraian)}
+                    </td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${valVolume}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${valSatuan}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${valTarif}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right; font-weight:bold;">${fr(item.subtotal)}</td>
+                </tr>`;
+        });
+
+        html += `
+                <tr style="background:#f8fafc; font-weight:bold;">
+                    <td colspan="5" style="border:1px solid #000; padding:10px; text-align:center; font-size:10pt;">TOTAL ANGGARAN DPA</td>
+                    <td style="border:1px solid #000; padding:10px; text-align:right; font-size:10pt;">${fr(gTotal)}</td>
+                </tr>
+            </tbody>
+        </table>`;
+        tablesContainer.innerHTML = html;
     }
+
+    // Initial Signatory Setup (Trio)
+    ['Kiri', 'Tengah', 'Kanan'].forEach(side => {
+        const ptJabatan = document.getElementById(`previewPtJabatan${side}`);
+        const ptNama = document.getElementById(`previewPtNama${side}`);
+        const ptNip = document.getElementById(`previewPtNip${side}`);
+        const ptPangkat = document.getElementById(`previewPtPangkat${side}`);
+        const ptSelect = document.getElementById(`ptSelect${side}`);
+        const ptArea = document.getElementById(`ptPreviewArea${side}`);
+
+        if (ptJabatan) ptJabatan.innerText = '';
+        if (ptNama) ptNama.innerText = '...................................';
+        if (ptNip) ptNip.innerText = 'NIP. ...................................';
+        if (ptSelect) ptSelect.value = '';
+        if (ptArea) ptArea.style.visibility = (side === 'Kanan' ? 'visible' : 'hidden');
+    });
 
     const modal = document.getElementById('previewLaporanModal');
     if (modal) modal.classList.add('show');
 };
-
 window.closePreviewModal = function () {
     const modal = document.getElementById('previewLaporanModal');
     if (modal) modal.classList.remove('show');
 };
+
+window.updateSignatory = function (side) {
+    const select = document.getElementById(`ptSelect${side}`);
+    const area = document.getElementById(`ptPreviewArea${side}`);
+    const opt = select.options[select.selectedIndex];
+
+    if (!opt.value) {
+        document.getElementById(`previewPtJabatan${side}`).innerText = '';
+        document.getElementById(`previewPtNama${side}`).innerText = '...................................';
+        document.getElementById(`previewPtNip${side}`).innerText = 'NIP. ...................................';
+        if (area && (side === 'Kiri' || side === 'Tengah')) area.style.visibility = 'hidden';
+        return;
+    }
+
+    if (area) area.style.visibility = 'visible';
+
+    const jabatan = opt.getAttribute('data-jabatan');
+    const pangkat = opt.getAttribute('data-pangkat');
+    const nama = opt.getAttribute('data-nama');
+    const nip = opt.getAttribute('data-nip');
+
+    document.getElementById(`previewPtJabatan${side}`).innerText = jabatan;
+    document.getElementById(`previewPtNama${side}`).innerText = `${nama}`;
+    document.getElementById(`previewPtNip${side}`).innerText = nip ? `NIP. ${nip}` : '';
+};
+function renderDPA(data) {
+    const tbody = document.getElementById('laporanDPABody');
+    if (!tbody) return;
+
+    if (!data.data || data.data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Tidak ada data rincian anggaran untuk tahun ini.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = '';
+    let grandTotal = 0;
+
+    data.data.forEach(item => {
+        const isHeader = item.tipe === 'header';
+        const indent = (item.level - 1) * 20;
+
+        // Only sum root level headers for grand total (level 1)
+        if (isHeader && item.level === 1) {
+            grandTotal += parseFloat(item.subtotal) || 0;
+        }
+
+        const valVolume = isHeader ? '' : (item.volume ? parseFloat(item.volume) : '');
+        const valSatuan = isHeader ? '' : (item.satuan || '');
+        const valTarif = isHeader ? '' : formatRupiahTable(item.tarif);
+        const valSubtotal = formatRupiahTable(item.subtotal);
+
+        tbody.insertAdjacentHTML('beforeend', `
+            <tr style="${isHeader ? 'background:#f8fafc; font-weight:700;' : ''}">
+                <td class="text-left">
+                    <code style="background:${isHeader ? '#e2e8f0' : '#f1f5f9'}; padding:2px 6px; border-radius:4px; font-size:12px;">${item.kode_rekening || ''}</code>
+                </td>
+                <td style="text-align: left; padding: 15px 12px; ${!isHeader ? 'font-style: italic; color: #475569;' : ''}">
+                    ${escapeHtml(item.uraian)}
+                </td>
+                <td class="text-center">${valVolume}</td>
+                <td class="text-center">${valSatuan}</td>
+                <td style="text-align:right">${valTarif}</td>
+                <td style="text-align:right; font-weight:700;">${valSubtotal}</td>
+            </tr>
+        `);
+    });
+
+    tbody.insertAdjacentHTML('beforeend', `
+        <tr style="background:#f1f5f9; font-weight:900; border-top: 2px solid #cbd5e1;">
+            <td colspan="5" style="text-align:center; padding:15px; font-size:14px;">TOTAL KESELURUHAN (DPA)</td>
+            <td style="text-align:right; padding:15px;">${formatRupiahTable(grandTotal)}</td>
+        </tr>
+    `);
+}

@@ -68,12 +68,12 @@
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th>Nama Perusahaan</th>
-                        <th style="text-align:right">Jumlah Piutang</th>
-                        <th style="text-align:right">Potongan</th>
-                        <th style="text-align:right">Adm Bank</th>
-                        <th style="text-align:right">Total Dibayar</th>
-                        <th style="text-align:right">Sisa Piutang</th>
+                        <th class="text-center">Nama Perusahaan</th>
+                        <th class="text-center" style="text-align:right">Jumlah Piutang</th>
+                        <th class="text-center" style="text-align:right">Potongan</th>
+                        <th class="text-center" style="text-align:right">Adm Bank</th>
+                        <th class="text-center" style="text-align:right">Total Dibayar</th>
+                        <th class="text-center" style="text-align:right">Sisa Piutang</th>
                     </tr>
                 </thead>
                 <tbody id="laporanPiutangBody">

@@ -67,9 +67,14 @@ class PendapatanJaminanController extends Controller
             $adm = $ded->total_adm ?? 0;
 
             if ($potongan > 0 || $adm > 0) {
-                $rs -= round($potongan * 0.7, 2);
-                $pelayanan -= round($potongan * 0.3, 2);
-                $rs -= $adm;
+                $grossYearly = DB::table('pendapatan_jaminan')->where('tahun', session('tahun_anggaran'))->sum('total');
+                $ratio = $grossYearly > 0 ? ($total / $grossYearly) : 0;
+                $dedPotongan = $potongan * $ratio;
+                $dedAdm = $adm * $ratio;
+
+                $rs -= round($dedPotongan * 0.7, 2);
+                $pelayanan -= round($dedPotongan * 0.3, 2);
+                $rs -= $dedAdm;
                 $total = $rs + $pelayanan;
             }
 

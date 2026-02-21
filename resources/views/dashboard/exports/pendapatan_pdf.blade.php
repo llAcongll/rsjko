@@ -249,8 +249,80 @@
         </tbody>
     </table>
 
-    <!-- 2. METODE PEMBAYARAN -->
-    <div class="section-title">2. RINCIAN METODE PEMBAYARAN</div>
+    <!-- 2. METODE JASA -->
+    <div class="section-title">2. RINCIAN METODE JASA (RS & PELAYANAN)</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%;">Kode</th>
+                <th style="width: 31%;">Uraian Akun</th>
+                <th style="width: 18%;">Jasa RS</th>
+                <th style="width: 18%;">Jasa Pelayanan</th>
+                <th style="width: 18%;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $tJra = 0;
+                $tJpel = 0;
+            $tJtotal = 0; @endphp
+            @foreach($breakdown as $key => $item)
+                @php
+                    $jrs = $item['jasa']['RS'] ?? 0;
+                    $jpel = $item['jasa']['PELAYANAN'] ?? 0;
+                    $jtot = $item['jasa']['TOTAL'] ?? 0;
+                    $tJra += $jrs;
+                    $tJpel += $jpel;
+                    $tJtotal += $jtot;
+                @endphp
+                <tr>
+                    <td class="text-center" style="font-size: 8pt;">{{ $item['kode'] }}</td>
+                    <td style="font-size: 8pt;">{{ $item['nama'] }}</td>
+                    <td class="text-right">
+                        <div class="currency-box">
+                            <span class="currency-symbol">Rp</span>
+                            <span class="currency-value">{{ number_format($jrs, 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                    <td class="text-right">
+                        <div class="currency-box">
+                            <span class="currency-symbol">Rp</span>
+                            <span class="currency-value">{{ number_format($jpel, 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                    <td class="text-right font-bold">
+                        <div class="currency-box">
+                            <span class="currency-symbol">Rp</span>
+                            <span class="currency-value">{{ number_format($jtot, 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                </tr>
+            @endforeach
+            <tr class="total-row">
+                <td colspan="2" style="text-align: center;">JUMLAH KESELURUHAN</td>
+                <td class="text-right">
+                    <div class="currency-box">
+                        <span class="currency-symbol">Rp</span>
+                        <span class="currency-value">{{ number_format($tJra, 2, ',', '.') }}</span>
+                    </div>
+                </td>
+                <td class="text-right">
+                    <div class="currency-box">
+                        <span class="currency-symbol">Rp</span>
+                        <span class="currency-value">{{ number_format($tJpel, 2, ',', '.') }}</span>
+                    </div>
+                </td>
+                <td class="text-right">
+                    <div class="currency-box">
+                        <span class="currency-symbol">Rp</span>
+                        <span class="currency-value">{{ number_format($tJtotal, 2, ',', '.') }}</span>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 3. METODE PEMBAYARAN -->
+    <div class="section-title">3. RINCIAN METODE PEMBAYARAN</div>
     <table>
         <thead>
             <tr>
@@ -318,8 +390,8 @@
         </tbody>
     </table>
 
-    <!-- 3. RECON BANK -->
-    <div class="section-title">3. RINCIAN PENERIMAAN BANK</div>
+    <!-- 4. RECON BANK -->
+    <div class="section-title">4. RINCIAN PENERIMAAN BANK</div>
     <table>
         <thead>
             <tr>
@@ -387,8 +459,8 @@
         </tbody>
     </table>
 
-    <!-- 4. RUANGAN -->
-    <div class="section-title">4. PENDAPATAN PER RUANGAN</div>
+    <!-- 5. RUANGAN -->
+    <div class="section-title">5. PENDAPATAN PER RUANGAN</div>
     <table>
         <thead>
             <tr>
@@ -425,6 +497,45 @@
                 </td>
             </tr>
         </tbody>
+    </table>
+
+    <table style="width: 100%; border: none; margin-top: 50px;">
+        <tr>
+            <td style="width: 33%; border: none; text-align: center; vertical-align: top;">
+                @if($ptKiri)
+                    <p style="margin: 0; min-height: 1.2em;">&nbsp;</p>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptKiri->jabatan }}</p>
+                    <div style="height: 60px;"></div>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptKiri->nama }}</p>
+                    <p style="margin: 0;">NIP. {{ $ptKiri->nip }}</p>
+                @endif
+            </td>
+            <td style="width: 34%; border: none; text-align: center; vertical-align: top;">
+                @if($ptTengah)
+                    <p style="margin: 0; min-height: 1.2em;">&nbsp;</p>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptTengah->jabatan }}</p>
+                    <div style="height: 60px;"></div>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptTengah->nama }}</p>
+                    <p style="margin: 0;">NIP. {{ $ptTengah->nip }}</p>
+                @endif
+            </td>
+            <td style="width: 33%; border: none; text-align: center; vertical-align: top;">
+                @if($ptKanan)
+                    <p style="margin: 0;">Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptKanan->jabatan }}</p>
+                    <div style="height: 60px;"></div>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptKanan->nama }}</p>
+                    <p style="margin: 0;">NIP. {{ $ptKanan->nip }}</p>
+                @else
+                    <p style="margin: 0;">Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+                    <p style="margin: 0; font-weight: bold;">&nbsp;</p>
+                    <p style="margin: 0;">&nbsp;</p>
+                    <div style="height: 60px;"></div>
+                    <p style="margin: 0; font-weight: bold;">...................................</p>
+                    <p style="margin: 0;">NIP. ...................................</p>
+                @endif
+            </td>
+        </tr>
     </table>
 
     <div class="footer">

@@ -139,7 +139,45 @@
                     </div>
                 </td>
             </tr>
-        </tbody>
+    </table>
+
+    <table style="width: 100%; border: none; margin-top: 50px;">
+        <tr>
+            <td style="width: 33%; border: none; text-align: center; vertical-align: top;">
+                @if($ptKiri)
+                    <p style="margin: 0; min-height: 1.25em;">&nbsp;</p>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptKiri->jabatan }}</p>
+                    <div style="height: 60px;"></div>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptKiri->nama }}</p>
+                    <p style="margin: 0;">NIP. {{ $ptKiri->nip }}</p>
+                @endif
+            </td>
+            <td style="width: 34%; border: none; text-align: center; vertical-align: top;">
+                @if($ptTengah)
+                    <p style="margin: 0; min-height: 1.25em;">&nbsp;</p>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptTengah->jabatan }}</p>
+                    <div style="height: 60px;"></div>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptTengah->nama }}</p>
+                    <p style="margin: 0;">NIP. {{ $ptTengah->nip }}</p>
+                @endif
+            </td>
+            <td style="width: 33%; border: none; text-align: center; vertical-align: top;">
+                @if($ptKanan)
+                    <p style="margin: 0;">Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptKanan->jabatan }}</p>
+                    <div style="height: 60px;"></div>
+                    <p style="margin: 0; font-weight: bold;">{{ $ptKanan->nama }}</p>
+                    <p style="margin: 0;">NIP. {{ $ptKanan->nip }}</p>
+                @else
+                    <p style="margin: 0;">Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+                    <p style="margin: 0; font-weight: bold;">&nbsp;</p>
+                    <p style="margin: 0;">&nbsp;</p>
+                    <div style="height: 60px;"></div>
+                    <p style="margin: 0; font-weight: bold;">...................................</p>
+                    <p style="margin: 0;">NIP. ...................................</p>
+                @endif
+            </td>
+        </tr>
     </table>
 </body>
 </html>

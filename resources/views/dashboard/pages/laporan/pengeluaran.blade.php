@@ -29,9 +29,33 @@
         </div>
     </div>
 
-    <!-- Row 1: Expenditure Type Cards -->
-    <div class="laporan-main-cards" id="laporanPengeluaranCards">
-        <!-- Dynamic Cards: Pegawai, Barang/Jasa, Modal -->
+    <!-- EXPENDITURE SUMMARY -->
+    <style>
+        /* Tighten page layout */
+        .laporan {
+            display: flex;
+            flex-direction: column;
+            gap: 16px !important;
+        }
+
+        .laporan-summary-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .laporan-summary-container .dashboard-cards {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            width: 100%;
+            max-width: 850px;
+            gap: 16px;
+        }
+    </style>
+
+    <div class="laporan-summary-container">
+        <div class="dashboard-cards" id="laporanPengeluaranCards">
+            <!-- Dynamic Cards: Pegawai, Barang/Jasa, Modal -->
+        </div>
     </div>
 
     <div class="laporan-section">
@@ -42,18 +66,17 @@
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th style="width: 150px;">Sub Kode Rekening</th>
-                        <th>Nama Rekening</th>
-                        <th>Uraian Belanja</th>
-                        <th style="text-align:right">Uang Persediaan</th>
-                        <th style="text-align:right">Ganti Uang</th>
-                        <th style="text-align:right">Langsung</th>
-                        <th style="text-align:right">Total Pengeluaran</th>
+                        <th class="text-center" style="width: 150px;">Sub Kode Rekening</th>
+                        <th class="text-center">Nama Rekening</th>
+                        <th class="text-center" style="text-align:right">Uang Persediaan</th>
+                        <th class="text-center" style="text-align:right">Ganti Uang</th>
+                        <th class="text-center" style="text-align:right">Langsung</th>
+                        <th class="text-center" style="text-align:right">Total Pengeluaran</th>
                     </tr>
                 </thead>
                 <tbody id="laporanPengeluaranBody">
                     <tr>
-                        <td colspan="7" class="text-center">Klik Tampilkan untuk memuat data.</td>
+                        <td colspan="6" class="text-center">Klik Tampilkan untuk memuat data.</td>
                     </tr>
                 </tbody>
             </table>

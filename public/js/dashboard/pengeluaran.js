@@ -27,6 +27,7 @@ window.initPengeluaran = function (kategori) {
         nominalInput.oninput = () => {
             const val = parseAngka(nominalInput.value);
             nominalHidden.value = val;
+            if (window.calculateTotalDibayarkan) window.calculateTotalDibayarkan();
         };
         nominalInput.onblur = () => {
             nominalInput.value = formatRibuan(nominalHidden.value);
@@ -34,6 +35,25 @@ window.initPengeluaran = function (kategori) {
         nominalInput.onfocus = () => {
             const val = parseAngka(nominalInput.value);
             nominalInput.value = val === 0 ? '' : val.toString().replace('.', ',');
+        };
+    }
+
+    // Bind Potongan Pajak Logic
+    const pajakInput = document.getElementById('pengeluaranPotonganPajakDisplay');
+    const pajakHidden = document.getElementById('pengeluaranPotonganPajakValue');
+
+    if (pajakInput && pajakHidden) {
+        pajakInput.oninput = () => {
+            const val = parseAngka(pajakInput.value);
+            pajakHidden.value = val;
+            if (window.calculateTotalDibayarkan) window.calculateTotalDibayarkan();
+        };
+        pajakInput.onblur = () => {
+            pajakInput.value = formatRibuan(pajakHidden.value);
+        };
+        pajakInput.onfocus = () => {
+            const val = parseAngka(pajakInput.value);
+            pajakInput.value = val === 0 ? '' : val.toString().replace('.', ',');
         };
     }
 
@@ -134,7 +154,20 @@ function resetPengeluaranForm() {
     document.getElementById('pengeluaranId').value = '';
     document.getElementById('pengeluaranNominalValue').value = 0;
     document.getElementById('pengeluaranNominalDisplay').value = '0';
+    document.getElementById('pengeluaranPotonganPajakValue').value = 0;
+    document.getElementById('pengeluaranPotonganPajakDisplay').value = '0';
+    document.getElementById('pengeluaranTotalDibayarkanValue').value = 0;
+    document.getElementById('pengeluaranTotalDibayarkanDisplay').value = '0';
 }
+
+window.calculateTotalDibayarkan = function () {
+    const nominal = parseAngka(document.getElementById('pengeluaranNominalValue').value) || 0;
+    const pajak = parseAngka(document.getElementById('pengeluaranPotonganPajakValue').value) || 0;
+    const total = nominal - pajak;
+
+    document.getElementById('pengeluaranTotalDibayarkanValue').value = total;
+    document.getElementById('pengeluaranTotalDibayarkanDisplay').value = formatRibuan(total);
+};
 
 /* =========================
    DATA LOADING
@@ -144,7 +177,7 @@ function loadPengeluaran(page = 1) {
     const tbody = document.querySelector('#tablePengeluaran tbody');
     if (!tbody) return;
 
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center">Memuat data...</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center">Memuat data...</td></tr>`;
 
 
 
@@ -175,6 +208,12 @@ function loadPengeluaran(page = 1) {
                 if (countEl) countEl.innerText = res.aggregates.total_count.toLocaleString('id-ID') + ' Transaksi';
                 if (totalEl) totalEl.innerText = formatRupiah(res.aggregates.total_nominal);
 
+                const pajakCardEl = document.getElementById('totalPajakPengeluaran');
+                if (pajakCardEl) pajakCardEl.innerText = formatRupiah(res.aggregates.total_pajak || 0);
+
+                const dibayarkanCardEl = document.getElementById('totalDibayarkanPengeluaran');
+                if (dibayarkanCardEl) dibayarkanCardEl.innerText = formatRupiah(res.aggregates.total_dibayarkan || 0);
+
                 if (upEl) upEl.innerText = formatRupiah(res.aggregates.total_up);
                 const countUPEl = document.getElementById('countUP');
                 if (countUPEl) countUPEl.innerText = res.aggregates.count_up.toLocaleString('id-ID') + ' Transaksi';
@@ -190,7 +229,7 @@ function loadPengeluaran(page = 1) {
 
             const data = res.data || [];
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Belum ada data.</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center">Belum ada data.</td></tr>`;
                 renderPaginationPengeluaran(res); // Ensure pagination is reset/updated even if empty
                 return;
             }
@@ -201,11 +240,31 @@ function loadPengeluaran(page = 1) {
                 tbody.insertAdjacentHTML('beforeend', `
                 <tr>
                     <td class="text-center">${no++}</td>
-                    <td>${formatTanggal(item.tanggal)}</td>
-                    <td><code>${item.kode_rekening?.kode ?? '-'}</code></td>
-                    <td>${item.kode_rekening?.nama ?? '-'}</td>
+                    <td class="text-center">${formatTanggal(item.tanggal)}</td>
+                    <td style="line-height: 1.4;">
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-2"><span class="badge-mini bg-blue-100 text-blue-700">SPP</span> <small class="font-mono text-slate-500">${item.no_spp || '-'}</small></div>
+                            <div class="flex items-center gap-2"><span class="badge-mini bg-emerald-100 text-emerald-700">SPM</span> <small class="font-mono text-slate-500">${item.no_spm || '-'}</small></div>
+                            <div class="flex items-center gap-2"><span class="badge-mini bg-purple-100 text-purple-700">SP2D</span> <small class="font-mono text-slate-500">${item.no_sp2d || '-'}</small></div>
+                        </div>
+                    </td>
                     <td>${escapeHtml(item.uraian)}</td>
-                    <td class="text-right font-bold">${formatRupiah(item.nominal)}</td>
+                    <td>
+                        <div class="nominal-group">
+                            <div class="nom-row">
+                                <div class="nom-val val-bruto">${formatRupiahTable(item.nominal)}</div>
+                                <span class="nom-label label-bruto">Bruto</span>
+                            </div>
+                            <div class="nom-row">
+                                <div class="nom-val val-pajak">${formatRupiahTable(item.potongan_pajak || 0)}</div>
+                                <span class="nom-label label-pajak">Pajak</span>
+                            </div>
+                            <div class="nom-row" style="margin-top: 2px; padding-top: 2px; border-top: 1px dashed #e2e8f0;">
+                                <div class="nom-val val-netto">${formatRupiahTable(item.total_dibayarkan || 0)}</div>
+                                <span class="nom-label label-netto">Netto</span>
+                            </div>
+                        </div>
+                    </td>
                     <td class="text-center">
                         <div class="flex justify-center gap-2">
                             <button class="btn-aksi detail" onclick="window.openPengeluaranDetail(${item.id})" title="Preview">
@@ -229,7 +288,7 @@ function loadPengeluaran(page = 1) {
         })
         .catch(err => {
             console.error(err);
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-red-500">Gagal memuat data: ${err.message}. Silakan coba lagi.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">Gagal memuat data: ${err.message}. Silakan coba lagi.</td></tr>`;
         });
 }
 
@@ -270,6 +329,11 @@ function loadEditData(id) {
             document.getElementById('pengeluaranKeterangan').value = data.keterangan || '';
             document.getElementById('pengeluaranNominalValue').value = data.nominal;
             document.getElementById('pengeluaranNominalDisplay').value = formatRibuan(data.nominal);
+
+            document.getElementById('pengeluaranPotonganPajakValue').value = data.potongan_pajak || 0;
+            document.getElementById('pengeluaranPotonganPajakDisplay').value = formatRibuan(data.potongan_pajak || 0);
+
+            if (window.calculateTotalDibayarkan) window.calculateTotalDibayarkan();
 
             document.getElementById('pengeluaranMetode').value = data.metode_pembayaran || '';
             document.getElementById('pengeluaranNoSPP').value = data.no_spp || '';
@@ -489,8 +553,16 @@ window.openPengeluaranDetail = function (id) {
                     <span class="value">${data.no_sp2d ?? '-'}</span>
                 </div>
                 <div class="detail-total mt-4">
-                    <span>Nominal Pengeluaran</span>
+                    <span>Jumlah yang diminta</span>
                     <strong>${formatRupiah(data.nominal)}</strong>
+                </div>
+                <div class="detail-row" style="margin-top: 12px; border-bottom: none; padding-bottom: 0;">
+                    <span class="label">Potongan Pajak</span>
+                    <span class="value text-red-500">${formatRupiah(data.potongan_pajak || 0)}</span>
+                </div>
+                <div class="detail-total mt-2" style="background: #ecfdf5; border-color: #6ee7b7;">
+                    <span style="color: #047857;">Total Dibayarkan</span>
+                    <strong style="color: #059669;">${formatRupiah(data.total_dibayarkan || 0)}</strong>
                 </div>
             `;
         })

@@ -44,8 +44,26 @@ class PiutangController extends Controller
             $totalQuery = clone $query;
             $paginated = $query->paginate($perPage);
 
-            // Hitung total keseluruhan berdasarkan filter (hanya Gross Piutang)
-            $totals = $totalQuery->reorder()->selectRaw('SUM(jumlah_piutang) as total_piutang')->first();
+            // Hitung total piutang berjalan dari tabel piutang
+            $totalsPiutang = $totalQuery->reorder()->selectRaw('SUM(jumlah_piutang) as total_piutang')->first();
+
+            // Ambil data potongan & adm bank dari tabel PenyesuaianPendapatan agar sinkron
+            $penyesuaianQuery = \App\Models\PenyesuaianPendapatan::where('tahun', session('tahun_anggaran'));
+
+            // Samakan filter pencarian jika ada
+            if ($search) {
+                $penyesuaianQuery->where(function ($q) use ($search) {
+                    $q->where('keterangan', 'like', "%{$search}%")
+                        ->orWhereHas('perusahaan', function ($p) use ($search) {
+                            $p->where('nama', 'like', "%{$search}%");
+                        });
+                });
+            }
+
+            $totalsPenyesuaian = $penyesuaianQuery->selectRaw('
+                SUM(potongan) as total_potongan,
+                SUM(administrasi_bank) as total_adm_bank
+            ')->first();
 
             return response()->json([
                 'data' => $paginated->items(),
@@ -55,7 +73,9 @@ class PiutangController extends Controller
                 'current_page' => $paginated->currentPage(),
                 'last_page' => $paginated->lastPage(),
                 'aggregates' => [
-                    'total_piutang' => $totals->total_piutang ?? 0,
+                    'total_piutang' => $totalsPiutang->total_piutang ?? 0,
+                    'total_potongan' => $totalsPenyesuaian->total_potongan ?? 0,
+                    'total_adm_bank' => $totalsPenyesuaian->total_adm_bank ?? 0,
                 ]
             ]);
         }
@@ -76,6 +96,8 @@ class PiutangController extends Controller
             'perusahaan_id' => 'required|exists:perusahaans,id',
             'bulan_pelayanan' => 'required|string|max:50',
             'jumlah_piutang' => 'required|numeric|min:0',
+            'potongan' => 'nullable|numeric|min:0',
+            'administrasi_bank' => 'nullable|numeric|min:0',
             'status' => 'required|in:LUNAS,BELUM_LUNAS',
             'keterangan' => 'nullable|string|max:255',
         ]);

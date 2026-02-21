@@ -102,13 +102,13 @@ function renderPiutangTable(items, from) {
 
         tr.innerHTML = `
             <td class="text-center">${from + index}</td>
-            <td>${formatDateIndo(item.tanggal)}</td>
+            <td class="text-center">${formatDateIndo(item.tanggal)}</td>
             <td>
                 <strong>${perusahaanName}</strong>
                 <div class="text-xs text-gray-500">${item.keterangan || '-'}</div>
             </td>
             <td>${item.bulan_pelayanan}</td>
-            <td class="text-right font-medium">${formatRupiah(item.jumlah_piutang)}</td>
+            <td class="font-medium">${formatRupiahTable(item.jumlah_piutang)}</td>
             <td class="text-center">
                 <span class="badge ${statusClass}">${item.status.replace('_', ' ')}</span>
             </td>
@@ -150,6 +150,12 @@ function updateSummaryPiutang(agg) {
     if (!agg) return;
     const el = document.getElementById('summaryTotalPiutang');
     if (el) el.innerText = formatRupiah(agg.total_piutang);
+
+    const potEl = document.getElementById('summaryTotalPotongan');
+    if (potEl) potEl.innerText = formatRupiah(agg.total_potongan || 0);
+
+    const admEl = document.getElementById('summaryTotalAdm');
+    if (admEl) admEl.innerText = formatRupiah(agg.total_adm_bank || 0);
 }
 
 // ================= MODAL LOGIC =================

@@ -18,7 +18,7 @@ let currentCategoryAnggaran = 'PENDAPATAN';
    EVENT
 ========================= */
 window.reloadAnggaran = function (category = currentCategoryAnggaran) {
-  const tahun = document.getElementById('anggaranTahun').value;
+  const tahun = document.getElementById('anggaranTahun')?.value || window.tahunAnggaran;
   loadAnggaran(tahun, category);
 };
 
@@ -234,8 +234,8 @@ window.openAnggaranRekening = async function (category = 'PENDAPATAN', btn) {
   const ok = await window.loadContent(page);
   if (!ok) return;
 
-  // Default tahun from the select or fallback current year
-  const tahun = document.getElementById('anggaranTahun')?.value || new Date().getFullYear();
+  // Default tahun from the session or fallback current year
+  const tahun = document.getElementById('anggaranTahun')?.value || window.tahunAnggaran || new Date().getFullYear();
 
   if (typeof loadAnggaran === 'function') {
     loadAnggaran(tahun, category);

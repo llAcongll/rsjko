@@ -92,12 +92,11 @@
 
                             <td colspan="2" class="text-right">{{ number_format($gTotal, 2, ',', '.') }}</td>
             </tr>
-            <tr><td colspan="7" style="border: none; height: 30px;"></td></tr>
-            <tr><th colspan="7" style="background-color: #cfe2f3; text-align: center;">2. RINCIAN PER KODE REKENING</th></tr>
+            <tr><td colspan="6" style="border: none; height: 30px;"></td></tr>
+            <tr><th colspan="6" style="background-color: #cfe2f3; text-align: center;">2. RINCIAN PER KODE REKENING</th></tr>
             <tr>
                 <th style="text-align: center;">Kode Rekening</th>
                 <th style="text-align: center;">Nama Rekening</th>
-                <th style="text-align: center;">Uraian Belanja</th>
                 <th style="text-align: center;">Uang Persediaan</th>
                 <th style="text-align: center;">Ganti Uang</th>
                 <th style="text-align: center;">Langsung</th>
@@ -109,7 +108,6 @@
                 <tr>
                     <td class="text-center">{{ $item->kode }}</td>
                         <td>{{ $item->nama }}</td>
-                        <td>{{ $item->uraian }}</td>
                         <td class="text-right">{{ number_format($item->up, 2, ',', '.') }}</td>
                         <td class="text-right">{{ number_format($item->gu, 2, ',', '.') }}</td>
                         <td class="text-right">{{ number_format($item->ls, 2, ',', '.') }}</td>
@@ -117,6 +115,40 @@
              </tr>
         @endforeach
         </tbody>
+    <table style="border: none;">
+        <tr>
+            <td align="center">
+                @if($ptKiri)
+                    <br>
+                    <b>{{ $ptKiri->jabatan }}</b><br><br><br><br>
+                    <b>{{ $ptKiri->nama }}</b><br>
+                    NIP. {{ $ptKiri->nip }}
+                @endif
+            </td>
+            <td></td>
+            <td colspan="2" align="center">
+                @if($ptTengah)
+                    <br>
+                    <b>{{ $ptTengah->jabatan }}</b><br><br><br><br>
+                    <b>{{ $ptTengah->nama }}</b><br>
+                    NIP. {{ $ptTengah->nip }}
+                @endif
+            </td>
+            <td></td>
+            <td align="center">
+                Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
+                @if($ptKanan)
+                    <b>{{ $ptKanan->jabatan }}</b><br><br><br><br>
+                    <b>{{ $ptKanan->nama }}</b><br>
+                    NIP. {{ $ptKanan->nip }}
+                @else
+                    <b>&nbsp;</b><br>
+                    &nbsp;<br><br><br><br>
+                    <b>...................................</b><br>
+                    NIP. ...................................
+                @endif
+            </td>
+        </tr>
     </table>
 </body>
 </html>

@@ -196,6 +196,17 @@ window.openMouPage = async (btn) => {
   }
 };
 
+window.openPenandaTangan = async (btn) => {
+  setActiveMenu(btn);
+  closeOnMobile();
+
+  await loadContent("penanda_tangan");
+
+  if (typeof window.initPenandaTangan === 'function') {
+    window.initPenandaTangan();
+  }
+};
+
 window.openUsers = (btn) => {
   setActiveMenu(btn);
   closeOnMobile();
@@ -440,21 +451,21 @@ function doLogout() {
 /* =========================
    GLOBAL MODAL CLOSERS
    (Close on ESC or Background Click)
+   Fitur ini dinonaktifkan agar modal hanya bisa ditutup via tombol Batal/X
 ========================= */
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    const activeModal = document.querySelector('.confirm-overlay.show');
-    if (activeModal) {
-      activeModal.classList.remove('show');
-      // Dispatch custom event if some module needs to know it closed
-      activeModal.dispatchEvent(new Event('modalClosed'));
-    }
+    // const activeModal = document.querySelector('.confirm-overlay.show');
+    // if (activeModal) {
+    //   activeModal.classList.remove('show');
+    //   activeModal.dispatchEvent(new Event('modalClosed'));
+    // }
   }
 });
 
 document.addEventListener('click', (e) => {
   if (e.target.classList.contains('confirm-overlay')) {
-    e.target.classList.remove('show');
-    e.target.dispatchEvent(new Event('modalClosed'));
+    // e.target.classList.remove('show');
+    // e.target.dispatchEvent(new Event('modalClosed'));
   }
 });

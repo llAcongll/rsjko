@@ -42,7 +42,26 @@ class PenyesuaianPendapatanController extends Controller
         }
 
         if ($request->header('Accept') === 'application/json') {
-            return response()->json($query->paginate($perPage));
+            $totalQuery = clone $query;
+            $paginated = $query->paginate($perPage);
+
+            $totals = $totalQuery->reorder()->selectRaw('
+                SUM(potongan) as total_potongan,
+                SUM(administrasi_bank) as total_adm_bank
+            ')->first();
+
+            return response()->json([
+                'data' => $paginated->items(),
+                'from' => $paginated->firstItem(),
+                'to' => $paginated->lastItem(),
+                'total' => $paginated->total(),
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'aggregates' => [
+                    'total_potongan' => $totals->total_potongan ?? 0,
+                    'total_adm_bank' => $totals->total_adm_bank ?? 0,
+                ]
+            ]);
         }
 
         return $query->paginate($perPage);
