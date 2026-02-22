@@ -94,11 +94,11 @@
             <table class="report-table" id="laporanRekonTable">
                 <thead>
                     <tr>
-                        <th class="text-center" style="width: 120px;">Bulan</th>
-                        <th class="text-center" style="text-align:right">Bank (Kredit)</th>
-                        <th class="text-center" style="text-align:right">Modul Netto</th>
-                        <th class="text-center" style="text-align:right">Selisih Harian</th>
-                        <th class="text-center" style="text-align:right">Selisih Kumulatif</th>
+                        <th class="text-center" style="width: 100px;">Bulan</th>
+                        <th class="text-center" style="text-align:right; width: 140px;">Bank (Kredit)</th>
+                        <th class="text-center" style="text-align:right; width: 140px;">Modul Netto</th>
+                        <th class="text-center" style="text-align:right; width: 140px;">Selisih Harian</th>
+                        <th class="text-left" style="text-align:left; min-width: 250px;">Deskripsi Penyebab Selisih</th>
                         <th style="text-align:center; width: 120px;">Status</th>
                     </tr>
                 </thead>

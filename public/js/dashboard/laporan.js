@@ -294,7 +294,6 @@ function renderRekon(data) {
         totalPend += Number(item.pendapatan);
 
         const isMatch = Math.abs(item.selisih) < 1;
-        const isKumulatifMatch = Math.abs(item.kumulatif) < 1;
 
         let statusClass = 'badge-danger';
         let statusText = '❌ SELISIH';
@@ -302,13 +301,9 @@ function renderRekon(data) {
         if (isMatch) {
             statusClass = 'badge-success';
             statusText = '✅ MATCH';
-        } else if (isKumulatifMatch) {
-            statusClass = 'badge-info';
-            statusText = '⏳ TIMING OK';
         }
 
         const selisihColor = item.selisih === 0 ? '#64748b' : (item.selisih > 0 ? '#16a34a' : '#ef4444');
-        const kumulatifColor = item.kumulatif === 0 ? '#64748b' : (item.kumulatif > 0 ? '#16a34a' : '#ef4444');
 
         body.insertAdjacentHTML('beforeend', `
             <tr>
@@ -316,7 +311,7 @@ function renderRekon(data) {
                 <td style="text-align:right">${formatRupiahTable(item.bank)}</td>
                 <td style="text-align:right">${formatRupiahTable(item.pendapatan)}</td>
                 <td style="text-align:right; font-weight:600; color:${selisihColor}">${formatRupiahTable(item.selisih)}</td>
-                <td style="text-align:right; font-weight:600; color:${kumulatifColor}">${formatRupiahTable(item.kumulatif)}</td>
+                <td style="text-align:left; color:#64748b; font-size:13px; white-space: normal; line-height: 1.6; min-width: 250px; padding: 10px;">${item.keterangan}</td>
                 <td style="text-align:center"><span class="badge ${statusClass}">${statusText}</span></td>
             </tr>
         `);

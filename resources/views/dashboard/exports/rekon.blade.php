@@ -51,7 +51,7 @@
                 <th>Bank (Kredit)</th>
                 <th>Modul Netto</th>
                 <th>Selisih Harian</th>
-                <th>Selisih Kumulatif</th>
+                <th>Deskripsi Penyebab Selisih</th>
             </tr>
         </thead>
         <tbody>
@@ -61,7 +61,7 @@
                     <td class="text-right">Rp {{ number_format($item->bank, 2, ',', '.') }}</td>
                     <td class="text-right">Rp {{ number_format($item->pendapatan, 2, ',', '.') }}</td>
                     <td class="text-right">Rp {{ number_format($item->selisih, 2, ',', '.') }}</td>
-                    <td class="text-right font-bold">Rp {{ number_format($item->kumulatif, 2, ',', '.') }}</td>
+                    <td style="font-size: 9pt; color: #666;">{{ $item->keterangan }}</td>
                 </tr>
             @endforeach
         </tbody>

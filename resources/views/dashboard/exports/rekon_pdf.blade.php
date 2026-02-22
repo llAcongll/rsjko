@@ -161,7 +161,7 @@
                 <th style="width: 20%;">Bank (Kredit)</th>
                 <th style="width: 20%;">Modul Netto</th>
                 <th style="width: 20%;">Selisih Harian</th>
-                <th style="width: 25%;">Selisih Kumulatif</th>
+                <th style="width: 25%;">Deskripsi Penyebab Selisih</th>
             </tr>
         </thead>
         <tbody>
@@ -186,11 +186,8 @@
                             <span class="curr-val">{{ number_format($item->selisih, 2, ',', '.') }}</span>
                         </div>
                     </td>
-                    <td class="font-bold">
-                        <div class="curr-cell">
-                            <span class="curr-rp">Rp</span>
-                            <span class="curr-val">{{ number_format($item->kumulatif, 2, ',', '.') }}</span>
-                        </div>
+                    <td style="font-size: 8pt; color: #555;">
+                        {{ $item->keterangan }}
                     </td>
                 </tr>
             @endforeach

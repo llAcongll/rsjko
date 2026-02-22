@@ -383,21 +383,67 @@ class ReportService
         }
 
         $rekonData = [];
-        $cumulativeDiff = 0;
         $namaBulan = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'];
 
         for ($i = 1; $i <= 12; $i++) {
             $bank = (float) ($rekKoran[$i] ?? 0);
             $pend = (float) ($revenues[$i] ?? 0);
             $diff = $bank - $pend;
-            $cumulativeDiff += $diff;
 
-            $rekonData[] = [
+            $keterangan = 'Data Cocok (Match)';
+            if (abs($diff) > 0.1) {
+                // Find transactions from bank that don't have a matching record in income modules
+                $tables = ['pendapatan_umum', 'pendapatan_bpjs', 'pendapatan_jaminan', 'pendapatan_kerjasama', 'pendapatan_lain'];
+
+                $unmatchedTransactions = [];
+                $bankRecords = DB::table('rekening_korans')
+                    ->whereYear('tanggal', $tahun)
+                    ->whereMonth('tanggal', $i)
+                    ->where('cd', 'C')
+                    ->orderBy('tanggal', 'asc')
+                    ->get();
+
+                foreach ($bankRecords as $bankItem) {
+                    $hasMatch = false;
+                    foreach ($tables as $table) {
+                        if (DB::table($table)->where('tanggal', $bankItem->tanggal)->where('total', $bankItem->jumlah)->exists()) {
+                            $hasMatch = true;
+                            break;
+                        }
+                    }
+
+                    if (!$hasMatch) {
+                        $bankName = ($bankItem->bank == 'Bank Riau Kepri Syariah' || $bankItem->bank == 'BRK') ? 'BRK' : (($bankItem->bank == 'Bank Syariah Indonesia' || $bankItem->bank == 'BSI') ? 'BSI' : $bankItem->bank);
+                        $tgl = \Carbon\Carbon::parse($bankItem->tanggal)->format('d/m');
+                        // Clean up description: remove common noise or keep first 50 chars
+                        $rawDesc = $bankItem->keterangan;
+                        $desc = (strlen($rawDesc) > 40) ? substr($rawDesc, 0, 37) . '...' : $rawDesc;
+
+                        $unmatchedTransactions[] = "{$bankName} {$tgl} [Rp " . number_format($bankItem->jumlah, 0, ',', '.') . "] - {$desc}";
+                        if (count($unmatchedTransactions) >= 3)
+                            break;
+                    }
+                }
+
+                if (!empty($unmatchedTransactions)) {
+                    $keterangan = "Belum Tercatat:<br>";
+                    foreach ($unmatchedTransactions as $ut) {
+                        $keterangan .= "• {$ut}<br>";
+                    }
+                    if (count($unmatchedTransactions) >= 3) {
+                        $keterangan .= "...";
+                    }
+                } else {
+                    $keterangan = "Sisa selisih harian:<br>Rp " . number_format(abs($diff), 0, ',', '.');
+                }
+            }
+
+            $rekonData[] = (object) [
                 'tanggal' => $namaBulan[$i],
                 'bank' => $bank,
                 'pendapatan' => $pend,
                 'selisih' => $diff,
-                'kumulatif' => $cumulativeDiff
+                'keterangan' => $keterangan
             ];
         }
 
