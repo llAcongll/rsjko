@@ -66,14 +66,15 @@ window.initPengeluaran = function (kategori) {
     // Bind Auto SPP Logic (only for create, or if user explicitly wants)
     const tglEl = document.getElementById('pengeluaranTanggal');
     const mtdEl = document.getElementById('pengeluaranMetode');
-    if (tglEl) tglEl.addEventListener('change', () => updateAutoSpp());
-    if (mtdEl) mtdEl.addEventListener('change', () => updateAutoSpp());
+    if (tglEl) tglEl.addEventListener('change', () => updateAutoSpp(true));
+    if (mtdEl) mtdEl.addEventListener('change', () => updateAutoSpp(true));
 
     loadPengeluaran();
 }
 
-async function updateAutoSpp() {
-    if (isEditPengeluaran) return;
+async function updateAutoSpp(isExplicitChange = false) {
+    // If editing, only update if the user explicitly changed something (via listener)
+    if (isEditPengeluaran && !isExplicitChange) return;
 
     const tgl = document.getElementById('pengeluaranTanggal').value;
     const mtd = document.getElementById('pengeluaranMetode').value;
@@ -84,13 +85,20 @@ async function updateAutoSpp() {
     if (!tgl || !mtd || !sppEl) return;
 
     try {
-        const res = await fetch(`/dashboard/pengeluaran/next-spp?tanggal=${tgl}&metode=${mtd}`, {
+        const idParam = isEditPengeluaran ? `&id=${editPengeluaranId}` : '';
+        const res = await fetch(`/dashboard/pengeluaran/next-spp?tanggal=${tgl}&metode=${mtd}${idParam}`, {
             headers: { 'Accept': 'application/json' }
         });
         const data = await res.json();
+
+        // Update fields automatically
         if (sppEl) sppEl.value = data.no_spp;
         if (spmEl) spmEl.value = data.no_spm;
         if (sp2dEl) sp2dEl.value = data.no_sp2d;
+
+        if (isEditPengeluaran && isExplicitChange) {
+            toast('Nomor administrasi disesuaikan', 'info');
+        }
     } catch (err) {
         console.error('Failed to gen numbers', err);
     }
@@ -117,11 +125,12 @@ window.openPengeluaranForm = function (kategori, id = null) {
         isEditPengeluaran = true;
         editPengeluaranId = id;
         titleEl.innerText = 'Edit Pengeluaran';
+        // Keep read-only to prevent manual override during edit
         [sppEl, spmEl, sp2dEl].forEach(el => {
             if (el) {
-                el.readOnly = false;
-                el.style.background = '';
-                el.style.cursor = '';
+                el.readOnly = true;
+                el.style.background = '#f8fafc';
+                el.style.cursor = 'not-allowed';
             }
         });
         loadEditData(id);

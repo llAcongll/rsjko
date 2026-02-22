@@ -58,7 +58,9 @@
           </div>
           <div class="permission-item"><label><input type="checkbox" value="LAPORAN_MOU"> Laporan MOU</label></div>
           <div class="permission-item"><label><input type="checkbox" value="LAPORAN_ANGGARAN"> Realisasi
-              Anggaran</label></div>
+              Anggaran & DPA</label></div>
+          <div class="permission-item"><label style="color: #0369a1; font-weight: 600;"><input type="checkbox"
+                value="LAPORAN_VIEW"> LIHAT SEMUA LAPORAN</label></div>
           <div class="permission-item"><label><input type="checkbox" value="LAPORAN_EXPORT"> Ekspor Laporan
               (Excel/CSV)</label></div>
           <div class="permission-item"><label><input type="checkbox" value="LAPORAN_EXPORT_PDF"> Ekspor Laporan
@@ -101,14 +103,35 @@
               Ke-3</label></div>
           <div class="permission-item"><label><input type="checkbox" value="MASTER_MOU_CRUD"> Kelola MOU</label></div>
           <div style="margin-top: 4px;"></div>
-          <p style="font-weight: 600; font-size: 12px; margin-top: 12px; margin-bottom: 8px; color: #1e293b;">Kode Rekening & Anggaran</p>
+          <div class="permission-item"><label style="color: #0369a1; font-weight: 600;"><input type="checkbox"
+                value="MASTER_VIEW"> AKSES SEMUA MASTER & TANDA TANGAN</label></div>
+          <div style="margin-top: 4px;"></div>
+          <p style="font-weight: 600; font-size: 12px; margin-top: 12px; margin-bottom: 8px; color: #1e293b;">Kode
+            Rekening & Anggaran</p>
           <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">PENDAPATAN</div>
-          <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_PENDAPATAN_VIEW"> Lihat Rekening & Anggaran</label></div>
-          <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_PENDAPATAN_CRUD"> Kelola Rekening & Anggaran</label></div>
-          
+          <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_PENDAPATAN_VIEW"> Lihat
+              Rekening & Anggaran</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_PENDAPATAN_CRUD"> Kelola
+              Rekening & Anggaran</label></div>
+
           <div style="font-size: 11px; font-weight: 700; color: #64748b; margin: 8px 0 4px;">PENGELUARAN</div>
-          <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_PENGELUARAN_VIEW"> Lihat Rekening & Anggaran</label></div>
-          <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_PENGELUARAN_CRUD"> Kelola Rekening & Anggaran</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_PENGELUARAN_VIEW"> Lihat
+              Rekening & Anggaran</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_PENGELUARAN_CRUD"> Kelola
+              Rekening & Anggaran</label></div>
+
+          <div style="margin-top: 8px;"></div>
+          <div class="permission-item"><label style="color: #0369a1; font-weight: 600;"><input type="checkbox"
+                value="KODE_REKENING_VIEW"> LIHAT SEMUA REK & ANGGARAN</label></div>
+          <div class="permission-item"><label style="color: #b91c1c; font-weight: 600;"><input type="checkbox"
+                value="KODE_REKENING_CRUD"> KELOLA SEMUA REK & ANGGARAN</label></div>
+
+          <p style="font-weight: 600; font-size: 12px; margin-top: 12px; margin-bottom: 8px; color: #1e293b;">User & Log
+            Aktivitas</p>
+          <div class="permission-item"><label><input type="checkbox" value="USER_VIEW"> Lihat Data User</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="USER_CRUD"> Kelola Data User</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="ACTIVITY_LOG_VIEW"> Lihat Log
+              Aktivitas</label></div>
         </div>
 
         {{-- PENDAPATAN --}}

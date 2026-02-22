@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <style>
         body {
-            font-family: 'Helvetica', sans-serif;
+            font-family: Arial, sans-serif;
             font-size: 8pt;
             color: #333;
         }
@@ -49,19 +49,29 @@
             margin-bottom: 20px;
         }
 
-        .line {
-            border-bottom: 2px solid #000;
-            margin: 5px 0;
-        }
+        .line { border-bottom: 4px solid #000; margin: -10px 0 10px; }
     </style>
 </head>
 
 <body>
-    <div class="header-box">
-        <div style="font-size: 11pt;">PEMERINTAH PROVINSI KEPULAUAN RIAU</div>
-        <div style="font-size: 10pt; font-weight: bold;">RUMAH SAKIT JIWA DAN KETERGANTUNGAN OBAT ENGKU HAJI DAUD</div>
-        <div style="font-size: 7pt;">Jalan Indun Suri – Simpang Busung Nomor 1 Tanjung Uban Kode Pos 29152</div>
-        <div class="line"></div>
+    <table style="width: 100%; border: none; margin-bottom: 0;">
+        <tr>
+            <td style="width: 165px; border: none; vertical-align: top;">
+                <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w400"
+                    style="height: 165px; width: auto; object-fit: contain;">
+            </td>
+            <td style="border: none; text-align: center; vertical-align: top; padding-right: 165px;">
+                <div style="font-size: 14pt; line-height: 1.2;">PEMERINTAH PROVINSI KEPULAUAN RIAU</div>
+                <div style="font-size: 13pt; font-weight: bold; line-height: 1.2;">RUMAH SAKIT JIWA DAN KETERGANTUNGAN OBAT</div>
+                <div style="font-size: 13pt; font-weight: bold; line-height: 1.2;">ENGKU HAJI DAUD</div>
+                <div style="font-size: 8pt; margin-top: 10px; line-height: 1.4;">
+                    Jalan Indun Suri – Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
+                    Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795 • Pos-el: rsjkoehd@kepriprov.go.id Laman : www.rsudehd.kepriprov.go.id
+                </div>
+            </td>
+        </tr>
+    </table>
+    <div class="line"></div>
         <div style="font-size: 11pt; font-weight: bold; text-decoration: underline; margin-top: 5px;">LAPORAN DOKUMEN
             PELAKSANAAN ANGGARAN (DPA)</div>
         <div style="font-size: 8pt; margin-top: 2px;">Tahun Anggaran: {{ $tahun }}</div>
@@ -136,34 +146,34 @@
             <td style="width: 33%; border: none; text-align: center; vertical-align: top;">
                 @if($ptKiri)
                     <p style="margin: 0; min-height: 1.25em;">&nbsp;</p>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptKiri->jabatan }}</p>
+                    <p style="margin: 0;">{{ $ptKiri->jabatan }}</p>
                     <div style="height: 50px;"></div>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptKiri->nama }}</p>
+                    <p style="margin: 0;">{{ $ptKiri->nama }}</p>
                     <p style="margin: 0;">NIP. {{ $ptKiri->nip }}</p>
                 @endif
             </td>
             <td style="width: 34%; border: none; text-align: center; vertical-align: top;">
                 @if($ptTengah)
                     <p style="margin: 0; min-height: 1.25em;">&nbsp;</p>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptTengah->jabatan }}</p>
+                    <p style="margin: 0;">{{ $ptTengah->jabatan }}</p>
                     <div style="height: 50px;"></div>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptTengah->nama }}</p>
+                    <p style="margin: 0;">{{ $ptTengah->nama }}</p>
                     <p style="margin: 0;">NIP. {{ $ptTengah->nip }}</p>
                 @endif
             </td>
             <td style="width: 33%; border: none; text-align: center; vertical-align: top;">
                 @if($ptKanan)
                     <p style="margin: 0;">Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptKanan->jabatan }}</p>
+                    <p style="margin: 0;">{{ $ptKanan->jabatan }}</p>
                     <div style="height: 50px;"></div>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptKanan->nama }}</p>
+                    <p style="margin: 0;">{{ $ptKanan->nama }}</p>
                     <p style="margin: 0;">NIP. {{ $ptKanan->nip }}</p>
                 @else
                     <p style="margin: 0;">Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                    <p style="margin: 0; font-weight: bold;">&nbsp;</p>
+                    <p style="margin: 0;">&nbsp;</p>
                     <p style="margin: 0;">&nbsp;</p>
                     <div style="height: 50px;"></div>
-                    <p style="margin: 0; font-weight: bold;">...................................</p>
+                    <p style="margin: 0;">...................................</p>
                     <p style="margin: 0;">NIP. ...................................</p>
                 @endif
             </td>

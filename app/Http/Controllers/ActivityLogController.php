@@ -10,7 +10,7 @@ class ActivityLogController extends BaseController
 {
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->isAdmin() || auth()->user()->hasPermission('ACTIVITY_LOG_VIEW'), 403);
         $query = ActivityLog::with('user')->latest();
 
         if ($request->search) {

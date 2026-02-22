@@ -12,7 +12,7 @@
         }
 
         body {
-            font-family: sans-serif;
+            font-family: Arial, sans-serif;
             font-size: 7pt;
             color: #333;
         }
@@ -47,10 +47,12 @@
         }
 
         .header-line {
-            border-bottom: 2px solid #000;
-            margin-bottom: 20px;
-            margin-top: 10px;
+            border-bottom: 4px solid #000;
+            margin-bottom: 10px;
+            margin-top: -10px;
         }
+
+        .line { border-bottom: 4px solid #000; margin: -10px 0 10px; }
 
         .report-title {
             text-align: center;
@@ -125,17 +127,23 @@
 </head>
 
 <body>
-    <div class="header-kop">
-        <h1>PEMERINTAH PROVINSI KEPULAUAN RIAU</h1>
-        <h2>RUMAH SAKIT JIWA DAN KETERGANTUNGAN OBAT</h2>
-        <h2>ENGKU HAJI DAUD</h2>
-        <div class="address">
-            Jalan Indun Suri - Simpang Busung Nomor 1 Tanjung Uban Kode Pos 29152<br>
-            Telepon (0771) 482655, 482796, Faksimile (0771) 482795<br>
-            Pos-el: rskjoehd@kepriprov.go.id<br>
-            Laman: www.rsuehd.kepriprov.go.id
-        </div>
-    </div>
+    <table style="width: 100%; border: none; margin-bottom: 0;">
+        <tr>
+            <td style="width: 165px; border: none; vertical-align: top;">
+                <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w400"
+                    style="height: 165px; width: auto; object-fit: contain;">
+            </td>
+            <td style="border: none; text-align: center; vertical-align: top; padding-right: 165px;">
+                <div style="font-size: 14pt; line-height: 1.2;">PEMERINTAH PROVINSI KEPULAUAN RIAU</div>
+                <div style="font-size: 13pt; font-weight: bold; line-height: 1.2;">RUMAH SAKIT JIWA DAN KETERGANTUNGAN OBAT</div>
+                <div style="font-size: 13pt; font-weight: bold; line-height: 1.2;">ENGKU HAJI DAUD</div>
+                <div style="font-size: 8pt; margin-top: 10px; line-height: 1.4;">
+                    Jalan Indun Suri – Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
+                    Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795 • Pos-el: rsjkoehd@kepriprov.go.id Laman : www.rsudehd.kepriprov.go.id
+                </div>
+            </td>
+        </tr>
+    </table>
     <div class="header-line"></div>
 
     <div class="report-title">
@@ -146,6 +154,16 @@
             {{ Carbon::parse($end)->translatedFormat('d F Y') }}
         </p>
     </div>
+
+    @php
+    $tables = [];
+    if ($category === 'SEMUA') {
+        $tables[] = ['title' => 'PENDAPATAN', 'items' => $data_pendapatan, 'totals' => (object)$sub_totals['pendapatan']];
+        $tables[] = ['title' => 'BELANJA (PENGELUARAN)', 'items' => $data_pengeluaran, 'totals' => (object)$sub_totals['pengeluaran']];
+    } else {
+        $tables[] = ['title' => $category === 'PENGELUARAN' ? 'BELANJA' : 'PENDAPATAN', 'items' => $data, 'totals' => (object)$totals];
+    }
+    @endphp
 
     <table>
         <thead>
@@ -161,93 +179,136 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($data as $item)
-                @php 
-                    $isBold = $item->level < 5; 
-                    $isRoot = str_contains($item->nama, 'Rumah Sakit Khusus Jiwa dan Ketergantungan Obat');
-                @endphp
-                <tr style="{{ $isBold ? 'font-weight:bold; background-color:#f8fafc;' : '' }}">
-                    <td>{{ $item->kode }}</td>
-                    <td>{{ $item->nama }}</td>
+            @foreach($tables as $table)
+                @foreach($table['items'] as $item)
+                    @php 
+                        $item = (object)$item;
+                        $isBold = $item->level < 5; 
+                        $isRoot = str_contains($item->nama, 'Rumah Sakit Khusus Jiwa dan Ketergantungan Obat');
+                    @endphp
+                    <tr style="{{ $isBold ? 'font-weight:bold; background-color:#f8fafc;' : '' }}">
+                        <td>{{ $item->kode }}</td>
+                        <td>{{ $item->nama }}</td>
+                        <td>
+                            @if(!$isRoot)
+                            <div class="curr-cell">
+                                <span class="curr-rp">Rp</span>
+                                <span class="curr-val">{{ number_format($item->target, 2, ',', '.') }}</span>
+                            </div>
+                            @endif
+                        </td>
+                        <td>
+                            @if(!$isRoot)
+                            <div class="curr-cell">
+                                <span class="curr-rp">Rp</span>
+                                <span class="curr-val">{{ number_format($item->realisasi_lalu, 2, ',', '.') }}</span>
+                            </div>
+                            @endif
+                        </td>
+                        <td>
+                            @if(!$isRoot)
+                            <div class="curr-cell">
+                                <span class="curr-rp">Rp</span>
+                                <span class="curr-val">{{ number_format($item->realisasi_kini, 2, ',', '.') }}</span>
+                            </div>
+                            @endif
+                        </td>
+                        <td>
+                            @if(!$isRoot)
+                            <div class="curr-cell">
+                                <span class="curr-rp">Rp</span>
+                                <span class="curr-val">{{ number_format($item->realisasi_total, 2, ',', '.') }}</span>
+                            </div>
+                            @endif
+                        </td>
+                        <td>
+                            @if(!$isRoot)
+                            <div class="curr-cell">
+                                <span class="curr-rp">Rp</span>
+                                <span class="curr-val">{{ number_format($item->selisih, 2, ',', '.') }}</span>
+                            </div>
+                            @endif
+                        </td>
+                        <td class="text-center">{{ $isRoot ? '' : number_format($item->persen, 2, ',', '.') . '%' }}</td>
+                    </tr>
+                @endforeach
+                <tr style="background:#f1f5f9; font-weight:bold;">
+                    <td colspan="2" class="text-center">TOTAL {{ $table['title'] }}</td>
                     <td>
-                        @if(!$isRoot)
                         <div class="curr-cell">
                             <span class="curr-rp">Rp</span>
-                            <span class="curr-val">{{ number_format($item->target, 2, ',', '.') }}</span>
+                            <span class="curr-val">{{ number_format($table['totals']->target ?? 0, 2, ',', '.') }}</span>
                         </div>
-                        @endif
                     </td>
                     <td>
-                        @if(!$isRoot)
                         <div class="curr-cell">
                             <span class="curr-rp">Rp</span>
-                            <span class="curr-val">{{ number_format($item->realisasi_lalu, 2, ',', '.') }}</span>
+                            <span class="curr-val">
+                               {{ number_format($table['totals']->real_lalu ?? 0, 2, ',', '.') }}
+                            </span>
                         </div>
-                        @endif
                     </td>
                     <td>
-                        @if(!$isRoot)
                         <div class="curr-cell">
                             <span class="curr-rp">Rp</span>
-                            <span class="curr-val">{{ number_format($item->realisasi_kini, 2, ',', '.') }}</span>
+                            <span class="curr-val">
+                               {{ number_format($table['totals']->real_kini ?? 0, 2, ',', '.') }}
+                            </span>
                         </div>
-                        @endif
                     </td>
                     <td>
-                        @if(!$isRoot)
                         <div class="curr-cell">
                             <span class="curr-rp">Rp</span>
-                            <span class="curr-val">{{ number_format($item->realisasi_total, 2, ',', '.') }}</span>
+                            <span class="curr-val">{{ number_format($table['totals']->real ?? 0, 2, ',', '.') }}</span>
                         </div>
-                        @endif
                     </td>
                     <td>
-                        @if(!$isRoot)
                         <div class="curr-cell">
                             <span class="curr-rp">Rp</span>
-                            <span class="curr-val">{{ number_format($item->selisih, 2, ',', '.') }}</span>
+                            <span class="curr-val">{{ number_format(($table['totals']->target ?? 0) - ($table['totals']->real ?? 0), 2, ',', '.') }}</span>
                         </div>
-                        @endif
                     </td>
-                    <td class="text-center">{{ $isRoot ? '' : number_format($item->persen, 2, ',', '.') . '%' }}</td>
+                    <td class="text-center">{{ number_format($table['totals']->persen ?? 0, 2, ',', '.') }}%</td>
                 </tr>
             @endforeach
-            <tr style="background:#f1f5f9; font-weight:bold;">
-                <td colspan="2" class="text-center">{{ $category === 'SEMUA' ? 'SURPLUS / (DEFISIT)' : 'GRAND TOTAL' }}
-                </td>
-                <td>
-                    <div class="curr-cell">
-                        <span class="curr-rp">Rp</span>
-                        <span class="curr-val">{{ number_format($totals->target, 2, ',', '.') }}</span>
-                    </div>
-                </td>
-                <td>
-                    <div class="curr-cell">
-                        <span class="curr-rp">Rp</span>
-                        <span class="curr-val">{{ number_format($totals->realisasi_lalu, 2, ',', '.') }}</span>
-                    </div>
-                </td>
-                <td>
-                    <div class="curr-cell">
-                        <span class="curr-rp">Rp</span>
-                        <span class="curr-val">{{ number_format($totals->realisasi_kini, 2, ',', '.') }}</span>
-                    </div>
-                </td>
-                <td>
-                    <div class="curr-cell">
-                        <span class="curr-rp">Rp</span>
-                        <span class="curr-val">{{ number_format($totals->realisasi_total, 2, ',', '.') }}</span>
-                    </div>
-                </td>
-                <td>
-                    <div class="curr-cell">
-                        <span class="curr-rp">Rp</span>
-                        <span
-                            class="curr-val">{{ number_format($totals->target - $totals->realisasi_total, 2, ',', '.') }}</span>
-                    </div>
-                </td>
-                <td class="text-center">{{ number_format($totals->persen, 2, ',', '.') }}%</td>
-            </tr>
+
+            @if($category === 'SEMUA')
+                <tr style="background:#e2e8f0; font-weight:bold; font-size: 8pt;">
+                    <td colspan="2" class="text-center">SURPLUS / (DEFISIT)</td>
+                    <td style="width: 15%;">
+                        <div class="curr-cell">
+                            <span class="curr-rp">Rp</span>
+                            <span class="curr-val">{{ number_format($totals['target'], 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                    <td style="width: 15%;">
+                        <div class="curr-cell">
+                            <span class="curr-rp">Rp</span>
+                            <span class="curr-val">{{ number_format($totals['realisasi_lalu'], 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                    <td style="width: 15%;">
+                        <div class="curr-cell">
+                            <span class="curr-rp">Rp</span>
+                            <span class="curr-val">{{ number_format($totals['realisasi_kini'], 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                    <td style="width: 15%;">
+                        <div class="curr-cell">
+                            <span class="curr-rp">Rp</span>
+                            <span class="curr-val">{{ number_format($totals['realisasi_total'], 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                    <td style="width: 15%;">
+                        <div class="curr-cell">
+                            <span class="curr-rp">Rp</span>
+                            <span class="curr-val">{{ number_format($totals['target'] - $totals['realisasi_total'], 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                    <td style="width: 5%;" class="text-center">{{ number_format($totals['persen'], 2, ',', '.') }}%</td>
+                </tr>
+            @endif
+        </tbody>
     </table>
 
     <table style="width: 100%; border: none; margin-top: 50px;">
@@ -255,34 +316,34 @@
             <td style="width: 33%; border: none; text-align: center; vertical-align: top;">
                 @if($ptKiri)
                     <p style="margin: 0; min-height: 1.25em;">&nbsp;</p>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptKiri->jabatan }}</p>
+                    <p style="margin: 0;">{{ $ptKiri->jabatan }}</p>
                     <div style="height: 60px;"></div>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptKiri->nama }}</p>
+                    <p style="margin: 0;">{{ $ptKiri->nama }}</p>
                     <p style="margin: 0;">NIP. {{ $ptKiri->nip }}</p>
                 @endif
             </td>
             <td style="width: 34%; border: none; text-align: center; vertical-align: top;">
                 @if($ptTengah)
                     <p style="margin: 0; min-height: 1.25em;">&nbsp;</p>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptTengah->jabatan }}</p>
+                    <p style="margin: 0;">{{ $ptTengah->jabatan }}</p>
                     <div style="height: 60px;"></div>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptTengah->nama }}</p>
+                    <p style="margin: 0;">{{ $ptTengah->nama }}</p>
                     <p style="margin: 0;">NIP. {{ $ptTengah->nip }}</p>
                 @endif
             </td>
             <td style="width: 33%; border: none; text-align: center; vertical-align: top;">
                 @if($ptKanan)
                     <p style="margin: 0;">Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptKanan->jabatan }}</p>
+                    <p style="margin: 0;">{{ $ptKanan->jabatan }}</p>
                     <div style="height: 60px;"></div>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptKanan->nama }}</p>
+                    <p style="margin: 0;">{{ $ptKanan->nama }}</p>
                     <p style="margin: 0;">NIP. {{ $ptKanan->nip }}</p>
                 @else
                     <p style="margin: 0;">Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                    <p style="margin: 0; font-weight: bold;">&nbsp;</p>
+                    <p style="margin: 0;">&nbsp;</p>
                     <p style="margin: 0;">&nbsp;</p>
                     <div style="height: 60px;"></div>
-                    <p style="margin: 0; font-weight: bold;">...................................</p>
+                    <p style="margin: 0;">...................................</p>
                     <p style="margin: 0;">NIP. ...................................</p>
                 @endif
             </td>

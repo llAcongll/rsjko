@@ -47,7 +47,7 @@ async function loadPenyesuaian() {
     const tbody = document.getElementById('penyesuaianBody');
     if (!tbody) return;
 
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center"><i class="ph ph-spinner animate-spin"></i> Memuat data...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center"><i class="ph ph-spinner animate-spin"></i> Memuat data...</td></tr>`;
 
     try {
         const res = await fetch(`/dashboard/penyesuaian?page=${penyesuaianPage}&per_page=${penyesuaianPerPage}&search=${penyesuaianKeyword}&kategori=${penyesuaianBatchKategori}`, {
@@ -59,12 +59,15 @@ async function loadPenyesuaian() {
         updatePaginationPenyesuaian(data);
         updateSummaryPenyesuaian(data.aggregates);
     } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-red-500">Error: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-red-500">Error: ${err.message}</td></tr>`;
     }
 }
 
 function updateSummaryPenyesuaian(agg) {
     if (!agg) return;
+    const lunEl = document.getElementById('summaryTotalPelunasanPenyesuaian');
+    if (lunEl) lunEl.innerText = formatRupiah(agg.total_pelunasan || 0);
+
     const potEl = document.getElementById('summaryTotalPotonganPenyesuaian');
     if (potEl) potEl.innerText = formatRupiah(agg.total_potongan || 0);
 
@@ -77,24 +80,20 @@ function renderPenyesuaianTable(items, from) {
     tbody.innerHTML = '';
 
     if (items.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-gray-500">Tidak ada data ditemukan</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-gray-500">Tidak ada data ditemukan</td></tr>`;
         return;
     }
 
     items.forEach((item, index) => {
         const tr = document.createElement('tr');
-        const subKategori = item.sub_kategori ? ` <small class="text-slate-500">(${item.sub_kategori})</small>` : '';
         tr.innerHTML = `
             <td class="text-center">${from + index}</td>
             <td class="text-center">${formatDateIndo(item.tanggal)}</td>
-            <td>
-                <span class="badge ${item.kategori === 'BPJS' ? 'badge-primary' : 'badge-info'}">${item.kategori}</span>
-                ${subKategori}
-            </td>
-            <td>${item.perusahaan ? item.perusahaan.nama : '-'}</td>
+            <td class="text-sm font-medium text-slate-600">${item.keterangan || '-'}</td>
+            <td class="text-center"><span class="badge badge-default">${item.tahun_piutang || item.tahun}</span></td>
+            <td class="text-green-600 font-bold">${formatRupiahTable(item.pelunasan)}</td>
             <td class="text-red-600">${formatRupiahTable(item.potongan)}</td>
             <td class="text-red-600">${formatRupiahTable(item.administrasi_bank)}</td>
-            <td class="text-sm font-medium text-slate-600">${item.keterangan || '-'}</td>
             <td class="text-center">
                 <div class="flex justify-center gap-2">
                     <button class="btn-aksi detail" onclick="detailPenyesuaian(${item.id})" title="Detail">
@@ -194,6 +193,8 @@ async function submitPenyesuaian(e) {
         kategori: document.getElementById('penyesuaianKategori').value,
         sub_kategori: document.getElementById('penyesuaianSubKategori').value,
         perusahaan_id: document.getElementById('penyesuaianPerusahaanId').value,
+        tahun_piutang: document.getElementById('penyesuaianTahunPiutang').value,
+        pelunasan: document.getElementById('penyesuaianPelunasan').value || 0,
         potongan: document.getElementById('penyesuaianPotongan').value || 0,
         administrasi_bank: document.getElementById('penyesuaianAdm').value || 0,
         keterangan: document.getElementById('penyesuaianKeterangan').value,
@@ -242,9 +243,10 @@ window.editPenyesuaian = async function (id) {
 
         await loadPerusahaanByKategori();
         document.getElementById('penyesuaianPerusahaanId').value = item.perusahaan_id;
-
-        document.getElementById('penyesuaianPotongan').value = item.potongan;
-        document.getElementById('penyesuaianAdm').value = item.administrasi_bank;
+        document.getElementById('penyesuaianTahunPiutang').value = item.tahun_piutang || item.tahun;
+        document.getElementById('penyesuaianPelunasan').value = item.pelunasan || 0;
+        document.getElementById('penyesuaianPotongan').value = item.potongan || 0;
+        document.getElementById('penyesuaianAdm').value = item.administrasi_bank || 0;
         document.getElementById('penyesuaianKeterangan').value = item.keterangan || '';
 
     } catch (err) {
@@ -321,16 +323,20 @@ window.detailPenyesuaian = async function (id) {
                         </div>
                     </div>
                     <div>
-                        <span class="text-xs font-semibold text-slate-400 block mb-1">Kategori Potongan</span>
+                        <span class="text-xs font-semibold text-slate-400 block mb-1">Target Piutang Tahun</span>
                         <div class="flex items-center gap-2 text-slate-700">
-                            <i class="ph ph-tag-simple text-slate-400"></i>
-                            <span class="font-medium">${item.kategori}</span>
+                            <i class="ph ph-calendar text-slate-400"></i>
+                            <span class="font-bold underline text-purple-700">${item.tahun_piutang || item.tahun}</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Financial Calculation -->
                 <div class="bg-white border-2 border-slate-100 rounded-2xl p-5 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-slate-500 font-medium text-green-600 font-bold">Pelunasan Tunai</span>
+                        <span class="font-bold text-green-700">${formatRupiah(item.pelunasan)}</span>
+                    </div>
                     <div class="flex justify-between items-center text-sm">
                         <span class="text-slate-500 font-medium">Potongan Jasa (70:30)</span>
                         <span class="font-bold text-slate-700">${formatRupiah(item.potongan)}</span>
@@ -340,8 +346,8 @@ window.detailPenyesuaian = async function (id) {
                         <span class="font-bold text-slate-700">${formatRupiah(item.administrasi_bank)}</span>
                     </div>
                     <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
-                        <span class="text-sm font-bold text-slate-900 uppercase tracking-wide">Total Pengurang</span>
-                        <span class="text-xl font-black text-red-600">${formatRupiah(parseFloat(item.potongan) + parseFloat(item.administrasi_bank))}</span>
+                        <span class="text-sm font-bold text-slate-900 uppercase tracking-wide">Total Cleared</span>
+                        <span class="text-xl font-black text-blue-600">${formatRupiah(parseFloat(item.pelunasan) + parseFloat(item.potongan) + parseFloat(item.administrasi_bank))}</span>
                     </div>
                 </div>
 

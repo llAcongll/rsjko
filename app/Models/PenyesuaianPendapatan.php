@@ -12,6 +12,8 @@ class PenyesuaianPendapatan extends Model
         'kategori',
         'sub_kategori',
         'perusahaan_id',
+        'tahun_piutang',
+        'pelunasan',
         'potongan',
         'administrasi_bank',
         'keterangan'
@@ -20,6 +22,7 @@ class PenyesuaianPendapatan extends Model
     protected $casts = [
         'tanggal' => 'date',
         'tahun' => 'integer',
+        'pelunasan' => 'decimal:2',
         'potongan' => 'decimal:2',
         'administrasi_bank' => 'decimal:2',
     ];

@@ -46,6 +46,7 @@ class PenyesuaianPendapatanController extends Controller
             $paginated = $query->paginate($perPage);
 
             $totals = $totalQuery->reorder()->selectRaw('
+                SUM(pelunasan) as total_pelunasan,
                 SUM(potongan) as total_potongan,
                 SUM(administrasi_bank) as total_adm_bank
             ')->first();
@@ -58,6 +59,7 @@ class PenyesuaianPendapatanController extends Controller
                 'current_page' => $paginated->currentPage(),
                 'last_page' => $paginated->lastPage(),
                 'aggregates' => [
+                    'total_pelunasan' => $totals->total_pelunasan ?? 0,
                     'total_potongan' => $totals->total_potongan ?? 0,
                     'total_adm_bank' => $totals->total_adm_bank ?? 0,
                 ]
@@ -78,6 +80,8 @@ class PenyesuaianPendapatanController extends Controller
             'kategori' => 'required|in:BPJS,JAMINAN',
             'sub_kategori' => 'nullable|string',
             'perusahaan_id' => 'required|exists:perusahaans,id',
+            'tahun_piutang' => 'required|integer',
+            'pelunasan' => 'nullable|numeric|min:0',
             'potongan' => 'nullable|numeric|min:0',
             'administrasi_bank' => 'nullable|numeric|min:0',
             'keterangan' => 'nullable|string|max:500',
@@ -105,6 +109,8 @@ class PenyesuaianPendapatanController extends Controller
             'kategori' => 'required|in:BPJS,JAMINAN',
             'sub_kategori' => 'nullable|string',
             'perusahaan_id' => 'required|exists:perusahaans,id',
+            'tahun_piutang' => 'required|integer',
+            'pelunasan' => 'nullable|numeric|min:0',
             'potongan' => 'nullable|numeric|min:0',
             'administrasi_bank' => 'nullable|numeric|min:0',
             'keterangan' => 'nullable|string|max:500',

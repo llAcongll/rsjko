@@ -6,11 +6,20 @@ use Illuminate\Http\Request;
 use App\Models\PendapatanLain;
 use App\Models\Ruangan;
 use App\Models\Mou;
+use App\Models\ActivityLog;
+use App\Services\RevenueService;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class PendapatanLainController extends Controller
 {
+    protected $service;
+
+    public function __construct(RevenueService $service)
+    {
+        $this->service = $service;
+    }
+
     public function index(Request $request)
     {
         abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_VIEW'), 403);
@@ -19,35 +28,29 @@ class PendapatanLainController extends Controller
         $query = PendapatanLain::with('ruangan', 'mou')
             ->where('tahun', session('tahun_anggaran'))
             ->orderBy('tanggal', 'asc');
+
         if ($search) {
             $query->where(function ($q) use ($search) {
-                // Try to handle Indonesian date format d/m/Y
-                $dateSearch = $search;
-                if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $search)) {
-                    try {
-                        $dateSearch = Carbon::createFromFormat('d/m/Y', $search)->format('Y-m-d');
-                    } catch (\Exception $e) {
-                        // ignore invalid date
-                    }
-                }
+                $dateSearch = $this->service->parseDate($search) ?? $search;
 
                 $q->where('nama_pasien', 'like', "%{$search}%")
                     ->orWhere('transaksi', 'like', "%{$search}%")
-                    ->orWhereDate('tanggal', '=', $dateSearch) // Exact date match
+                    ->orWhereDate('tanggal', '=', $dateSearch)
                     ->orWhere('tanggal', 'like', "%{$search}%")
                     ->orWhereHas('ruangan', function ($r) use ($search) {
                         $r->where('nama', 'like', "%{$search}%");
                     });
             });
         }
+
         if ($request->header('Accept') === 'application/json') {
             $totalQuery = clone $query;
             $paginated = $query->paginate($perPage);
             $totals = $totalQuery->reorder()->selectRaw('
-SUM(rs_tindakan + rs_obat) as total_rs,
-SUM(pelayanan_tindakan + pelayanan_obat) as total_pelayanan,
-SUM(total) as grand_total
-')->first();
+                SUM(rs_tindakan + rs_obat) as total_rs,
+                SUM(pelayanan_tindakan + pelayanan_obat) as total_pelayanan,
+                SUM(total) as grand_total
+            ')->first();
 
             return response()->json([
                 'data' => $paginated->items(),
@@ -83,14 +86,25 @@ SUM(total) as grand_total
             'pelayanan_tindakan' => 'nullable|numeric|min:0',
             'pelayanan_obat' => 'nullable|numeric|min:0',
         ]);
+
         if ($data['metode_pembayaran'] === 'TUNAI') {
             $data['bank'] = 'BRK';
             $data['metode_detail'] = 'SETOR_TUNAI';
         }
-        $data['total'] = ($data['rs_tindakan'] ?? 0) + ($data['rs_obat'] ?? 0) + ($data['pelayanan_tindakan'] ?? 0) +
-            ($data['pelayanan_obat'] ?? 0);
+
+        $data['total'] = ($data['rs_tindakan'] ?? 0) + ($data['rs_obat'] ?? 0) + ($data['pelayanan_tindakan'] ?? 0) + ($data['pelayanan_obat'] ?? 0);
         $data['tahun'] = session('tahun_anggaran');
-        PendapatanLain::create($data);
+        $pendapatan = PendapatanLain::create($data);
+
+        ActivityLog::log(
+            'CREATE',
+            'PENDAPATAN_LAIN',
+            "Menambah pendapatan lain-lain pasien {$pendapatan->nama_pasien}",
+            $pendapatan->id,
+            null,
+            $pendapatan->toArray()
+        );
+
         return response()->json(['success' => true]);
     }
 
@@ -118,20 +132,44 @@ SUM(total) as grand_total
             'pelayanan_tindakan' => 'nullable|numeric|min:0',
             'pelayanan_obat' => 'nullable|numeric|min:0',
         ]);
+
         if ($data['metode_pembayaran'] === 'TUNAI') {
             $data['bank'] = 'BRK';
             $data['metode_detail'] = 'SETOR_TUNAI';
         }
-        $data['total'] = ($data['rs_tindakan'] ?? 0) + ($data['rs_obat'] ?? 0) + ($data['pelayanan_tindakan'] ?? 0) +
-            ($data['pelayanan_obat'] ?? 0);
+
+        $data['total'] = ($data['rs_tindakan'] ?? 0) + ($data['rs_obat'] ?? 0) + ($data['pelayanan_tindakan'] ?? 0) + ($data['pelayanan_obat'] ?? 0);
+        $oldValues = $pendapatan->toArray();
         $pendapatan->update($data);
+
+        ActivityLog::log(
+            'UPDATE',
+            'PENDAPATAN_LAIN',
+            "Mengubah pendapatan lain-lain pasien {$pendapatan->nama_pasien}",
+            $pendapatan->id,
+            $oldValues,
+            $pendapatan->toArray()
+        );
+
         return response()->json(['success' => true]);
     }
 
     public function destroy($id)
     {
         abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_CRUD'), 403);
-        PendapatanLain::findOrFail($id)->delete();
+        $pendapatan = PendapatanLain::findOrFail($id);
+        $oldValues = $pendapatan->toArray();
+        $pendapatan->delete();
+
+        ActivityLog::log(
+            'DELETE',
+            'PENDAPATAN_LAIN',
+            "Menghapus pendapatan lain-lain pasien {$pendapatan->nama_pasien}",
+            $id,
+            $oldValues,
+            null
+        );
+
         return response()->json(['success' => true]);
     }
 
@@ -163,19 +201,7 @@ SUM(total) as grand_total
         $callback = function () use ($columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
-            fputcsv($file, [
-                '2026-02-15',
-                'UMUM LAIN',
-                'RADIOLOGI',
-                'LAIN-LAIN PIHAK KE-3',
-                'NON_TUNAI',
-                'BRK',
-                'TRANSFER',
-                '500000',
-                '250000',
-                '300000',
-                '100000'
-            ]);
+            fputcsv($file, ['2026-02-15', 'UMUM LAIN', 'RADIOLOGI', 'LAIN-LAIN PIHAK KE-3', 'NON_TUNAI', 'BRK', 'TRANSFER', '500000', '250000', '300000', '100000']);
             fclose($file);
         };
 
@@ -186,63 +212,34 @@ SUM(total) as grand_total
     {
         abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_IMPORT'), 403);
         $request->validate(['file' => 'required|mimes:csv,txt']);
+
         $file = $request->file('file');
         $filePath = $file->getRealPath();
-
         $firstLine = fgets(fopen($filePath, 'r'));
         $delimiter = (strpos($firstLine, ';') !== false) ? ';' : ',';
-
         $handle = fopen($filePath, 'r');
+
         fgetcsv($handle, 0, $delimiter); // Skip header
 
         $ruangans = Ruangan::all()->pluck('id', 'nama')->mapWithKeys(fn($id, $name) => [strtoupper($name) => $id]);
         $mous = Mou::all()->pluck('id', 'nama')->mapWithKeys(fn($id, $name) => [strtoupper($name) => $id]);
 
         $count = 0;
-        DB::beginTransaction();
-        try {
+        $this->service->transaction(function () use ($handle, $delimiter, $ruangans, $mous, &$count) {
             while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 if (count($row) < 4 || empty($row[0]))
                     continue;
+
                 $namaRuangan = strtoupper(trim($row[2] ?? ''));
                 $ruanganId = $ruangans[$namaRuangan] ?? 39;
                 $namaMou = strtoupper(trim($row[3] ?? ''));
                 $mouId = $mous[$namaMou] ?? null;
-                $tanggalStr = trim($row[0]);
-                try {
-                    $tanggal = str_contains($tanggalStr, '/') ? Carbon::createFromFormat(
-                        'd/m/Y',
-                        $tanggalStr
-                    )->format('Y-m-d')
-                        : Carbon::parse($tanggalStr)->format('Y-m-d');
-                } catch (\Exception $e) {
-                    $tanggal = $tanggalStr;
-                }
+                $tanggal = $this->service->parseDate($row[0]);
 
-                $parseNumeric = function ($v) {
-                    if (empty($v))
-                        return 0;
-                    $v = preg_replace('/[^-0-9,.]/', '', $v);
-                    $latC = strrpos($v, ',');
-                    $latD = strrpos($v, '.');
-                    if ($latC !== false && $latD !== false) {
-                        return ($latC > $latD) ? (float) str_replace(',', '.', str_replace('.', '', $v)) : (float) str_replace(',', '', $v);
-                    }
-                    if ($latC !== false)
-                        return (strlen($v) - $latC === 4) ? (float) str_replace(',', '', $v) : (float) str_replace(',', '.', $v);
-                    if ($latD !== false)
-                        return (strlen($v) - $latD === 4) ? (float) str_replace('.', '', $v) : (float) $v;
-                    return (float) $v;
-                };
-
-                $rsT = $parseNumeric($row[7] ?? 0);
-                $rsO = $parseNumeric($row[8] ?? 0);
-                $plT = $parseNumeric($row[9] ?? 0);
-                $plO = $parseNumeric($row[10] ?? 0);
-
-                $metode = str_replace(' ', '_', strtoupper(trim($row[4] ?? 'TUNAI')));
-                $bank = strtoupper(trim($row[5] ?? 'BRK'));
-                $detail = str_replace(' ', '_', strtoupper(trim($row[6] ?? 'SETOR_TUNAI')));
+                $rsT = $this->service->parseNumeric($row[7] ?? 0);
+                $rsO = $this->service->parseNumeric($row[8] ?? 0);
+                $plT = $this->service->parseNumeric($row[9] ?? 0);
+                $plO = $this->service->parseNumeric($row[10] ?? 0);
 
                 PendapatanLain::create([
                     'tanggal' => $tanggal,
@@ -250,9 +247,9 @@ SUM(total) as grand_total
                     'ruangan_id' => $ruanganId,
                     'mou_id' => $mouId,
                     'transaksi' => $namaMou ?: 'Lain-lain Import',
-                    'metode_pembayaran' => $metode,
-                    'bank' => $bank,
-                    'metode_detail' => $detail,
+                    'metode_pembayaran' => str_replace(' ', '_', strtoupper(trim($row[4] ?? 'TUNAI'))),
+                    'bank' => strtoupper(trim($row[5] ?? 'BRK')),
+                    'metode_detail' => str_replace(' ', '_', strtoupper(trim($row[6] ?? 'SETOR_TUNAI'))),
                     'rs_tindakan' => $rsT,
                     'rs_obat' => $rsO,
                     'pelayanan_tindakan' => $plT,
@@ -262,23 +259,23 @@ SUM(total) as grand_total
                 ]);
                 $count++;
             }
-            DB::commit();
-            fclose($handle);
-            return response()->json(['success' => true, 'count' => $count]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            fclose($handle);
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
+        });
+
+        fclose($handle);
+        ActivityLog::log('IMPORT', 'PENDAPATAN_LAIN', "Berhasil mengimpor {$count} data pendapatan lain-lain", null, null, null);
+        return response()->json(['success' => true, 'count' => $count]);
     }
 
     public function bulkDelete(Request $request)
     {
         abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_BULK'), 403);
         $request->validate(['tanggal' => 'required|date']);
-        $count = PendapatanLain::where('tanggal', $request->tanggal)
-            ->where('tahun', session('tahun_anggaran'))
-            ->delete();
+
+        $query = PendapatanLain::where('tanggal', $request->tanggal)->where('tahun', session('tahun_anggaran'));
+        $count = $query->count();
+        $query->delete();
+
+        ActivityLog::log('DELETE', 'PENDAPATAN_LAIN', "Menghapus massal {$count} data pendapatan lain-lain tanggal {$request->tanggal}", null, null, null);
         return response()->json(['success' => true, 'count' => $count]);
     }
 }

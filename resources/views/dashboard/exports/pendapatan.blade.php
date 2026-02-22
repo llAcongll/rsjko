@@ -5,14 +5,14 @@
     <meta charset="utf-8">
     <style>
         .title {
-            font-family: sans-serif;
+            font-family: Arial, sans-serif;
             font-size: 16pt;
             font-weight: bold;
             text-align: center;
         }
 
         .subtitle {
-            font-family: sans-serif;
+            font-family: Arial, sans-serif;
             font-size: 11pt;
             text-align: center;
             margin-bottom: 20px;
@@ -21,7 +21,7 @@
         .table {
             border-collapse: collapse;
             width: 100%;
-            font-family: sans-serif;
+            font-family: Arial, sans-serif;
             font-size: 10pt;
         }
 
@@ -77,16 +77,16 @@
             <td colspan="5" class="text-center" style="border: none; font-size: 13pt; font-weight: bold;">ENGKU HAJI DAUD</td>
         </tr>
         <tr>
-            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Jalan Indun Suri – Simpang Busung Nomor 1 Tanjung Uban Kode Pos 29152</td>
+            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Jalan Indun Suri – Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152</td>
         </tr>
         <tr>
-            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Telepon (0771) 482655, 482796 • Faksimile (0771) 482795</td>
+            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795</td>
         </tr>
         <tr>
-            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Pos-el: rskjoehd@kepriprov.go.id</td>
+            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Pos-el: rsjkoehd@kepriprov.go.id</td>
         </tr>
         <tr>
-            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Laman: www.rsuehd.kepriprov.go.id</td>
+            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Laman : www.rsudehd.kepriprov.go.id</td>
         </tr>
         <tr>
             <td colspan="5" style="border-bottom: 2px solid #000; height: 10px;"></td>
@@ -318,8 +318,8 @@
             <td align="center">
                 @if($ptKiri)
                     <br>
-                    <b>{{ $ptKiri->jabatan }}</b><br><br><br><br>
-                    <b>{{ $ptKiri->nama }}</b><br>
+                    {{ $ptKiri->jabatan }}<br><br><br><br>
+                    {{ $ptKiri->nama }}<br>
                     NIP. {{ $ptKiri->nip }}
                 @endif
             </td>
@@ -327,8 +327,8 @@
             <td align="center">
                 @if($ptTengah)
                     <br>
-                    <b>{{ $ptTengah->jabatan }}</b><br><br><br><br>
-                    <b>{{ $ptTengah->nama }}</b><br>
+                    {{ $ptTengah->jabatan }}<br><br><br><br>
+                    {{ $ptTengah->nama }}<br>
                     NIP. {{ $ptTengah->nip }}
                 @endif
             </td>
@@ -336,13 +336,13 @@
             <td align="center">
                 Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
                 @if($ptKanan)
-                    <b>{{ $ptKanan->jabatan }}</b><br><br><br><br>
-                    <b>{{ $ptKanan->nama }}</b><br>
+                    {{ $ptKanan->jabatan }}<br><br><br><br>
+                    {{ $ptKanan->nama }}<br>
                     NIP. {{ $ptKanan->nip }}
                 @else
-                    <b>&nbsp;</b><br>
+                    &nbsp;<br>
                     &nbsp;<br><br><br><br>
-                    <b>...................................</b><br>
+                    ...................................<br>
                     NIP. ...................................
                 @endif
             </td>

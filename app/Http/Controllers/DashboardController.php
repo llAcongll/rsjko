@@ -19,7 +19,7 @@ class DashboardController extends BaseController
 
             'dashboard' => view('dashboard.pages.dashboard'),
 
-            'users' => Auth::user()->isAdmin()
+            'users' => (Auth::user()->isAdmin() || Auth::user()->hasPermission('USER_VIEW'))
             ? view('dashboard.pages.users', [
                 'users' => User::orderBy('username')->get()
             ])
@@ -73,7 +73,7 @@ class DashboardController extends BaseController
                         ? view('dashboard.pages.pengeluaran.anggaran')
                         : view('dashboard.pages.pendapatan.anggaran')
                     ) : abort(403),
-                    'logs' => Auth::user()->isAdmin() ? view('dashboard.pages.master.logs') : abort(403),
+                    'logs' => (Auth::user()->isAdmin() || Auth::user()->hasPermission('ACTIVITY_LOG_VIEW')) ? view('dashboard.pages.master.logs') : abort(403),
                     default => abort(404),
                 },
 

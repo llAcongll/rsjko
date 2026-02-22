@@ -6,12 +6,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
-  <title>SIPPBLUD EHD</title>
+  <title>SIPP BLUD EHD</title>
 
-  <link rel="icon" href="https://drive.google.com/thumbnail?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&sz=w100"
-    type="image/x-icon">
-  <link rel="shortcut icon" href="https://drive.google.com/thumbnail?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&sz=w100"
-    type="image/x-icon">
+  {{-- FAVICON & PWA --}}
+  <!-- Light mode -->
+  <link rel="icon" type="image/png" href="{{ asset('favicon-light.png') }}?v=1.2" media="(prefers-color-scheme: light)">
+  <!-- Dark mode -->
+  <link rel="icon" type="image/png" href="{{ asset('favicon-dark.png') }}?v=1.2" media="(prefers-color-scheme: dark)">
+  <!-- Fallback -->
+  <link rel="icon" type="image/png" href="{{ asset('favicon-light.png') }}?v=1.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}?v=1.2">
+  <link rel="manifest" href="{{ asset('site.webmanifest') }}?v=1.2">
+  <meta name="apple-mobile-web-app-title" content="SIPP BLUD EHD">
 
   {{-- GOOGLE FONTS & ICONS --}}
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,7 +34,7 @@
   <div class="login-container">
     <div class="login-card">
       <div class="login-header">
-        <img src="https://drive.google.com/thumbnail?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&sz=w400" class="logo"
+        <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w400" class="logo"
           alt="Logo Provinsi Kepulauan Riau" title="SIPPBLUD EHD">
         <div class="branding">
           <h1>SISTEM INFORMASI<br>PENDAPATAN DAN PENGELUARAN BLUD</h1>

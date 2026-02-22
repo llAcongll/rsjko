@@ -1,7 +1,11 @@
 <div class="laporan">
     <div class="laporan-header">
         <div class="header-left">
-            <h2><i class="ph ph-chart-line"></i> Laporan Realisasi Anggaran</h2>
+            <h2 style="display: flex; align-items: center; gap: 10px;">
+                <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w200"
+                    style="height: 36px; width: auto; object-fit: contain;" alt="Logo Prov Kepri">
+                Laporan Realisasi Anggaran
+            </h2>
             <p id="lraDescription">Perbandingan Pencapaian Pendapatan terhadap Target Anggaran Pendapatan</p>
         </div>
         <div class="header-right">
@@ -41,29 +45,32 @@
         <!-- Dynamic Cards -->
     </div>
 
-    <div class="laporan-section">
-        <div class="section-header">
-            <h3>Rincian Realisasi Per Kode Rekening</h3>
-        </div>
-        <div class="table-responsive">
-            <table class="report-table">
-                <thead>
-                    <tr>
-                        <th class="text-center" style="width: 150px; vertical-align: middle;">Kode Rekening</th>
-                        <th class="text-center" style="vertical-align: middle;">Uraian</th>
-                        <th class="text-center" style="text-align:right; vertical-align: middle;">Target Anggaran</th>
-                        <th class="text-center" style="text-align:center">Realisasi (Lalu)</th>
-                        <th class="text-center" style="text-align:center">Realisasi (Kini)</th>
-                        <th class="text-center" style="text-align:center">Realisasi (Total)</th>
-                        <th class="text-center" style="text-align:right; vertical-align: middle;">Selisih</th>
-                        <th class="text-center" style="text-align:center; vertical-align: middle;">%</th>
-                        <th class="text-center" style="width: 120px; vertical-align: middle;">Progres</th>
-                    </tr>
-                </thead>
-                <tbody id="laporanAnggaranBody">
-                    <!-- Dynamic -->
-                </tbody>
-            </table>
+    <div id="lraTableContainer">
+        <!-- Tables will be injected here dynamically by renderAnggaran -->
+        <div class="laporan-section">
+            <div class="table-responsive">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 150px; vertical-align: middle;">Kode Rekening</th>
+                            <th class="text-center" style="vertical-align: middle;">Uraian</th>
+                            <th class="text-center" style="text-align:right; vertical-align: middle;">Target Anggaran
+                            </th>
+                            <th class="text-center" style="text-align:center">Realisasi (Lalu)</th>
+                            <th class="text-center" style="text-align:center">Realisasi (Kini)</th>
+                            <th class="text-center" style="text-align:center">Realisasi (Total)</th>
+                            <th class="text-center" style="text-align:right; vertical-align: middle;">Selisih</th>
+                            <th class="text-center" style="text-align:center; vertical-align: middle;">%</th>
+                            <th class="text-center" style="width: 120px; vertical-align: middle;">Progres</th>
+                        </tr>
+                    </thead>
+                    <tbody id="laporanAnggaranBody">
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-slate-400">Memuat data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

@@ -3,8 +3,8 @@
     {{-- HEADER --}}
     <div class="dashboard-header">
         <div class="dashboard-header-left">
-            <h2><i class="ph ph-scissors"></i> Potongan & Adm Bank</h2>
-            <p>Kelola potongan tagihan dan biaya administrasi bank</p>
+            <h2><i class="ph ph-hand-coins"></i> Pelunasan & Potongan</h2>
+            <p>Kelola uang masuk, potongan tagihan, dan administrasi bank</p>
         </div>
 
         <div class="dashboard-header-right">
@@ -31,15 +31,26 @@
         }
 
         .penyesuaian-summary-container .dashboard-cards {
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             width: 100%;
-            max-width: 600px;
+            max-width: 900px;
             gap: 16px;
         }
     </style>
 
     <div class="penyesuaian-summary-container">
         <div class="dashboard-cards">
+            <div class="dash-card green">
+                <div class="dash-card-icon">
+                    <i class="ph ph-coins"></i>
+                </div>
+                <div class="dash-card-content">
+                    <span class="label">Total Pelunasan Tunai</span>
+                    <h3 id="summaryTotalPelunasanPenyesuaian">Rp 0</h3>
+                    <small>Uang tunai masuk</small>
+                </div>
+            </div>
+
             <div class="dash-card indigo">
                 <div class="dash-card-icon">
                     <i class="ph ph-scissors"></i>
@@ -100,11 +111,11 @@
                     <tr>
                         <th class="text-center" style="width: 50px;">No</th>
                         <th class="text-center" style="width: 110px;">Tanggal</th>
-                        <th class="text-center">Kategori</th>
-                        <th class="text-center">Perusahaan</th>
+                        <th class="text-center">Keterangan</th>
+                        <th class="text-center" style="width: 80px;">Tahun</th>
+                        <th class="text-center">Pelunasan</th>
                         <th class="text-center">Potongan</th>
                         <th class="text-center">Adm Bank</th>
-                        <th class="text-center">Keterangan</th>
                         <th class="text-center" style="width: 100px;">Aksi</th>
                     </tr>
                 </thead>

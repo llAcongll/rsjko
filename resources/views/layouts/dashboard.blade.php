@@ -3,12 +3,18 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>SIPPBLUD EHD</title>
+  <title>SIPP BLUD EHD</title>
 
-  <link rel="icon" href="https://drive.google.com/thumbnail?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&sz=w100"
-    type="image/x-icon">
-  <link rel="shortcut icon" href="https://drive.google.com/thumbnail?id=1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx&sz=w100"
-    type="image/x-icon">
+  {{-- FAVICON & PWA --}}
+  <!-- Light mode -->
+  <link rel="icon" type="image/png" href="{{ asset('favicon-light.png') }}?v=1.2" media="(prefers-color-scheme: light)">
+  <!-- Dark mode -->
+  <link rel="icon" type="image/png" href="{{ asset('favicon-dark.png') }}?v=1.2" media="(prefers-color-scheme: dark)">
+  <!-- Fallback -->
+  <link rel="icon" type="image/png" href="{{ asset('favicon-light.png') }}?v=1.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}?v=1.2">
+  <link rel="manifest" href="{{ asset('site.webmanifest') }}?v=1.2">
+  <meta name="apple-mobile-web-app-title" content="SIPP BLUD EHD">
 
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -52,7 +58,10 @@
 
   {{-- MOBILE HEADER --}}
   <div class="mobile-header">
-    <div class="mobile-logo">RSJKO EHD</div>
+    <div class="mobile-logo" style="display: flex; align-items: center; gap: 10px;">
+      <i class="ph ph-buildings" style="font-size: 28px; color: #0f172a;"></i>
+      <span>RSJKO EHD</span>
+    </div>
     <button class="menu-toggle" onclick="toggleSidebar()">
       <i class="ph ph-list"></i>
     </button>
@@ -60,8 +69,10 @@
 
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="logo-wrapper" style="flex-direction: row; gap: 12px; align-items: center;">
-        <i class="ph-fill ph-hospital" style="font-size: 32px; color: var(--accent-blue); min-width: 32px;"></i>
+      <div class="logo-wrapper">
+        <div class="hospital-icon-wrapper">
+          <i class="ph ph-buildings"></i>
+        </div>
         <span>RSJKO EHD</span>
       </div>
     </div>
@@ -300,11 +311,13 @@
               <span>Penanda Tangan</span>
             </button>
           @endif
-          @if(auth()->user()->isAdmin())
+          @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('USER_VIEW'))
             <button onclick="openUsers(this)">
               <i class="ph ph-users-three"></i>
               <span>Users</span>
             </button>
+          @endif
+          @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('ACTIVITY_LOG_VIEW'))
             <button onclick="openActivityLogs(this)">
               <i class="ph ph-fingerprint"></i>
               <span>Log Aktivitas</span>

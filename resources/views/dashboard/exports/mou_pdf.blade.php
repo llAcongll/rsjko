@@ -7,13 +7,13 @@
     <title>Laporan Kerjasama / MOU</title>
     <style>
         @page { margin: 1cm; }
-        body { font-family: sans-serif; font-size: 8pt; color: #333; }
+        body { font-family: Arial, sans-serif; font-size: 8pt; color: #333; }
         
         .header-kop { text-align: center; margin-bottom: 5px; }
         .header-kop h1 { margin: 0; padding: 0; font-size: 14pt; font-weight: normal; color: #000; }
         .header-kop h2 { margin: 0; padding: 0; font-size: 13pt; font-weight: bold; color: #000; }
         .header-kop .address { line-height: 1.4; margin-top: 5px; font-size: 8pt; font-weight: normal; color: #000; }
-        .header-line { border-bottom: 2px solid #000; margin-bottom: 20px; margin-top: 10px; }
+        .header-line { border-bottom: 4px solid #000; margin-bottom: 20px; margin-top: -10px; }
         
         .report-title { text-align: center; margin-bottom: 20px; width: 100%; }
         .report-title h3 { margin: 0 auto; font-size: 14pt; font-weight: bold; text-decoration: underline; text-align: center; }
@@ -33,17 +33,27 @@
     </style>
 </head>
 <body>
-    <div class="header-kop">
-        <h1>PEMERINTAH PROVINSI KEPULAUAN RIAU</h1>
-        <h2>RUMAH SAKIT JIWA DAN KETERGANTUNGAN OBAT</h2>
-        <h2>ENGKU HAJI DAUD</h2>
-        <div class="address">
-            Jalan Indun Suri – Simpang Busung Nomor 1 Tanjung Uban Kode Pos 29152<br>
-            Telepon (0771) 482655, 482796 • Faksimile (0771) 482795<br>
-            Pos-el: rskjoehd@kepriprov.go.id<br>
-            Laman: www.rsuehd.kepriprov.go.id
-        </div>
-    </div>
+    <table style="width: 100%; border: none; margin-bottom: 0;">
+        <tr>
+            <td style="width: 165px; border: none; vertical-align: top;">
+                <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w400"
+                    style="height: 165px; width: auto; object-fit: contain;">
+            </td>
+            <td style="border: none; text-align: center; vertical-align: top; padding-right: 165px;">
+                <h1 style="margin: 0; padding: 0; font-size: 14pt; font-weight: normal; color: #000; line-height: 1.2;">
+                    PEMERINTAH PROVINSI KEPULAUAN RIAU</h1>
+                <h2 style="margin: 0; padding: 0; font-size: 13pt; font-weight: bold; color: #000; line-height: 1.2;">RUMAH SAKIT
+                    JIWA DAN KETERGANTUNGAN OBAT</h2>
+                <h2 style="margin: 0; padding: 0; font-size: 13pt; font-weight: bold; color: #000; line-height: 1.2;">ENGKU HAJI
+                    DAUD</h2>
+                <div style="line-height: 1.4; margin-top: 10px; font-size: 8pt; font-weight: normal; color: #000;">
+                    Jalan Indun Suri - Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
+                    Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795<br>
+                    Pos-el: rsjkoehd@kepriprov.go.id Laman : www.rsudehd.kepriprov.go.id
+                </div>
+            </td>
+        </tr>
+    </table>
     <div class="header-line"></div>
 
     <div class="report-title">
@@ -146,34 +156,34 @@
             <td style="width: 33%; border: none; text-align: center; vertical-align: top;">
                 @if($ptKiri)
                     <p style="margin: 0; min-height: 1.25em;">&nbsp;</p>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptKiri->jabatan }}</p>
+                    <p style="margin: 0;">{{ $ptKiri->jabatan }}</p>
                     <div style="height: 60px;"></div>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptKiri->nama }}</p>
+                    <p style="margin: 0;">{{ $ptKiri->nama }}</p>
                     <p style="margin: 0;">NIP. {{ $ptKiri->nip }}</p>
                 @endif
             </td>
             <td style="width: 34%; border: none; text-align: center; vertical-align: top;">
                 @if($ptTengah)
                     <p style="margin: 0; min-height: 1.25em;">&nbsp;</p>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptTengah->jabatan }}</p>
+                    <p style="margin: 0;">{{ $ptTengah->jabatan }}</p>
                     <div style="height: 60px;"></div>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptTengah->nama }}</p>
+                    <p style="margin: 0;">{{ $ptTengah->nama }}</p>
                     <p style="margin: 0;">NIP. {{ $ptTengah->nip }}</p>
                 @endif
             </td>
             <td style="width: 33%; border: none; text-align: center; vertical-align: top;">
                 @if($ptKanan)
                     <p style="margin: 0;">Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptKanan->jabatan }}</p>
+                    <p style="margin: 0;">{{ $ptKanan->jabatan }}</p>
                     <div style="height: 60px;"></div>
-                    <p style="margin: 0; font-weight: bold;">{{ $ptKanan->nama }}</p>
+                    <p style="margin: 0;">{{ $ptKanan->nama }}</p>
                     <p style="margin: 0;">NIP. {{ $ptKanan->nip }}</p>
                 @else
                     <p style="margin: 0;">Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                    <p style="margin: 0; font-weight: bold;">&nbsp;</p>
+                    <p style="margin: 0;">&nbsp;</p>
                     <p style="margin: 0;">&nbsp;</p>
                     <div style="height: 60px;"></div>
-                    <p style="margin: 0; font-weight: bold;">...................................</p>
+                    <p style="margin: 0;">...................................</p>
                     <p style="margin: 0;">NIP. ...................................</p>
                 @endif
             </td>

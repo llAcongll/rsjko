@@ -47,30 +47,52 @@ body {
 }
 
 .sidebar-header {
-  padding: 32px 24px 20px;
+  padding: 32px 15px 20px;
   display: flex;
+  justify-content: flex-start;
   align-items: center;
 }
 
 .logo-wrapper {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.hospital-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.hospital-icon-wrapper i {
+  color: #fff;
+  font-size: 24px;
+}
+
+.sidebar:hover .hospital-icon-wrapper {
+  width: 40px;
+  height: 40px;
+}
+
+.sidebar:hover .hospital-icon-wrapper i {
+  font-size: 32px;
 }
 
 .logo-wrapper span {
   font-weight: 700;
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1.2;
   letter-spacing: -0.5px;
   color: #fff;
-}
-
-.logo-wrapper small {
-  font-size: 11px;
-  color: #94a3b8;
-  font-weight: 500;
-  margin-top: 2px;
+  white-space: nowrap;
 }
 
 .close-sidebar {
@@ -87,7 +109,7 @@ body {
  ===================== */
 .sidebar-content {
   flex: 1;
-  padding: 0 16px;
+  padding: 0 10px;
   overflow-y: auto;
 }
 
@@ -309,15 +331,13 @@ body {
   }
 
   /* 16.5px exactly centers the 32px hospital logo in the 65px wide sidebar */
-  .sidebar-header {
-    padding: 32px 16.5px 20px;
+
+  /* Align centers at exactly 31px (15px padding + 16px half-width of 32px icon) */
+  .sidebar button {
+    padding: 12px 11px;
   }
 
-  /* 16px (sidebar-content) + 6.5px (button left) = 22.5px. 
-     Exactly centers a 20px icon in the 65px wide sidebar */
-  .sidebar button {
-    padding: 12px 6.5px;
-  }
+  /* (10px content padding + 11px button padding + 10px half-width of 20px icon) = 31px */
 
   /* Make submenu items still indented but properly padded */
   .submenu-child button {
@@ -326,8 +346,10 @@ body {
 
   /* 12.5px exactly centers the 40px user avatar in the 65px wide sidebar */
   .sidebar-footer {
-    padding: 24px 12.5px;
+    padding: 24px 11px;
   }
+
+  /* (11px padding + 20px half-width of 40px avatar) = 31px */
 
   .sidebar .btn-logout {
     padding-left: 10px;
@@ -509,6 +531,11 @@ table tbody td {
 .badge-info {
   background: #dbeafe;
   color: #1d4ed8;
+}
+
+.badge-primary {
+  background: #e0e7ff;
+  color: #4338ca;
 }
 
 .badge-mini {

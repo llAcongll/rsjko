@@ -2,10 +2,8 @@
     <div class="page-header">
         <div class="header-left">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <div
-                    style="width: 44px; height: 44px; background: #eff6ff; color: #3b82f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
-                    <i class="ph ph-fingerprint"></i>
-                </div>
+                <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w200"
+                    style="height: 48px; width: auto; object-fit: contain;" alt="Logo Prov Kepri">
                 <div>
                     <h2 style="margin: 0;">Log Aktivitas Pengguna</h2>
                     <p style="margin: 0; color: #64748b; font-size: 13px;">Riwayat perubahan data pendapatan dan

@@ -11,7 +11,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        abort_unless(Auth::user()->isAdmin() || Auth::user()->hasPermission('USER_VIEW'), 403);
 
         return response()->json(
             User::select('id', 'username', 'role', 'permissions')->get()
@@ -20,7 +20,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        abort_unless(Auth::user()->isAdmin() || Auth::user()->hasPermission('USER_CRUD'), 403);
 
         $data = $request->validate([
             'username' => 'required|unique:users',
@@ -41,7 +41,7 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        abort_unless(Auth::user()->isAdmin() || Auth::user()->hasPermission('USER_CRUD'), 403);
 
         $data = $request->validate([
             'username' => 'required|unique:users,username,' . $user->id,
@@ -63,7 +63,7 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        abort_unless(Auth::user()->isAdmin() || Auth::user()->hasPermission('USER_CRUD'), 403);
 
         $user->delete();
 
@@ -72,7 +72,7 @@ class UserController extends Controller
 
     public function show(User $user)
     {
-        abort_unless(Auth::user()->isAdmin(), 403);
+        abort_unless(Auth::user()->isAdmin() || Auth::user()->hasPermission('USER_VIEW'), 403);
 
         return response()->json([
             'id' => $user->id,

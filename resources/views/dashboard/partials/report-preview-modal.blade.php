@@ -12,26 +12,37 @@
         <div id="previewContent"
             style="flex: 1; overflow-y: auto; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px;">
             <div id="previewFormalView"
-                style="background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); width: 100%; min-height: 100%; margin: 0 auto; padding: 40px; box-sizing: border-box; font-family: 'Inter', sans-serif;">
+                style="background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); width: 100%; min-height: 100%; margin: 0 auto; padding: 40px; box-sizing: border-box; font-family: Arial, sans-serif; color: black;">
 
                 {{-- KOP SURAT --}}
-                <div style="text-align: center; margin-bottom: 5px;">
-                    <h1 style="margin: 0; padding: 0; font-size: 14pt; font-weight: normal; color: #000;">
-                        PEMERINTAH PROVINSI KEPULAUAN RIAU</h1>
-                    <h2 style="margin: 0; padding: 0; font-size: 13pt; font-weight: bold; color: #000;">RUMAH SAKIT JIWA
-                        DAN KETERGANTUNGAN OBAT</h2>
-                    <h2 style="margin: 0; padding: 0; font-size: 13pt; font-weight: bold; color: #000;">ENGKU HAJI DAUD
-                    </h2>
-                    <div class="address"
-                        style="line-height: 1.4; margin-top: 5px; font-size: 8pt; font-weight: normal; color: #000;">
-                        Jalan Indun Suri – Simpang Busung Nomor 1 Tanjung Uban Kode Pos 29152<br>
-                        Telepon (0771) 482655, 482796 • Faksimile (0771) 482795<br>
-                        Pos-el: rskjoehd@kepriprov.go.id<br>
-                        Laman: www.rsuehd.kepriprov.go.id
+                <div style="display: flex; align-items: center; width: 100%; min-height: 165px; margin-bottom: 0;">
+                    <div style="width: 165px; display: flex; justify-content: flex-start;">
+                        <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w400"
+                            style="height: 165px; width: auto; object-fit: contain;" alt="Logo Prov Kepri">
                     </div>
+                    <div style="flex: 1; text-align: center; padding: 0 10px;">
+                        <h1
+                            style="margin: 0; padding: 0; font-size: 15pt; font-weight: normal; color: #000; line-height: 1.2;">
+                            PEMERINTAH PROVINSI KEPULAUAN RIAU</h1>
+                        <h2
+                            style="margin: 0; padding: 0; font-size: 16pt; font-weight: bold; color: #000; line-height: 1.2;">
+                            RUMAH SAKIT
+                            JIWA DAN KETERGANTUNGAN OBAT</h2>
+                        <h2
+                            style="margin: 0; padding: 0; font-size: 16pt; font-weight: bold; color: #000; line-height: 1.2;">
+                            ENGKU HAJI
+                            DAUD</h2>
+                        <div class="address"
+                            style="line-height: 1.4; margin-top: 0; font-size: 10pt; font-weight: normal; color: #000;">
+                            Jalan Indun Suri – Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
+                            Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795<br>
+                            Pos-el: rsjkoehd@kepriprov.go.id Laman : www.rsudehd.kepriprov.go.id
+                        </div>
+                    </div>
+                    <div style="width: 165px;"></div>
                 </div>
 
-                <div style="height: 2px; background: #000; margin: 15px 0 20px;"></div>
+                <div style="height: 4px; background: #000; margin: -10px 0 20px;"></div>
 
                 <div
                     style="text-align: center; margin-top: 20px; margin-bottom: 30px; width: 100%; position: relative;">
@@ -55,9 +66,9 @@
                     {{-- LEFT SIGNATORY SLOT --}}
                     <div id="ptPreviewAreaKiri" style="width: 32%; text-align: center; visibility: hidden;">
                         <p style="margin: 0; min-height: 1.25em;">&nbsp;</p>
-                        <p id="previewPtJabatanKiri" style="margin: 0; font-weight: bold; min-height: 1.2em;"></p>
+                        <p id="previewPtJabatanKiri" style="margin: 0; min-height: 1.2em;"></p>
                         <div style="height: 60px;"></div>
-                        <p id="previewPtNamaKiri" style="margin: 0; font-weight: bold;">
+                        <p id="previewPtNamaKiri" style="margin: 0;">
                             ...................................</p>
                         <p id="previewPtNipKiri" style="margin: 0;">NIP. ...................................</p>
                     </div>
@@ -65,9 +76,9 @@
                     {{-- MIDDLE SIGNATORY SLOT --}}
                     <div id="ptPreviewAreaTengah" style="width: 32%; text-align: center; visibility: hidden;">
                         <p style="margin: 0; min-height: 1.25em;">&nbsp;</p>
-                        <p id="previewPtJabatanTengah" style="margin: 0; font-weight: bold; min-height: 1.2em;"></p>
+                        <p id="previewPtJabatanTengah" style="margin: 0; min-height: 1.2em;"></p>
                         <div style="height: 60px;"></div>
-                        <p id="previewPtNamaTengah" style="margin: 0; font-weight: bold;">
+                        <p id="previewPtNamaTengah" style="margin: 0;">
                             ...................................</p>
                         <p id="previewPtNipTengah" style="margin: 0;">NIP. ...................................</p>
                     </div>
@@ -75,9 +86,9 @@
                     {{-- RIGHT SIGNATORY SLOT --}}
                     <div id="ptPreviewAreaKanan" style="width: 32%; text-align: center;">
                         <p style="margin: 0;">Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                        <p id="previewPtJabatanKanan" style="margin: 0; font-weight: bold; min-height: 1.2em;"></p>
+                        <p id="previewPtJabatanKanan" style="margin: 0; min-height: 1.2em;"></p>
                         <div style="height: 60px;"></div>
-                        <p id="previewPtNamaKanan" style="margin: 0; font-weight: bold;">
+                        <p id="previewPtNamaKanan" style="margin: 0;">
                             ...................................</p>
                         <p id="previewPtNipKanan" style="margin: 0;">NIP. ...................................</p>
                     </div>

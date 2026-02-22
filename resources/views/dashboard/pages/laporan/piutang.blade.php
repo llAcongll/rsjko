@@ -1,18 +1,26 @@
 <div class="laporan">
     <div class="laporan-header">
         <div class="header-left">
-            <h2><i class="ph ph-invoice"></i> Laporan Piutang</h2>
+            <h2 style="display: flex; align-items: center; gap: 10px;">
+                <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w200"
+                    style="height: 36px; width: auto; object-fit: contain;" alt="Logo Prov Kepri">
+                Laporan Piutang
+            </h2>
             <p>Rekapitulasi piutang berjalan dikelompokkan berdasarkan Perusahaan Penjamin</p>
         </div>
         <div class="header-right">
             <div class="laporan-filter-group">
                 <div class="filter-item">
-                    <label>Dari</label>
-                    <input type="date" id="laporanStart" class="filter-date-input">
-                </div>
-                <div class="filter-item">
-                    <label>Sampai</label>
-                    <input type="date" id="laporanEnd" class="filter-date-input">
+                    <label>Tahun Anggaran</label>
+                    <select id="laporanTahun" class="filter-date-input" style="width: 100px;">
+                        @php
+                            $currentY = date('Y');
+                            $sessionY = session('tahun_anggaran', $currentY);
+                        @endphp
+                        @for($y = $currentY; $y >= 2023; $y--)
+                            <option value="{{ $y }}" {{ $y == $sessionY ? 'selected' : '' }}>{{ $y }}</option>
+                        @endfor
+                    </select>
                 </div>
                 <button class="btn-filter" onclick="loadLaporan('PIUTANG')">
                     <i class="ph ph-magnifying-glass"></i>
@@ -67,13 +75,27 @@
         <div class="table-responsive">
             <table class="report-table">
                 <thead>
-                    <tr>
-                        <th class="text-center">Nama Perusahaan</th>
-                        <th class="text-center" style="text-align:right">Jumlah Piutang</th>
-                        <th class="text-center" style="text-align:right">Potongan</th>
-                        <th class="text-center" style="text-align:right">Adm Bank</th>
-                        <th class="text-center" style="text-align:right">Total Dibayar</th>
-                        <th class="text-center" style="text-align:right">Sisa Piutang</th>
+                    <tr style="background: #f8fafc;">
+                        <th rowspan="2" class="text-center" style="vertical-align: middle;">Perusahaan</th>
+                        <th colspan="4" class="text-center" style="border-bottom: 1px solid #e2e8f0;">Saldo Awal (Tahun
+                            Lalu)</th>
+                        <th colspan="4" class="text-center" style="border-bottom: 1px solid #e2e8f0;">Tahun Berjalan
+                        </th>
+                        <th rowspan="2" class="text-center" style="vertical-align: middle;">Pelunasan Total</th>
+                        <th rowspan="2" class="text-center" style="vertical-align: middle;">Potongan Total</th>
+                        <th rowspan="2" class="text-center" style="vertical-align: middle; color:#ef4444">Sisa 2025</th>
+                        <th rowspan="2" class="text-center" style="vertical-align: middle; background: #f1f5f9;">Saldo
+                            Akhir</th>
+                    </tr>
+                    <tr style="background: #f8fafc;">
+                        <th class="text-center">Piutang</th>
+                        <th class="text-center">Lunas</th>
+                        <th class="text-center">Pot</th>
+                        <th class="text-center">Adm</th>
+                        <th class="text-center">Piutang</th>
+                        <th class="text-center">Lunas</th>
+                        <th class="text-center">Pot</th>
+                        <th class="text-center">Adm</th>
                     </tr>
                 </thead>
                 <tbody id="laporanPiutangBody">

@@ -1,7 +1,11 @@
 <div class="laporan">
     <div class="laporan-header">
         <div class="header-left">
-            <h2><i class="ph ph-scales"></i> Laporan Rekonsiliasi</h2>
+            <h2 style="display: flex; align-items: center; gap: 10px;">
+                <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w200"
+                    style="height: 36px; width: auto; object-fit: contain;" alt="Logo Prov Kepri">
+                Laporan Rekonsiliasi
+            </h2>
             <p>Perbandingan data Rekening Koran (Bank) vs Modul Pendapatan</p>
         </div>
         <div class="header-right">

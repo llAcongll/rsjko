@@ -7,7 +7,7 @@
         .table {
             border-collapse: collapse;
             width: 100%;
-            font-family: sans-serif;
+            font-family: Arial, sans-serif;
             font-size: 10pt;
         }
 
@@ -75,13 +75,13 @@
                     </td>
                     <td class="text-center">{{ $isHeader ? '' : (float)$item->volume }}</td>
                     <td class="text-center">{{ $isHeader ? '' : $item->satuan }}</td>
-                    <td class="text-right">{{ $isHeader ? '' : number_format($item->tarif, 2, ',', '.') }}</td>
-                    <td class="text-right font-bold">{{ number_format($item->subtotal, 2, ',', '.') }}</td>
+                    <td class="text-right">{{ $isHeader ? '' : 'Rp ' . number_format($item->tarif, 2, ',', '.') }}</td>
+                    <td class="text-right font-bold">{{ 'Rp ' . number_format($item->subtotal, 2, ',', '.') }}</td>
                 </tr>
             @endforeach
             <tr class="font-bold" style="background-color: #f2f2f2;">
                 <td colspan="5" style="text-align: center; padding: 10px;">TOTAL ANGGARAN DPA</td>
-                <td class="text-right" style="padding: 10px;">{{ number_format($grandTotal, 2, ',', '.') }}</td>
+                <td class="text-right" style="padding: 10px;">{{ 'Rp ' . number_format($grandTotal, 2, ',', '.') }}</td>
             </tr>
         </tbody>
     </table>
@@ -92,8 +92,8 @@
             <td align="center" style="width: 30%;">
                 @if($ptKiri)
                     <br>
-                    <b>{{ $ptKiri->jabatan }}</b><br><br><br><br>
-                    <b>{{ $ptKiri->nama }}</b><br>
+                    {{ $ptKiri->jabatan }}<br><br><br><br>
+                    {{ $ptKiri->nama }}<br>
                     NIP. {{ $ptKiri->nip }}
                 @endif
             </td>
@@ -101,13 +101,13 @@
             <td align="center" style="width: 40%;">
                 Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
                 @if($ptKanan)
-                    <b>{{ $ptKanan->jabatan }}</b><br><br><br><br>
-                    <b>{{ $ptKanan->nama }}</b><br>
+                    {{ $ptKanan->jabatan }}<br><br><br><br>
+                    {{ $ptKanan->nama }}<br>
                     NIP. {{ $ptKanan->nip }}
                 @else
-                    <b>&nbsp;</b><br>
+                    &nbsp;<br>
                     &nbsp;<br><br><br><br>
-                    <b>...................................</b><br>
+                    ...................................<br>
                     NIP. ...................................
                 @endif
             </td>

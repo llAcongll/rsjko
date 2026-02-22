@@ -7,7 +7,7 @@
         .table {
             border-collapse: collapse;
             width: 100%;
-            font-family: sans-serif;
+            font-family: Arial, sans-serif;
             font-size: 10pt;
         }
 
@@ -120,8 +120,8 @@
             <td align="center">
                 @if($ptKiri)
                     <br>
-                    <b>{{ $ptKiri->jabatan }}</b><br><br><br><br>
-                    <b>{{ $ptKiri->nama }}</b><br>
+                    {{ $ptKiri->jabatan }}<br><br><br><br>
+                    {{ $ptKiri->nama }}<br>
                     NIP. {{ $ptKiri->nip }}
                 @endif
             </td>
@@ -129,8 +129,8 @@
             <td colspan="2" align="center">
                 @if($ptTengah)
                     <br>
-                    <b>{{ $ptTengah->jabatan }}</b><br><br><br><br>
-                    <b>{{ $ptTengah->nama }}</b><br>
+                    {{ $ptTengah->jabatan }}<br><br><br><br>
+                    {{ $ptTengah->nama }}<br>
                     NIP. {{ $ptTengah->nip }}
                 @endif
             </td>
@@ -138,13 +138,13 @@
             <td align="center">
                 Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
                 @if($ptKanan)
-                    <b>{{ $ptKanan->jabatan }}</b><br><br><br><br>
-                    <b>{{ $ptKanan->nama }}</b><br>
+                    {{ $ptKanan->jabatan }}<br><br><br><br>
+                    {{ $ptKanan->nama }}<br>
                     NIP. {{ $ptKanan->nip }}
                 @else
-                    <b>&nbsp;</b><br>
+                    &nbsp;<br>
                     &nbsp;<br><br><br><br>
-                    <b>...................................</b><br>
+                    ...................................<br>
                     NIP. ...................................
                 @endif
             </td>

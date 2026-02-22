@@ -7,11 +7,19 @@ use App\Models\PendapatanBpjs;
 use App\Models\Ruangan;
 use App\Models\Perusahaan;
 use App\Models\ActivityLog;
+use App\Services\RevenueService;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class PendapatanBpjsController extends Controller
 {
+    protected $service;
+
+    public function __construct(RevenueService $service)
+    {
+        $this->service = $service;
+    }
+
     /* =========================
        LIST DATA (AJAX TABLE)
     ========================= */
@@ -20,7 +28,7 @@ class PendapatanBpjsController extends Controller
         abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_VIEW'), 403);
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
-        $jenisBpjs = $request->get('jenis_bpjs'); // REGULAR | EVAKUASI | OBAT
+        $jenisBpjs = $request->get('jenis_bpjs');
 
         $query = PendapatanBpjs::with('ruangan', 'perusahaan')
             ->where('tahun', session('tahun_anggaran'))
@@ -32,19 +40,11 @@ class PendapatanBpjsController extends Controller
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                // Try to handle Indonesian date format d/m/Y
-                $dateSearch = $search;
-                if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $search)) {
-                    try {
-                        $dateSearch = Carbon::createFromFormat('d/m/Y', $search)->format('Y-m-d');
-                    } catch (\Exception $e) {
-                        // ignore invalid date
-                    }
-                }
+                $dateSearch = $this->service->parseDate($search) ?? $search;
 
                 $q->where('nama_pasien', 'like', "%{$search}%")
                     ->orWhere('no_sep', 'like', "%{$search}%")
-                    ->orWhereDate('tanggal', '=', $dateSearch) // Exact date match
+                    ->orWhereDate('tanggal', '=', $dateSearch)
                     ->orWhere('tanggal', 'like', "%{$search}%")
                     ->orWhereHas('ruangan', function ($r) use ($search) {
                         $r->where('nama', 'like', "%{$search}%");
@@ -56,7 +56,6 @@ class PendapatanBpjsController extends Controller
             $totalQuery = clone $query;
             $paginated = $query->paginate($perPage);
 
-            // Hitung total keseluruhan berdasarkan filter (bukan hanya per halaman)
             $totals = $totalQuery->reorder()->selectRaw('
                 SUM(rs_tindakan + rs_obat) as total_rs,
                 SUM(pelayanan_tindakan + pelayanan_obat) as total_pelayanan,
@@ -67,7 +66,6 @@ class PendapatanBpjsController extends Controller
             $pelayanan = $totals->total_pelayanan ?? 0;
             $total = $totals->grand_total ?? 0;
 
-            // Fetch deductions for BPJS category for the current year
             $dedQuery = DB::table('penyesuaian_pendapatans')
                 ->where('kategori', 'BPJS')
                 ->where('tahun', session('tahun_anggaran'));
@@ -140,22 +138,15 @@ class PendapatanBpjsController extends Controller
             'pelayanan_obat' => 'nullable|numeric|min:0',
         ]);
 
-        // No SEP wajib untuk REGULAR
         if ($data['jenis_bpjs'] === 'REGULAR' && empty($data['no_sep'])) {
-            return response()->json([
-                'message' => 'No SEP wajib diisi untuk BPJS Regular'
-            ], 422);
+            return response()->json(['message' => 'No SEP wajib diisi untuk BPJS Regular'], 422);
         }
 
         if ($data['metode_pembayaran'] === 'TUNAI') {
             $data['bank'] = 'BRK';
             $data['metode_detail'] = 'SETOR_TUNAI';
-        } else {
-            if (empty($data['bank']) || empty($data['metode_detail'])) {
-                return response()->json([
-                    'message' => 'Bank dan metode detail wajib diisi untuk Non Tunai'
-                ], 422);
-            }
+        } elseif (empty($data['bank']) || empty($data['metode_detail'])) {
+            return response()->json(['message' => 'Bank dan metode detail wajib diisi untuk Non Tunai'], 422);
         }
 
         $data['transaksi'] = $data['transaksi'] ?? 'BPJS';
@@ -163,13 +154,7 @@ class PendapatanBpjsController extends Controller
         $data['rs_obat'] = $data['rs_obat'] ?? 0;
         $data['pelayanan_tindakan'] = $data['pelayanan_tindakan'] ?? 0;
         $data['pelayanan_obat'] = $data['pelayanan_obat'] ?? 0;
-
-        $data['total'] =
-            $data['rs_tindakan'] +
-            $data['rs_obat'] +
-            $data['pelayanan_tindakan'] +
-            $data['pelayanan_obat'];
-
+        $data['total'] = $data['rs_tindakan'] + $data['rs_obat'] + $data['pelayanan_tindakan'] + $data['pelayanan_obat'];
         $data['tahun'] = session('tahun_anggaran');
 
         $pendapatan = PendapatanBpjs::create($data);
@@ -212,20 +197,14 @@ class PendapatanBpjsController extends Controller
         ]);
 
         if ($data['jenis_bpjs'] === 'REGULAR' && empty($data['no_sep'])) {
-            return response()->json([
-                'message' => 'No SEP wajib diisi untuk BPJS Regular'
-            ], 422);
+            return response()->json(['message' => 'No SEP wajib diisi untuk BPJS Regular'], 422);
         }
 
         if ($data['metode_pembayaran'] === 'TUNAI') {
             $data['bank'] = 'BRK';
             $data['metode_detail'] = 'SETOR_TUNAI';
-        } else {
-            if (empty($data['bank']) || empty($data['metode_detail'])) {
-                return response()->json([
-                    'message' => 'Bank dan metode detail wajib diisi untuk Non Tunai'
-                ], 422);
-            }
+        } elseif (empty($data['bank']) || empty($data['metode_detail'])) {
+            return response()->json(['message' => 'Bank dan metode detail wajib diisi untuk Non Tunai'], 422);
         }
 
         $data['transaksi'] = $data['transaksi'] ?? 'BPJS';
@@ -233,12 +212,7 @@ class PendapatanBpjsController extends Controller
         $data['rs_obat'] = $data['rs_obat'] ?? 0;
         $data['pelayanan_tindakan'] = $data['pelayanan_tindakan'] ?? 0;
         $data['pelayanan_obat'] = $data['pelayanan_obat'] ?? 0;
-
-        $data['total'] =
-            $data['rs_tindakan'] +
-            $data['rs_obat'] +
-            $data['pelayanan_tindakan'] +
-            $data['pelayanan_obat'];
+        $data['total'] = $data['rs_tindakan'] + $data['rs_obat'] + $data['pelayanan_tindakan'] + $data['pelayanan_obat'];
 
         $oldValues = $pendapatan->toArray();
         $pendapatan->update($data);
@@ -319,10 +293,7 @@ class PendapatanBpjsController extends Controller
         $callback = function () use ($columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
-
-            // Contoh data
             fputcsv($file, ['2026-02-15', 'REGULAR', '0001R001', 'BUDI', 'AMBULAN', 'BPJS KESEHATAN', 'NON_TUNAI', 'BRK', 'TRANSFER', '150000', '50000', '100000', '25000']);
-
             fclose($file);
         };
 
@@ -332,101 +303,48 @@ class PendapatanBpjsController extends Controller
     public function import(Request $request)
     {
         abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_IMPORT'), 403);
-        $request->validate([
-            'file' => 'required|mimes:csv,txt'
-        ]);
+        $request->validate(['file' => 'required|mimes:csv,txt']);
 
         $file = $request->file('file');
         $filePath = $file->getRealPath();
-
-        // Deteksi Delimiter (Koma atau Titik Koma)
         $firstLine = fgets(fopen($filePath, 'r'));
         $delimiter = (strpos($firstLine, ';') !== false) ? ';' : ',';
-
         $handle = fopen($filePath, 'r');
 
-        // Skip header
-        fgetcsv($handle, 0, $delimiter);
+        fgetcsv($handle, 0, $delimiter); // Skip header
 
-        $ruangans = Ruangan::all()->pluck('id', 'nama')->mapWithKeys(function ($id, $name) {
-            return [strtoupper($name) => $id];
-        });
-
-        $perusahaans = Perusahaan::all()->pluck('id', 'nama')->mapWithKeys(function ($id, $name) {
-            return [strtoupper($name) => $id];
-        });
+        $ruangans = Ruangan::all()->pluck('id', 'nama')->mapWithKeys(fn($id, $name) => [strtoupper($name) => $id]);
+        $perusahaans = Perusahaan::all()->pluck('id', 'nama')->mapWithKeys(fn($id, $name) => [strtoupper($name) => $id]);
 
         $count = 0;
-        DB::beginTransaction();
-        try {
+        $this->service->transaction(function () use ($handle, $delimiter, $ruangans, $perusahaans, &$count) {
             while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
-                // Lewati jika baris kosong atau kolom tidak cukup (minimal 4 kolom: tgl, jenis, sep, nama)
-                if (count($row) < 4 || empty($row[0])) {
+                if (count($row) < 4 || empty($row[0]))
                     continue;
-                }
 
                 $namaRuangan = strtoupper(trim($row[4] ?? ''));
-                $ruanganId = $ruangans[$namaRuangan] ?? 39; // default Lain-lain if not found
+                $ruanganId = $ruangans[$namaRuangan] ?? 39;
+                $perusahaanId = $perusahaans[strtoupper(trim($row[5] ?? ''))] ?? null;
 
-                // Lookup perusahaan by name (kolom 5)
-                $namaPerusahaan = strtoupper(trim($row[5] ?? ''));
-                $perusahaanId = $perusahaans[$namaPerusahaan] ?? null;
-
-                // Logika Filter Jenis BPJS khusus (Ambulan -> Evakuasi, Apotek -> Obat)
                 $jenisBpjs = strtoupper($row[1] ?? 'REGULAR');
-                if ($namaRuangan === 'AMBULAN' || $namaRuangan === 'AMBULANCE') {
+                if ($namaRuangan === 'AMBULAN' || $namaRuangan === 'AMBULANCE')
                     $jenisBpjs = 'EVAKUASI';
-                } elseif ($namaRuangan === 'APOTEK') {
+                elseif ($namaRuangan === 'APOTEK')
                     $jenisBpjs = 'OBAT';
-                }
 
-                // Kolom index geser +1 karena Perusahaan di index 5
-                $parseNumeric = function ($v) {
-                    if (empty($v))
-                        return 0;
-                    $v = preg_replace('/[^-0-9,.]/', '', $v);
-                    $latC = strrpos($v, ',');
-                    $latD = strrpos($v, '.');
-                    if ($latC !== false && $latD !== false) {
-                        return ($latC > $latD) ? (float) str_replace(',', '.', str_replace('.', '', $v)) : (float) str_replace(',', '', $v);
-                    }
-                    if ($latC !== false)
-                        return (strlen($v) - $latC === 4) ? (float) str_replace(',', '', $v) : (float) str_replace(',', '.', $v);
-                    if ($latD !== false)
-                        return (strlen($v) - $latD === 4) ? (float) str_replace('.', '', $v) : (float) $v;
-                    return (float) $v;
-                };
+                $rsT = $this->service->parseNumeric($row[9] ?? 0);
+                $rsO = $this->service->parseNumeric($row[10] ?? 0);
+                $plT = $this->service->parseNumeric($row[11] ?? 0);
+                $plO = $this->service->parseNumeric($row[12] ?? 0);
+                $tanggal = $this->service->parseDate($row[0]);
 
-                $rsT = $parseNumeric($row[9] ?? 0);
-                $rsO = $parseNumeric($row[10] ?? 0);
-                $plT = $parseNumeric($row[11] ?? 0);
-                $plO = $parseNumeric($row[12] ?? 0);
-
-                $tanggalStr = trim($row[0]);
-                try {
-                    // Coba parse format DD/MM/YYYY yang umum di Excel Indonesia
-                    if (str_contains($tanggalStr, '/')) {
-                        $tanggal = Carbon::createFromFormat('d/m/Y', $tanggalStr)->format('Y-m-d');
-                    } else {
-                        $tanggal = Carbon::parse($tanggalStr)->format('Y-m-d');
-                    }
-                } catch (\Exception $e) {
-                    $tanggal = $tanggalStr; // fallback jika gagal parse
-                }
-
-                // Enforce conditional nominal rules based on BPJS type
                 if ($jenisBpjs === 'OBAT') {
                     $rsT = 0;
                     $plT = 0;
                 } else {
-                    // REGULAR or EVAKUASI
                     $rsO = 0;
                     $plO = 0;
                 }
-
-                $metode = str_replace(' ', '_', strtoupper(trim($row[6] ?? 'TUNAI')));
-                $bank = strtoupper(trim($row[7] ?? 'BRK'));
-                $detail = str_replace(' ', '_', strtoupper(trim($row[8] ?? 'SETOR_TUNAI')));
 
                 PendapatanBpjs::create([
                     'tanggal' => $tanggal,
@@ -435,9 +353,9 @@ class PendapatanBpjsController extends Controller
                     'nama_pasien' => $row[3] ?? 'Tanpa Nama',
                     'ruangan_id' => $ruanganId,
                     'perusahaan_id' => $perusahaanId,
-                    'metode_pembayaran' => $metode,
-                    'bank' => $bank,
-                    'metode_detail' => $detail,
+                    'metode_pembayaran' => str_replace(' ', '_', strtoupper(trim($row[6] ?? 'TUNAI'))),
+                    'bank' => strtoupper(trim($row[7] ?? 'BRK')),
+                    'metode_detail' => str_replace(' ', '_', strtoupper(trim($row[8] ?? 'SETOR_TUNAI'))),
                     'rs_tindakan' => $rsT,
                     'rs_obat' => $rsO,
                     'pelayanan_tindakan' => $plT,
@@ -448,34 +366,26 @@ class PendapatanBpjsController extends Controller
                 ]);
                 $count++;
             }
-            DB::commit();
-            fclose($handle);
-            return response()->json(['success' => true, 'count' => $count]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            fclose($handle);
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
+        });
+
+        fclose($handle);
+        ActivityLog::log('IMPORT', 'PENDAPATAN_BPJS', "Berhasil mengimpor {$count} data pendapatan BPJS", null, null, null);
+        return response()->json(['success' => true, 'count' => $count]);
     }
 
-    /* =========================
-       BULK DELETE
-    ========================= */
     public function bulkDelete(Request $request)
     {
         abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_BULK'), 403);
-        $request->validate([
-            'tanggal' => 'required|date'
-        ]);
+        $request->validate(['tanggal' => 'required|date']);
 
-        $query = PendapatanBpjs::where('tanggal', $request->tanggal)
-            ->where('tahun', session('tahun_anggaran'));
-
-        if ($request->jenis_bpjs) {
+        $query = PendapatanBpjs::where('tanggal', $request->tanggal)->where('tahun', session('tahun_anggaran'));
+        if ($request->jenis_bpjs)
             $query->where('jenis_bpjs', $request->jenis_bpjs);
-        }
 
-        $count = $query->delete();
+        $count = $query->count();
+        $query->delete();
+
+        ActivityLog::log('DELETE', 'PENDAPATAN_BPJS', "Menghapus massal {$count} data pendapatan BPJS tanggal {$request->tanggal}", null, null, null);
 
         return response()->json(['success' => true, 'count' => $count]);
     }

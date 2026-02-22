@@ -11,12 +11,15 @@ window.initLaporan = function (type = 'PENDAPATAN') {
 window.loadLaporan = async function (type) {
     const startEl = document.getElementById('laporanStart');
     const endEl = document.getElementById('laporanEnd');
+    const tahunEl = document.getElementById('laporanTahun');
     const start = startEl ? startEl.value : '';
     const end = endEl ? endEl.value : '';
+    const tahun = tahunEl ? tahunEl.value : '';
 
     window.lastLaporanType = type;
 
-    if (!end && type !== 'REKON' && type !== 'DPA') {
+    // Only validate dates for non-PIUTANG reports that need them
+    if (!end && !['REKON', 'DPA', 'PIUTANG'].includes(type)) {
         toast('Pilih tanggal!', 'error');
         return;
     }
@@ -26,17 +29,18 @@ window.loadLaporan = async function (type) {
 
     try {
         let url = '';
+        const params = `start=${start}&end=${end}&tahun=${tahun}`;
         switch (type) {
-            case 'PENDAPATAN': url = `/dashboard/laporan/data?start=${start}&end=${end}`; break;
-            case 'REKON': url = `/dashboard/laporan/rekon?start=${start}&end=${end}`; break;
-            case 'PIUTANG': url = `/dashboard/laporan/piutang?start=${start}&end=${end}`; break;
-            case 'MOU': url = `/dashboard/laporan/mou?start=${start}&end=${end}`; break;
+            case 'PENDAPATAN': url = `/dashboard/laporan/data?${params}`; break;
+            case 'REKON': url = `/dashboard/laporan/rekon?${params}`; break;
+            case 'PIUTANG': url = `/dashboard/laporan/piutang?${params}`; break;
+            case 'MOU': url = `/dashboard/laporan/mou?${params}`; break;
             case 'ANGGARAN': {
                 const cat = document.getElementById('lraCategory')?.value || 'SEMUA';
-                url = `/dashboard/laporan/anggaran?start=${start}&end=${end}&category=${cat}`;
+                url = `/dashboard/laporan/anggaran?${params}&category=${cat}`;
                 break;
             }
-            case 'PENGELUARAN': url = `/dashboard/laporan/pengeluaran?start=${start}&end=${end}`; break;
+            case 'PENGELUARAN': url = `/dashboard/laporan/pengeluaran?${params}`; break;
             case 'DPA': url = `/dashboard/laporan/dpa`; break;
         }
 
@@ -328,24 +332,30 @@ function renderRekon(data) {
 }
 
 function renderPiutang(data) {
-    if (document.getElementById('totalPiutangReport')) document.getElementById('totalPiutangReport').innerText = formatRupiah(data.totals.piutang);
-    if (document.getElementById('totalPotonganPiutangReport')) document.getElementById('totalPotonganPiutangReport').innerText = formatRupiah(data.totals.potongan);
-    if (document.getElementById('totalAdmBankPiutangReport')) document.getElementById('totalAdmBankPiutangReport').innerText = formatRupiah(data.totals.adm_bank);
-    if (document.getElementById('totalDiterimaPiutangReport')) document.getElementById('totalDiterimaPiutangReport').innerText = formatRupiah(data.totals.dibayar);
+    if (document.getElementById('totalPiutangReport')) document.getElementById('totalPiutangReport').innerText = formatRupiah(data.totals.sa_piutang + data.totals.berjalan_piutang);
+    if (document.getElementById('totalPotonganPiutangReport')) document.getElementById('totalPotonganPiutangReport').innerText = formatRupiah(data.totals.total_potongan);
+    if (document.getElementById('totalAdmBankPiutangReport')) document.getElementById('totalAdmBankPiutangReport').innerText = formatRupiah(data.totals.total_adm);
+    if (document.getElementById('totalDiterimaPiutangReport')) document.getElementById('totalDiterimaPiutangReport').innerText = formatRupiah(data.totals.total_pelunasan);
 
     const body = document.getElementById('laporanPiutangBody');
     if (!body) return;
     body.innerHTML = '';
     data.data.forEach(item => {
-        const sisa = item.total_piutang - item.total_dibayar - item.total_potongan - item.total_adm_bank;
         body.insertAdjacentHTML('beforeend', `
             <tr>
                 <td><strong>${item.nama_perusahaan}</strong></td>
-                <td style="text-align:right">${formatRupiahTable(item.total_piutang)}</td>
-                <td style="text-align:right">${formatRupiahTable(item.total_potongan)}</td>
-                <td style="text-align:right">${formatRupiahTable(item.total_adm_bank)}</td>
-                <td style="text-align:right">${formatRupiahTable(item.total_dibayar)}</td>
-                <td style="text-align:right; font-weight:700;">${formatRupiahTable(sisa)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.sa_piutang)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.sa_pelunasan)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.sa_potongan)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.sa_adm)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.berjalan_piutang)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.berjalan_pelunasan)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.berjalan_potongan)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.berjalan_adm)}</td>
+                <td style="text-align:right; font-weight:700;">${formatRupiahTable(item.total_pelunasan)}</td>
+                <td style="text-align:right; font-weight:700;">${formatRupiahTable(item.total_potongan)}</td>
+                <td style="text-align:right; font-weight:700; color:#ef4444">${formatRupiahTable(item.sisa_2025)}</td>
+                <td style="text-align:right; font-weight:700; background:#f1f5f9;">${formatRupiahTable(item.saldo_akhir)}</td>
             </tr>
         `);
     });
@@ -374,6 +384,7 @@ function renderMou(data) {
 
 function renderAnggaran(data) {
     const cardsContainer = document.getElementById('lraCardsContainer');
+    const tableContainer = document.getElementById('lraTableContainer');
     const desc = document.getElementById('lraDescription');
 
     if (desc) {
@@ -429,51 +440,134 @@ function renderAnggaran(data) {
         }
     }
 
-    const body = document.getElementById('laporanAnggaranBody');
-    if (!body) return;
-    body.innerHTML = '';
+    if (tableContainer) {
+        tableContainer.innerHTML = '';
 
-    data.data.forEach(item => {
-        const isHeader = item.tipe === 'header';
-        let progressColor = '#3b82f6';
-        if (item.persen >= 100) progressColor = '#9333ea';
-        else if (item.persen >= 80) progressColor = '#10b981';
-        else if (item.persen < 50) progressColor = '#f59e0b';
+        const generateTableHtml = (items, title, totals = null) => {
+            let rowsHtml = '';
+            items.forEach(item => {
+                const isHeader = item.tipe === 'header';
+                let progressColor = '#3b82f6';
+                if (item.persen >= 100) progressColor = '#9333ea';
+                else if (item.persen >= 80) progressColor = '#10b981';
+                else if (item.persen < 50) progressColor = '#f59e0b';
 
-        // Hide numeric values for Root Organization
-        const isRoot = item.nama && item.nama.includes('Rumah Sakit Khusus Jiwa dan Ketergantungan Obat');
+                const isRoot = item.nama && item.nama.includes('Rumah Sakit Khusus Jiwa dan Ketergantungan Obat');
 
-        const valTarget = isRoot ? '' : formatRupiah(item.target);
-        const valLalu = isRoot ? '' : formatRupiah(item.realisasi_lalu);
-        const valKini = isRoot ? '' : formatRupiah(item.realisasi_kini);
-        const valTotal = isRoot ? '' : formatRupiah(item.realisasi_total);
-        const valSelisih = isRoot ? '' : formatRupiah(item.selisih);
-        const valPersen = isRoot ? '' : item.persen + '%';
-        const valProgress = isRoot ? '' : `
+                const valTarget = isRoot ? '' : formatRupiah(item.target);
+                const valLalu = isRoot ? '' : formatRupiah(item.realisasi_lalu);
+                const valKini = isRoot ? '' : formatRupiah(item.realisasi_kini);
+                const valTotal = isRoot ? '' : formatRupiah(item.realisasi_total);
+                const valSelisih = isRoot ? '' : formatRupiah(item.selisih);
+                const valPersen = isRoot ? '' : item.persen + '%';
+                const valProgress = isRoot ? '' : `
                     <div class="progress-track">
                         <div class="progress-fill" style="width: ${Math.min(item.persen, 100)}%; background:${progressColor};"></div>
                     </div>`;
 
-        body.insertAdjacentHTML('beforeend', `
-            <tr class="${isHeader ? 'row-header' : 'row-detail'}">
-                <td class="col-kode">${item.kode}</td>
-                <td class="col-uraian">
-                    <span>${item.nama}</span>
-                </td>
-                <td class="col-mono ">${valTarget}</td>
-                <td class="col-mono " style="color:#64748b; font-size:12px;">${valLalu}</td>
-                <td class="col-mono font-medium text-slate-700">${valKini}</td>
-                <td class="col-mono font-bold text-slate-900">${valTotal}</td>
-                <td class="col-mono ${item.selisih < 0 ? 'text-red-500' : 'text-slate-500'}">
-                    ${valSelisih}
-                </td>
-                <td class="text-center font-bold" style="color:${progressColor}">${valPersen}</td>
-                <td class="col-progress">
-                    ${valProgress}
-                </td>
-            </tr>
-        `);
-    });
+                rowsHtml += `
+                    <tr class="${isHeader ? 'row-header' : 'row-detail'}">
+                        <td class="col-kode">${item.kode}</td>
+                        <td class="col-uraian"><span>${item.nama}</span></td>
+                        <td class="col-mono ">${valTarget}</td>
+                        <td class="col-mono " style="color:#64748b; font-size:12px;">${valLalu}</td>
+                        <td class="col-mono font-medium text-slate-700">${valKini}</td>
+                        <td class="col-mono font-bold text-slate-900">${valTotal}</td>
+                        <td class="col-mono ${item.selisih < 0 ? 'text-red-500' : 'text-slate-500'}">${valSelisih}</td>
+                        <td class="text-center font-bold" style="color:${progressColor}">${valPersen}</td>
+                        <td class="col-progress">${valProgress}</td>
+                    </tr>
+                `;
+            });
+
+            let footerHtml = '';
+            if (totals) {
+                footerHtml = `
+                    <tr style="background:#f1f5f9; font-weight:800; border-top:2px solid #cbd5e1;">
+                        <td colspan="2" class="text-center" style="padding:15px; font-size:14px;">TOTAL ${title}</td>
+                        <td class="text-right" style="padding:15px; font-family:'JetBrains Mono';">${formatRupiah(totals.target)}</td>
+                        <td class="text-right" style="padding:15px; color:#64748b; font-size:12px;">${formatRupiah(totals.realisasi_lalu)}</td>
+                        <td class="text-right" style="padding:15px;">${formatRupiah(totals.realisasi_kini)}</td>
+                        <td class="text-right" style="padding:15px; font-weight:bold;">${formatRupiah(totals.realisasi_total)}</td>
+                        <td class="text-right" style="padding:15px;">${formatRupiah(totals.target - totals.realisasi_total)}</td>
+                        <td class="text-center" style="padding:15px;">${totals.persen}%</td>
+                        <td></td>
+                    </tr>
+                `;
+            }
+
+            return `
+                <div class="laporan-section" style="margin-bottom:40px;">
+                    <div class="section-header" style="background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:15px 20px;">
+                        <h3 style="margin:0; font-size:16px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px;">
+                            <i class="ph ph-table"></i> Rincian Realisasi ${title}
+                        </h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width: 150px;">Kode Rekening</th>
+                                    <th class="text-center">Uraian</th>
+                                    <th class="text-center">Target</th>
+                                    <th class="text-center">Realisasi (L)</th>
+                                    <th class="text-center">Realisasi (K)</th>
+                                    <th class="text-center">Realisasi (T)</th>
+                                    <th class="text-center">Selisih</th>
+                                    <th class="text-center">%</th>
+                                    <th class="text-center" style="width: 120px;">Progres</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                                ${footerHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        };
+
+        if (data.category === 'SEMUA') {
+            tableContainer.innerHTML += generateTableHtml(data.data_pendapatan, 'PENDAPATAN', {
+                target: data.sub_totals.pendapatan.target,
+                realisasi_total: data.sub_totals.pendapatan.real,
+                realisasi_lalu: data.data_pendapatan.reduce((a, b) => a + (b.level === 1 ? b.realisasi_lalu : 0), 0),
+                realisasi_kini: data.data_pendapatan.reduce((a, b) => a + (b.level === 1 ? b.realisasi_kini : 0), 0),
+                persen: data.sub_totals.pendapatan.persen
+            });
+
+            tableContainer.innerHTML += generateTableHtml(data.data_pengeluaran, 'BELANJA (PENGELUARAN)', {
+                target: data.sub_totals.pengeluaran.target,
+                realisasi_total: data.sub_totals.pengeluaran.real,
+                realisasi_lalu: data.data_pengeluaran.reduce((a, b) => a + (b.level === 1 ? b.realisasi_lalu : 0), 0),
+                realisasi_kini: data.data_pengeluaran.reduce((a, b) => a + (b.level === 1 ? b.realisasi_kini : 0), 0),
+                persen: data.sub_totals.pengeluaran.persen
+            });
+
+            // Summary Table (Surplus/Defisit)
+            const surplusHtml = `
+                <div class="laporan-section" style="margin-top:20px; border:2px solid #e2e8f0;">
+                    <table class="report-table">
+                        <tr style="background:#f1f5f9; font-weight:900; font-size:16px;">
+                            <td colspan="2" class="text-center" style="padding:20px;">SURPLUS / (DEFISIT) ANGGARAN</td>
+                            <td class="text-right" style="padding:20px;">${formatRupiah(data.totals.target)}</td>
+                            <td class="text-right" style="padding:20px; color:#64748b; font-size:12px;">${formatRupiah(data.totals.realisasi_lalu)}</td>
+                            <td class="text-right" style="padding:20px;">${formatRupiah(data.totals.realisasi_kini)}</td>
+                            <td class="text-right" style="padding:20px;">${formatRupiah(data.totals.realisasi_total)}</td>
+                            <td class="text-right" style="padding:20px;">${formatRupiah(data.totals.target - data.totals.realisasi_total)}</td>
+                            <td class="text-center" style="padding:20px;">${data.totals.persen}%</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+            `;
+            tableContainer.innerHTML += surplusHtml;
+        } else {
+            const title = data.category === 'PENDAPATAN' ? 'PENDAPATAN' : 'BELANJA (PENGELUARAN)';
+            tableContainer.innerHTML += generateTableHtml(data.data, title, data.totals);
+        }
+    }
 }
 
 
@@ -623,6 +717,21 @@ window.exportPdf = function (type) {
     toast(`⏳ Menyiapkan Export PDF ${reportType}...`, 'info');
 };
 
+window.numFr = (num) => {
+    if (typeof num !== 'number') num = parseFloat(num) || 0;
+    return num.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+window.fr = (num) => {
+    const val = window.numFr(num);
+    return `
+        <div style="display: flex; justify-content: space-between; width: 100%; gap: 5px;">
+            <span>Rp</span>
+            <span style="text-align: right;">${val}</span>
+        </div>
+    `;
+};
+
 window.openPreviewModal = function (type) {
     const reportType = type || window.lastLaporanType;
     const start = document.getElementById('laporanStart')?.value;
@@ -660,6 +769,9 @@ window.openPreviewModal = function (type) {
             periodeEl.innerText = `Laporan Tahunan (Tahun Anggaran Berjalan)`;
         } else if (reportType === 'DPA') {
             periodeEl.innerText = `Tahun Anggaran: ${data.tahun || window.tahunAnggaran}`;
+        } else if (reportType === 'PIUTANG') {
+            const tahunVal = document.getElementById('laporanTahun')?.value || new Date().getFullYear();
+            periodeEl.innerText = `Tahun Anggaran: ${tahunVal}`;
         } else {
             periodeEl.innerText = `Periode: ${formatTanggal(start)} s/d ${formatTanggal(end)}`;
         }
@@ -683,22 +795,6 @@ window.openPreviewModal = function (type) {
     const tablesContainer = document.getElementById('previewTables');
     if (!tablesContainer) return;
     tablesContainer.innerHTML = '';
-
-    const fr = (num) => {
-        if (typeof num !== 'number') num = parseFloat(num) || 0;
-        const val = num.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        return `
-            <div style="display: flex; justify-content: space-between; width: 100%; gap: 5px;">
-                <span>Rp</span>
-                <span style="text-align: right;">${val}</span>
-            </div>
-        `;
-    };
-
-    const numFr = (num) => {
-        if (typeof num !== 'number') num = parseFloat(num) || 0;
-        return num.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    };
 
     if (reportType === 'PENDAPATAN') {
         const categoryKeys = [
@@ -900,7 +996,7 @@ window.openPreviewModal = function (type) {
             <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
                 <thead style="background:#f8fafc;">
                     <tr>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 15%;">Tanggal</th>
+                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 15%;">Bulan</th>
                         <th style="border:1px solid #000; padding:8px; text-align:center; width: 22%;">Bank (Kredit)</th>
                         <th style="border:1px solid #000; padding:8px; text-align:center; width: 22%;">Modul Netto</th>
                         <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">Selisih Harian</th>
@@ -911,7 +1007,7 @@ window.openPreviewModal = function (type) {
         data.forEach(item => {
             rekonHtml += `
                 <tr>
-                    <td style="border:1px solid #000; padding:8px; text-align:center;">${formatTanggal(item.tanggal)}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${item.tanggal}</td>
                     <td style="border:1px solid #000; padding:8px;">${fr(item.bank)}</td>
                     <td style="border:1px solid #000; padding:8px;">${fr(item.pendapatan)}</td>
                     <td style="border:1px solid #000; padding:8px;">${fr(item.selisih)}</td>
@@ -923,55 +1019,64 @@ window.openPreviewModal = function (type) {
 
     } else if (reportType === 'PIUTANG') {
         let piutangHtml = `
-            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+            <div style="overflow-x: auto;">
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:7pt;">
                 <thead style="background:#f8fafc;">
                     <tr>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 30%;">Perusahaan Penjamin</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 17%;">Piutang</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 17%;">Potongan</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 17%;">Adm Bank</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 19%;">Total Dibayar</th>
+                        <th rowspan="2" style="border:1px solid #000; padding:4px; text-align:center; width: 14%;">Perusahaan</th>
+                        <th colspan="4" style="border:1px solid #000; padding:4px; text-align:center;">Saldo Awal (Tahun Lalu)</th>
+                        <th colspan="4" style="border:1px solid #000; padding:4px; text-align:center;">Tahun Berjalan</th>
+                        <th rowspan="2" style="border:1px solid #000; padding:4px; text-align:center;">Pel. Total</th>
+                        <th rowspan="2" style="border:1px solid #000; padding:4px; text-align:center;">Pot. Total</th>
+                        <th rowspan="2" style="border:1px solid #000; padding:4px; text-align:center; color:#ef4444;">Sisa 2025</th>
+                        <th rowspan="2" style="border:1px solid #000; padding:4px; text-align:center;">S. Akhir</th>
+                    </tr>
+                    <tr>
+                        <th style="border:1px solid #000; padding:4px; text-align:center;">Piutang</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center;">Lunas</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center;">Pot</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center;">Adm</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center;">Piutang</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center;">Lunas</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center;">Pot</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center;">Adm</th>
                     </tr>
                 </thead>
                 <tbody>`;
         data.data.forEach(item => {
             piutangHtml += `
                 <tr>
-                    <td style="border:1px solid #000; padding:8px; vertical-align: middle;">${item.nama_perusahaan}</td>
-                    <td style="border:1px solid #000; padding:8px; vertical-align: middle;">
-                        <div style="display: flex; justify-content: space-between; width: 100%;">
-                            <span>Rp</span>
-                            <span>${numFr(item.total_piutang)}</span>
-                        </div>
-                    </td>
-                    <td style="border:1px solid #000; padding:8px; vertical-align: middle;">
-                        <div style="display: flex; justify-content: space-between; width: 100%;">
-                            <span>Rp</span>
-                            <span>${numFr(item.total_potongan)}</span>
-                        </div>
-                    </td>
-                    <td style="border:1px solid #000; padding:8px; vertical-align: middle;">
-                        <div style="display: flex; justify-content: space-between; width: 100%;">
-                            <span>Rp</span>
-                            <span>${numFr(item.total_adm_bank)}</span>
-                        </div>
-                    </td>
-                    <td style="border:1px solid #000; padding:8px; vertical-align: middle; font-weight:bold;">
-                        <div style="display: flex; justify-content: space-between; width: 100%;">
-                            <span>Rp</span>
-                            <span>${numFr(item.total_dibayar)}</span>
-                        </div>
-                    </td>
+                    <td style="border:1px solid #000; padding:4px; font-weight:bold;">${item.nama_perusahaan}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(item.sa_piutang)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(item.sa_pelunasan)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(item.sa_potongan)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(item.sa_adm)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(item.berjalan_piutang)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(item.berjalan_pelunasan)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(item.berjalan_potongan)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(item.berjalan_adm)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right; font-weight:bold;">${numFr(item.total_pelunasan)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(item.total_potongan)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right; color:#ef4444; font-weight:bold;">${numFr(item.sisa_2025)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right; font-weight:bold; background:#f8fafc;">${numFr(item.saldo_akhir)}</td>
                 </tr>`;
         });
         piutangHtml += `
                 <tr style="background:#f1f5f9; font-weight:bold;">
-                    <td style="border:1px solid #000; padding:8px; text-align:center;">GRAND TOTAL</td>
-                    <td style="border:1px solid #000; padding:8px; text-align:right; white-space:nowrap;">${fr(data.totals.piutang)}</td>
-                    <td style="border:1px solid #000; padding:8px; text-align:right; white-space:nowrap;">${fr(data.totals.potongan)}</td>
-                    <td style="border:1px solid #000; padding:8px; text-align:right; white-space:nowrap;">${fr(data.totals.adm_bank)}</td>
-                    <td style="border:1px solid #000; padding:8px; text-align:right; white-space:nowrap;">${fr(data.totals.dibayar)}</td>
-                </tr></tbody></table>`;
+                    <td style="border:1px solid #000; padding:4px; text-align:center;">GRAND TOTAL</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.totals.sa_piutang)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.totals.sa_pelunasan)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.totals.sa_potongan)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.totals.sa_adm)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.totals.berjalan_piutang)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.totals.berjalan_pelunasan)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.totals.berjalan_potongan)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.totals.berjalan_adm)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.totals.total_pelunasan)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.totals.total_potongan)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.totals.sisa_2025)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.totals.saldo_akhir)}</td>
+                </tr></tbody></table></div>`;
         tablesContainer.innerHTML = piutangHtml;
 
     } else if (reportType === 'MOU') {
@@ -1017,48 +1122,87 @@ window.openPreviewModal = function (type) {
         tablesContainer.innerHTML = mouHtml;
 
     } else if (reportType === 'ANGGARAN') {
-        let aggHtml = `
+        const getRowsHtml = (items) => {
+            let html = '';
+            items.forEach(item => {
+                const isBold = item.level < 5;
+                const isRoot = item.nama && item.nama.includes('Rumah Sakit Khusus Jiwa dan Ketergantungan Obat');
+                html += `
+                    <tr style="${isBold ? 'font-weight:bold; background-color:#f8fafc;' : ''}">
+                        <td style="border:1px solid #000; padding:5px;">${item.kode}</td>
+                        <td style="border:1px solid #000; padding:5px;">${item.nama}</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right;">${isRoot ? '' : numFr(item.target)}</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right;">${isRoot ? '' : numFr(item.realisasi_lalu)}</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right;">${isRoot ? '' : numFr(item.realisasi_kini)}</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right;">${isRoot ? '' : numFr(item.realisasi_total)}</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right;">${isRoot ? '' : numFr(item.selisih)}</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:center;">${isRoot ? '' : item.persen + '%'}</td>
+                    </tr>`;
+            });
+            return html;
+        };
+
+        const getTotalRowHtml = (title, totals) => {
+            return `
+                <tr style="background:#f1f5f9; font-weight:bold;">
+                    <td colspan="2" style="border:1px solid #000; padding:5px; text-align:center;">TOTAL ${title}</td>
+                    <td style="border:1px solid #000; padding:5px; text-align:right;">${numFr(totals.target)}</td>
+                    <td style="border:1px solid #000; padding:5px; text-align:right;">${numFr(totals.real_lalu)}</td>
+                    <td style="border:1px solid #000; padding:5px; text-align:right;">${numFr(totals.real_kini)}</td>
+                    <td style="border:1px solid #000; padding:5px; text-align:right;">${numFr(totals.real)}</td>
+                    <td style="border:1px solid #000; padding:5px; text-align:right;">${numFr(totals.target - totals.real)}</td>
+                    <td style="border:1px solid #000; padding:5px; text-align:center;">${totals.persen}%</td>
+                </tr>`;
+        };
+
+        let tableBody = '';
+        const cat = document.getElementById('lraCategory')?.value || 'SEMUA';
+
+        if (cat === 'SEMUA') {
+            tableBody += getRowsHtml(data.data_pendapatan);
+            tableBody += getTotalRowHtml('PENDAPATAN', data.sub_totals.pendapatan);
+            tableBody += getRowsHtml(data.data_pengeluaran);
+            tableBody += getTotalRowHtml('BELANJA (PENGELUARAN)', data.sub_totals.pengeluaran);
+            tableBody += `
+                <tr style="background:#e2e8f0; font-weight:bold;">
+                    <td colspan="2" style="border:1px solid #000; padding:10px; text-align:center;">SURPLUS / (DEFISIT) ANGGARAN</td>
+                    <td style="border:1px solid #000; padding:10px; text-align:right;">${numFr(data.totals.target)}</td>
+                    <td style="border:1px solid #000; padding:10px; text-align:right;">${numFr(data.totals.realisasi_lalu)}</td>
+                    <td style="border:1px solid #000; padding:10px; text-align:right;">${numFr(data.totals.realisasi_kini)}</td>
+                    <td style="border:1px solid #000; padding:10px; text-align:right; font-weight:bold; color:${data.totals.realisasi_total >= 0 ? '#16a34a' : '#ef4444'}">${numFr(data.totals.realisasi_total)}</td>
+                    <td style="border:1px solid #000; padding:10px; text-align:right;">${numFr(data.totals.target - data.totals.realisasi_total)}</td>
+                    <td style="border:1px solid #000; padding:10px; text-align:center;">${data.totals.persen}%</td>
+                </tr>`;
+        } else {
+            tableBody += getRowsHtml(data.data);
+            tableBody += getTotalRowHtml(cat === 'PENGELUARAN' ? 'BELANJA' : 'PENDAPATAN', {
+                target: data.totals.target,
+                real: data.totals.realisasi_total,
+                real_lalu: data.totals.realisasi_lalu,
+                real_kini: data.totals.realisasi_kini,
+                persen: data.totals.persen
+            });
+        }
+
+        tablesContainer.innerHTML = `
             <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:8pt;">
                 <thead style="background:#f8fafc;">
                     <tr>
-                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 8%;">Kode</th>
-                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 22%;">Uraian</th>
-                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 12%;">Target</th>
-                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 12%;">Real. Lalu</th>
-                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 12%;">Real. Kini</th>
-                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 12%;">Real. Total</th>
-                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 12%;">Selisih</th>
-                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 6%;">%</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 10%;">Kode</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 25%;">Uraian</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 11%;">Target</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 11%;">Real. Lalu</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 11%;">Real. Kini</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 11%;">Real. Total</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 11%;">Selisih</th>
+                        <th style="border:1px solid #000; padding:5px; text-align:center; width: 10%;">%</th>
                     </tr>
                 </thead>
-                <tbody>`;
-        data.data.forEach(item => {
-            const isBold = item.level < 5;
-            const isRoot = item.nama && item.nama.includes('Rumah Sakit Khusus Jiwa dan Ketergantungan Obat');
-
-            aggHtml += `
-                <tr style="${isBold ? 'font-weight:bold; background-color:#f8fafc;' : ''}">
-                    <td style="border:1px solid #000; padding:5px;">${item.kode}</td>
-                    <td style="border:1px solid #000; padding:5px;">${item.nama}</td>
-                    <td style="border:1px solid #000; padding:5px;">${isRoot ? '' : fr(item.target)}</td>
-                    <td style="border:1px solid #000; padding:5px;">${isRoot ? '' : fr(item.realisasi_lalu)}</td>
-                    <td style="border:1px solid #000; padding:5px;">${isRoot ? '' : fr(item.realisasi_kini)}</td>
-                    <td style="border:1px solid #000; padding:5px;">${isRoot ? '' : fr(item.realisasi_total)}</td>
-                    <td style="border:1px solid #000; padding:5px;">${isRoot ? '' : fr(item.selisih)}</td>
-                    <td style="border:1px solid #000; padding:5px; text-align:center;">${isRoot ? '' : item.persen + '%'}</td>
-                </tr>`;
-        });
-        aggHtml += `
-                <tr style="background:#f1f5f9; font-weight:bold;">
-                    <td colspan="2" style="border:1px solid #000; padding:5px; text-align:center;">TOTAL</td>
-                    <td style="border:1px solid #000; padding:5px;">${fr(data.totals.target)}</td>
-                    <td style="border:1px solid #000; padding:5px;">${fr(data.totals.realisasi_lalu)}</td>
-                    <td style="border:1px solid #000; padding:5px;">${fr(data.totals.realisasi_kini)}</td>
-                    <td style="border:1px solid #000; padding:5px;">${fr(data.totals.realisasi_total)}</td>
-                    <td style="border:1px solid #000; padding:5px;">${fr(data.totals.target - data.totals.realisasi_total)}</td>
-                    <td style="border:1px solid #000; padding:5px; text-align:center;">${data.totals.persen}%</td>
-                </tr></tbody></table>`;
-        tablesContainer.innerHTML = aggHtml;
+                <tbody>
+                    ${tableBody}
+                </tbody>
+            </table>
+        `;
     } else if (reportType === 'PENGELUARAN') {
         let expHtml = `
             <h6 style="margin:20px 0 10px; font-weight:bold; border-left:4px solid #10b981; padding-left:10px; font-size:11pt;">1. RINGKASAN PER KATEGORI</h6>
