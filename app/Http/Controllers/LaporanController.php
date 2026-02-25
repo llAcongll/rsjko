@@ -208,6 +208,16 @@ class LaporanController extends Controller
         return response()->json(['data' => $data, 'tahun' => $tahun]);
     }
 
+    public function getBku(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('PENGELUARAN_BKU') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
+        $month = $request->get('month');
+        $year = $request->get('year', session('tahun_anggaran', date('Y')));
+
+        $res = $this->service->getBkuData($year, $month);
+        return response()->json($res);
+    }
+
     // Export Methods
     public function exportRekon(Request $request)
     {
@@ -429,5 +439,43 @@ class LaporanController extends Controller
             'ptKanan' => $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null,
         ]);
         return $pdf->download("Laporan_DPA_{$tahun}.pdf");
+    }
+
+    public function exportBku(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT'), 403);
+        $month = $request->get('month');
+        $year = $request->get('year', session('tahun_anggaran', date('Y')));
+        $res = $this->service->getBkuData($year, $month);
+
+        return view('dashboard.exports.bku', [
+            'data' => $res['data'],
+            'summary' => $res['summary'],
+            'opening_balance' => $res['opening_balance'],
+            'period' => $res['period'],
+            'ptKiri' => $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null,
+            'ptTengah' => $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null,
+            'ptKanan' => $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null,
+        ]);
+    }
+
+    public function exportBkuPdf(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'), 403);
+        $month = $request->get('month');
+        $year = $request->get('year', session('tahun_anggaran', date('Y')));
+        $res = $this->service->getBkuData($year, $month);
+
+        $pdf = Pdf::loadView('dashboard.exports.bku_pdf', [
+            'data' => $res['data'],
+            'summary' => $res['summary'],
+            'opening_balance' => $res['opening_balance'],
+            'period' => $res['period'],
+            'ptKiri' => $request->has('pt_id_kiri') ? \App\Models\PenandaTangan::find($request->pt_id_kiri) : null,
+            'ptTengah' => $request->has('pt_id_tengah') ? \App\Models\PenandaTangan::find($request->pt_id_tengah) : null,
+            'ptKanan' => $request->has('pt_id_kanan') ? \App\Models\PenandaTangan::find($request->pt_id_kanan) : null,
+        ]);
+
+        return $pdf->download("Buku_Kas_Umum_{$res['period']}.pdf");
     }
 }

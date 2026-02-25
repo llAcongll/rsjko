@@ -23,52 +23,33 @@
                 </div>
             </div>
 
-            <div class="form-grid grid-2">
-                <div class="form-group">
-                    <label>Metode Pembayaran</label>
-                    <select name="metode_pembayaran" id="pengeluaranMetode" class="form-input">
-                        <option value="">-- Pilih Metode --</option>
-                        <option value="UP">Uang Persediaan</option>
-                        <option value="GU">Ganti Uang</option>
-                        <option value="LS">Langsung</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>No. SPP</label>
-                    <input type="text" name="no_spp" id="pengeluaranNoSPP" class="form-input" placeholder="Automatis..."
-                        readonly style="background: #f8fafc; cursor: not-allowed;">
-                    <small style="color: #64748b; font-size: 10px;">* Terisi otomatis berdasarkan tanggal &
-                        metode</small>
-                </div>
-            </div>
-
-            <div class="form-grid grid-2">
-                <div class="form-group">
-                    <label>No. SPM</label>
-                    <input type="text" name="no_spm" id="pengeluaranNoSPM" class="form-input" placeholder="Automatis..."
-                        readonly style="background: #f8fafc; cursor: not-allowed;">
-                    <small style="color: #64748b; font-size: 10px;">* Terisi otomatis</small>
-                </div>
-
-                <div class="form-group">
-                    <label>No. SP2D</label>
-                    <input type="text" name="no_sp2d" id="pengeluaranNoSP2D" class="form-input"
-                        placeholder="Automatis..." readonly style="background: #f8fafc; cursor: not-allowed;">
-                    <small style="color: #64748b; font-size: 10px;">* Terisi otomatis</small>
-                </div>
+            <div class="form-group">
+                <label>Metode Pembayaran</label>
+                <select name="metode_pembayaran" id="pengeluaranMetode" class="form-input" required>
+                    <option value="">-- Pilih Metode --</option>
+                    <option value="UP">Uang Persediaan (UP)</option>
+                    <option value="GU">Ganti Uang (GU)</option>
+                    <option value="LS">Langsung (LS)</option>
+                </select>
             </div>
 
             <div class="form-group">
-                <label>Uraian</label>
+                <label>Vendor / Penerima</label>
+                <input type="text" name="vendor" id="pengeluaranVendor" class="form-input"
+                    placeholder="Nama toko, rekanan, atau perorangan...">
+            </div>
+
+            <div class="form-group" id="guCycleSection" style="display:none;">
+                <label>Pilih Batch GU</label>
+                <select name="siklus_up" id="pengeluaranSiklus" class="form-input">
+                    <option value="">-- Pilih Batch GU --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Uraian Belanja</label>
                 <input type="text" name="uraian" id="pengeluaranUraian" class="form-input"
                     placeholder="Masukkan uraian pengeluaran..." required>
-            </div>
-
-            <div class="form-group">
-                <label>Keterangan (Opsional)</label>
-                <textarea name="keterangan" id="pengeluaranKeterangan" class="form-input" rows="3"
-                    placeholder="Tambahkan catatan tambahan..."></textarea>
             </div>
 
             <div class="form-grid grid-2">

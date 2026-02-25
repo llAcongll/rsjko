@@ -378,7 +378,7 @@ window.editPendapatanBpjs = async function (id) {
     ]);
 
     const form = document.getElementById('formPendapatanBpjs');
-    form.querySelector('[name="tanggal"]').value = data.tanggal.substring(0, 10);
+    form.querySelector('[name="tanggal"]').value = formatDateForInput(data.tanggal);
     form.querySelector('[name="jenis_bpjs"]').value = data.jenis_bpjs;
     form.querySelector('[name="no_sep"]').value = data.no_sep || '';
     form.querySelector('[name="nama_pasien"]').value = data.nama_pasien;

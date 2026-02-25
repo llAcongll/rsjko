@@ -276,6 +276,135 @@ window.openPengeluaran = async function (kategori, btn) {
   }
 };
 
+window.openSpj = async function (btn) {
+  const parentBtn = document.getElementById('btnPengeluaran');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  await loadContent('pengeluaran/spj');
+
+  document
+    .querySelectorAll('#submenuPengeluaran button')
+    .forEach(b => b.classList.remove('active'));
+
+  if (btn) btn.classList.add('active');
+
+  if (typeof window.initSpj === 'function') {
+    window.initSpj();
+  }
+};
+
+window.openSppPage = async function (btn) {
+  const parentBtn = document.getElementById('btnPengeluaran');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  window._disbursementPageMode = 'SPP';
+  await loadContent('pengeluaran/disbursement');
+
+  document
+    .querySelectorAll('#submenuPengeluaran button')
+    .forEach(b => b.classList.remove('active'));
+
+  if (btn) btn.classList.add('active');
+
+  if (typeof window.initDisbursement === 'function') {
+    window.initDisbursement();
+  }
+};
+
+window.openSpmPage = async function (btn) {
+  const parentBtn = document.getElementById('btnPengeluaran');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  window._disbursementPageMode = 'SPM';
+  await loadContent('pengeluaran/disbursement');
+
+  document
+    .querySelectorAll('#submenuPengeluaran button')
+    .forEach(b => b.classList.remove('active'));
+
+  if (btn) btn.classList.add('active');
+
+  if (typeof window.initDisbursement === 'function') {
+    window.initDisbursement();
+  }
+};
+
+window.openSp2dPage = async function (btn) {
+  const parentBtn = document.getElementById('btnPengeluaran');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  window._disbursementPageMode = 'SP2D';
+  await loadContent('pengeluaran/disbursement');
+
+  document
+    .querySelectorAll('#submenuPengeluaran button')
+    .forEach(b => b.classList.remove('active'));
+
+  if (btn) btn.classList.add('active');
+
+  if (typeof window.initDisbursement === 'function') {
+    window.initDisbursement();
+  }
+};
+
+window.openTreasurerCash = async function (btn) {
+  const parentBtn = document.getElementById('btnPengeluaran');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  await loadContent('pengeluaran/ledger');
+
+  document
+    .querySelectorAll('#submenuPengeluaran button')
+    .forEach(b => b.classList.remove('active'));
+
+  if (btn) btn.classList.add('active');
+
+  if (typeof window.initLedger === 'function') {
+    window.initLedger();
+  }
+};
+
+window.openRekeningKoranPengeluaran = async function (btn) {
+  const parentBtn = document.getElementById('btnPengeluaran');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  await loadContent('pengeluaran/rekening-koran');
+
+  document
+    .querySelectorAll('#submenuPengeluaran button')
+    .forEach(b => b.classList.remove('active'));
+
+  if (btn) btn.classList.add('active');
+
+  if (typeof window.initBankLedger === 'function') {
+    window.initBankLedger();
+  }
+};
+
+window.openSaldoDana = async function (btn) {
+  const parentBtn = document.getElementById('btnPengeluaran');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  await loadContent('pengeluaran/saldo');
+
+  document
+    .querySelectorAll('#submenuPengeluaran button')
+    .forEach(b => b.classList.remove('active'));
+
+  if (btn) btn.classList.add('active');
+
+  if (typeof window.initSaldoDana === 'function') {
+    window.initSaldoDana();
+  }
+};
+
 window.openPendapatan = async function (jenis, btn) {
   if (!jenis) return;
 

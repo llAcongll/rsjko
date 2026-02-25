@@ -236,7 +236,7 @@ window.editPenyesuaian = async function (id) {
         document.getElementById('penyesuaianModalTitle').innerHTML = '<i class="ph ph-pencil-simple"></i> Edit Penyesuaian';
 
         document.getElementById('penyesuaianId').value = item.id;
-        document.getElementById('penyesuaianTanggal').value = item.tanggal ? item.tanggal.substring(0, 10) : '';
+        document.getElementById('penyesuaianTanggal').value = formatDateForInput(item.tanggal);
         document.getElementById('penyesuaianKategori').value = item.kategori;
         handleKategoriChange();
         document.getElementById('penyesuaianSubKategori').value = item.sub_kategori || '';

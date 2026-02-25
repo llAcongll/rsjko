@@ -83,7 +83,8 @@
                         </th>
                         <th rowspan="2" class="text-center" style="vertical-align: middle;">Pelunasan Total</th>
                         <th rowspan="2" class="text-center" style="vertical-align: middle;">Potongan Total</th>
-                        <th rowspan="2" class="text-center" style="vertical-align: middle; color:#ef4444">Sisa 2025</th>
+                        <th rowspan="2" class="text-center" style="vertical-align: middle; color:#ef4444"
+                            id="headerSisaTahun">Sisa {{ session('tahun_anggaran', date('Y')) - 1 }}</th>
                         <th rowspan="2" class="text-center" style="vertical-align: middle; background: #f1f5f9;">Saldo
                             Akhir</th>
                     </tr>

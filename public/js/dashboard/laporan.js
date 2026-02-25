@@ -18,8 +18,8 @@ window.loadLaporan = async function (type) {
 
     window.lastLaporanType = type;
 
-    // Only validate dates for non-PIUTANG reports that need them
-    if (!end && !['REKON', 'DPA', 'PIUTANG'].includes(type)) {
+    // Only validate dates for reports that need start/end range
+    if (!end && !['REKON', 'DPA', 'PIUTANG', 'BKU'].includes(type)) {
         toast('Pilih tanggal!', 'error');
         return;
     }
@@ -41,6 +41,12 @@ window.loadLaporan = async function (type) {
                 break;
             }
             case 'PENGELUARAN': url = `/dashboard/laporan/pengeluaran?${params}`; break;
+            case 'BKU': {
+                const month = document.getElementById('ledgerMonth')?.value || '';
+                const year = document.getElementById('ledgerYear')?.value || '';
+                url = `/dashboard/laporan/bku?month=${month}&year=${year}`;
+                break;
+            }
             case 'DPA': url = `/dashboard/laporan/dpa`; break;
         }
 
@@ -56,6 +62,11 @@ window.loadLaporan = async function (type) {
         else if (type === 'PIUTANG') renderPiutang(data);
         else if (type === 'MOU') renderMou(data);
         else if (type === 'ANGGARAN') renderAnggaran(data);
+        else if (type === 'BKU') {
+            // No specific render function needed for BKU in the main view yet,
+            // as it currently uses pagination in treasurer.js, 
+            // but we store it for preview.
+        }
         else if (type === 'PENGELUARAN') {
             if (data && data.summary) {
                 renderPengeluaran(data);
@@ -327,6 +338,9 @@ function renderRekon(data) {
 }
 
 function renderPiutang(data) {
+    if (document.getElementById('headerSisaTahun')) {
+        document.getElementById('headerSisaTahun').innerText = `Sisa ${data.tahun - 1}`;
+    }
     if (document.getElementById('totalPiutangReport')) document.getElementById('totalPiutangReport').innerText = formatRupiah(data.totals.sa_piutang + data.totals.berjalan_piutang);
     if (document.getElementById('totalPotonganPiutangReport')) document.getElementById('totalPotonganPiutangReport').innerText = formatRupiah(data.totals.total_potongan);
     if (document.getElementById('totalAdmBankPiutangReport')) document.getElementById('totalAdmBankPiutangReport').innerText = formatRupiah(data.totals.total_adm);
@@ -349,7 +363,7 @@ function renderPiutang(data) {
                 <td style="text-align:right">${formatRupiahTable(item.berjalan_adm)}</td>
                 <td style="text-align:right; font-weight:700;">${formatRupiahTable(item.total_pelunasan)}</td>
                 <td style="text-align:right; font-weight:700;">${formatRupiahTable(item.total_potongan)}</td>
-                <td style="text-align:right; font-weight:700; color:#ef4444">${formatRupiahTable(item.sisa_2025)}</td>
+                <td style="text-align:right; font-weight:700; color:#ef4444">${formatRupiahTable(item.sisa_sa)}</td>
                 <td style="text-align:right; font-weight:700; background:#f1f5f9;">${formatRupiahTable(item.saldo_akhir)}</td>
             </tr>
         `);
@@ -649,7 +663,7 @@ window.exportLaporan = function (type) {
     const start = document.getElementById('laporanStart')?.value;
     const end = document.getElementById('laporanEnd')?.value;
 
-    if (!end && reportType !== 'DPA' && reportType !== 'REKON') {
+    if (!end && !['REKON', 'DPA', 'PIUTANG', 'BKU'].includes(reportType)) {
         toast('Pilih tanggal!', 'error');
         return;
     }
@@ -661,7 +675,8 @@ window.exportLaporan = function (type) {
         'MOU': 'mou',
         'ANGGARAN': 'anggaran',
         'PENGELUARAN': 'pengeluaran',
-        'DPA': 'dpa'
+        'DPA': 'dpa',
+        'BKU': 'bku'
     };
 
     const ptKiri = document.getElementById('ptSelectKiri')?.value || '';
@@ -674,6 +689,11 @@ window.exportLaporan = function (type) {
         const cat = document.getElementById('lraCategory')?.value || 'PENDAPATAN';
         url += `&category=${cat}`;
     }
+    if (reportType === 'BKU') {
+        const month = document.getElementById('ledgerMonth')?.value || '';
+        const year = document.getElementById('ledgerYear')?.value || '';
+        url = `/dashboard/laporan/export/${endpoint}?month=${month}&year=${year}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
     window.location.href = url;
     toast(`⏳ Menyiapkan Unduh Excel ${reportType}...`, 'info');
 };
@@ -683,7 +703,7 @@ window.exportPdf = function (type) {
     const start = document.getElementById('laporanStart')?.value;
     const end = document.getElementById('laporanEnd')?.value;
 
-    if (!end && reportType !== 'DPA' && reportType !== 'REKON') {
+    if (!end && !['REKON', 'DPA', 'PIUTANG', 'BKU'].includes(reportType)) {
         toast('Pilih tanggal!', 'error');
         return;
     }
@@ -695,7 +715,8 @@ window.exportPdf = function (type) {
         'MOU': 'mou-pdf',
         'ANGGARAN': 'anggaran-pdf',
         'PENGELUARAN': 'pengeluaran-pdf',
-        'DPA': 'dpa-pdf'
+        'DPA': 'dpa-pdf',
+        'BKU': 'bku-pdf'
     };
 
     const ptKiri = document.getElementById('ptSelectKiri')?.value || '';
@@ -707,6 +728,11 @@ window.exportPdf = function (type) {
     if (reportType === 'ANGGARAN') {
         const cat = document.getElementById('lraCategory')?.value || 'PENDAPATAN';
         url += `&category=${cat}`;
+    }
+    if (reportType === 'BKU') {
+        const month = document.getElementById('ledgerMonth')?.value || '';
+        const year = document.getElementById('ledgerYear')?.value || '';
+        url = `/dashboard/laporan/export/${endpoint}?month=${month}&year=${year}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
     }
     window.location.href = url;
     toast(`⏳ Menyiapkan Export PDF ${reportType}...`, 'info');
@@ -732,7 +758,18 @@ window.openPreviewModal = function (type) {
     const start = document.getElementById('laporanStart')?.value;
     const end = document.getElementById('laporanEnd')?.value;
 
-    if (!window.lastLaporanData || window.lastLaporanType !== reportType) {
+    if (!window.lastLaporanData || window.lastLaporanType !== reportType || (reportType === 'BKU' && !window._bkuAlreadyReloaded)) {
+        if (reportType === 'BKU') {
+            // For BKU, ALWAYS reload to get the latest data (as it might have been updated on the same page)
+            window._bkuAlreadyReloaded = true;
+            toast('Memuat data BKU...', 'info');
+            loadLaporan('BKU').then(() => {
+                openPreviewModal('BKU');
+                // Reset flag after a small delay to allow future reloads but prevent immediate recursion
+                setTimeout(() => { window._bkuAlreadyReloaded = false; }, 100);
+            });
+            return;
+        }
         toast('Klik Tampilkan data terlebih dahulu!', 'info');
         return;
     }
@@ -764,6 +801,8 @@ window.openPreviewModal = function (type) {
             periodeEl.innerText = `Laporan Tahunan (Tahun Anggaran Berjalan)`;
         } else if (reportType === 'DPA') {
             periodeEl.innerText = `Tahun Anggaran: ${data.tahun || window.tahunAnggaran}`;
+        } else if (reportType === 'BKU') {
+            periodeEl.innerText = `Periode: ${data.period || '-'}`;
         } else if (reportType === 'PIUTANG') {
             const tahunVal = document.getElementById('laporanTahun')?.value || new Date().getFullYear();
             periodeEl.innerText = `Tahun Anggaran: ${tahunVal}`;
@@ -779,7 +818,8 @@ window.openPreviewModal = function (type) {
         'MOU': 'LAPORAN KERJASAMA / MOU',
         'ANGGARAN': 'LAPORAN REALISASI ANGGARAN',
         'PENGELUARAN': 'LAPORAN REALISASI BELANJA',
-        'DPA': 'LAPORAN DOKUMEN PELAKSANAAN ANGGARAN (DPA)'
+        'DPA': 'LAPORAN DOKUMEN PELAKSANAAN ANGGARAN (DPA)',
+        'BKU': 'BUKU KAS UMUM (BKU)'
     };
     const modalMainTitle = document.getElementById('previewMainTitle');
     if (modalMainTitle) modalMainTitle.innerText = titleMapping[reportType] || 'LAPORAN';
@@ -1315,6 +1355,66 @@ window.openPreviewModal = function (type) {
             </tbody>
         </table>`;
         tablesContainer.innerHTML = html;
+    } else if (reportType === 'BKU') {
+        let bkuHtml = `
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:7pt;">
+                <thead style="background:#f8fafc;">
+                    <tr>
+                        <th style="border:1px solid #000; padding:4px; text-align:center; width: 25px;">No</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center; width: 60px;">Tanggal</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center; width: 90px;">No Bukti</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center; width: 150px;">Uraian</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center; width: 100px;">Kode Rek</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center; width: 85px;">Transfer Penerimaan</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center; width: 85px;">Pengajuan SP2D</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center; width: 85px;">Realisasi</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center; width: 85px;">Saldo Dana</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center; width: 85px;">Saldo Rekening Koran</th>
+                        <th style="border:1px solid #000; padding:4px; text-align:center; width: 90px;">Saldo Akhir</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border:1px solid #000; padding:4px; text-align:center;">-</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:center;">-</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:center;">-</td>
+                        <td style="border:1px solid #000; padding:4px; font-weight:bold;">SALDO AWAL</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:center;">-</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:right;">-</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:right;">-</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:right;">-</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.opening_balance - data.opening_bank)}</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.opening_bank)}</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:right; font-weight:bold;">${numFr(data.opening_balance)}</td>
+                    </tr>
+
+                    ${data.data.map((item, i) => `
+                    <tr>
+                        <td style="border:1px solid #000; padding:4px; text-align:center;">${i + 1}</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:center;">${formatTanggal(item.date)}</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:center; font-size:7pt;">${item.no_bukti || '-'}</td>
+                        <td style="border:1px solid #000; padding:4px; font-size:7pt;">${item.uraian || '-'}</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:center; font-size:7pt;">${item.kode_rekening || '-'}</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:right;">${item.transfer_penerimaan > 0 ? numFr(item.transfer_penerimaan) : '-'}</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:right;">${item.sp2d_penerimaan > 0 ? numFr(item.sp2d_penerimaan) : '-'}</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:right;">${item.realisasi > 0 ? numFr(item.realisasi) : '-'}</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(item.saldo_tunai)}</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(item.saldo_bank)}</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:right; font-weight:bold;">${numFr(item.saldo_akhir)}</td>
+                    </tr>`).join('')}
+
+                    <tr style="background:#f1f5f9; font-weight:bold;">
+                        <td colspan="5" style="border:1px solid #000; padding:6px; text-align:center;">TOTAL MUTASI & SALDO AKHIR</td>
+                        <td style="border:1px solid #000; padding:6px; text-align:right;">${numFr(data.summary.total_debit_transfer)}</td>
+                        <td style="border:1px solid #000; padding:6px; text-align:right;">${numFr(data.summary.total_debit_sp2d)}</td>
+                        <td style="border:1px solid #000; padding:6px; text-align:right;">${numFr(data.summary.total_credit_realisasi)}</td>
+                        <td style="border:1px solid #000; padding:6px; text-align:right;">${numFr(data.summary.final_tunai)}</td>
+                        <td style="border:1px solid #000; padding:6px; text-align:right;">${numFr(data.summary.final_bank)}</td>
+                        <td style="border:1px solid #000; padding:6px; text-align:right;">${numFr(data.summary.final_balance)}</td>
+                    </tr>
+                </tbody>
+            </table>`;
+        tablesContainer.innerHTML = bkuHtml;
     }
 
     // Initial Signatory Setup (Trio)

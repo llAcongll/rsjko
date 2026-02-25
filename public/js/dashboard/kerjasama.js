@@ -319,7 +319,7 @@ window.editPendapatanKerjasama = async function (id) {
     ]);
 
     const form = document.getElementById('formPendapatanKerjasama');
-    form.querySelector('[name="tanggal"]').value = data.tanggal.substring(0, 10);
+    form.querySelector('[name="tanggal"]').value = formatDateForInput(data.tanggal);
     form.querySelector('[name="nama_pasien"]').value = data.nama_pasien;
     form.querySelector('[name="ruangan_id"]').value = data.ruangan_id;
 

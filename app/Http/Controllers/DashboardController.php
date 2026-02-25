@@ -80,6 +80,10 @@ class DashboardController extends BaseController
             'pengeluaran' => match ($param) {
                     'PEGAWAI', 'BARANG_JASA', 'MODAL' => Auth::user()->hasPermission('PENGELUARAN_VIEW') || Auth::user()->isAdmin() ? view('dashboard.pages.pengeluaran.index', ['param' => $param]) : abort(403),
                     'ANGGARAN' => (Auth::user()->hasPermission('KODE_REKENING_PENGELUARAN_VIEW') || Auth::user()->hasPermission('KODE_REKENING_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.anggaran') : abort(403),
+                    'disbursement' => (Auth::user()->hasPermission('PENGELUARAN_CAIR') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.disbursement') : abort(403),
+                    'saldo' => (Auth::user()->hasPermission('PENGELUARAN_CAIR') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.saldo') : abort(403),
+                    'ledger' => (Auth::user()->hasPermission('PENGELUARAN_BKU') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.ledger') : abort(403),
+                    'rekening-koran' => (Auth::user()->hasPermission('PENGELUARAN_CAIR') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.rekening-koran') : abort(403),
                     default => abort(404),
                 },
 
@@ -136,10 +140,10 @@ class DashboardController extends BaseController
             $realisasiGross = $totalRS + $totalPelayanan;
             $realisasiNet = max(0, $realisasiGross - $totalPotongan);
 
-            /* 4. REALISASI PENGELUARAN */
-            $realisasiPengeluaran = DB::table('pengeluaran')
-                ->whereYear('tanggal', $tahunAnggaran)
-                ->sum('nominal');
+            /* 4. REALISASI PENGELUARAN (ECONOMIC) */
+            $realisasiPengeluaran = DB::table('expenditures')
+                ->whereYear('spending_date', $tahunAnggaran)
+                ->sum('gross_value');
 
             /* 5. PERSENTASE CAPAIAN */
             $persenCapaian = $targetPendapatan > 0 ? round(($realisasiNet / $targetPendapatan) * 100, 2) : 0;
@@ -223,10 +227,11 @@ class DashboardController extends BaseController
         try {
             $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
 
-            $results = DB::table('pengeluaran')
-                ->whereYear('tanggal', $tahunAnggaran)
-                ->select('kategori', DB::raw('SUM(nominal) as total'))
-                ->groupBy('kategori')
+            $results = DB::table('expenditures')
+                ->join('kode_rekening', 'expenditures.kode_rekening_id', '=', 'kode_rekening.id')
+                ->whereYear('expenditures.spending_date', $tahunAnggaran)
+                ->select('kode_rekening.sumber_data as kategori', DB::raw('SUM(expenditures.gross_value) as total'))
+                ->groupBy('kode_rekening.sumber_data')
                 ->get();
 
             $map = [
@@ -291,11 +296,11 @@ class DashboardController extends BaseController
             }
             $values[] = $monthTotal;
 
-            // 2. PENGELUARAN
-            $pengTotal = DB::table('pengeluaran')
-                ->whereYear('tanggal', $year)
-                ->whereMonth('tanggal', $m)
-                ->sum('nominal');
+            // 2. PENGELUARAN (ECONOMIC)
+            $pengTotal = DB::table('expenditures')
+                ->whereYear('spending_date', $year)
+                ->whereMonth('spending_date', $m)
+                ->sum('gross_value');
             $valuesPengeluaran[] = $pengTotal;
         }
 

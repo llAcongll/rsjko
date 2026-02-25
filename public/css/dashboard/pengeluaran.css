@@ -57,3 +57,35 @@
     outline: none;
     background-color: #fff;
 }
+
+/* Status Filter Buttons */
+.btn-filter-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-filter-status:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #334155;
+}
+
+.btn-filter-status.active {
+    background: #1e293b;
+    border-color: #1e293b;
+    color: #fff;
+}
+
+.btn-filter-status i {
+    font-size: 15px;
+}

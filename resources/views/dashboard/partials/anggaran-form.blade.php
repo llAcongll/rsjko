@@ -6,7 +6,7 @@
     <div class="modal-total-box">
       <div class="total-left">
         <label class="modal-total-label">Subtotal Anggaran (Rp)</label>
-        <div class="total-tahun">Tahun Anggaran: <span id="arTahunLabel" style="font-weight: 700;">2026</span></div>
+        <div class="total-tahun">Tahun Anggaran : <span id="arTahunLabel" style="font-weight: 700;">2026</span></div>
       </div>
       <input id="arNilai" class="modal-total-value"
         style="background:transparent; border:none; text-align:right; pointer-events:none;" value="Rp 0" readonly>

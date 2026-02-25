@@ -20,6 +20,7 @@ class Pengeluaran extends Model
         'potongan_pajak',
         'total_dibayarkan',
         'metode_pembayaran',
+        'siklus_up',
         'no_spm',
         'no_sp2d',
         'no_spp',

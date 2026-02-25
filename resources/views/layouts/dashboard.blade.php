@@ -165,18 +165,37 @@
         </button>
 
         <div class="submenu-child" id="submenuPengeluaran">
-          <button onclick="openPengeluaran('PEGAWAI', this)">
-            <i class="ph ph-identification-card"></i>
-            <span>Pegawai</span>
+          <div class="submenu-header">Pengajuan Pencairan</div>
+          <button onclick="openSppPage(this)">
+            <i class="ph ph-file-text"></i>
+            <span>SPP</span>
           </button>
-          <button onclick="openPengeluaran('BARANG_JASA', this)">
-            <i class="ph ph-package"></i>
-            <span>Barang dan Jasa</span>
+          <button onclick="openSpmPage(this)">
+            <i class="ph ph-seal-check"></i>
+            <span>SPM</span>
           </button>
-          <button onclick="openPengeluaran('MODAL', this)">
+          <button onclick="openSp2dPage(this)">
+            <i class="ph ph-check-circle"></i>
+            <span>SP2D (Cair)</span>
+          </button>
+
+          <div class="submenu-header">Kelola Kas</div>
+          <button onclick="openRekeningKoranPengeluaran(this)">
             <i class="ph ph-bank"></i>
-            <span>Modal Aset Lainnya</span>
+            <span>Rekening Koran</span>
           </button>
+          <button onclick="openSaldoDana(this)">
+            <i class="ph ph-piggy-bank"></i>
+            <span>Saldo Dana</span>
+          </button>
+
+          <div class="submenu-header">Laporan Kas</div>
+          @if(auth()->user()->hasPermission('PENGELUARAN_BKU') || auth()->user()->isAdmin())
+            <button onclick="openTreasurerCash(this)">
+              <i class="ph ph-book-open"></i>
+              <span>Buku Kas Umum</span>
+            </button>
+          @endif
         </div>
       @endif
 
@@ -389,6 +408,7 @@
 
   {{-- MODAL REKENING --}}
   @include('dashboard.partials.rekening-form')
+  @include('dashboard.partials.bank-ledger-form')
 
   {{-- MODAL PIUTANG --}}
   @include('dashboard.partials.piutang-form')
@@ -456,6 +476,10 @@
     src=" {{ asset('js/dashboard/anggaran-rekening.js') }}?v={{ filemtime(public_path('js/dashboard/anggaran-rekening.js')) }}"></script>
   <script
     src="{{ asset('js/dashboard/pengeluaran.js') }}?v={{ filemtime(public_path('js/dashboard/pengeluaran.js')) }}"></script>
+  <script
+    src="{{ asset('js/dashboard/treasurer.js') }}?v={{ filemtime(public_path('js/dashboard/treasurer.js')) }}"></script>
+  <script
+    src="{{ asset('js/dashboard/bank-ledger.js') }}?v={{ filemtime(public_path('js/dashboard/bank-ledger.js')) }}"></script>
   <script src="{{ asset('js/dashboard/logs.js') }}?v={{ filemtime(public_path('js/dashboard/logs.js')) }}"></script>
 
 </body>

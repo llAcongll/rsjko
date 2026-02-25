@@ -322,7 +322,7 @@ window.editPendapatanUmum = function (id) {
   ]).then(([_, data]) => {
     const form = document.getElementById('formPendapatanUmum');
 
-    form.querySelector('[name="tanggal"]').value = data.tanggal.substring(0, 10);
+    form.querySelector('[name="tanggal"]').value = formatDateForInput(data.tanggal);
     form.querySelector('[name="nama_pasien"]').value = data.nama_pasien;
     form.querySelector('[name="ruangan_id"]').value = data.ruangan_id;
 

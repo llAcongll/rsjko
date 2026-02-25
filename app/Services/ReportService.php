@@ -7,6 +7,12 @@ use Carbon\Carbon;
 
 class ReportService
 {
+    protected $numberingService;
+
+    public function __construct(NumberingService $numberingService)
+    {
+        $this->numberingService = $numberingService;
+    }
     /**
      * Get revenue summary across all modules
      */
@@ -232,33 +238,34 @@ class ReportService
      */
     public function getPengeluaranSummary($start, $end, $tahun)
     {
-        $query = DB::table('pengeluaran')
-            ->join('kode_rekening', 'pengeluaran.kode_rekening_id', '=', 'kode_rekening.id')
-            ->whereYear('pengeluaran.tanggal', $tahun)
-            ->whereBetween('pengeluaran.tanggal', [$start, $end]);
+        $query = DB::table('expenditures')
+            ->join('kode_rekening', 'expenditures.kode_rekening_id', '=', 'kode_rekening.id')
+            ->whereYear('expenditures.spending_date', $tahun)
+            ->whereBetween('expenditures.spending_date', [$start, $end]);
 
         $details = (clone $query)
             ->select(
                 'kode_rekening.kode',
                 'kode_rekening.nama',
-                DB::raw('SUM(nominal) as total'),
-                DB::raw("SUM(CASE WHEN metode_pembayaran = 'UP' THEN nominal ELSE 0 END) as up"),
-                DB::raw("SUM(CASE WHEN metode_pembayaran = 'GU' THEN nominal ELSE 0 END) as gu"),
-                DB::raw("SUM(CASE WHEN metode_pembayaran = 'LS' THEN nominal ELSE 0 END) as ls")
+                DB::raw('SUM(gross_value) as total'),
+                DB::raw("SUM(CASE WHEN spending_type = 'UP' THEN gross_value ELSE 0 END) as up"),
+                DB::raw("0 as gu"), // GU is a cash flow, not an economic event category here
+                DB::raw("SUM(CASE WHEN spending_type = 'LS' THEN gross_value ELSE 0 END) as ls")
             )
             ->groupBy('kode_rekening.kode', 'kode_rekening.nama')
             ->orderBy('kode_rekening.kode')
             ->get();
 
-        $summary = DB::table('pengeluaran')
-            ->whereYear('tanggal', $tahun)
-            ->whereBetween('tanggal', [$start, $end])
+        $summary = DB::table('expenditures')
+            ->join('kode_rekening', 'expenditures.kode_rekening_id', '=', 'kode_rekening.id')
+            ->whereYear('spending_date', $tahun)
+            ->whereBetween('spending_date', [$start, $end])
             ->select(
-                'kategori',
-                DB::raw('SUM(nominal) as total'),
+                'kode_rekening.sumber_data as kategori',
+                DB::raw('SUM(gross_value) as total'),
                 DB::raw('COUNT(*) as count')
             )
-            ->groupBy('kategori')
+            ->groupBy('kode_rekening.sumber_data')
             ->get()
             ->keyBy('kategori');
 
@@ -471,9 +478,9 @@ class ReportService
         $penyesuaianData = DB::table('penyesuaian_pendapatans')
             ->select(
                 'perusahaan_id',
-                DB::raw("SUM(CASE WHEN tahun_piutang < $tahun THEN pelunasan ELSE 0 END) as sa_cash"),
-                DB::raw("SUM(CASE WHEN tahun_piutang < $tahun THEN potongan ELSE 0 END) as sa_potongan"),
-                DB::raw("SUM(CASE WHEN tahun_piutang < $tahun THEN administrasi_bank ELSE 0 END) as sa_adm"),
+                DB::raw("SUM(CASE WHEN tahun_piutang < $tahun " . ($end ? "AND tanggal <= '$end'" : "") . " THEN pelunasan ELSE 0 END) as sa_cash"),
+                DB::raw("SUM(CASE WHEN tahun_piutang < $tahun " . ($end ? "AND tanggal <= '$end'" : "") . " THEN potongan ELSE 0 END) as sa_potongan"),
+                DB::raw("SUM(CASE WHEN tahun_piutang < $tahun " . ($end ? "AND tanggal <= '$end'" : "") . " THEN administrasi_bank ELSE 0 END) as sa_adm"),
                 DB::raw("SUM(CASE WHEN tahun_piutang = $tahun " . ($start && $end ? "AND tanggal >= '$start' AND tanggal <= '$end'" : "") . " THEN pelunasan ELSE 0 END) as berjalan_cash"),
                 DB::raw("SUM(CASE WHEN tahun_piutang = $tahun " . ($start && $end ? "AND tanggal >= '$start' AND tanggal <= '$end'" : "") . " THEN potongan ELSE 0 END) as berjalan_potongan"),
                 DB::raw("SUM(CASE WHEN tahun_piutang = $tahun " . ($start && $end ? "AND tanggal >= '$start' AND tanggal <= '$end'" : "") . " THEN administrasi_bank ELSE 0 END) as berjalan_adm")
@@ -496,8 +503,8 @@ class ReportService
             $item->berjalan_pelunasan = (float) $item->berjalan_lunas_gross + $item->berjalan_manual_cash + $item->berjalan_potongan + $item->berjalan_adm;
             $item->total_pelunasan = $item->sa_pelunasan + $item->berjalan_pelunasan;
             $item->total_potongan = $item->sa_potongan + $item->berjalan_potongan;
-            $item->total_adm = $item->sa_adm + $item->berjalan_adm;
-            $item->sisa_2025 = max(0, $item->sa_piutang - $item->sa_pelunasan);
+            $item->total_adm = (float) $item->sa_adm + $item->berjalan_adm;
+            $item->sisa_sa = max(0, $item->sa_piutang - $item->sa_pelunasan);
             $item->saldo_akhir = ($item->sa_piutang + $item->berjalan_piutang) - ($item->sa_pelunasan + $item->berjalan_pelunasan);
             return $item;
         });
@@ -515,17 +522,17 @@ class ReportService
                     'perusahaan_id' => $id,
                     'nama_perusahaan' => $perusahaan->nama ?? 'Unknown',
                     'sa_piutang' => 0,
-                    'sa_pelunasan' => -($sa_pot + $sa_adm),
+                    'sa_pelunasan' => (float) ($sa_pot + $sa_adm),
                     'sa_potongan' => $sa_pot,
                     'sa_adm' => $sa_adm,
                     'berjalan_piutang' => 0,
-                    'berjalan_pelunasan' => -($b_pot + $b_adm),
+                    'berjalan_pelunasan' => (float) ($b_pot + $b_adm),
                     'berjalan_potongan' => $b_pot,
                     'berjalan_adm' => $b_adm,
-                    'total_pelunasan' => -($t_clear),
+                    'total_pelunasan' => (float) ($t_clear),
                     'total_potongan' => $sa_pot + $b_pot,
                     'total_adm' => $sa_adm + $b_adm,
-                    'sisa_2025' => 0,
+                    'sisa_sa' => 0,
                     'saldo_akhir' => -($t_clear)
                 ]);
             }
@@ -543,7 +550,7 @@ class ReportService
             'total_pelunasan' => $finalData->sum('total_pelunasan'),
             'total_potongan' => $finalData->sum('total_potongan'),
             'total_adm' => $finalData->sum('total_adm'),
-            'sisa_2025' => $finalData->sum('sisa_2025'),
+            'sisa_sa' => $finalData->sum('sisa_sa'),
             'saldo_akhir' => $finalData->sum('saldo_akhir'),
         ];
 
@@ -687,8 +694,8 @@ class ReportService
                 $realTotal = $realLalu + $realKini;
             } elseif ($node->category === 'PENGELUARAN') {
                 if ($start > $startOfYear)
-                    $realLalu = DB::table('pengeluaran')->where('kode_rekening_id', $node->id)->whereBetween('tanggal', [$startOfYear, $prevEnd])->sum('nominal');
-                $realKini = DB::table('pengeluaran')->where('kode_rekening_id', $node->id)->whereBetween('tanggal', [$start, $end])->sum('nominal');
+                    $realLalu = DB::table('expenditures')->where('kode_rekening_id', $node->id)->whereBetween('spending_date', [$startOfYear, $prevEnd])->sum('gross_value');
+                $realKini = DB::table('expenditures')->where('kode_rekening_id', $node->id)->whereBetween('spending_date', [$start, $end])->sum('gross_value');
                 $realTotal = $realLalu + $realKini;
             }
         } else {
@@ -736,10 +743,13 @@ class ReportService
             case 'PEGAWAI':
             case 'BARANG_JASA':
             case 'MODAL':
-                $q = DB::table('pengeluaran')->where('kategori', $sumberData)->whereBetween('tanggal', [$startDate, $endDate]);
+                $q = DB::table('expenditures')
+                    ->join('kode_rekening', 'expenditures.kode_rekening_id', '=', 'kode_rekening.id')
+                    ->where('kode_rekening.sumber_data', $sumberData)
+                    ->whereBetween('expenditures.spending_date', [$startDate, $endDate]);
                 if ($nodeId)
-                    $q->where('kode_rekening_id', $nodeId);
-                return $q->sum('nominal');
+                    $q->where('expenditures.kode_rekening_id', $nodeId);
+                return $q->sum('expenditures.gross_value');
         }
         return 0;
     }
@@ -820,6 +830,134 @@ class ReportService
         $res['banks']['TOTAL'] = $res['banks']['BRK'] + $res['banks']['BSI'];
 
         return $res;
+    }
+
+    public function getBkuData($year, $month = null)
+    {
+        $query = \App\Models\TreasurerCash::whereYear('date', $year);
+
+        $openingBalance = 0;
+        if ($month) {
+            $lastEntryBefore = \App\Models\TreasurerCash::where('date', '<', \Carbon\Carbon::create($year, $month, 1)->toDateString())
+                ->orderBy('date', 'desc')
+                ->orderBy('id', 'desc')
+                ->first();
+            $openingBalance = (float) ($lastEntryBefore->balance ?? 0);
+            $query->whereMonth('date', $month);
+        }
+
+        $data = $query->orderBy('date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        // Get bank entries to map them to BKU rows for accurate column sync
+        $bankEntries = \App\Models\BankAccountLedger::whereYear('date', $year)
+            ->orderBy('date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $bankMap = [];
+        foreach ($bankEntries as $be) {
+            // Map by ref for specific rows
+            $bankMap[$be->ref_table][$be->ref_id] = (float) $be->balance;
+            // Also map by its own ID if ref_table is bank_account_ledgers
+            $bankMap['bank_account_ledgers'][$be->id] = (float) $be->balance;
+        }
+
+        $expenditureIds = $data->where('ref_table', 'expenditures')->pluck('ref_id')->unique();
+        $disbursementIds = $data->where('ref_table', 'fund_disbursements')->pluck('ref_id')->unique();
+
+        $expenditures = \App\Models\Expenditure::with('kodeRekening')->whereIn('id', $expenditureIds)->get()->keyBy('id');
+        $disbursements = \App\Models\FundDisbursement::with(['expenditure.kodeRekening', 'kodeRekening'])->whereIn('id', $disbursementIds)->get()->keyBy('id');
+
+        $startDate = $month ? \Carbon\Carbon::create($year, $month, 1)->toDateString() : \Carbon\Carbon::create($year, 1, 1)->toDateString();
+
+        $openingBank = (float) (\App\Models\BankAccountLedger::where('date', '<', $startDate)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->value('balance') ?? 0);
+
+        $currentBankRunning = $openingBank;
+
+        $data->transform(function ($item) use ($expenditures, $disbursements, $bankMap, &$currentBankRunning) {
+            $item->kode_rekening = '';
+            $item->no_bukti = '';
+            $item->uraian = $item->description;
+
+            // Categorization
+            $item->transfer_penerimaan = 0;
+            $item->sp2d_penerimaan = 0;
+            $item->realisasi = 0;
+
+            if ($item->ref_table === 'expenditures' && isset($expenditures[$item->ref_id])) {
+                $exp = $expenditures[$item->ref_id];
+                $item->kode_rekening = $exp->kodeRekening->kode ?? '';
+                $item->no_bukti = $exp->no_bukti ?? '';
+                $item->uraian = $exp->description ?? $item->description;
+            } elseif ($item->ref_table === 'fund_disbursements' && isset($disbursements[$item->ref_id])) {
+                $disb = $disbursements[$item->ref_id];
+                $item->no_bukti = $disb->sp2d_no ?? '';
+                $item->uraian = $disb->description ?? $item->description;
+                if ($disb->expenditure) {
+                    $item->kode_rekening = $disb->expenditure->kodeRekening->kode ?? '';
+                } else {
+                    $item->kode_rekening = $disb->kodeRekening->kode ?? '';
+                }
+            }
+
+            // Determine if it's an activity (SPP-based) or just a fund refill
+            $isActivity = str_contains($item->type, 'ACTIVITY');
+            if (!$isActivity && $item->ref_table === 'fund_disbursements' && isset($disbursements[$item->ref_id])) {
+                $isActivity = !empty($disbursements[$item->ref_id]->spp_no);
+            }
+
+            if ($item->debit > 0) {
+                // Special case: Only UP and GU activities move to Realisasi column upon SP2D cair
+                if (in_array($item->type, ['ACTIVITY_UP', 'ACTIVITY_GU'])) {
+                    $item->realisasi = (float) $item->debit;
+                }
+                // LS activities and all refills (Saldo Dana) stay in Pengajuan SP2D column
+                elseif (in_array($item->type, ['TERIMA_UP', 'GU', 'UP', 'LS_RECEIPT', 'DEPOSIT_LS', 'ACTIVITY_LS'])) {
+                    $item->sp2d_penerimaan = (float) $item->debit;
+                } else {
+                    $item->transfer_penerimaan = (float) $item->debit;
+                }
+            } else {
+                // All expenditures (Credit) go to Realisasi
+                $item->realisasi = (float) $item->credit;
+            }
+
+            // Sync Bank Balance with Rekening Koran specifically for this row
+            if (isset($bankMap[$item->ref_table][$item->ref_id])) {
+                // If this BKU row has a direct bank entry link, use that balance
+                $currentBankRunning = $bankMap[$item->ref_table][$item->ref_id];
+            }
+
+            $item->saldo_bank = $currentBankRunning;
+            $currentBku = (float) $item->balance;
+            $item->saldo_tunai = (float) ($currentBku - $item->saldo_bank);
+            $item->saldo_akhir = $currentBku;
+
+            return $item;
+        });
+
+        $finalBku = $data->last() ? $data->last()->saldo_akhir : $openingBalance;
+        $finalBank = $data->last() ? $data->last()->saldo_bank : $openingBank;
+
+        return [
+            'data' => $data,
+            'opening_balance' => $openingBalance,
+            'opening_bank' => $openingBank,
+            'summary' => [
+                'total_debit_transfer' => (float) $data->sum('transfer_penerimaan'),
+                'total_debit_sp2d' => (float) $data->sum('sp2d_penerimaan'),
+                'total_credit_realisasi' => (float) $data->sum('realisasi'),
+                'final_bank' => $finalBank,
+                'final_tunai' => $finalBku - $finalBank,
+                'final_balance' => $finalBku
+            ],
+            'period' => $month ? \Carbon\Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y') : $year
+        ];
     }
 
     private function emptyStats()

@@ -24,9 +24,7 @@ window.openRekeningForm = function (row = null) {
   rekeningModalTitle.innerText =
     row ? '✏️ Edit Rekening' : '➕ Tambah Rekening';
 
-  rkTanggal.value = row?.tanggal
-    ? new Date(row.tanggal).toISOString().slice(0, 10)
-    : '';
+  rkTanggal.value = formatDateForInput(row?.tanggal);
 
   fillBankDropdown(row?.bank || '');
   rkKeterangan.value = row?.keterangan || '';

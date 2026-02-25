@@ -80,12 +80,19 @@
 
           <p style="font-weight: 600; font-size: 12px; margin-top: 12px; margin-bottom: 8px; color: #1e293b;">
             Pengeluaran (Belanja)</p>
-          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_VIEW"> Lihat Data</label></div>
-          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_CREATE"> Tambah Data</label>
+          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_VIEW"> Lihat Data
+              Belanja</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_CREATE"> Tambah Belanja</label>
           </div>
-          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_UPDATE"> Edit Data</label></div>
-          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_DELETE"> Hapus Data</label>
+          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_UPDATE"> Edit Belanja</label>
           </div>
+          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_DELETE"> Hapus Belanja</label>
+          </div>
+          <div style="margin-top: 4px; border-top: 1px dashed #e2e8f0; padding-top: 4px;"></div>
+          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_CAIR"> Kelola Pencairan
+              (SP2D)</label></div>
+          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_BKU"> Lihat Buku Kas Umum
+              (BKU)</label></div>
 
           <p style="font-weight: 600; font-size: 12px; margin-top: 12px; margin-bottom: 8px; color: #1e293b;">Master
             Data (Dasar)</p>

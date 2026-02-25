@@ -258,7 +258,7 @@ window.editPiutang = async function (id) {
 
         // Populate Form
         const form = document.getElementById('formPiutang');
-        form.querySelector('[name="tanggal"]').value = data.tanggal ? data.tanggal.substring(0, 10) : '';
+        form.querySelector('[name="tanggal"]').value = formatDateForInput(data.tanggal);
         form.querySelector('[name="perusahaan_id"]').value = data.perusahaan_id;
         form.querySelector('[name="bulan_pelayanan"]').value = data.bulan_pelayanan;
         form.querySelector('[name="status"]').value = data.status;

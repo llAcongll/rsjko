@@ -10,6 +10,13 @@ use Carbon\Carbon;
 
 class PengeluaranService
 {
+    protected $siklusService;
+
+    public function __construct(SiklusService $siklusService)
+    {
+        $this->siklusService = $siklusService;
+    }
+
     /**
      * Check if the nominal exceeds the remaining budget.
      */
@@ -50,9 +57,16 @@ class PengeluaranService
             $data['potongan_pajak'] = $data['potongan_pajak'] ?? 0;
             $data['total_dibayarkan'] = max(0, $data['nominal'] - $data['potongan_pajak']);
 
-            $pengeluaran = Pengeluaran::create($data);
-
             $year = date('Y', strtotime($data['tanggal']));
+            $metode = $data['metode_pembayaran'] ?? 'UP';
+
+            if ($metode === 'UP' || $metode === 'GU') {
+                $data['siklus_up'] = $this->siklusService->getActiveSiklus($year);
+            } else {
+                $data['siklus_up'] = 0;
+            }
+
+            $pengeluaran = Pengeluaran::create($data);
             $this->syncNumbers($year);
 
             $pengeluaran->refresh();
@@ -84,6 +98,15 @@ class PengeluaranService
 
             $data['potongan_pajak'] = $data['potongan_pajak'] ?? 0;
             $data['total_dibayarkan'] = max(0, $data['nominal'] - $data['potongan_pajak']);
+
+            $metode = $data['metode_pembayaran'] ?? $pengeluaran->metode_pembayaran ?? 'UP';
+            if (!isset($data['siklus_up'])) {
+                if ($metode === 'UP' || $metode === 'GU') {
+                    $data['siklus_up'] = $this->siklusService->getActiveSiklus($newYear);
+                } else {
+                    $data['siklus_up'] = 0;
+                }
+            }
 
             $pengeluaran->update($data);
 
@@ -145,23 +168,21 @@ class PengeluaranService
             ->orderBy('id', 'asc')
             ->get();
 
-        $metodeCounters = [
-            'UP' => 0,
-            'GU' => 0,
-            'LS' => 0
-        ];
+        $cycleCounters = [];
 
         foreach ($records as $index => $rec) {
             /** @var Pengeluaran $rec */
             $globalIdx = $index + 1;
             $metode = $rec->metode_pembayaran ?: 'UP';
+            $siklus = $rec->siklus_up ?: 0;
 
-            if (!isset($metodeCounters[$metode])) {
-                $metodeCounters[$metode] = 0;
+            $key = "{$metode}_{$siklus}";
+            if (!isset($cycleCounters[$key])) {
+                $cycleCounters[$key] = 0;
             }
 
-            $metodeCounters[$metode]++;
-            $mtdIdx = $metodeCounters[$metode];
+            $cycleCounters[$key]++;
+            $mtdIdx = $cycleCounters[$key];
 
             $monthRoman = $this->getRoman(Carbon::parse($rec->tanggal)->month);
             $y = Carbon::parse($rec->tanggal)->year;
@@ -175,8 +196,16 @@ class PengeluaranService
             $rec->no_spm_metode_index = $mtdIdx;
             $rec->no_sp2d_index = $globalIdx;
 
-            $rec->no_spp = "{$gs}/SPP/{$metode}-{$ms}/BLUD/RSJKO-EHD/{$monthRoman}/{$y}";
-            $rec->no_spm = "{$gs}/SPM/{$metode}-{$ms}/BLUD/RSJKO-EHD/{$monthRoman}/{$y}";
+            if ($metode === 'GU') {
+                $typeLabel = "GU-{$siklus}-{$ms}";
+            } elseif ($metode === 'UP') {
+                $typeLabel = ($siklus > 1) ? "UP-{$siklus}-{$ms}" : "UP-{$ms}";
+            } else {
+                $typeLabel = "{$metode}-{$ms}";
+            }
+
+            $rec->no_spp = "{$gs}/SPP/{$typeLabel}/BLUD/RSJKO-EHD/{$monthRoman}/{$y}";
+            $rec->no_spm = "{$gs}/SPM/{$typeLabel}/BLUD/RSJKO-EHD/{$monthRoman}/{$y}";
             $rec->no_sp2d = "{$gs}/SP2D/1.02.01.03/{$y}";
 
             $rec->saveQuietly();
@@ -214,9 +243,19 @@ class PengeluaranService
         $gspp = str_pad($nextSppGlobal, 4, '0', STR_PAD_LEFT);
         $mspp = str_pad($nextSppMetode, 4, '0', STR_PAD_LEFT);
 
+        $siklus = ($metode === 'UP' || $metode === 'GU') ? $this->siklusService->getActiveSiklus($year) : 0;
+
+        if ($metode === 'GU') {
+            $typeLabel = "GU-{$siklus}-{$mspp}";
+        } elseif ($metode === 'UP') {
+            $typeLabel = ($siklus > 1) ? "UP-{$siklus}-{$mspp}" : "UP-{$mspp}";
+        } else {
+            $typeLabel = "{$metode}-{$mspp}";
+        }
+
         return [
-            'no_spp' => "{$gspp}/SPP/{$metode}-{$mspp}/BLUD/RSJKO-EHD/{$monthRoman}/{$year}",
-            'no_spm' => "{$gspp}/SPM/{$metode}-{$mspp}/BLUD/RSJKO-EHD/{$monthRoman}/{$year}",
+            'no_spp' => "{$gspp}/SPP/{$typeLabel}/BLUD/RSJKO-EHD/{$monthRoman}/{$year}",
+            'no_spm' => "{$gspp}/SPM/{$typeLabel}/BLUD/RSJKO-EHD/{$monthRoman}/{$year}",
             'no_sp2d' => "{$gspp}/SP2D/1.02.01.03/{$year}",
             'indexes' => [
                 'spp_index' => $nextSppGlobal,

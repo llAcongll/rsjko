@@ -227,6 +227,18 @@
                             style="width: 100%; height: 48px; padding-left: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
                     </div>
                 </div>
+
+                <div class="filter-wrapper" style="display: flex; flex-direction: column; gap: 4px; width: 220px;">
+                    <label style="font-size: 11px; font-weight: 600; color: #64748b; margin-left: 4px;">Metode
+                        Pembayaran</label>
+                    <select id="filterMethod" onchange="handleFilterType(this.value)"
+                        style="width: 100%; height: 48px; padding: 0 16px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px; background: #fff; cursor: pointer;">
+                        <option value="">Semua Metode</option>
+                        <option value="UP">Uang Persediaan (UP)</option>
+                        <option value="GU">Ganti Uang (GU)</option>
+                        <option value="LS">Langsung (LS)</option>
+                    </select>
+                </div>
             </div>
         </div>
 

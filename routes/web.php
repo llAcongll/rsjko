@@ -19,9 +19,14 @@ use App\Http\Controllers\PerusahaanController;
 use App\Http\Controllers\MouController;
 use App\Http\Controllers\PiutangController;
 use App\Http\Controllers\PenyesuaianPendapatanController;
-use App\Http\Controllers\PengeluaranController;
+use App\Http\Controllers\ExpenditureController;
+use App\Http\Controllers\SpjController;
+use App\Http\Controllers\DisbursementController;
+use App\Http\Controllers\TreasurerCashController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\PenandaTanganController;
+use App\Http\Controllers\SiklusUpController;
+use App\Http\Controllers\BankAccountLedgerController;
 
 Route::get('/health', function () {
     return response('OK', 200);
@@ -312,17 +317,50 @@ Route::middleware(['auth', 'role:ADMIN,USER'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | PENGELUARAN
+    | AUDIT-SAFE EXPENDITURE (REDESIGN)
     |--------------------------------------------------------------------------
     */
-    Route::prefix('dashboard/pengeluaran')->group(function () {
-        Route::get('/next-spp', [PengeluaranController::class, 'generateNextSppNumber']);
-        Route::get('/', [PengeluaranController::class, 'index']);
-        Route::post('/', [PengeluaranController::class, 'store']);
-        Route::get('/{id}', [PengeluaranController::class, 'show']);
-        Route::put('/{id}', [PengeluaranController::class, 'update']);
-        Route::delete('/{id}', [PengeluaranController::class, 'destroy']);
+    Route::prefix('dashboard/expenditures')->group(function () {
+        Route::get('/', [ExpenditureController::class, 'index']);
+        Route::post('/', [ExpenditureController::class, 'store']);
+        Route::get('/unlinked', [SpjController::class, 'getUnlinkedExpenditures']);
+        Route::get('/{id}', [ExpenditureController::class, 'show']);
+        Route::put('/{id}', [ExpenditureController::class, 'update']);
+        Route::delete('/{id}', [ExpenditureController::class, 'destroy']);
     });
+
+    Route::prefix('dashboard/spj')->group(function () {
+        Route::get('/', [SpjController::class, 'index']);
+        Route::post('/', [SpjController::class, 'store']);
+        Route::get('/{id}', [SpjController::class, 'show']);
+        Route::get('/{id}/print', [SpjController::class, 'print']);
+        Route::put('/{id}/status', [SpjController::class, 'updateStatus']);
+        Route::delete('/{id}', [SpjController::class, 'destroy']);
+    });
+
+    Route::prefix('dashboard/disbursements')->group(function () {
+        Route::get('/', [DisbursementController::class, 'index']);
+        Route::post('/', [DisbursementController::class, 'store']);
+        Route::get('/next-siklus', [DisbursementController::class, 'getNextSiklus']);
+        Route::get('/available-siklus', [DisbursementController::class, 'availableSiklus']);
+        Route::get('/sisa-anggaran', [DisbursementController::class, 'getSisaAnggaran']);
+        Route::get('/saldo-kas', [DisbursementController::class, 'getSaldoKas']);
+        Route::get('/saldo-summary', [DisbursementController::class, 'getSaldoSummary']);
+        Route::get('/{id}', [DisbursementController::class, 'show']);
+        Route::put('/{id}', [DisbursementController::class, 'update']);
+        Route::put('/{id}/status', [DisbursementController::class, 'updateStatus']);
+        Route::put('/{id}/revert', [DisbursementController::class, 'revertStatus']);
+        Route::delete('/{id}', [DisbursementController::class, 'destroy']);
+    });
+
+    Route::get('dashboard/bank-account-ledger', [BankAccountLedgerController::class, 'index']);
+    Route::post('dashboard/bank-account-ledger/deposit', [BankAccountLedgerController::class, 'deposit']);
+
+    // Blade page mapping
+    Route::get('dashboard/pengeluaran/rekening-koran', fn() => view('dashboard.pages.pengeluaran.rekening-koran'));
+
+    Route::get('dashboard/treasurer-cash', [TreasurerCashController::class, 'index']);
+    Route::post('dashboard/treasurer-cash/sync', [TreasurerCashController::class, 'sync']);
 });
 
 
@@ -402,6 +440,10 @@ Route::get('/dashboard/laporan/export/pengeluaran-pdf', [LaporanController::clas
 
 Route::get('/dashboard/laporan/export/dpa', [LaporanController::class, 'exportDpa'])->middleware('auth');
 Route::get('/dashboard/laporan/export/dpa-pdf', [LaporanController::class, 'exportDpaPdf'])->middleware('auth');
+
+Route::get('/dashboard/laporan/bku', [LaporanController::class, 'getBku'])->middleware('auth');
+Route::get('/dashboard/laporan/export/bku', [LaporanController::class, 'exportBku'])->middleware('auth');
+Route::get('/dashboard/laporan/export/bku-pdf', [LaporanController::class, 'exportBkuPdf'])->middleware('auth');
 
 Route::get(
     '/dashboard/pendapatan/anggaran',
