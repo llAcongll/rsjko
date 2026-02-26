@@ -355,6 +355,8 @@ Route::middleware(['auth', 'role:ADMIN,USER'])->group(function () {
 
     Route::get('dashboard/bank-account-ledger', [BankAccountLedgerController::class, 'index']);
     Route::post('dashboard/bank-account-ledger/deposit', [BankAccountLedgerController::class, 'deposit']);
+    Route::put('dashboard/bank-account-ledger/deposit/{id}', [BankAccountLedgerController::class, 'updateDeposit']);
+    Route::delete('dashboard/bank-account-ledger/deposit/{id}', [BankAccountLedgerController::class, 'destroyDeposit']);
 
     // Blade page mapping
     Route::get('dashboard/pengeluaran/rekening-koran', fn() => view('dashboard.pages.pengeluaran.rekening-koran'));

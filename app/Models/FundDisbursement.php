@@ -26,6 +26,8 @@ class FundDisbursement extends Model
         'status',
         'description',
         'number_locked_at',
+        'no_bukti',
+        'no_bukti_urut',
         'spp_urut',
         'spm_urut',
         'sp2d_urut',
@@ -67,5 +69,10 @@ class FundDisbursement extends Model
     public function kodeRekening()
     {
         return $this->belongsTo(KodeRekening::class, 'kode_rekening_id');
+    }
+
+    public function expenditures()
+    {
+        return $this->hasMany(Expenditure::class, 'fund_disbursement_id');
     }
 }

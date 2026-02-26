@@ -24,7 +24,7 @@ class SpjController extends Controller
             $query->where('spj_number', 'like', "%$search%");
         }
 
-        return response()->json($query->orderBy('spj_date', 'desc')->paginate($limit));
+        return response()->json($query->orderBy('spj_date', 'asc')->orderBy('id', 'asc')->paginate($limit));
     }
 
     public function store(Request $request)

@@ -139,18 +139,9 @@ class ExpenditureService
                 "{$expenditure->no_bukti} - {$expenditure->description}"
             );
 
-            // LS expenditure also reduces the bank balance (Rekening Koran)
-            if ($expenditure->spending_type === 'LS') {
-                app(\App\Services\BankLedgerService::class)->recordEntry(
-                    $expenditure->spending_date,
-                    'WITHDRAW_LS',
-                    $expenditure->gross_value,
-                    'expenditures',
-                    $expenditure->id,
-                    'CREDIT',
-                    "{$expenditure->no_bukti} - Belanja LS (Realisasi)"
-                );
-            }
+            // LS expenditure impact to bank is now handled by SP2D (DisbursementService CAIR)
+            // We remove any existing bank entry to ensure no duplicates from old logic
+            app(\App\Services\BankLedgerService::class)->removeEntry('expenditures', $expenditure->id);
 
             ActivityLog::log(
                 'CREATE',
@@ -197,20 +188,8 @@ class ExpenditureService
                 "{$expenditure->no_bukti} - {$expenditure->description}"
             );
 
-            // Sync with bank if LS
-            if ($expenditure->spending_type === 'LS') {
-                app(\App\Services\BankLedgerService::class)->recordEntry(
-                    $expenditure->spending_date,
-                    'WITHDRAW_LS',
-                    $expenditure->gross_value,
-                    'expenditures',
-                    $expenditure->id,
-                    'CREDIT',
-                    "{$expenditure->no_bukti} - Belanja LS (Realisasi)"
-                );
-            } else {
-                app(\App\Services\BankLedgerService::class)->removeEntry('expenditures', $expenditure->id);
-            }
+            // LS expenditure impact to bank is now handled by SP2D (DisbursementService CAIR)
+            app(\App\Services\BankLedgerService::class)->removeEntry('expenditures', $expenditure->id);
 
             ActivityLog::log(
                 'UPDATE',

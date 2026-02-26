@@ -3,6 +3,7 @@
         <h3 id="bankLedgerModalTitle"><i class="ph ph-bank"></i> Tambah Saldo Rekening</h3>
 
         <form id="formBankLedger" onsubmit="submitBankLedger(event)" autocomplete="off">
+            <input type="hidden" id="bankLedgerId">
             <div class="form-group">
                 <label>Tanggal Setor</label>
                 <input type="date" name="date" id="bankLedgerDate" class="form-input" required>

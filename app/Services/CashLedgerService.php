@@ -23,6 +23,7 @@ class CashLedgerService
             // Delete existing entry for this reference if it exists (for updates)
             TreasurerCash::where('ref_table', $refTable)
                 ->where('ref_id', $refId)
+                ->where('type', $type)
                 ->delete();
 
             $entry = new TreasurerCash();
@@ -51,19 +52,27 @@ class CashLedgerService
     /**
      * Remove an entry from the ledger.
      */
-    public function removeEntry($refTable, $refId)
+    public function removeEntry($refTable, $refId, $type = null)
     {
-        DB::transaction(function () use ($refTable, $refId) {
-            $entry = TreasurerCash::where('ref_table', $refTable)
-                ->where('ref_id', $refId)
-                ->lockForUpdate()
-                ->first();
+        DB::transaction(function () use ($refTable, $refId, $type) {
+            $query = TreasurerCash::where('ref_table', $refTable)
+                ->where('ref_id', $refId);
 
-            if ($entry) {
-                $year = Carbon::parse($entry->date)->year;
+            if ($type) {
+                $query->where('type', $type);
+            }
+
+            $entries = $query->lockForUpdate()->get();
+
+            if ($entries->count() > 0) {
+                $year = Carbon::parse($entries->first()->date)->year;
                 // Lock the whole year to prevent race during rebuild
                 DB::table('treasurer_cash')->whereYear('date', $year)->lockForUpdate()->count();
-                $entry->delete();
+
+                foreach ($entries as $entry) {
+                    $entry->delete();
+                }
+
                 $this->rebuildBalances($year);
             }
         });
@@ -82,31 +91,8 @@ class CashLedgerService
 
         $runningBalance = 0;
         foreach ($entries as $entry) {
-            // BKU Balance Logic (Total Liquidity = Bank + Cash):
-            // 1. DEPOSIT_MANUAL: Increases total liquidity.
-            // 2. BELANJA_UP, BELANJA_GU, BELANJA_LS: Decreases total liquidity.
-            // 3. TERIMA_UP, GU, LS_RECEIPT (SP2D Receipts): 
-            //    - UP/GU are transfers from Bank to Cash (Total Liquidity unchanged).
-            //    - LS_RECEIPT is an accounting entry (bypasses total liquidity pool or stays neutral).
-
-            if ($entry->type === 'LS_RECEIPT') {
-                // Traditional LS refill/accounting entry is neutral to BKU
-            } elseif (in_array($entry->type, ['ACTIVITY_UP', 'ACTIVITY_GU'])) {
-                // Activity realizations for UP/GU formally reduce the fund balance in BKU
-                $runningBalance -= (float) ($entry->debit > 0 ? $entry->debit : $entry->credit);
-            } elseif ($entry->type === 'ACTIVITY_LS') {
-                // LS activities are neutral to BKU total balance (Direct bank impact)
-            } elseif ($entry->type === 'BELANJA_LS') {
-                // LS Expenditure reduces total liquidity (Bank reduction at Realisasi stage)
-                $runningBalance -= (float) $entry->credit;
-            } elseif (str_contains($entry->type, 'BELANJA')) {
-                // All other expenditures (UP, GU) reduce the total liquidity (BKU Balance)
-                $runningBalance -= (float) $entry->credit;
-            } elseif ($entry->type === 'DEPOSIT_MANUAL') {
-                $runningBalance += (float) $entry->debit;
-            } else {
-                // Receipts like TERIMA_UP, GU (Refills) are neutral to TOTAL balance (Bank to Cash transfer)
-            }
+            $runningBalance += (float) $entry->debit;
+            $runningBalance -= (float) $entry->credit;
 
             $entry->setAttribute('balance', $runningBalance);
             $entry->saveQuietly();
@@ -131,7 +117,7 @@ class CashLedgerService
 
     /**
      * Force sync the entire ledger from source tables for a given year.
-     * This is useful for fixing data after migrations or manual database changes.
+     * This ensures the BKU mathematically matches the accounting rules.
      */
     public function syncLedger($year)
     {
@@ -139,72 +125,93 @@ class CashLedgerService
             // 1. Clear existing for this year
             TreasurerCash::whereYear('date', $year)->delete();
 
-            // 2. Add from Fund Disbursements (UP, GU, LS)
+            // Clear all bank entries associated with system-managed transactions to avoid orphans
+            \App\Models\BankAccountLedger::whereYear('date', $year)
+                ->whereIn('ref_table', ['fund_disbursements', 'expenditures'])
+                ->delete();
+
+            $bankService = app(\App\Services\BankLedgerService::class);
+
+            // Pre-calculate consolidation totals for bank entries (by SP2D/SPM/SPP Number)
+            $consolidationTotals = DB::table('fund_disbursements')
+                ->whereYear('sp2d_date', $year)
+                ->select(DB::raw('COALESCE(sp2d_no, spm_no, spp_no) as ref_no'), DB::raw('SUM(value) as total'))
+                ->groupBy('ref_no')
+                ->pluck('total', 'ref_no');
+
+            // 2. DISBURSTMENTS (Inflows & Bank Moves)
             $disbursements = \App\Models\FundDisbursement::whereYear('sp2d_date', $year)
-                ->where('status', 'CAIR')
-                ->whereIn('type', ['UP', 'GU', 'LS'])
+                ->whereIn('status', ['SPP', 'SPM', 'CAIR'])
                 ->get();
 
             foreach ($disbursements as $d) {
-                $entry = new TreasurerCash();
-                $entry->date = $d->sp2d_date;
+                $date = $d->sp2d_date;
+                $refNo = $d->sp2d_no ?: ($d->spm_no ?: $d->spp_no);
+                $totalVal = $consolidationTotals[$refNo] ?? $d->value;
 
-                $isActivity = !empty($d->spp_no);
-                $typeLabel = $d->type;
+                if ($d->type === 'LS') {
+                    // LS always records DEBIT in BKU (Receipt)
+                    $this->createEntry($date, 'LS_IN', $d->value, 'fund_disbursements', $d->id, ($d->uraian ?: $d->description));
 
-                if ($d->type === 'UP') {
-                    $typeLabel = $isActivity ? 'ACTIVITY_UP' : 'TERIMA_UP';
-                } elseif ($d->type === 'GU') {
-                    $typeLabel = $isActivity ? 'ACTIVITY_GU' : 'GU';
-                } elseif ($d->type === 'LS') {
-                    $typeLabel = $isActivity ? 'ACTIVITY_LS' : 'LS_RECEIPT';
+                    // Bank: Only CREDIT (money goes out to vendor)
+                    $bankService->recordEntry($date, 'LS_BANK_OUT', $totalVal, 'fund_disbursements', $d->id, 'CREDIT', "Pembayaran LS ke Vendor ({$refNo})", $refNo);
+                } elseif (!$d->expenditure_id && !$d->kode_rekening_id) {
+                    // This is a REFILL (UP/GU) - Inflow to Treasurer Cash
+                    $this->createEntry($date, "AJU_{$d->type}", $d->value, 'fund_disbursements', $d->id, ($d->uraian ?: ($d->description ?: "Isi Saldo Kas {$d->type}")));
+
+                    // Bank: Only CREDIT (money withdrawn from bank to treasurer cash)
+                    $bankService->recordEntry($date, "WITHDRAW_{$d->type}", $totalVal, 'fund_disbursements', $d->id, 'CREDIT', "Penarikan Tunai Kas Bendahara ({$refNo})", $refNo);
+                } else {
+                    // This is an activity SPP (Outflow check). 
+                    $this->createEntry($date, "TRACE_ACTIVITY_{$d->type}", 0, 'fund_disbursements', $d->id, "[Audit Trace] " . ($d->uraian ?: $d->description));
                 }
-
-                $entry->type = $typeLabel;
-                $entry->ref_table = 'fund_disbursements';
-                $entry->ref_id = $d->id;
-                $entry->description = $d->description ?: "Penerimaan {$d->type} - {$d->sp2d_no}";
-                $entry->setAttribute('debit', $d->value);
-                $entry->setAttribute('credit', 0);
-                $entry->save();
             }
 
-            // 3. Add from Expenditures (UP, GU, LS)
+            // 3. EXPENDITURES (The actual Bill/Money Out)
             $expenditures = \App\Models\Expenditure::whereYear('spending_date', $year)
                 ->whereIn('spending_type', ['UP', 'GU', 'LS'])
                 ->get();
 
             foreach ($expenditures as $e) {
-                $entry = new TreasurerCash();
-                $entry->date = $e->spending_date;
-                $entry->type = 'BELANJA_' . $e->spending_type;
-                $entry->ref_table = 'expenditures';
-                $entry->ref_id = $e->id;
-                $entry->description = "{$e->no_bukti} - {$e->description}";
-                $entry->setAttribute('debit', 0);
-                $entry->setAttribute('credit', $e->gross_value);
-                $entry->save();
+                // All expenditures reduce the Treasurer Cash liquidity
+                $this->createEntry($e->spending_date, "BELANJA_{$e->spending_type}", $e->gross_value, 'expenditures', $e->id, "{$e->no_bukti} - {$e->description}", 'CREDIT');
             }
 
-            // 4. Add from Bank Account Ledger (Manual Deposits)
+            // 4. MANUAL DEPOSITS (Direct to Bank)
             $deposits = \App\Models\BankAccountLedger::whereYear('date', $year)
                 ->where('type', 'DEPOSIT_MANUAL')
                 ->get();
 
             foreach ($deposits as $dep) {
-                $entry = new TreasurerCash();
-                $entry->date = $dep->date;
-                $entry->type = $dep->type;
-                $entry->ref_table = 'bank_account_ledgers';
-                $entry->ref_id = $dep->id;
-                $entry->description = $dep->description ?: "Setoran Manual";
-                $entry->setAttribute('debit', $dep->debit);
-                $entry->setAttribute('credit', 0);
-                $entry->save();
+                $this->createEntry($dep->date, $dep->type, $dep->debit, 'bank_account_ledgers', $dep->id, $dep->description ?: "Setoran Manual");
             }
 
-            // 5. Rebuild balances
+            // 5. Rebuild final running balances
             $this->rebuildBalances($year);
         });
+    }
+
+    /**
+     * Helper to create a BKU entry without business logic overhead
+     */
+    private function createEntry($date, $type, $amount, $refTable, $refId, $description, $direction = 'DEBIT')
+    {
+        $entry = new TreasurerCash();
+        $entry->date = $date;
+        $entry->type = $type;
+        $entry->ref_table = $refTable;
+        $entry->ref_id = $refId;
+        $entry->description = $description;
+
+        if ($direction === 'DEBIT') {
+            $entry->setAttribute('debit', $amount);
+            $entry->setAttribute('credit', 0);
+        } else {
+            $entry->setAttribute('debit', 0);
+            $entry->setAttribute('credit', $amount);
+        }
+
+        $entry->save();
+        return $entry;
     }
 }

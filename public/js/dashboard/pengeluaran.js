@@ -20,43 +20,7 @@ window.initPengeluaran = function (kategori) {
     pengeluaranPage = 1;
     pengeluaranKeyword = '';
 
-    // Bind Nominal Input Logic
-    const nominalInput = document.getElementById('pengeluaranNominalDisplay');
-    const nominalHidden = document.getElementById('pengeluaranNominalValue');
-
-    if (nominalInput && nominalHidden) {
-        nominalInput.oninput = () => {
-            const val = parseAngka(nominalInput.value);
-            nominalHidden.value = val;
-            if (window.calculateTotalDibayarkan) window.calculateTotalDibayarkan();
-        };
-        nominalInput.onblur = () => {
-            nominalInput.value = formatRibuan(nominalHidden.value);
-        };
-        nominalInput.onfocus = () => {
-            const val = parseAngka(nominalInput.value);
-            nominalInput.value = val === 0 ? '' : val.toString().replace('.', ',');
-        };
-    }
-
-    // Bind Potongan Pajak Logic
-    const pajakInput = document.getElementById('pengeluaranPotonganPajakDisplay');
-    const pajakHidden = document.getElementById('pengeluaranPotonganPajakValue');
-
-    if (pajakInput && pajakHidden) {
-        pajakInput.oninput = () => {
-            const val = parseAngka(pajakInput.value);
-            pajakHidden.value = val;
-            if (window.calculateTotalDibayarkan) window.calculateTotalDibayarkan();
-        };
-        pajakInput.onblur = () => {
-            pajakInput.value = formatRibuan(pajakHidden.value);
-        };
-        pajakInput.onfocus = () => {
-            const val = parseAngka(pajakInput.value);
-            pajakInput.value = val === 0 ? '' : val.toString().replace('.', ',');
-        };
-    }
+    bindCurrencyInputs();
 
     // Bind Search Input Logic
     const searchInput = document.getElementById('searchPengeluaran');
@@ -152,7 +116,41 @@ window.openPengeluaranForm = function (kategori, id = null) {
     }
 
     loadRekeningPengeluaran(kategori);
+    bindCurrencyInputs();
 };
+
+function bindCurrencyInputs() {
+    const nomDisp = document.getElementById('pengeluaranNominalDisplay');
+    const nomHidden = document.getElementById('pengeluaranNominalValue');
+    const pajDisp = document.getElementById('pengeluaranPotonganPajakDisplay');
+    const pajHidden = document.getElementById('pengeluaranPotonganPajakValue');
+
+    if (!nomDisp || !pajDisp) return;
+
+    const setup = (disp, hidden) => {
+        if (!disp || !hidden) return;
+
+        disp.oninput = function () {
+            let val = this.value.replace(/\D/g, '');
+            this.value = val;
+            hidden.value = val || 0;
+            if (window.calculateTotalDibayarkan) window.calculateTotalDibayarkan();
+        };
+
+        disp.onblur = function () {
+            const val = parseFloat(hidden.value) || 0;
+            this.value = val > 0 ? formatRibuan(val) : '';
+        };
+
+        disp.onfocus = function () {
+            const val = parseFloat(hidden.value) || 0;
+            this.value = val === 0 ? '' : val.toString();
+        };
+    };
+
+    setup(nomDisp, nomHidden);
+    setup(pajDisp, pajHidden);
+}
 
 window.closePengeluaranModal = function () {
     const modal = document.getElementById('pengeluaranModal');
@@ -164,24 +162,44 @@ function resetPengeluaranForm() {
     form?.reset();
     document.getElementById('pengeluaranId').value = '';
     document.getElementById('pengeluaranNominalValue').value = 0;
-    document.getElementById('pengeluaranNominalDisplay').value = '0';
+    document.getElementById('pengeluaranNominalDisplay').value = '';
     document.getElementById('pengeluaranPotonganPajakValue').value = 0;
-    document.getElementById('pengeluaranPotonganPajakDisplay').value = '0';
+    document.getElementById('pengeluaranPotonganPajakDisplay').value = '';
     document.getElementById('pengeluaranTotalDibayarkanValue').value = 0;
-    document.getElementById('pengeluaranTotalDibayarkanDisplay').value = '0';
+    document.getElementById('pengeluaranTotalDibayarkanDisplay').value = '';
     const guSection = document.getElementById('guCycleSection');
     if (guSection) guSection.style.display = 'none';
     const siklusSelect = document.getElementById('pengeluaranSiklus');
     if (siklusSelect) siklusSelect.value = '';
+
+    // Clear disbursement link if exists
+    const hiddenId = document.getElementById('pengeluaranFundDisbursementId');
+    if (hiddenId) hiddenId.value = '';
+
+    // Re-enable all options
+    const metodeSelect = document.getElementById('pengeluaranMetode');
+    if (metodeSelect) {
+        Array.from(metodeSelect.options).forEach(opt => opt.disabled = false);
+    }
 }
 
 window.calculateTotalDibayarkan = function () {
-    const nominal = parseAngka(document.getElementById('pengeluaranNominalValue').value) || 0;
-    const pajak = parseAngka(document.getElementById('pengeluaranPotonganPajakValue').value) || 0;
+    const nomVal = document.getElementById('pengeluaranNominalValue');
+    const pajVal = document.getElementById('pengeluaranPotonganPajakValue');
+    const totVal = document.getElementById('pengeluaranTotalDibayarkanValue');
+    const totDisp = document.getElementById('pengeluaranTotalDibayarkanDisplay');
+
+    if (!nomVal || !totDisp) return;
+
+    const nominal = parseFloat(nomVal.value) || 0;
+    const pajak = parseFloat(pajVal?.value || 0) || 0;
     const total = nominal - pajak;
 
-    document.getElementById('pengeluaranTotalDibayarkanValue').value = total;
-    document.getElementById('pengeluaranTotalDibayarkanDisplay').value = formatRibuan(total);
+    if (totVal) totVal.value = total;
+    if (totDisp) {
+        // As long as there is a nominal value, show the total (even if it's 0)
+        totDisp.value = (nominal > 0 || pajak > 0) ? formatRibuan(total) : '';
+    }
 };
 
 /* =========================
@@ -324,6 +342,9 @@ function loadEditData(id) {
 
             idEl.value = data.id;
 
+            const fdIdEl = document.getElementById('pengeluaranFundDisbursementId');
+            if (fdIdEl) fdIdEl.value = data.fund_disbursement_id || '';
+
             if (data.spending_date) {
                 // Ensure date doesn't shift by using local date parts if it's already a JS date-like string
                 const d = new Date(data.spending_date);
@@ -458,6 +479,7 @@ window.submitPengeluaran = async function (event) {
         spending_type: formData.get('metode_pembayaran'),
         siklus_up: formData.get('siklus_up'),
         vendor: formData.get('vendor') || '',
+        fund_disbursement_id: formData.get('fund_disbursement_id') || null,
     };
 
     if (id) apiData['_method'] = 'PUT';
@@ -484,7 +506,16 @@ window.submitPengeluaran = async function (event) {
 
         toast('Data berhasil disimpan', 'success');
         closePengeluaranModal();
-        loadPengeluaran();
+
+        // Refresh appropriate lists
+        if (typeof loadPengeluaran === 'function' && document.getElementById('tablePengeluaran')) {
+            loadPengeluaran();
+        }
+
+        // If we are in the "Manage Activities" view in Pencairan
+        if (typeof loadBelanjaItems === 'function' && window.currentBelanjaDisbursement) {
+            loadBelanjaItems(window.currentBelanjaDisbursement.id);
+        }
     } catch (err) {
         toast(err.message, 'error');
     } finally {
@@ -545,61 +576,51 @@ window.openPengeluaranDetail = function (id) {
     content.innerHTML = '<div class="col-span-2 text-center py-4"><i class="ph ph-spinner animate-spin text-2xl"></i></div>';
     modal.classList.add('show');
 
-    fetch(`/dashboard/pengeluaran/${id}`, { headers: { Accept: 'application/json' } })
+    fetch(`/dashboard/expenditures/${id}`, { headers: { Accept: 'application/json' } })
         .then(res => res.json())
         .then(data => {
+            const rek = data.kode_rekening || {};
             content.innerHTML = `
                 <div class="detail-row">
                     <span class="label">Tanggal</span>
-                    <span class="value">${formatTanggal(data.tanggal)}</span>
+                    <span class="value">${formatTanggal(data.spending_date)}</span>
                 </div>
                 <div class="detail-row">
-                    <span class="label">Kategori</span>
-                    <span class="value">${data.kategori}</span>
+                    <span class="label">No. Bukti</span>
+                    <span class="value" style="color: #6366f1; font-weight: 700; font-family: monospace;">${data.no_bukti || '-'}</span>
                 </div>
                 <div class="detail-row">
                     <span class="label">Kode Rekening</span>
-                    <span class="value"><code>${data.kode_rekening?.kode ?? '-'}</code></span>
+                    <span class="value"><code>${rek.kode ?? '-'}</code></span>
                 </div>
                 <div class="detail-row">
                     <span class="label">Nama Rekening</span>
-                    <span class="value">${data.kode_rekening?.nama ?? '-'}</span>
+                    <span class="value">${rek.nama ?? '-'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Vendor</span>
+                    <span class="value">${data.vendor || '-'}</span>
                 </div>
                 <div class="detail-row">
                     <span class="label">Uraian</span>
-                    <span class="value">${escapeHtml(data.uraian)}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Keterangan</span>
-                    <span class="value">${escapeHtml(data.keterangan || '-')}</span>
+                    <span class="value">${escapeHtml(data.description)}</span>
                 </div>
                 <div class="detail-row">
                     <span class="label">Metode Pembayaran</span>
-                    <span class="value">${data.metode_pembayaran === 'UP' ? 'Uang Persediaan' : (data.metode_pembayaran === 'GU' ? 'Ganti Uang' : (data.metode_pembayaran === 'LS' ? 'Langsung' : '-'))}</span>
+                    <span class="value">${data.spending_type === 'UP' ? 'Uang Persediaan' : (data.spending_type === 'GU' ? 'Ganti Uang' : (data.spending_type === 'LS' ? 'Langsung' : '-'))}</span>
                 </div>
-                <div class="detail-row">
-                    <span class="label">No. SPP</span>
-                    <span class="value">${data.no_spp ?? '-'}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">No. SPM</span>
-                    <span class="value">${data.no_spm ?? '-'}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">No. SP2D</span>
-                    <span class="value">${data.no_sp2d ?? '-'}</span>
-                </div>
+                
                 <div class="detail-total mt-4">
-                    <span>Jumlah yang diminta</span>
-                    <strong>${formatRupiah(data.nominal)}</strong>
+                    <span>Bruto (Rp)</span>
+                    <strong>${formatRupiah(data.gross_value)}</strong>
                 </div>
                 <div class="detail-row" style="margin-top: 12px; border-bottom: none; padding-bottom: 0;">
                     <span class="label">Potongan Pajak</span>
-                    <span class="value text-red-500">${formatRupiah(data.potongan_pajak || 0)}</span>
+                    <span class="value text-red-500">${formatRupiah(data.tax || 0)}</span>
                 </div>
-                <div class="detail-total mt-2" style="background: #ecfdf5; border-color: #6ee7b7;">
-                    <span style="color: #047857;">Total Dibayarkan</span>
-                    <strong style="color: #059669;">${formatRupiah(data.total_dibayarkan || 0)}</strong>
+                <div class="detail-total mt-2" style="background: #f0fdf4; border-color: #86efac;">
+                    <span style="color: #166534;">Netto (Total Dibayar)</span>
+                    <strong style="color: #15803d;">${formatRupiah(data.net_value || 0)}</strong>
                 </div>
             `;
         })

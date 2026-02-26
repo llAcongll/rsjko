@@ -25,8 +25,8 @@ class NumberingService
             $urutStr = str_pad($urut, 4, '0', STR_PAD_LEFT);
             $noBukti = "{$urutStr}/BUKTI -{$type} {$siklus} /BLUD/39.01/RSJKO-EHD/{$romawi}/{$year}";
         } else {
-            // For UP (or others)
-            $urut = DocumentSequence::nextNumber('BUKTI', $year, $siklus, $type);
+            // For UP (or others) - Always use siklus 0 to ensure continuous numbering for the whole year
+            $urut = DocumentSequence::nextNumber('BUKTI', $year, 0, $type);
             $urutStr = str_pad($urut, 4, '0', STR_PAD_LEFT);
             $noBukti = "{$urutStr}/BUKTI - {$type}/BLUD/39.01/RSJKO-EHD/{$romawi}/{$year}";
         }
@@ -49,11 +49,10 @@ class NumberingService
         $romawi = $this->getRomanMonth($date);
 
         if ($type === 'UP') {
-            $typeLabel = 'UP';
+            $typeLabel = "UP-{$siklus}";
         } elseif ($type === 'GU') {
             $typeLabel = "GU-{$siklus}";
         } else {
-            // LS
             $typeLabel = "LS-{$dalamSiklus}";
         }
 
@@ -70,11 +69,10 @@ class NumberingService
         $romawi = $this->getRomanMonth($date);
 
         if ($type === 'UP') {
-            $typeLabel = 'UP';
+            $typeLabel = "UP-{$siklus}";
         } elseif ($type === 'GU') {
             $typeLabel = "GU-{$siklus}";
         } else {
-            // LS
             $typeLabel = "LS-{$dalamSiklus}";
         }
 

@@ -30,7 +30,8 @@ class PendapatanUmumController extends Controller
 
         $query = PendapatanUmum::with('ruangan')
             ->where('tahun', session('tahun_anggaran'))
-            ->orderBy('tanggal', 'asc');
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('id', 'asc');
 
         if ($search) {
             $query->where(function ($q) use ($search) {

@@ -27,7 +27,8 @@ class PendapatanLainController extends Controller
         $search = $request->get('search');
         $query = PendapatanLain::with('ruangan', 'mou')
             ->where('tahun', session('tahun_anggaran'))
-            ->orderBy('tanggal', 'asc');
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('id', 'asc');
 
         if ($search) {
             $query->where(function ($q) use ($search) {

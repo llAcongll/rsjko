@@ -11,23 +11,36 @@ class BankLedgerService
     /**
      * Record a transaction into the bank account ledger (Rekening Koran)
      */
-    public function recordEntry($date, $type, $amount, $refTable, $refId, $direction = 'DEBIT', $description = null)
+    public function recordEntry($date, $type, $amount, $refTable, $refId, $direction = 'DEBIT', $description = null, $refNo = null)
     {
-        return DB::transaction(function () use ($date, $type, $amount, $refTable, $refId, $direction, $description) {
+        return DB::transaction(function () use ($date, $type, $amount, $refTable, $refId, $direction, $description, $refNo) {
             $year = Carbon::parse($date)->year;
 
             // Lock ledger for year
             DB::table('bank_account_ledgers')->whereYear('date', $year)->lockForUpdate()->count();
 
-            BankAccountLedger::where('ref_table', $refTable)
-                ->where('ref_id', $refId)
-                ->delete();
+            // Find existing entry: Check ref_table, ref_id AND type
+            $query = BankAccountLedger::where('ref_table', $refTable)
+                ->where('type', $type);
 
-            $entry = new BankAccountLedger();
+            if ($refNo) {
+                $query->where('ref_no', $refNo);
+            } else {
+                $query->where('ref_id', $refId);
+            }
+
+            $entry = $query->first();
+
+            if (!$entry) {
+                $entry = new BankAccountLedger();
+                $entry->ref_id = $refId;
+                $entry->ref_table = $refTable;
+                $entry->type = $type; // Ensure type is set for new entries
+            }
+
             $entry->date = $date;
             $entry->type = $type;
-            $entry->ref_table = $refTable;
-            $entry->ref_id = $refId;
+            $entry->ref_no = $refNo;
             $entry->description = $description;
 
             if ($direction === 'DEBIT') { // Uang Masuk
@@ -45,18 +58,26 @@ class BankLedgerService
         });
     }
 
-    public function removeEntry($refTable, $refId)
+    public function removeEntry($refTable, $refId, $type = null)
     {
-        DB::transaction(function () use ($refTable, $refId) {
-            $entry = BankAccountLedger::where('ref_table', $refTable)
-                ->where('ref_id', $refId)
-                ->lockForUpdate()
-                ->first();
+        DB::transaction(function () use ($refTable, $refId, $type) {
+            $query = BankAccountLedger::where('ref_table', $refTable)
+                ->where('ref_id', $refId);
 
-            if ($entry) {
-                $year = Carbon::parse($entry->date)->year;
+            if ($type) {
+                $query->where('type', $type);
+            }
+
+            $entries = $query->lockForUpdate()->get();
+
+            if ($entries->count() > 0) {
+                $year = Carbon::parse($entries->first()->date)->year;
                 DB::table('bank_account_ledgers')->whereYear('date', $year)->lockForUpdate()->count();
-                $entry->delete();
+
+                foreach ($entries as $entry) {
+                    $entry->delete();
+                }
+
                 $this->rebuildBalances($year);
             }
         });

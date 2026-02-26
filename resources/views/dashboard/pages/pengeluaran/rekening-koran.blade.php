@@ -58,11 +58,12 @@
                         <th width="160" class="text-right">Debit (Masuk)</th>
                         <th width="160" class="text-right">Kredit (Keluar)</th>
                         <th width="180" class="text-right">Saldo</th>
+                        <th width="100" class="text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="tableBankLedgerBody">
                     <tr>
-                        <td colspan="7" class="text-center">Memuat data...</td>
+                        <td colspan="8" class="text-center">Memuat data...</td>
                     </tr>
                 </tbody>
             </table>

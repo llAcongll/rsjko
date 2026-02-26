@@ -135,8 +135,29 @@ window.viewSpjDetail = function (id) {
 };
 
 window.hapusSpj = function (id) {
-    if (!confirm('Hapus SPJ ini? Belanja yang terkait akan menjadi UNLINKED kembali.')) return;
+    const modal = document.getElementById('modalConfirmAction');
+    if (modal) {
+        document.getElementById('confirmActionIcon').innerHTML = '<i class="ph ph-trash-simple" style="color:#dc2626;"></i>';
+        document.getElementById('confirmActionTitle').innerText = 'Hapus SPJ';
+        document.getElementById('confirmActionMessage').innerHTML = 'Hapus SPJ ini? Belanja yang terkait akan menjadi UNLINKED kembali.';
 
+        const btn = document.getElementById('btnConfirmActionProceed');
+        btn.innerHTML = `<i class="ph ph-trash"></i> Ya, Hapus SPJ`;
+        btn.style.backgroundColor = '#dc2626';
+        btn.style.color = '#ffffff';
+        btn.onclick = function () {
+            closeConfirmActionModal();
+            executeHapusSpj(id);
+        };
+        modal.classList.add('show');
+    } else {
+        if (confirm('Hapus SPJ ini? Belanja yang terkait akan menjadi UNLINKED kembali.')) {
+            executeHapusSpj(id);
+        }
+    }
+};
+
+function executeHapusSpj(id) {
     fetch(`/dashboard/spj/${id}`, {
         method: 'DELETE',
         headers: {
@@ -153,7 +174,7 @@ window.hapusSpj = function (id) {
             loadSpj();
         })
         .catch((err) => toast(err.message || 'Gagal menghapus SPJ', 'error'));
-};
+}
 
 /* =========================
    SALDO DANA LOGIC
@@ -317,8 +338,29 @@ window.submitSaldo = function (e) {
 };
 
 window.hapusSaldo = function (id) {
-    if (!confirm('Hapus data saldo ini? Entri BKU juga akan dihapus.')) return;
+    const modal = document.getElementById('modalConfirmAction');
+    if (modal) {
+        document.getElementById('confirmActionIcon').innerHTML = '<i class="ph ph-trash" style="color:#dc2626;"></i>';
+        document.getElementById('confirmActionTitle').innerText = 'Hapus Saldo';
+        document.getElementById('confirmActionMessage').innerText = 'Hapus data saldo ini? Entri BKU juga akan dihapus.';
 
+        const btn = document.getElementById('btnConfirmActionProceed');
+        btn.innerHTML = `<i class="ph ph-trash"></i> Hapus Saldo`;
+        btn.style.backgroundColor = '#dc2626';
+        btn.style.color = '#ffffff';
+        btn.onclick = function () {
+            closeConfirmActionModal();
+            executeHapusSaldo(id);
+        };
+        modal.classList.add('show');
+    } else {
+        if (confirm('Hapus data saldo ini? Entri BKU juga akan dihapus.')) {
+            executeHapusSaldo(id);
+        }
+    }
+};
+
+function executeHapusSaldo(id) {
     fetch(`/dashboard/disbursements/${id}`, {
         method: 'DELETE',
         headers: {
@@ -336,7 +378,7 @@ window.hapusSaldo = function (id) {
             loadSaldoTable();
         })
         .catch(err => toast(err.message, 'error'));
-};
+}
 
 /* =========================
    DISBURSEMENT LOGIC
@@ -352,23 +394,27 @@ window.initDisbursement = function () {
     const titleEl = document.querySelector('.dashboard-header h2');
     const subEl = document.querySelector('.dashboard-header p');
     const addBtn = document.querySelector('.btn-tambah-data');
-    const filterBar = document.getElementById('filterBar');
 
     if (disbursementPageMode === 'SPP') {
         if (titleEl) titleEl.innerHTML = '<i class="ph ph-file-text"></i> SPP (Surat Permintaan Pembayaran)';
         if (subEl) subEl.textContent = 'Buat dan kelola pengajuan SPP';
         if (addBtn) addBtn.style.display = '';
-        disbursementStatusFilter = 'SPP';
+        disbursementStatusFilter = 'DRAFT,SPP';
     } else if (disbursementPageMode === 'SPM') {
         if (titleEl) titleEl.innerHTML = '<i class="ph ph-seal-check"></i> SPM (Surat Perintah Membayar)';
-        if (subEl) subEl.textContent = 'Proses SPP yang sudah diajukan menjadi SPM';
+        if (subEl) subEl.textContent = 'Proses SPP menjadi SPM';
         if (addBtn) addBtn.style.display = 'none';
-        disbursementStatusFilter = 'SPP,SPM'; // Show SPP (to advance) + SPM (to revert)
+        disbursementStatusFilter = 'SPP,SPM';
     } else if (disbursementPageMode === 'SP2D') {
         if (titleEl) titleEl.innerHTML = '<i class="ph ph-check-circle"></i> SP2D (Surat Perintah Pencairan Dana)';
-        if (subEl) subEl.textContent = 'Cairkan SPM yang sudah disetujui';
+        if (subEl) subEl.textContent = 'Proses pencairan & Assign nomor SP2D';
         if (addBtn) addBtn.style.display = 'none';
-        disbursementStatusFilter = 'SPM,CAIR'; // Show SPM items ready to be advanced + already CAIR
+        disbursementStatusFilter = 'SPM,CAIR';
+    } else if (disbursementPageMode === 'PENCAIRAN') {
+        if (titleEl) titleEl.innerHTML = '<i class="ph ph-wallet"></i> Realisasi Pencairan (UP/GU/LS)';
+        if (subEl) subEl.textContent = 'Daftar kegiatan yang telah dicairkan';
+        if (addBtn) addBtn.style.display = 'none';
+        disbursementStatusFilter = 'CAIR';
     }
 
     // Set active filter button
@@ -394,6 +440,11 @@ window.loadDisbursements = function () {
     let url = '/dashboard/disbursements?limit=50&is_saldo=0';
     if (disbursementStatusFilter) url += `&status=${disbursementStatusFilter}`;
 
+    // Apply Type Filter for PENCAIRAN mode (UP/GU/LS)
+    if (disbursementPageMode === 'PENCAIRAN') {
+        url += '&type=UP,GU,LS';
+    }
+
     fetch(url, { headers: { 'Accept': 'application/json' } })
         .then(res => res.json())
         .then(res => {
@@ -415,26 +466,50 @@ window.loadDisbursements = function () {
                 // Build action buttons based on current status AND page mode
                 let actionHtml = '';
                 if (disbursementPageMode === 'SPP') {
-                    // SPP page: edit & hapus SPP
-                    if (item.status === 'SPP') {
+                    if (item.status === 'DRAFT' || item.status === 'SPP') {
                         actionHtml += `<button class="btn-aksi" title="Edit SPP" onclick="editDisbursement(${item.id})" style="color:#2563eb;"><i class="ph ph-pencil-simple"></i></button>`;
                         actionHtml += `<button class="btn-aksi delete" title="Hapus SPP" onclick="hapusDisbursement(${item.id})"><i class="ph ph-trash"></i></button>`;
                     }
                 } else if (disbursementPageMode === 'SPM') {
-                    // SPM page: proses SPP->SPM, atau batalkan SPM->SPP
                     if (item.status === 'SPP') {
-                        actionHtml += `<button class="btn-aksi" title="Proses ke SPM" onclick="advanceStatus(${item.id}, 'SPM')" style="color:#047857;"><i class="ph ph-seal-check"></i> <span style='font-size:0.7rem'>Proses SPM</span></button>`;
+                        actionHtml += `<button class="btn-aksi" title="Proses ke SPM" onclick="advanceStatus(${item.id}, 'SPM')" style="color:#047857;"><i class="ph ph-seal-check"></i> <span style='font-size:0.7rem'>Ke SPM</span></button>`;
                     }
                     if (item.status === 'SPM') {
-                        actionHtml += `<button class="btn-aksi" title="Batalkan SPM" onclick="revertStatus(${item.id}, 'SPP')" style="color:#dc2626;"><i class="ph ph-arrow-counter-clockwise"></i> <span style='font-size:0.7rem'>Batal SPM</span></button>`;
+                        actionHtml += `<button class="btn-aksi" title="Batalkan SPM" onclick="revertStatus(${item.id}, 'SPP')" style="color:#dc2626;"><i class="ph ph-arrow-counter-clockwise"></i> <span style='font-size:0.7rem'>Batal</span></button>`;
                     }
                 } else if (disbursementPageMode === 'SP2D') {
-                    // SP2D page: cairkan SPM->CAIR, atau batalkan CAIR->SPM
                     if (item.status === 'SPM') {
-                        actionHtml += `<button class="btn-aksi" title="Cairkan (SP2D)" onclick="advanceStatus(${item.id}, 'CAIR')" style="color:#1d4ed8;"><i class="ph ph-check-circle"></i> <span style='font-size:0.7rem'>Cairkan</span></button>`;
+                        actionHtml += `<button class="btn-aksi" title="Cairkan (Assign SP2D)" onclick="advanceStatus(${item.id}, 'CAIR')" style="color:#1d4ed8;"><i class="ph ph-check-circle"></i> <span style='font-size:0.7rem'>Assign SP2D</span></button>`;
                     }
                     if (item.status === 'CAIR') {
-                        actionHtml += `<button class="btn-aksi" title="Batalkan SP2D" onclick="revertStatus(${item.id}, 'SPM')" style="color:#dc2626;"><i class="ph ph-arrow-counter-clockwise"></i> <span style='font-size:0.7rem'>Batal SP2D</span></button>`;
+                        actionHtml += `<span style="font-size:0.7rem; color:#64748b">Selesai (Lihat di Pencairan)</span>`;
+                    }
+                } else if (disbursementPageMode === 'PENCAIRAN') {
+                    // Horizontal Action Group
+                    if (item.status === 'CAIR') {
+                        actionHtml += `
+                        <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+                            <button class="btn-aksi" title="Detail Belanja" onclick="openBelanjaItems(${item.id})" 
+                                style="width: auto; height: 32px; padding: 0 12px; border-radius: 8px; background: #ecfdf5; color: #059669; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1px solid #10b981;">
+                                <i class="ph ph-shopping-cart" style="font-size: 14px;"></i> <span>Belanja</span>
+                            </button>
+                            
+                            <button class="btn-aksi" title="Lihat Detail" onclick="viewDisbursement(${item.id})" 
+                                style="width: 32px; height: 32px; background: #eff6ff; color: #2563eb; border: 1px solid #3b82f6;">
+                                <i class="ph ph-eye"></i>
+                            </button>
+                            
+                            <button class="btn-aksi" title="Edit Data" onclick="editDisbursement(${item.id})" 
+                                style="width: 32px; height: 32px; background: #fffbeb; color: #d97706; border: 1px solid #f59e0b;">
+                                <i class="ph ph-pencil-simple"></i>
+                            </button>
+
+                            <button class="btn-aksi" title="Batalkan SP2D" onclick="revertStatus(${item.id}, 'SPM')" 
+                                style="width: auto; height: 32px; padding: 0 12px; border-radius: 8px; background: #fef2f2; color: #dc2626; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1px solid #ef4444;">
+                                <i class="ph ph-arrow-counter-clockwise" style="font-size: 14px;"></i> <span>Batal</span>
+                            </button>
+                        </div>
+                        `;
                     }
                 }
 
@@ -505,24 +580,53 @@ window.advanceStatus = function (id, newStatus) {
     if (modal) {
         document.getElementById('confirmActionIcon').innerHTML = '<i class="ph ph-seal-check" style="color:#047857;"></i>';
         document.getElementById('confirmActionTitle').innerText = 'Proses ' + label;
-        document.getElementById('confirmActionMessage').innerText = `Lanjutkan ke tahap ${label}?\nNomor dokumen (SPP/SPM/SP2D) akan dibuat otomatis jika belum ada.`;
+
+        let message = `Lanjutkan ke tahap ${label}?`;
+
+        if (newStatus === 'SPM' || newStatus === 'CAIR') {
+            message += `<br><span style="font-size:13px; color:#64748b;">Nomor ${label} akan dibuat otomatis oleh sistem.</span>`;
+        } else {
+            message += `\nNomor dokumen akan dibuat otomatis jika dikosongkan.`;
+            message += `
+                <div style="margin-top:15px; text-align:left;">
+                    <label style="font-size:12px; font-weight:700; color:#475569;">Masukkan Nomor ${label} (Opsional)</label>
+                    <input type="text" id="manualDocNumber" class="form-input" placeholder="Kosongkan untuk auto-generate" style="margin-top:5px; width:100%;">
+                </div>
+            `;
+        }
+
+        document.getElementById('confirmActionMessage').innerHTML = message;
 
         const btn = document.getElementById('btnConfirmActionProceed');
         btn.innerHTML = `<i class="ph ph-check"></i> Ya, Lanjutkan`;
         btn.style.backgroundColor = '#047857';
         btn.style.color = '#ffffff';
         btn.onclick = function () {
+            const manualNo = document.getElementById('manualDocNumber')?.value;
             closeConfirmActionModal();
-            executeAdvance(id, newStatus, label);
+            executeAdvance(id, newStatus, label, manualNo);
         };
         modal.classList.add('show');
     } else {
-        if (!confirm(`Lanjutkan ke tahap ${label}? Nomor ${label} akan dibuat otomatis.`)) return;
-        executeAdvance(id, newStatus, label);
+        let manualNo = '';
+        if (newStatus !== 'SPM' && newStatus !== 'CAIR') {
+            manualNo = prompt(`Lanjutkan ke tahap ${label}?\nMasukkan nomor manual jika ingin menggunakan nomor tertentu (atau kosongkan untuk otomatis):`);
+            if (manualNo === null) return;
+        } else {
+            if (!confirm(`Lanjutkan ke tahap ${label}?`)) return;
+        }
+        executeAdvance(id, newStatus, label, manualNo);
     }
 };
 
-function executeAdvance(id, newStatus, label) {
+function executeAdvance(id, newStatus, label, manualNo = '') {
+    const body = { status: newStatus };
+    if (manualNo) {
+        if (newStatus === 'SPP') body.spp_no = manualNo;
+        if (newStatus === 'SPM') body.spm_no = manualNo;
+        if (newStatus === 'CAIR') body.sp2d_no = manualNo;
+    }
+
     fetch(`/dashboard/disbursements/${id}/status`, {
         method: 'PUT',
         headers: {
@@ -530,7 +634,7 @@ function executeAdvance(id, newStatus, label) {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify(body)
     })
         .then(async res => {
             if (!res.ok) {
@@ -589,6 +693,73 @@ function executeRevert(id, targetStatus, label) {
         .catch(err => toast(err.message, 'error'));
 };
 
+window.viewDisbursement = function (id) {
+    const modal = document.getElementById('disbursementDetailModal');
+    const content = document.getElementById('detailDisbursementContent');
+    if (!modal || !content) return;
+
+    content.innerHTML = '<div style="text-align:center; padding:20px;"><i class="ph ph-spinner animate-spin text-2xl"></i></div>';
+    modal.classList.add('show');
+
+    fetch(`/dashboard/disbursements?id=${id}`, { headers: { Accept: 'application/json' } })
+        .then(res => res.json())
+        .then(res => {
+            const data = (res.data || [])[0];
+            if (!data) throw new Error('Data tidak ditemukan');
+
+            content.innerHTML = `
+                <div class="detail-row">
+                    <span class="label">Tipe</span>
+                    <span class="value">${data.type}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Tanggal</span>
+                    <span class="value">${formatTanggal(data.sp2d_date)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">No. SPP</span>
+                    <span class="value">${data.spp_no || '-'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">No. SPM</span>
+                    <span class="value">${data.spm_no || '-'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">No. SP2D</span>
+                    <span class="value" style="color:#1d4ed8; font-weight:800;">${data.sp2d_no || '-'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Siklus</span>
+                    <span class="value">${data.siklus_up ? 'Batch ' + data.siklus_up : '-'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Rekening</span>
+                    <span class="value" style="font-size:13px;">${data.kode_rekening ? `[${data.kode_rekening.kode}] ${data.kode_rekening.nama}` : '-'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Uraian</span>
+                    <span class="value" style="text-align:right;">${data.uraian || '-'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Status</span>
+                    <span class="value">${data.status}</span>
+                </div>
+                <div class="detail-total mt-4">
+                    <span>Total Nilai</span>
+                    <strong>${formatRupiah(data.value)}</strong>
+                </div>
+            `;
+        })
+        .catch(err => {
+            content.innerHTML = `<div style="text-align:center; padding:20px; color:#ef4444;">${err.message}</div>`;
+        });
+};
+
+window.closeDetailDisbursement = function () {
+    const modal = document.getElementById('disbursementDetailModal');
+    modal?.classList.remove('show');
+};
+
 window.openDisbursementForm = function (item = null) {
     const form = document.getElementById('formDisbursement');
     form.reset();
@@ -607,6 +778,10 @@ window.openDisbursementForm = function (item = null) {
         submitBtn.innerHTML = '<i class="ph ph-floppy-disk"></i> Simpan Perubahan';
         idEl.value = item.id;
 
+        // Preserve the current status (don't reset to SPP)
+        const statusEl = document.getElementById('disbursementStatus');
+        if (statusEl) statusEl.value = item.status || 'SPP';
+
         document.getElementById('disbursementType').value = item.type;
         document.getElementById('disbursementDate').value = formatTanggalInput(item.sp2d_date);
         document.getElementById('disbursementSiklus').value = item.siklus_up || '';
@@ -621,14 +796,20 @@ window.openDisbursementForm = function (item = null) {
         titleEl.innerText = 'Buat Pengajuan SPP';
         submitBtn.innerHTML = '<i class="ph ph-paper-plane-tilt"></i> Ajukan SPP';
         idEl.value = '';
+
+        // New record always starts as SPP
+        const statusEl = document.getElementById('disbursementStatus');
+        if (statusEl) statusEl.value = 'SPP';
+
         document.getElementById('disbursementDate').value = new Date().toISOString().split('T')[0];
         window._pendingRekeningId = '';
         window._pendingSpjId = '';
     }
 
     document.getElementById('disbursementFormModal').classList.add('show');
-    document.getElementById('guSection').style.display = 'none';
+
     document.getElementById('siklusGroup').style.display = 'none';
+    document.getElementById('rekeningGroup').style.display = 'block';
     const sisaPanel = document.getElementById('sisaSaldoInfo');
     if (sisaPanel) sisaPanel.style.display = 'none';
     const saldoPanel = document.getElementById('saldoKasInfo');
@@ -779,7 +960,11 @@ function updateSaldoKasInfo() {
     fetch(url)
         .then(res => res.json())
         .then(data => {
-            saldoPanel.style.display = 'block';
+            if (window.disbursementPageMode === 'PENCAIRAN') {
+                saldoPanel.style.display = 'block';
+            } else {
+                saldoPanel.style.display = 'none';
+            }
             const sTypeEl = document.getElementById('saldoKasType');
             if (sTypeEl) sTypeEl.textContent = data.label; // UP, LS, or GU-1, etc.
 
@@ -811,10 +996,20 @@ function updateSaldoKasInfo() {
 document.addEventListener('change', function (e) {
     if (e.target && e.target.id === 'disbursementType') {
         const type = e.target.value;
-        const guSection = document.getElementById('guSection');
         const siklusGroup = document.getElementById('siklusGroup');
-        if (guSection) guSection.style.display = type === 'GU' ? 'block' : 'none';
+        const rekeningGroup = document.getElementById('rekeningGroup');
+
         if (siklusGroup) siklusGroup.style.display = type === 'GU' ? 'block' : 'none';
+
+        if (rekeningGroup) {
+            rekeningGroup.style.display = type === 'LS' ? 'block' : 'none';
+            if (type !== 'LS') {
+                const rekSelect = document.getElementById('disbursementRekening');
+                if (rekSelect) rekSelect.value = '';
+                // Trigger change to hide sisaSaldoInfo panel
+                rekSelect.dispatchEvent(new Event('change'));
+            }
+        }
 
         if (type === 'GU') {
             const id = document.getElementById('disbursementId')?.value;
@@ -852,9 +1047,9 @@ window.submitDisbursement = function (e) {
 
     const val = parseFloat(data.value) || 0;
 
-    // Validate if exceeding Saldo Kas (Only for UP or GU)
+    // Validate if exceeding Saldo Kas (Only for UP or GU and if it's an ACTIVITY SPP)
     // LS is direct from bank, so it bypasses this internal cash check
-    if ((data.type === 'UP' || data.type === 'GU') && val > (window.currentSisaKas || 0)) {
+    if ((data.type === 'UP' || data.type === 'GU') && data.kode_rekening_id && val > (window.currentSisaKas || 0)) {
         return toast('Gagal: Nominal pengajuan melebihi Sisa Saldo Kas yang tersedia!', 'error');
     }
 
@@ -1106,3 +1301,198 @@ window.syncLedger = function () {
 window.printLedger = function () {
     window.print();
 };
+
+/* =========================
+   BELANJA ITEMS (ACTIVITIES)
+========================= */
+window.currentBelanjaDisbursement = null;
+
+window.openBelanjaItems = function (id) {
+    const mainList = document.getElementById('disbursementMainList');
+    const detailSection = document.getElementById('sectionBelanjaItems');
+    if (!mainList || !detailSection) return;
+
+    mainList.style.display = 'none';
+    detailSection.style.display = 'block';
+
+    // Reset view position
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    loadBelanjaItems(id);
+};
+
+window.closeBelanjaItemsModal = function () {
+    const mainList = document.getElementById('disbursementMainList');
+    const detailSection = document.getElementById('sectionBelanjaItems');
+    if (mainList && detailSection) {
+        detailSection.style.display = 'none';
+        mainList.style.display = 'block';
+    }
+    window.currentBelanjaDisbursement = null;
+    loadDisbursements();
+};
+
+window.loadBelanjaItems = function (id) {
+    fetch(`/dashboard/disbursements?id=${id}`) // Re-fetch to get specific object with relations
+        .then(res => res.json())
+        .then(res => {
+            const items = res.data || [];
+            if (items.length === 0) return;
+            const disbursement = items[0];
+            window.currentBelanjaDisbursement = disbursement;
+
+            // Header Info
+            document.getElementById('belanjaRefNo').textContent = disbursement.sp2d_no || disbursement.spm_no || disbursement.spp_no || '-';
+            const total = parseFloat(disbursement.value) || 0;
+
+            const formatNumeric = (num) => Number(num || 0).toLocaleString('id-ID', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            document.getElementById('belanjaTotalValue').textContent = formatNumeric(total);
+
+            // Fetch Expenditures linked to this disbursement
+            fetch(`/dashboard/expenditures?fund_disbursement_id=${id}&limit=100`)
+                .then(r => r.json())
+                .then(rData => {
+                    const expenditures = rData.data || [];
+                    const tbody = document.getElementById('belanjaItemsTableBody');
+                    tbody.innerHTML = '';
+
+                    let usedSum = 0;
+
+                    if (expenditures.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding: 20px; color: #94a3b8;">Belum ada rincian kegiatan.</td></tr>';
+                    } else {
+                        expenditures.forEach((ex, idx) => {
+                            usedSum += parseFloat(ex.gross_value) || 0;
+                            const rekLabel = ex.kode_rekening ? `[${ex.kode_rekening.kode}] ${ex.kode_rekening.nama}` : '-';
+                            tbody.insertAdjacentHTML('beforeend', `
+                                <tr>
+                                    <td class="text-center" style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${idx + 1}</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; white-space: nowrap;">${formatTanggal(ex.spending_date)}</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; font-family: monospace; font-size: 11px; font-weight: 700; color: #6366f1; white-space: nowrap;">${ex.no_bukti || '-'}</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${ex.description || '-'}</td>
+                                    <td class="text-right font-mono" style="padding: 10px; border-bottom: 1px solid #f1f5f9; font-weight: 600;">${formatRupiahTable(ex.gross_value)}</td>
+                                    <td class="text-center" style="padding: 10px; border-bottom: 1px solid #f1f5f9; white-space: nowrap;">
+                                        <div style="display: flex; gap: 4px; justify-content: center;">
+                                            <button class="btn-aksi" title="Preview" onclick="openPengeluaranDetail(${ex.id})" 
+                                                style="background: #eff6ff; color: #2563eb; width: 28px; height: 28px; border: 1px solid #3b82f6;">
+                                                <i class="ph ph-eye"></i>
+                                            </button>
+                                            <button class="btn-aksi" title="Edit" onclick="openPengeluaranForm('ALL', ${ex.id})" 
+                                                style="background: #fffbeb; color: #d97706; width: 28px; height: 28px; border: 1px solid #f59e0b;">
+                                                <i class="ph ph-pencil-simple"></i>
+                                            </button>
+                                            <button class="btn-aksi delete" title="Hapus" onclick="deleteBelanjaItem(${ex.id})" 
+                                                style="width: 28px; height: 28px; background: #fef2f2; color: #ef4444; border: 1px solid #ef4444;">
+                                                <i class="ph ph-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                    }
+
+                    document.getElementById('belanjaUsedValue').textContent = formatNumeric(usedSum);
+                    document.getElementById('belanjaRemainingValue').textContent = formatNumeric(total - usedSum);
+                });
+        });
+};
+
+window.addNewBelanjaItem = function () {
+    if (!window.currentBelanjaDisbursement) return;
+    const d = window.currentBelanjaDisbursement;
+
+    // Open existing pengeluaran modal
+    if (typeof openPengeluaranForm === 'function') {
+        loadRekeningPengeluaran('ALL');
+
+        const modal = document.getElementById('pengeluaranModal');
+        modal.classList.add('show');
+        resetPengeluaranForm();
+
+        // Preset values from disbursement
+        document.getElementById('pengeluaranTanggal').value = d.sp2d_date ? d.sp2d_date.substring(0, 10) : '';
+
+        // Handle Payment Method restriction
+        const metodeSelect = document.getElementById('pengeluaranMetode');
+        metodeSelect.value = d.type;
+
+        Array.from(metodeSelect.options).forEach(opt => {
+            if (d.type === 'UP') {
+                opt.disabled = (opt.value !== 'UP');
+            } else if (d.type === 'GU') {
+                opt.disabled = (opt.value === 'LS');
+            } else if (d.type === 'LS') {
+                opt.disabled = (opt.value !== 'LS');
+            } else {
+                opt.disabled = false;
+            }
+        });
+
+        document.getElementById('pengeluaranVendor').value = d.recipient_party || '';
+
+        if (d.type === 'GU' && d.siklus_up) {
+            document.getElementById('guCycleSection').style.display = 'block';
+            // We might need to populate and select the cycle
+            const siklusSelect = document.getElementById('pengeluaranSiklus');
+            siklusSelect.innerHTML = `<option value="${d.siklus_up}" selected>Batch GU-${d.siklus_up}</option>`;
+        }
+
+        const hiddenId = document.getElementById('pengeluaranFundDisbursementId');
+        if (hiddenId) hiddenId.value = d.id;
+
+        // Ensure calculation logic is bound
+        if (typeof bindCurrencyInputs === 'function') {
+            bindCurrencyInputs();
+        }
+    }
+};
+
+window.deleteBelanjaItem = function (id) {
+    const modal = document.getElementById('modalConfirmAction');
+    if (modal) {
+        document.getElementById('confirmActionIcon').innerHTML = '<i class="ph ph-trash" style="color:#ef4444; font-size: 3.5rem;"></i>';
+        document.getElementById('confirmActionTitle').innerText = 'Hapus Rincian Kegiatan';
+        document.getElementById('confirmActionMessage').innerHTML = 'Hapus rincian kegiatan ini dari BKU?<br><span style="font-size:13px; color:#64748b;">Tindakan ini akan menghapus data belanja secara permanen dan tidak dapat dibatalkan.</span>';
+
+        const btn = document.getElementById('btnConfirmActionProceed');
+        btn.innerHTML = `<i class="ph ph-trash"></i> Ya, Hapus`;
+        btn.style.backgroundColor = '#ef4444';
+        btn.style.borderColor = '#ef4444';
+        btn.style.color = '#ffffff';
+        btn.onclick = function () {
+            closeConfirmActionModal();
+            executeDeleteBelanjaItem(id);
+        };
+        modal.classList.add('show');
+    } else {
+        if (confirm('Hapus rincian kegiatan ini dari BKU?')) {
+            executeDeleteBelanjaItem(id);
+        }
+    }
+};
+
+function executeDeleteBelanjaItem(id) {
+    fetch(`/dashboard/expenditures/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+        .then(async res => {
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message || 'Gagal menghapus');
+            }
+            toast('Kegiatan berhasil dihapus', 'success');
+            if (window.currentBelanjaDisbursement) {
+                loadBelanjaItems(window.currentBelanjaDisbursement.id);
+            }
+        })
+        .catch(err => toast(err.message || 'Gagal menghapus', 'error'));
+}

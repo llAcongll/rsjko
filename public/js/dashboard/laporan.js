@@ -1383,7 +1383,7 @@ window.openPreviewModal = function (type) {
                         <td style="border:1px solid #000; padding:4px; text-align:right;">-</td>
                         <td style="border:1px solid #000; padding:4px; text-align:right;">-</td>
                         <td style="border:1px solid #000; padding:4px; text-align:right;">-</td>
-                        <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.opening_balance - data.opening_bank)}</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.opening_saldo_dana || 0)}</td>
                         <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.opening_bank)}</td>
                         <td style="border:1px solid #000; padding:4px; text-align:right; font-weight:bold;">${numFr(data.opening_balance)}</td>
                     </tr>

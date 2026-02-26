@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Expenditure extends Model
 {
     protected $fillable = [
+        'fund_disbursement_id',
         'spending_date',
         'kode_rekening_id',
         'description',
@@ -48,5 +49,10 @@ class Expenditure extends Model
     public function getIsInSpjAttribute()
     {
         return $this->spjItems()->exists();
+    }
+
+    public function fundDisbursement()
+    {
+        return $this->belongsTo(FundDisbursement::class);
     }
 }

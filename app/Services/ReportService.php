@@ -879,7 +879,22 @@ class ReportService
 
         $currentBankRunning = $openingBank;
 
-        $data->transform(function ($item) use ($expenditures, $disbursements, $bankMap, &$currentBankRunning) {
+        // Types excluded from Saldo Dana: LS (pass-through) and DEPOSIT_MANUAL (bank only)
+        $excludeFromSaldoDana = ['LS_IN', 'LS_RECEIPT', 'ACTIVITY_LS', 'DEPOSIT_LS', 'BELANJA_LS', 'DEPOSIT_MANUAL'];
+        $openingSaldoDana = 0;
+        if ($month) {
+            $beforeEntries = \App\Models\TreasurerCash::where('date', '<', \Carbon\Carbon::create($year, $month, 1)->toDateString())
+                ->orderBy('date', 'asc')->orderBy('id', 'asc')->get();
+            foreach ($beforeEntries as $be) {
+                if (!in_array($be->type, $excludeFromSaldoDana)) {
+                    $openingSaldoDana += (float) $be->debit;
+                    $openingSaldoDana -= (float) $be->credit;
+                }
+            }
+        }
+        $saldoDanaRunning = $openingSaldoDana;
+
+        $data->transform(function ($item) use ($expenditures, $disbursements, $bankMap, &$currentBankRunning, &$saldoDanaRunning, $excludeFromSaldoDana) {
             $item->kode_rekening = '';
             $item->no_bukti = '';
             $item->uraian = $item->description;
@@ -896,13 +911,14 @@ class ReportService
                 $item->uraian = $exp->description ?? $item->description;
             } elseif ($item->ref_table === 'fund_disbursements' && isset($disbursements[$item->ref_id])) {
                 $disb = $disbursements[$item->ref_id];
-                $item->no_bukti = $disb->sp2d_no ?? '';
                 $item->uraian = $disb->description ?? $item->description;
                 if ($disb->expenditure) {
                     $item->kode_rekening = $disb->expenditure->kodeRekening->kode ?? '';
                 } else {
                     $item->kode_rekening = $disb->kodeRekening->kode ?? '';
                 }
+                // No bukti only for non-penerimaan disbursement types (not used here)
+                $item->no_bukti = '';
             }
 
             // Determine if it's an activity (SPP-based) or just a fund refill
@@ -912,19 +928,26 @@ class ReportService
             }
 
             if ($item->debit > 0) {
-                // Special case: Only UP and GU activities move to Realisasi column upon SP2D cair
-                if (in_array($item->type, ['ACTIVITY_UP', 'ACTIVITY_GU'])) {
-                    $item->realisasi = (float) $item->debit;
-                }
-                // LS activities and all refills (Saldo Dana) stay in Pengajuan SP2D column
-                elseif (in_array($item->type, ['TERIMA_UP', 'GU', 'UP', 'LS_RECEIPT', 'DEPOSIT_LS', 'ACTIVITY_LS'])) {
+                // Determine if it goes to Pengajuan or Transfer column
+                if (str_starts_with($item->type, 'AJU_')) {
+                    $item->sp2d_penerimaan = (float) $item->debit;
+                } elseif (in_array($item->type, ['TERIMA_UP', 'GU', 'UP', 'LS_RECEIPT', 'LS_IN', 'DEPOSIT_LS', 'ACTIVITY_LS'])) {
+                    // Legacy types or LS — all SP2D-related inflows
                     $item->sp2d_penerimaan = (float) $item->debit;
                 } else {
                     $item->transfer_penerimaan = (float) $item->debit;
                 }
-            } else {
+            }
+
+            if ($item->credit > 0) {
                 // All expenditures (Credit) go to Realisasi
                 $item->realisasi = (float) $item->credit;
+            }
+
+            // Update Saldo Dana running balance (UP/GU only, exclude LS)
+            if (!in_array($item->type, $excludeFromSaldoDana)) {
+                $saldoDanaRunning += (float) $item->debit;
+                $saldoDanaRunning -= (float) $item->credit;
             }
 
             // Sync Bank Balance with Rekening Koran specifically for this row
@@ -934,26 +957,27 @@ class ReportService
             }
 
             $item->saldo_bank = $currentBankRunning;
-            $currentBku = (float) $item->balance;
-            $item->saldo_tunai = (float) ($currentBku - $item->saldo_bank);
-            $item->saldo_akhir = $currentBku;
+            $item->saldo_tunai = $saldoDanaRunning;
+            $item->saldo_akhir = $item->saldo_tunai + $item->saldo_bank;
 
             return $item;
         });
 
-        $finalBku = $data->last() ? $data->last()->saldo_akhir : $openingBalance;
+        $finalSaldoDana = $data->last() ? $data->last()->saldo_tunai : $openingSaldoDana;
         $finalBank = $data->last() ? $data->last()->saldo_bank : $openingBank;
+        $finalBku = $finalSaldoDana + $finalBank;
 
         return [
             'data' => $data,
-            'opening_balance' => $openingBalance,
+            'opening_balance' => $openingSaldoDana + $openingBank,
             'opening_bank' => $openingBank,
+            'opening_saldo_dana' => $openingSaldoDana,
             'summary' => [
                 'total_debit_transfer' => (float) $data->sum('transfer_penerimaan'),
                 'total_debit_sp2d' => (float) $data->sum('sp2d_penerimaan'),
                 'total_credit_realisasi' => (float) $data->sum('realisasi'),
                 'final_bank' => $finalBank,
-                'final_tunai' => $finalBku - $finalBank,
+                'final_tunai' => $finalSaldoDana,
                 'final_balance' => $finalBku
             ],
             'period' => $month ? \Carbon\Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y') : $year

@@ -28,6 +28,10 @@ class ExpenditureController extends Controller
 
         $query = Expenditure::with(['kodeRekening']);
 
+        if ($request->has('fund_disbursement_id')) {
+            $query->where('fund_disbursement_id', $request->get('fund_disbursement_id'));
+        }
+
         if ($kategori) {
             $query->whereHas('kodeRekening', function ($q) use ($kategori) {
                 $q->where('sumber_data', $kategori);
@@ -60,7 +64,7 @@ class ExpenditureController extends Controller
         $guStats = (clone $query)->where('spending_type', 'GU')->selectRaw('SUM(gross_value) as total, COUNT(*) as count')->first();
         $lsStats = (clone $query)->where('spending_type', 'LS')->selectRaw('SUM(gross_value) as total, COUNT(*) as count')->first();
 
-        $data = $query->orderBy('spending_date', 'desc')->paginate($limit);
+        $data = $query->orderBy('spending_date', 'asc')->orderBy('id', 'asc')->paginate($limit);
 
         $response = $data->toArray();
         $response['aggregates'] = [
@@ -89,6 +93,7 @@ class ExpenditureController extends Controller
             'spending_type' => 'required|in:UP,GU,LS',
             'siklus_up' => 'nullable|integer',
             'vendor' => 'nullable|string|max:255',
+            'fund_disbursement_id' => 'nullable|exists:fund_disbursements,id',
         ]);
 
         try {
@@ -131,6 +136,7 @@ class ExpenditureController extends Controller
             'spending_type' => 'required|in:UP,GU,LS',
             'siklus_up' => 'nullable|integer',
             'vendor' => 'nullable|string|max:255',
+            'fund_disbursement_id' => 'nullable|exists:fund_disbursements,id',
         ]);
 
         try {

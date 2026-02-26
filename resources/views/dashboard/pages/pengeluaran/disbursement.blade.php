@@ -2,43 +2,124 @@
     $title = 'Pencairan Dana (SP2D)';
 @endphp
 
-<div class="dashboard">
-    <div class="dashboard-header">
-        <div class="dashboard-header-left">
-            <h2><i class="ph ph-wallet"></i> {{ $title }}</h2>
-            <p>Kelola pencairan dana (UP/GU/LS) &mdash; Alur: SPP &rarr; SPM &rarr; SP2D (Cair)</p>
+<div id="disbursementMainList">
+    <div class="dashboard">
+        <div class="dashboard-header">
+            <div class="dashboard-header-left">
+                <h2><i class="ph ph-wallet"></i> {{ $title }}</h2>
+                <p>Kelola pencairan dana (UP/GU/LS) &mdash; Alur: SPP &rarr; SPM &rarr; SP2D (Cair)</p>
+            </div>
+
+            <div class="dashboard-header-right">
+                @if(auth()->user()->hasPermission('PENGELUARAN_CREATE') || auth()->user()->isAdmin())
+                    <button class="btn-tambah-data" onclick="openDisbursementForm()">
+                        <i class="ph-bold ph-plus"></i>
+                        <span>Buat Pengajuan SPP</span>
+                    </button>
+                @endif
+            </div>
         </div>
 
+        <div class="dashboard-box">
+            <div class="table-container">
+                <table id="tableDisbursement">
+                    <thead>
+                        <tr>
+                            <th width="40" class="text-center">No</th>
+                            <th width="80" class="text-center">Paket</th>
+                            <th width="70" class="text-center">Tipe</th>
+                            <th width="220" class="text-left">No. Dokumen</th>
+                            <th width="100" class="text-center">Siklus</th>
+                            <th width="100" class="text-center">Tanggal</th>
+                            <th>Kegiatan</th>
+                            <th class="text-right">Nilai (Rp)</th>
+                            <th width="120" class="text-center">Status</th>
+                            <th width="200" class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableDisbursementBody">
+                        <tr>
+                            <td colspan="10" class="text-center">Memuat data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- SECTION DETAIL BELANJA (FULL WIDTH) --}}
+<div id="sectionBelanjaItems" style="display: none; animation: fadeIn 0.3s ease-out;">
+    <div class="dashboard-header" style="margin-bottom: 24px;">
+        <div class="dashboard-header-left">
+            <button onclick="closeBelanjaItemsModal()"
+                style="display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 10px; cursor: pointer; color: #64748b; font-weight: 600; margin-bottom: 12px; transition: all 0.2s;">
+                <i class="ph ph-arrow-left"></i> Kembali ke Daftar
+            </button>
+            <h2 id="belanjaItemsTitle"><i class="ph ph-shopping-cart"></i> Detail Belanja / Kegiatan</h2>
+            <p id="belanjaItemsSubtitle" style="font-size: 14px; color: #64748b;">Kelola rincian kegiatan untuk
+                dokumen: <span id="belanjaRefNo" style="font-weight: 700; color: #1e293b;">-</span></p>
+        </div>
         <div class="dashboard-header-right">
-            @if(auth()->user()->hasPermission('PENGELUARAN_CREATE') || auth()->user()->isAdmin())
-                <button class="btn-tambah-data" onclick="openDisbursementForm()">
-                    <i class="ph-bold ph-plus"></i>
-                    <span>Buat Pengajuan SPP</span>
-                </button>
-            @endif
+            <button class="btn-tambah-data" onclick="addNewBelanjaItem()" style="background:#059669; height: 44px;">
+                <i class="ph-bold ph-plus"></i>
+                <span>Tambah Rincian Kegiatan</span>
+            </button>
         </div>
     </div>
 
-    <div class="dashboard-box">
-        <div class="table-container">
-            <table id="tableDisbursement">
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px;">
+        <div
+            style="background: #fff; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <div
+                style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">
+                Total Dana Cair (SP2D)</div>
+            <div style="font-size: 24px; font-weight: 800; color: #1e40af;">
+                <small style="font-size: 14px; font-weight: 600; opacity: 0.6;">Rp</small> <span
+                    id="belanjaTotalValue">0,00</span>
+            </div>
+        </div>
+        <div
+            style="background: #fff; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <div
+                style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">
+                Total Realisasi (Belanja)</div>
+            <div style="font-size: 24px; font-weight: 800; color: #dc2626;">
+                <small style="font-size: 14px; font-weight: 600; opacity: 0.6;">Rp</small> <span
+                    id="belanjaUsedValue">0,00</span>
+            </div>
+        </div>
+        <div
+            style="background: #fff; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <div
+                style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">
+                Sisa (Belum Direalisasikan)</div>
+            <div style="font-size: 24px; font-weight: 800; color: #059669;">
+                <small style="font-size: 14px; font-weight: 600; opacity: 0.6;">Rp</small> <span
+                    id="belanjaRemainingValue">0,00</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-box" style="padding: 0; overflow: hidden;">
+        <div class="table-container" style="margin-top: 0; border-radius: 0; border: none;">
+            <table>
                 <thead>
                     <tr>
-                        <th width="40" class="text-center">No</th>
-                        <th width="80" class="text-center">Paket</th>
-                        <th width="70" class="text-center">Tipe</th>
-                        <th width="220" class="text-left">No. Dokumen</th>
-                        <th width="100" class="text-center">Siklus</th>
-                        <th width="100" class="text-center">Tanggal</th>
-                        <th>Kegiatan</th>
-                        <th class="text-right">Nilai (Rp)</th>
-                        <th width="120" class="text-center">Status</th>
-                        <th width="140" class="text-center">Aksi</th>
+                        <th class="text-center" width="60">No</th>
+                        <th style="white-space:nowrap" width="140">Tanggal</th>
+                        <th style="white-space:nowrap" width="260">No. Bukti</th>
+                        <th>Uraian Kegiatan</th>
+                        <th class="text-right" width="180">Nilai (Rp)</th>
+                        <th class="text-center" width="140">Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="tableDisbursementBody">
+                <tbody id="belanjaItemsTableBody">
                     <tr>
-                        <td colspan="10" class="text-center">Memuat data...</td>
+                        <td colspan="6" class="text-center" style="padding: 40px; color: #94a3b8;">
+                            <i class="ph ph-mask-sad" style="font-size: 32px; display: block; margin-bottom: 10px;"></i>
+                            Belum ada rincian kegiatan untuk pencairan ini.
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -106,7 +187,7 @@
             </div>
 
             {{-- KEGIATAN / KODE REKENING --}}
-            <div class="form-group">
+            <div class="form-group" id="rekeningGroup">
                 <label><i class="ph ph-list-numbers" style="color:#2563eb"></i> Kegiatan / Kode Rekening</label>
                 <select name="kode_rekening_id" id="disbursementRekening" class="form-input">
                     <option value="">-- Pilih Kegiatan --</option>
@@ -157,18 +238,10 @@
                     placeholder="Keterangan tambahan (opsional)..."></textarea>
             </div>
 
-            <div id="guSection"
-                style="display:none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0;">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label style="color: #b45309; font-weight: 700;">Hubungkan dengan SPJ (Wajib untuk GU)</label>
-                    <select name="spj_id" id="disbursementSpj" class="form-input" style="border-color: #f59e0b;">
-                        <option value="">-- Pilih SPJ --</option>
-                    </select>
-                </div>
-            </div>
 
-            {{-- Hidden: status selalu SPP saat buat baru --}}
-            <input type="hidden" name="status" value="SPP">
+
+            {{-- Hidden: status SPP saat buat baru, diatur ulang saat edit --}}
+            <input type="hidden" name="status" id="disbursementStatus" value="SPP">
 
             <div class="confirm-actions">
                 <button type="button" class="btn-secondary" onclick="closeDisbursementModal()">
@@ -182,19 +255,37 @@
     </div>
 </div>
 
-<!-- Modal Konfirmasi Aksi UI -->
-<div id="modalConfirmAction" class="confirm-overlay">
-    <div class="confirm-box" style="max-width: 400px; text-align: center;">
-        <div id="confirmActionIcon" style="font-size: 3rem; margin-bottom: 10px;"></div>
-        <h3 id="confirmActionTitle" style="margin-bottom: 10px;">Konfirmasi</h3>
-        <p id="confirmActionMessage" style="color: #64748b; font-size: 14px; margin-bottom: 25px; line-height: 1.5;">
-        </p>
-        <div class="confirm-actions" style="justify-content: center; display: flex; gap: 10px;">
-            <button type="button" class="btn-secondary" onclick="closeConfirmActionModal()">
+<!-- Modal Detail Pengeluaran (Preview Belanja) -->
+<div id="pengeluaranDetailModal" class="confirm-overlay">
+    <div class="confirm-box" style="max-width: 500px;">
+        <h3 class="modal-title">
+            <i class="ph ph-receipt"></i> Detail Realisasi Belanja
+        </h3>
+        <div id="detailPengeluaranContent" class="detail-grid" style="margin-top: 20px;">
+            <!-- Content will be injected by JS -->
+        </div>
+        <div class="modal-actions" style="margin-top: 30px;">
+            <button type="button" class="btn-secondary" onclick="closeDetailPengeluaran()" style="width: 100%;">
                 Tutup
             </button>
-            <button type="button" id="btnConfirmActionProceed" class="btn-primary" style="flex:1;">
-                Lanjutkan
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Modal Detail Realisasi Pencairan (Disbursement View Only) -->
+<div id="disbursementDetailModal" class="confirm-overlay">
+    <div class="confirm-box" style="max-width: 600px;">
+        <h3 class="modal-title">
+            <i class="ph ph-receipt"></i> Detail Realisasi Pencairan
+        </h3>
+        <div id="detailDisbursementContent" class="detail-grid" style="margin-top: 20px;">
+            <!-- Content will be injected by JS -->
+        </div>
+        <div class="modal-actions" style="margin-top: 30px;">
+            <button type="button" class="btn-secondary" onclick="closeDetailDisbursement()" style="width: 100%;">
+                Tutup
             </button>
         </div>
     </div>

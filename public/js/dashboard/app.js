@@ -351,6 +351,25 @@ window.openSp2dPage = async function (btn) {
   }
 };
 
+window.openPencairanPage = async function (btn) {
+  const parentBtn = document.getElementById('btnPengeluaran');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  window._disbursementPageMode = 'PENCAIRAN';
+  await loadContent('pengeluaran/disbursement');
+
+  document
+    .querySelectorAll('#submenuPengeluaran button')
+    .forEach(b => b.classList.remove('active'));
+
+  if (btn) btn.classList.add('active');
+
+  if (typeof window.initDisbursement === 'function') {
+    window.initDisbursement();
+  }
+};
+
 window.openTreasurerCash = async function (btn) {
   const parentBtn = document.getElementById('btnPengeluaran');
   setActiveMenu(parentBtn);

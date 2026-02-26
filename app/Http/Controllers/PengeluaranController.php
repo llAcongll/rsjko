@@ -56,7 +56,7 @@ class PengeluaranController extends Controller
             ->keyBy('metode_pembayaran')
             ->toArray();
 
-        $data = $query->orderBy('tanggal', 'asc')->paginate($limit);
+        $data = $query->orderBy('tanggal', 'asc')->orderBy('id', 'asc')->paginate($limit);
 
         $response = $data->toArray();
         $response['aggregates'] = [

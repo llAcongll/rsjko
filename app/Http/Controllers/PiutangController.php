@@ -24,7 +24,8 @@ class PiutangController extends Controller
 
         $query = Piutang::with('perusahaan')
             ->where('tahun', session('tahun_anggaran'))
-            ->orderBy('tanggal', 'asc');
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('id', 'asc');
 
         if ($status) {
             $query->where('status', $status);

@@ -46,14 +46,23 @@ class DocumentSequence extends Model
     private static function getActualMax($type, $year, $siklus, $subKey)
     {
         if ($type === 'BUKTI') {
-            $query = \App\Models\Expenditure::whereYear('spending_date', $year)
+            $maxExp = \App\Models\Expenditure::whereYear('spending_date', $year)
                 ->where('spending_type', $subKey);
 
-            if (in_array($subKey, ['UP', 'GU'])) {
-                $query->where('siklus_up', $siklus);
-            }
+            $maxDisb = \App\Models\FundDisbursement::where('tahun', $year)
+                ->where('type', $subKey);
 
-            return $query->max('no_bukti_urut') ?? 0;
+            // GU uses cycle-specific numbering
+            if ($subKey === 'GU') {
+                $maxExp->where('siklus_up', $siklus);
+                $maxDisb->where('siklus_up', $siklus);
+            }
+            // UP is global for the year, so we don't filter by siklus_up here
+
+            $valExp = (int) $maxExp->max('no_bukti_urut');
+            $valDisb = (int) $maxDisb->max('no_bukti_urut');
+
+            return max($valExp, $valDisb);
         }
 
         if ($type === 'PAKET_GLOBAL') {

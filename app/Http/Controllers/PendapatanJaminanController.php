@@ -27,7 +27,8 @@ class PendapatanJaminanController extends Controller
         $search = $request->get('search');
         $query = PendapatanJaminan::with('ruangan', 'perusahaan')
             ->where('tahun', session('tahun_anggaran'))
-            ->orderBy('tanggal', 'asc');
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('id', 'asc');
 
         if ($search) {
             $query->where(function ($q) use ($search) {

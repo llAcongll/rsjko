@@ -32,7 +32,8 @@ class PendapatanBpjsController extends Controller
 
         $query = PendapatanBpjs::with('ruangan', 'perusahaan')
             ->where('tahun', session('tahun_anggaran'))
-            ->orderBy('tanggal', 'asc');
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('id', 'asc');
 
         if ($jenisBpjs) {
             $query->where('jenis_bpjs', $jenisBpjs);

@@ -165,7 +165,7 @@
         </button>
 
         <div class="submenu-child" id="submenuPengeluaran">
-          <div class="submenu-header">Pengajuan Pencairan</div>
+          <div class="submenu-header">Pencairan Dana</div>
           <button onclick="openSppPage(this)">
             <i class="ph ph-file-text"></i>
             <span>SPP</span>
@@ -176,7 +176,11 @@
           </button>
           <button onclick="openSp2dPage(this)">
             <i class="ph ph-check-circle"></i>
-            <span>SP2D (Cair)</span>
+            <span>SP2D</span>
+          </button>
+          <button onclick="openPencairanPage(this)">
+            <i class="ph ph-wallet"></i>
+            <span>Pencairan</span>
           </button>
 
           <div class="submenu-header">Kelola Kas</div>
@@ -481,6 +485,28 @@
   <script
     src="{{ asset('js/dashboard/bank-ledger.js') }}?v={{ filemtime(public_path('js/dashboard/bank-ledger.js')) }}"></script>
   <script src="{{ asset('js/dashboard/logs.js') }}?v={{ filemtime(public_path('js/dashboard/logs.js')) }}"></script>
+
+  <!-- Modal Konfirmasi Universal (UI Berbasis Aksi) -->
+  <div id="modalConfirmAction" class="confirm-overlay">
+    <div class="confirm-box" style="max-width: 400px; text-align: center; padding: 30px;">
+      <div id="confirmActionIcon" style="font-size: 3.5rem; margin-bottom: 15px;"></div>
+      <h3 id="confirmActionTitle" style="margin-bottom: 12px; font-size: 1.25rem; font-weight: 700; color: #0f172a;">
+        Konfirmasi
+      </h3>
+      <p id="confirmActionMessage" style="color: #64748b; font-size: 14px; margin-bottom: 30px; line-height: 1.6;">
+      </p>
+      <div class="confirm-actions" style="justify-content: center; display: flex; gap: 12px;">
+        <button type="button" class="btn-secondary" onclick="closeConfirmActionModal()"
+          style="flex: 1; padding: 10px; font-weight: 600;">
+          Batal
+        </button>
+        <button type="button" id="btnConfirmActionProceed" class="btn-primary"
+          style="flex: 1.5; padding: 10px; font-weight: 700;">
+          Lanjutkan
+        </button>
+      </div>
+    </div>
+  </div>
 
 </body>
 

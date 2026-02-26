@@ -57,8 +57,12 @@ class DisbursementService
                     $qPending->where('siklus_up', $pSiklus);
                 }
 
-                $totalCair = (float) (clone $qCair)->whereNull('spp_no')->sum('value');
-                $sppKeluar = (float) (clone $qCair)->whereNotNull('spp_no')->sum('value');
+                $totalCair = (float) (clone $qCair)->where(function ($q) {
+                    $q->whereNull('spp_no')->orWhereNull('kode_rekening_id');
+                })->sum('value');
+                $sppKeluar = (float) (clone $qCair)->where(function ($q) {
+                    $q->whereNotNull('kode_rekening_id')->orWhereNotNull('expenditure_id');
+                })->sum('value');
                 $totalBelanja = (float) $qBelanja->sum('gross_value') + $sppKeluar;
                 $sppPending = (float) $qPending->where(function ($q) {
                     $q->whereNotNull('kode_rekening_id')->orWhereNotNull('expenditure_id');
@@ -143,10 +147,22 @@ class DisbursementService
                 }
             }
 
+            // Generate Proof Number (No Bukti) for activity-based disbursements
+            if (!empty($disbursement->kode_rekening_id) || !empty($disbursement->expenditure_id)) {
+                $bukti = $this->numberingService->generateNoBukti(
+                    $disbursement->type,
+                    $disbursement->sp2d_date,
+                    $disbursement->nomor_dalam_siklus,
+                    $disbursement->siklus_up ?? 0
+                );
+                $disbursement->no_bukti = $bukti['no_bukti'];
+                $disbursement->no_bukti_urut = $bukti['no_bukti_urut'];
+            }
+
             $disbursement->save();
 
-            // Ledger impact only when CAIR
-            if ($intendedStatus === 'CAIR') {
+            // Ledger impact only when CAIR or SPP/SPM (Pengajuan)
+            if (in_array($intendedStatus, ['SPP', 'SPM', 'CAIR'])) {
                 $this->applyLedgerImpact($disbursement);
             }
 
@@ -159,16 +175,21 @@ class DisbursementService
     /**
      * Update status and generate corresponding numbers.
      */
-    public function updateStatus($id, $newStatus)
+    public function updateStatus($id, $newStatus, $manualData = [])
     {
-        return DB::transaction(function () use ($id, $newStatus) {
+        return DB::transaction(function () use ($id, $newStatus, $manualData) {
             $disbursement = FundDisbursement::lockForUpdate()->findOrFail($id);
             $year = $disbursement->tahun;
 
+            // Handle manual status override from $manualData
             if ($newStatus === 'SPP' && !$disbursement->spp_no) {
-                $res = $this->numberingService->generateSppNumber($year, $disbursement->type, $disbursement->siklus_up, $disbursement->sp2d_date, $disbursement->nomor_dalam_siklus);
-                $disbursement->spp_no = $res['formatted'];
-                $disbursement->spp_urut = $res['urut'];
+                if (!empty($manualData['spp_no'])) {
+                    $disbursement->spp_no = $manualData['spp_no'];
+                } else {
+                    $res = $this->numberingService->generateSppNumber($year, $disbursement->type, $disbursement->siklus_up, $disbursement->sp2d_date, $disbursement->nomor_dalam_siklus);
+                    $disbursement->spp_no = $res['formatted'];
+                    $disbursement->spp_urut = $res['urut'];
+                }
             }
 
             if ($newStatus === 'SPM' && !$disbursement->spm_no) {
@@ -177,9 +198,14 @@ class DisbursementService
                     $disbursement->spp_no = $resSpp['formatted'];
                     $disbursement->spp_urut = $resSpp['urut'];
                 }
-                $res = $this->numberingService->generateSpmNumber($year, $disbursement->type, $disbursement->siklus_up, $disbursement->sp2d_date, $disbursement->nomor_dalam_siklus);
-                $disbursement->spm_no = $res['formatted'];
-                $disbursement->spm_urut = $res['urut'];
+
+                if (!empty($manualData['spm_no'])) {
+                    $disbursement->spm_no = $manualData['spm_no'];
+                } else {
+                    $res = $this->numberingService->generateSpmNumber($year, $disbursement->type, $disbursement->siklus_up, $disbursement->sp2d_date, $disbursement->nomor_dalam_siklus);
+                    $disbursement->spm_no = $res['formatted'];
+                    $disbursement->spm_urut = $res['urut'];
+                }
             }
 
             if ($newStatus === 'CAIR' && !$disbursement->sp2d_no) {
@@ -201,20 +227,44 @@ class DisbursementService
                     $disbursement->spm_no = $resSpm['formatted'];
                     $disbursement->spm_urut = $resSpm['urut'];
                 }
-                $res = $this->numberingService->generateSp2dNumber($year);
-                $disbursement->sp2d_no = $res['formatted'];
-                $disbursement->sp2d_urut = $res['urut'];
+
+                if (!empty($manualData['sp2d_no'])) {
+                    $disbursement->sp2d_no = $manualData['sp2d_no'];
+                } else {
+                    $res = $this->numberingService->generateSp2dNumber($year);
+                    $disbursement->sp2d_no = $res['formatted'];
+                    $disbursement->sp2d_urut = $res['urut'];
+                }
+
                 $disbursement->sp2d_date = $disbursement->sp2d_date ?? now();
                 $disbursement->number_locked_at = now();
                 $disbursement->status = $newStatus; // update status first before calling applyLedgerImpact
-                $disbursement->save(); // Save to make sure we don't have mismatch issues if ledger needs saved data
 
-                // When officially CAIR, record in ledger
+                // Generate Proof Number (No Bukti) if missing for activity-based disbursements
+                if (!$disbursement->no_bukti && (!empty($disbursement->kode_rekening_id) || !empty($disbursement->expenditure_id))) {
+                    $bukti = $this->numberingService->generateNoBukti($disbursement->type, $disbursement->sp2d_date, $disbursement->nomor_dalam_siklus, $disbursement->siklus_up ?? 0);
+                    $disbursement->no_bukti = $bukti['no_bukti'];
+                    $disbursement->no_bukti_urut = $bukti['no_bukti_urut'];
+                }
+
+                $disbursement->save(); // Save to make sure we don't have mismatch issues if ledger needs saved data
                 $this->applyLedgerImpact($disbursement);
+                return $disbursement;
             } else {
                 $disbursement->status = $newStatus;
+
+                // Generate Proof Number (No Bukti) if missing for activity-based disbursements
+                if (!$disbursement->no_bukti && (!empty($disbursement->kode_rekening_id) || !empty($disbursement->expenditure_id))) {
+                    $bukti = $this->numberingService->generateNoBukti($disbursement->type, $disbursement->sp2d_date, $disbursement->nomor_dalam_siklus, $disbursement->siklus_up ?? 0);
+                    $disbursement->no_bukti = $bukti['no_bukti'];
+                    $disbursement->no_bukti_urut = $bukti['no_bukti_urut'];
+                }
+
                 $disbursement->save();
             }
+
+            // Apply Ledger Impact for the new status
+            $this->applyLedgerImpact($disbursement);
 
             return $disbursement;
         });
@@ -247,47 +297,58 @@ class DisbursementService
 
     private function applyLedgerImpact(FundDisbursement $disbursement)
     {
-        if ($disbursement->status !== 'CAIR')
-            return;
-
-        $isActivity = !empty($disbursement->spp_no);
-        $date = $disbursement->sp2d_date;
-        $val = $disbursement->value;
+        $date = $disbursement->sp2d_date ?: now();
         $id = $disbursement->id;
+        $isActivity = !empty($disbursement->kode_rekening_id) || !empty($disbursement->expenditure_id);
 
-        if ($disbursement->type === 'UP') {
-            $desc = $disbursement->uraian ?: ($disbursement->description ?: "Penerimaan UP - " . ($disbursement->sp2d_no ?? $disbursement->nomor_paket));
-            $type = $isActivity ? 'ACTIVITY_UP' : 'TERIMA_UP';
-            // UP adds to BKU (Debit)
-            $this->ledgerService->recordEntry($date, $type, $val, 'fund_disbursements', $id, 'DEBIT', $desc);
+        // Determine logical document number for grouping in Bank Ledger
+        $refNo = $disbursement->sp2d_no ?: ($disbursement->spm_no ?: $disbursement->spp_no);
 
-            if (!$isActivity) {
-                // Only manual "Saldo Dana" refill pulls from Bank (Credit)
-                $this->bankService->recordEntry($date, 'WITHDRAW_UP', $val, 'fund_disbursements', $id, 'CREDIT', "Penarikan SP2D UP " . ($disbursement->sp2d_no ?? 'Manual'));
-            } else {
-                // Activities do not reduce Rekening Koran (already covered by initial UP draw)
-                $this->bankService->removeEntry('fund_disbursements', $id);
-            }
-        } elseif ($disbursement->type === 'GU') {
-            $desc = $disbursement->uraian ?: ($disbursement->description ?: "Pengajuan GU {$disbursement->siklus_up} - " . ($disbursement->sp2d_no ?? $disbursement->nomor_paket));
-            $type = $isActivity ? 'ACTIVITY_GU' : 'GU';
-            // GU adds to BKU (Debit)
-            $this->ledgerService->recordEntry($date, $type, $val, 'fund_disbursements', $id, 'DEBIT', $desc);
+        // Calculate total value for this document grouping (to support multiple activities in one SP2D)
+        $totalVal = $disbursement->value;
+        if ($refNo) {
+            $totalVal = FundDisbursement::where(function ($q) use ($refNo) {
+                $q->where('sp2d_no', $refNo)->orWhere('spm_no', $refNo)->orWhere('spp_no', $refNo);
+            })->sum('value');
+        }
 
-            if (!$isActivity) {
-                // Only manual "Saldo Dana" replenishment pulls from Bank (Credit)
-                $this->bankService->recordEntry($date, 'WITHDRAW_GU', $val, 'fund_disbursements', $id, 'CREDIT', "Penarikan SP2D GU {$disbursement->siklus_up} " . ($disbursement->sp2d_no ?? 'Manual'));
-            } else {
-                // Activities do not reduce Rekening Koran
-                $this->bankService->removeEntry('fund_disbursements', $id);
-            }
-        } elseif ($disbursement->type === 'LS') {
-            $desc = $disbursement->uraian ?: ($disbursement->description ?: "Penerimaan LS - " . ($disbursement->sp2d_no ?? $disbursement->nomor_paket));
+        if ($disbursement->type === 'LS') {
+            if ($disbursement->status !== 'CAIR')
+                return;
+            $desc = $disbursement->uraian ?: ($disbursement->description ?: ($disbursement->sp2d_no ?? $disbursement->nomor_paket));
             $type = $isActivity ? 'ACTIVITY_LS' : 'LS_RECEIPT';
-            // LS adds to BKU only for reporting (SP2D column), not total liquidity impact here
-            // (Total balance impact for LS is handled by the individual Expenditure Note)
-            $this->ledgerService->recordEntry($date, $type, $val, 'fund_disbursements', $id, 'DEBIT', $desc);
-            $this->bankService->removeEntry('fund_disbursements', $id);
+            $this->ledgerService->recordEntry($date, $type, $disbursement->value, 'fund_disbursements', $id, 'DEBIT', $desc);
+            $this->bankService->recordEntry($date, 'WITHDRAW_LS', $totalVal, 'fund_disbursements', $id, 'CREDIT', "Penarikan SP2D LS " . ($refNo ?? 'Manual'), $refNo);
+        } else {
+            // UP or GU
+            if ($isActivity) {
+                // ACTIVITY-BASED: These are SPP line items tied to a Kode Rekening
+                // They only create a TRACE entry in BKU; actual spending is through Expenditures
+                if (in_array($disbursement->status, ['SPP', 'SPM', 'CAIR'])) {
+                    $this->ledgerService->recordEntry($date, "TRACE_ACTIVITY_{$disbursement->type}", 0, 'fund_disbursements', $id, 'DEBIT', "[Audit Trace] " . ($disbursement->uraian ?: ($disbursement->description ?: "Kegiatan {$disbursement->type}")));
+                } else {
+                    $this->ledgerService->removeEntry('fund_disbursements', $id);
+                    $this->bankService->removeEntry('fund_disbursements', $id);
+                }
+            } else {
+                // SALDO DANA (Non-activity): This is a cash refill (UP/GU)
+                // When CAIR: Money flows INTO the Treasurer Cash (DEBIT only)
+                // No CREDIT here — the CREDIT happens when Expenditures are recorded
+                if (in_array($disbursement->status, ['SPP', 'SPM', 'CAIR'])) {
+                    $type = "AJU_{$disbursement->type}";
+                    $desc = ($disbursement->uraian ?: ($disbursement->description ?: "Isi Saldo Kas {$disbursement->type}"));
+
+                    // Debit BKU (Increases Saldo Dana)
+                    $this->ledgerService->recordEntry($date, $type, $disbursement->value, 'fund_disbursements', $id, 'DEBIT', $desc);
+
+                    // Decreases Rekening Koran (Moves money from Bank to Cash/Dana)
+                    $this->bankService->recordEntry($date, "WITHDRAW_{$disbursement->type}", $totalVal, 'fund_disbursements', $id, 'CREDIT', "Penarikan SP2D {$disbursement->type} ({$refNo})", $refNo);
+                } else {
+                    // If status reverted back to DRAFT, remove everything
+                    $this->ledgerService->removeEntry('fund_disbursements', $id);
+                    $this->bankService->removeEntry('fund_disbursements', $id);
+                }
+            }
         }
     }
 
@@ -312,8 +373,26 @@ class DisbursementService
             if (!isset($allowedRevert[$currentStatus]) || $allowedRevert[$currentStatus] !== $targetStatus) {
                 throw new \Exception("Pembatalan dari {$currentStatus} ke {$targetStatus} tidak diizinkan.");
             }
+
             if ($currentStatus === 'CAIR') {
-                // Remove ledger impact
+                // Check if there are any linked expenditures at all
+                $linkedCount = \App\Models\Expenditure::where('fund_disbursement_id', $disbursement->id)->count();
+
+                if ($linkedCount > 0) {
+                    // Check specifically for SPJ-linked ones
+                    $linkedInSpj = \App\Models\Expenditure::where('fund_disbursement_id', $disbursement->id)
+                        ->whereHas('spjItems')
+                        ->count();
+
+                    if ($linkedInSpj > 0) {
+                        throw new \Exception("Tidak bisa membatalkan SP2D karena ada {$linkedInSpj} belanja yang sudah masuk dalam SPJ. Hapus dari SPJ terlebih dahulu.");
+                    }
+
+                    throw new \Exception("Tidak bisa membatalkan SP2D karena masih ada {$linkedCount} rincian belanja. Hapus semua belanja terlebih dahulu sebelum membatalkan.");
+                }
+
+                // Remove ledger impact for the disbursement itself
+
                 $this->ledgerService->removeEntry('fund_disbursements', $disbursement->id);
                 $this->bankService->removeEntry('fund_disbursements', $disbursement->id);
 
@@ -346,8 +425,26 @@ class DisbursementService
         return DB::transaction(function () use ($id) {
             $disbursement = FundDisbursement::findOrFail($id);
 
+            // Check if any linked expenditures are in SPJ
+            $linkedInSpj = \App\Models\Expenditure::where('fund_disbursement_id', $disbursement->id)
+                ->whereHas('spjItems')
+                ->count();
+
+            if ($linkedInSpj > 0) {
+                throw new \Exception("Tidak bisa menghapus pencairan karena ada {$linkedInSpj} belanja yang sudah masuk dalam SPJ.");
+            }
+
             $oldData = $disbursement->toArray();
             $label = $disbursement->type . " #" . ($disbursement->sp2d_no ?? $disbursement->nomor_paket);
+
+            // Delete all linked expenditures and their ledger entries
+            $linkedExpenditures = \App\Models\Expenditure::where('fund_disbursement_id', $disbursement->id)->get();
+            foreach ($linkedExpenditures as $exp) {
+                $this->ledgerService->removeEntry('expenditures', $exp->id);
+                $this->bankService->removeEntry('expenditures', $exp->id);
+                ActivityLog::log('DELETE', 'EXPENDITURE', "Otomatis dihapus karena penghapusan pencairan: {$exp->description}", $exp->id, $exp->toArray());
+                $exp->delete();
+            }
 
             // hapus ledger BKU (jika ada)
             $this->ledgerService->removeEntry('fund_disbursements', $disbursement->id);
@@ -357,7 +454,9 @@ class DisbursementService
 
             $disbursement->delete();
 
-            ActivityLog::log('DELETE', 'DISBURSEMENT', "Menghapus pencairan: {$label}", $id, $oldData);
+            $deletedCount = $linkedExpenditures->count();
+            $extraLog = $deletedCount > 0 ? " ({$deletedCount} belanja ikut dihapus)" : "";
+            ActivityLog::log('DELETE', 'DISBURSEMENT', "Menghapus pencairan: {$label}{$extraLog}", $id, $oldData);
 
             return true;
         });

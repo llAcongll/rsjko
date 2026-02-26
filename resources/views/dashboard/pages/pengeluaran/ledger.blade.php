@@ -2,6 +2,56 @@
     $title = 'Buku Kas Umum (BKU)';
 @endphp
 
+<style>
+    .table-container {
+        overflow-x: auto !important;
+        display: block;
+        width: 100%;
+        padding-bottom: 10px;
+        /* Space for scrollbar */
+    }
+
+    #tableLedger {
+        font-size: 12px;
+        min-width: 1500px;
+        /* Increased min-width to ensure scroll */
+        border-collapse: collapse;
+    }
+
+    #tableLedger th,
+    #tableLedger td {
+        padding: 10px 8px !important;
+        white-space: nowrap;
+    }
+
+    #tableLedger th {
+        font-size: 11px;
+        background: #f8fafc;
+        position: sticky;
+        top: 0;
+    }
+
+    /* Custom Scrollbar to make it visible */
+    .table-container::-webkit-scrollbar {
+        height: 10px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+        border: 2px solid #f1f5f9;
+    }
+
+    .table-container::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+</style>
+
 <div class="dashboard">
     <div class="dashboard-header">
         <div class="dashboard-header-left">

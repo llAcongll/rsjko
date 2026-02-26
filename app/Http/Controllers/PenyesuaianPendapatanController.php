@@ -22,7 +22,8 @@ class PenyesuaianPendapatanController extends Controller
 
         $query = PenyesuaianPendapatan::with('perusahaan')
             ->where('tahun', session('tahun_anggaran'))
-            ->orderBy('tanggal', 'asc');
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('id', 'asc');
 
         if ($kategori) {
             $query->where('kategori', $kategori);
