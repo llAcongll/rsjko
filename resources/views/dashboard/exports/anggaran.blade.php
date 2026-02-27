@@ -36,11 +36,13 @@
 
 <body>
     <div style="text-align: center;">
-        <h3>LAPORAN REALISASI ANGGARAN
-            {{ $category === 'SEMUA' ? 'PENDAPATAN DAN BELANJA' : ($category === 'PENGELUARAN' ? 'BELANJA' : 'PENDAPATAN') }}
-        </h3>
-        <p>Periode: {{ Carbon::parse($start)->translatedFormat('d F Y') }} s/d
-            {{ Carbon::parse($end)->translatedFormat('d F Y') }}
+        <h3 style="margin: 0; padding: 0;">{{ $report_title ?? 'LAPORAN REALISASI ANGGARAN ' . ($category === 'SEMUA' ? 'PENDAPATAN DAN BELANJA' : ($category === 'PENGELUARAN' ? 'BELANJA' : 'PENDAPATAN')) }}</h3>
+        <p style="margin: 5px 0 0; padding: 0;">
+            @if(isset($report_period))
+                {{ $report_period }}
+            @else
+                Periode: {{ Carbon::parse($start)->translatedFormat('d F Y') }} s/d {{ Carbon::parse($end)->translatedFormat('d F Y') }}
+            @endif
         </p>
     </div>
 
@@ -54,15 +56,21 @@
         }
     @endphp
 
+    @php
+        $isSp3bp = $report_title && str_contains($report_title, 'PEMBIAYAAN');
+    @endphp
+
     <table>
         <thead>
             <tr style="background-color: #f2f2f2;">
                 <th>Kode Rekening</th>
                 <th>Uraian</th>
                 <th>Target Anggaran</th>
+                @if($isSp3bp)
                 <th>Realisasi (Lalu)</th>
                 <th>Realisasi (Kini)</th>
-                <th>Realisasi (Total)</th>
+                @endif
+                <th>Realisasi{{ $isSp3bp ? ' (Total)' : '' }}</th>
                 <th>Selisih</th>
                 <th>%</th>
             </tr>
@@ -79,8 +87,10 @@
                         <td>{{ $item->kode }}</td>
                         <td>{{ $item->nama }}</td>
                         <td class="text-right">{{ $isRoot ? '' : 'Rp ' . number_format($item->target, 2, ',', '.') }}</td>
+                        @if($isSp3bp)
                         <td class="text-right">{{ $isRoot ? '' : 'Rp ' . number_format($item->realisasi_lalu, 2, ',', '.') }}</td>
                         <td class="text-right">{{ $isRoot ? '' : 'Rp ' . number_format($item->realisasi_kini, 2, ',', '.') }}</td>
+                        @endif
                         <td class="text-right">{{ $isRoot ? '' : 'Rp ' . number_format($item->realisasi_total, 2, ',', '.') }}</td>
                         <td class="text-right">{{ $isRoot ? '' : 'Rp ' . number_format($item->selisih, 2, ',', '.') }}</td>
                         <td class="text-center">{{ $isRoot ? '' : number_format($item->persen, 2, ',', '.') . '%' }}</td>
@@ -89,12 +99,14 @@
                 <tr style="background-color: #f1f5f9; font-weight: bold;">
                     <td colspan="2" class="text-center">TOTAL {{ $table['title'] }}</td>
                     <td class="text-right">Rp {{ number_format($table['totals']->target ?? 0, 2, ',', '.') }}</td>
+                    @if($isSp3bp)
                     <td class="text-right">
                         Rp {{ number_format($table['totals']->real_lalu ?? 0, 2, ',', '.') }}
                     </td>
                     <td class="text-right">
                         Rp {{ number_format($table['totals']->real_kini ?? 0, 2, ',', '.') }}
                     </td>
+                    @endif
                     <td class="text-right">Rp {{ number_format($table['totals']->real ?? 0, 2, ',', '.') }}</td>
                     <td class="text-right">Rp {{ number_format(($table['totals']->target ?? 0) - ($table['totals']->real ?? 0), 2, ',', '.') }}</td>
                     <td class="text-center">{{ number_format($table['totals']->persen ?? 0, 2, ',', '.') }}%</td>
@@ -105,8 +117,10 @@
                 <tr style="background-color: #e2e8f0; font-weight: bold; font-size: 11pt;">
                     <td colspan="2" class="text-center" style="padding: 10px;">SURPLUS / (DEFISIT)</td>
                     <td class="text-right">Rp {{ number_format($totals['target'], 2, ',', '.') }}</td>
+                    @if($isSp3bp)
                     <td class="text-right">Rp {{ number_format($totals['realisasi_lalu'], 2, ',', '.') }}</td>
                     <td class="text-right">Rp {{ number_format($totals['realisasi_kini'], 2, ',', '.') }}</td>
+                    @endif
                     <td class="text-right">Rp {{ number_format($totals['realisasi_total'], 2, ',', '.') }}</td>
                     <td class="text-right">Rp {{ number_format($totals['target'] - $totals['realisasi_total'], 2, ',', '.') }}</td>
                     <td class="text-center">{{ number_format($totals['persen'], 2, ',', '.') }}%</td>

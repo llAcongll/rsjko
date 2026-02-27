@@ -409,6 +409,34 @@ Route::middleware('auth')
             Route::delete('/master/activity-logs/purge', [ActivityLogController::class, 'purge']);
             Route::delete('/master/activity-logs/{id}', [ActivityLogController::class, 'destroy']);
         });
+
+        /*
+        |--------------------------------------------------
+        | SP3BP (PENGESAHAN)
+        |--------------------------------------------------
+        */
+        Route::prefix('pengesahan/sp3bp')->group(function () {
+            Route::get('/', [\App\Http\Controllers\SP3BPController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\SP3BPController::class, 'store']);
+            Route::get('/{id}', [\App\Http\Controllers\SP3BPController::class, 'show']);
+            Route::post('/{id}/generate', [\App\Http\Controllers\SP3BPController::class, 'generate']);
+            Route::post('/{id}/sahkan', [\App\Http\Controllers\SP3BPController::class, 'sahkan']);
+            Route::post('/{id}/batal-sah', [\App\Http\Controllers\SP3BPController::class, 'batalSah']);
+            Route::get('/{id}/print', [\App\Http\Controllers\SP3BPController::class, 'printPdf']);
+            Route::delete('/{id}', [\App\Http\Controllers\SP3BPController::class, 'destroy']);
+        });
+
+        // LRKB Routes
+        Route::prefix('pengesahan/lrkb')->group(function () {
+            Route::get('/', [\App\Http\Controllers\LRKBController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\LRKBController::class, 'store']);
+            Route::get('/{id}', [\App\Http\Controllers\LRKBController::class, 'show']);
+            Route::post('/{id}/generate', [\App\Http\Controllers\LRKBController::class, 'generate']);
+            Route::post('/{id}/validate', [\App\Http\Controllers\LRKBController::class, 'validateLrkb']);
+            Route::post('/{id}/unvalidate', [\App\Http\Controllers\LRKBController::class, 'unvalidateLrkb']);
+            Route::get('/{id}/print', [\App\Http\Controllers\LRKBController::class, 'print']);
+            Route::delete('/{id}', [\App\Http\Controllers\LRKBController::class, 'destroy']);
+        });
     });
 
 /*

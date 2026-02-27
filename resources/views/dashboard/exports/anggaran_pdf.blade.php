@@ -147,11 +147,13 @@
     <div class="header-line"></div>
 
     <div class="report-title">
-        <h3>LAPORAN REALISASI ANGGARAN
-            {{ $category === 'SEMUA' ? 'PENDAPATAN DAN BELANJA' : ($category === 'PENGELUARAN' ? 'BELANJA' : 'PENDAPATAN') }}
-        </h3>
-        <p>Periode: {{ Carbon::parse($start)->translatedFormat('d F Y') }} s/d
-            {{ Carbon::parse($end)->translatedFormat('d F Y') }}
+        <h3>{{ $report_title ?? 'LAPORAN REALISASI ANGGARAN ' . ($category === 'SEMUA' ? 'PENDAPATAN DAN BELANJA' : ($category === 'PENGELUARAN' ? 'BELANJA' : 'PENDAPATAN')) }}</h3>
+        <p>
+            @if(isset($report_period))
+                {{ $report_period }}
+            @else
+                Periode: {{ Carbon::parse($start)->translatedFormat('d F Y') }} s/d {{ Carbon::parse($end)->translatedFormat('d F Y') }}
+            @endif
         </p>
     </div>
 
@@ -165,15 +167,23 @@
     }
     @endphp
 
+    @php
+        $isSp3bp = $report_title && str_contains($report_title, 'PEMBIAYAAN');
+    @endphp
+
     <table>
         <thead>
             <tr>
                 <th style="width: 7%; text-align:center;">Kode</th>
                 <th style="width: 25%; text-align:center;">Uraian</th>
                 <th style="width: 12%; text-align:center;">Target</th>
+                @if($isSp3bp)
                 <th style="width: 10%; text-align:center;">Real. Lalu</th>
                 <th style="width: 10%; text-align:center;">Real. Kini</th>
                 <th style="width: 11%; text-align:center;">Real. Total</th>
+                @else
+                <th style="width: 20%; text-align:center;">Realisasi</th>
+                @endif
                 <th style="width: 11%; text-align:center;">Selisih</th>
                 <th style="width: 5%; text-align:center;">%</th>
             </tr>
@@ -197,6 +207,7 @@
                             </div>
                             @endif
                         </td>
+                        @if($isSp3bp)
                         <td>
                             @if(!$isRoot)
                             <div class="curr-cell">
@@ -213,6 +224,7 @@
                             </div>
                             @endif
                         </td>
+                        @endif
                         <td>
                             @if(!$isRoot)
                             <div class="curr-cell">
@@ -240,6 +252,7 @@
                             <span class="curr-val">{{ number_format($table['totals']->target ?? 0, 2, ',', '.') }}</span>
                         </div>
                     </td>
+                    @if($isSp3bp)
                     <td>
                         <div class="curr-cell">
                             <span class="curr-rp">Rp</span>
@@ -256,6 +269,7 @@
                             </span>
                         </div>
                     </td>
+                    @endif
                     <td>
                         <div class="curr-cell">
                             <span class="curr-rp">Rp</span>
@@ -275,37 +289,39 @@
             @if($category === 'SEMUA')
                 <tr style="background:#e2e8f0; font-weight:bold; font-size: 8pt;">
                     <td colspan="2" class="text-center">SURPLUS / (DEFISIT)</td>
-                    <td style="width: 15%;">
+                    <td>
                         <div class="curr-cell">
                             <span class="curr-rp">Rp</span>
                             <span class="curr-val">{{ number_format($totals['target'], 2, ',', '.') }}</span>
                         </div>
                     </td>
-                    <td style="width: 15%;">
+                    @if($isSp3bp)
+                    <td>
                         <div class="curr-cell">
                             <span class="curr-rp">Rp</span>
                             <span class="curr-val">{{ number_format($totals['realisasi_lalu'], 2, ',', '.') }}</span>
                         </div>
                     </td>
-                    <td style="width: 15%;">
+                    <td>
                         <div class="curr-cell">
                             <span class="curr-rp">Rp</span>
                             <span class="curr-val">{{ number_format($totals['realisasi_kini'], 2, ',', '.') }}</span>
                         </div>
                     </td>
-                    <td style="width: 15%;">
+                    @endif
+                    <td>
                         <div class="curr-cell">
                             <span class="curr-rp">Rp</span>
                             <span class="curr-val">{{ number_format($totals['realisasi_total'], 2, ',', '.') }}</span>
                         </div>
                     </td>
-                    <td style="width: 15%;">
+                    <td>
                         <div class="curr-cell">
                             <span class="curr-rp">Rp</span>
                             <span class="curr-val">{{ number_format($totals['target'] - $totals['realisasi_total'], 2, ',', '.') }}</span>
                         </div>
                     </td>
-                    <td style="width: 5%;" class="text-center">{{ number_format($totals['persen'], 2, ',', '.') }}%</td>
+                    <td class="text-center">{{ number_format($totals['persen'], 2, ',', '.') }}%</td>
                 </tr>
             @endif
         </tbody>

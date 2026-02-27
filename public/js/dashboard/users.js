@@ -76,7 +76,7 @@ window.submitUser = function () {
   const role = document.getElementById('userRole').value;
 
   if (!username) {
-    alert('Username wajib diisi');
+    toast('Username wajib diisi', 'warning');
     return;
   }
 

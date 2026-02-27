@@ -255,6 +255,41 @@ window.togglePengeluaran = function (btn) {
   }
 };
 
+window.togglePengesahan = function (btn) {
+  const sub = document.getElementById("submenuPengesahan");
+  const caret = btn.querySelector('.dropdown-icon');
+
+  const isOpen = sub && sub.style.display === "block";
+  hideSubmenus();
+
+  if (sub && !isOpen) {
+    sub.style.display = "block";
+    if (caret) caret.style.transform = 'rotate(180deg)';
+    setActiveMenu(btn);
+  }
+};
+
+window.openPengesahan = async function (type, btn) {
+  if (!type) return;
+
+  type = type.toUpperCase();
+  const parentBtn = document.getElementById('btnPengesahan');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  await loadContent(`pengesahan/${type}`);
+
+  document
+    .querySelectorAll('#submenuPengesahan button')
+    .forEach(b => b.classList.remove('active'));
+
+  if (btn) btn.classList.add('active');
+
+  if (type === 'SP3BP' && typeof window.initSp3bp === 'function') window.initSp3bp();
+  if (type === 'SPTJB' && typeof window.initSptjb === 'function') window.initSptjb();
+  if (type === 'LRKB' && typeof window.initLrkb === 'function') window.initLrkb();
+};
+
 window.openPengeluaran = async function (kategori, btn) {
   if (!kategori) return;
 

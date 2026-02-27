@@ -87,6 +87,13 @@ class DashboardController extends BaseController
                     default => abort(404),
                 },
 
+            'pengesahan' => match ($param) {
+                    'SP3BP', 'sp3bp' => (Auth::user()->hasPermission('PENGESAHAN_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengesahan.sp3bp') : abort(403),
+                    'SPTJB', 'sptjb' => (Auth::user()->hasPermission('PENGESAHAN_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengesahan.sptjb') : abort(403),
+                    'LRKB', 'lrkb' => (Auth::user()->hasPermission('PENGESAHAN_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengesahan.lrkb') : abort(403),
+                    default => abort(404),
+                },
+
             default => abort(404),
         };
     }

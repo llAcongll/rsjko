@@ -83,33 +83,16 @@
         <span>Dashboard</span>
       </button>
 
-      @if(auth()->user()->hasPermission('REKENING_VIEW'))
-        <button onclick="openRekening(this)">
-          <i class="ph ph-notebook"></i>
-          <span>Rekening Koran</span>
-        </button>
-      @endif
-
-      @if(auth()->user()->hasPermission('PIUTANG_VIEW'))
-        <button onclick="openPiutang(this)">
-          <i class="ph ph-invoice"></i>
-          <span>Piutang</span>
-        </button>
-      @endif
-
-      @if(auth()->user()->hasPermission('PENYESUAIAN_VIEW'))
-        <button onclick="openPenyesuaian(this)">
-          <i class="ph ph-scissors"></i>
-          <span>Potongan & Adm Bank</span>
-        </button>
-      @endif
 
       @php
         $hasAnyPendapatan = auth()->user()->hasPermission('PENDAPATAN_UMUM_VIEW') ||
           auth()->user()->hasPermission('PENDAPATAN_BPJS_VIEW') ||
           auth()->user()->hasPermission('PENDAPATAN_JAMINAN_VIEW') ||
           auth()->user()->hasPermission('PENDAPATAN_KERJA_VIEW') ||
-          auth()->user()->hasPermission('PENDAPATAN_LAIN_VIEW');
+          auth()->user()->hasPermission('PENDAPATAN_LAIN_VIEW') ||
+          auth()->user()->hasPermission('REKENING_VIEW') ||
+          auth()->user()->hasPermission('PIUTANG_VIEW') ||
+          auth()->user()->hasPermission('PENYESUAIAN_VIEW');
       @endphp
 
       @if($hasAnyPendapatan)
@@ -120,6 +103,27 @@
         </button>
 
         <div class="submenu-child" id="submenuPendapatan">
+          <div class="submenu-header">Kelola Kas & Piutang</div>
+          @if(auth()->user()->hasPermission('REKENING_VIEW'))
+            <button onclick="openRekening(this)">
+              <i class="ph ph-notebook"></i>
+              <span>Rekening Koran Pendapatan</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('PIUTANG_VIEW'))
+            <button onclick="openPiutang(this)">
+              <i class="ph ph-invoice"></i>
+              <span>Piutang</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('PENYESUAIAN_VIEW'))
+            <button onclick="openPenyesuaian(this)">
+              <i class="ph ph-scissors"></i>
+              <span>Potongan & Adm Bank</span>
+            </button>
+          @endif
+
+          <div class="submenu-header">Rincian Pasien</div>
           @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_VIEW'))
             <button onclick="openPendapatan('UMUM', this)">
               <i class="ph ph-user"></i>
@@ -186,7 +190,7 @@
           <div class="submenu-header">Kelola Kas</div>
           <button onclick="openRekeningKoranPengeluaran(this)">
             <i class="ph ph-bank"></i>
-            <span>Rekening Koran</span>
+            <span>Rekening Koran Pengeluaran</span>
           </button>
           <button onclick="openSaldoDana(this)">
             <i class="ph ph-piggy-bank"></i>
@@ -203,6 +207,7 @@
         </div>
       @endif
 
+
       @php
         $hasAnyLaporan = auth()->user()->hasPermission('LAPORAN_PENDAPATAN') ||
           auth()->user()->hasPermission('LAPORAN_REKON') ||
@@ -214,21 +219,17 @@
       @if($hasAnyLaporan)
         <button id="btnLaporan" onclick="toggleLaporan(this)">
           <i class="ph ph-chart-bar"></i>
-          <span>Laporan</span>
+          <span>Laporan Keuangan</span>
           <i class="ph ph-caret-down dropdown-icon"></i>
         </button>
 
         <div class="submenu-child" id="submenuLaporan">
+          {{-- 1. Pendapatan --}}
+          <div class="submenu-header">Pendapatan</div>
           @if(auth()->user()->hasPermission('LAPORAN_PENDAPATAN'))
             <button onclick="openLaporan('PENDAPATAN', this)">
               <i class="ph ph-money"></i>
               <span>Laporan Pendapatan</span>
-            </button>
-          @endif
-          @if(auth()->user()->hasPermission('LAPORAN_PENGELUARAN') || auth()->user()->hasPermission('LAPORAN_VIEW'))
-            <button onclick="openLaporan('PENGELUARAN', this)">
-              <i class="ph ph-hand-coins"></i>
-              <span>Laporan Pengeluaran</span>
             </button>
           @endif
           @if(auth()->user()->hasPermission('LAPORAN_REKON'))
@@ -249,16 +250,90 @@
               <span>Laporan MOU</span>
             </button>
           @endif
-          @if(auth()->user()->hasPermission('LAPORAN_ANGGARAN'))
-            <button onclick="openLaporan('ANGGARAN', this)">
-              <i class="ph ph-chart-pie-slice"></i>
-              <span>Realisasi Anggaran</span>
+
+          {{-- 2. Belanja --}}
+          <div class="submenu-header">Belanja</div>
+          @if(auth()->user()->hasPermission('LAPORAN_PENGELUARAN') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+            <button onclick="openLaporan('PENGELUARAN', this)">
+              <i class="ph ph-hand-coins"></i>
+              <span>Laporan Pengeluaran</span>
             </button>
+          @endif
+
+          {{-- 3. Anggaran --}}
+          <div class="submenu-header">
+            Anggaran<br>
+            <small style="font-size: 10px; font-weight: normal; opacity: 0.8; display: block; margin-top: 2px;">(alur
+              perencanaan → pelaksanaan → evaluasi)</small>
+          </div>
+          <button onclick="toast('Laporan RKA dalam pengembangan', 'info')">
+            <i class="ph ph-file-pdf"></i>
+            <span>Laporan RKA</span>
+          </button>
+          <button onclick="toast('Laporan RBA dalam pengembangan', 'info')">
+            <i class="ph ph-file-text"></i>
+            <span>Rencana Bisnis & Anggaran (RBA)</span>
+          </button>
+          @if(auth()->user()->hasPermission('LAPORAN_ANGGARAN'))
             <button onclick="openLaporan('DPA', this)">
               <i class="ph ph-article"></i>
               <span>Laporan DPA</span>
             </button>
+            <button onclick="openLaporan('ANGGARAN', this)">
+              <i class="ph ph-chart-pie-slice"></i>
+              <span>Realisasi Anggaran</span>
+            </button>
           @endif
+          <button onclick="toast('Perbandingan RKA vs Realisasi dalam pengembangan', 'info')">
+            <i class="ph ph-scales"></i>
+            <span>Perbandingan RKA vs Realisasi</span>
+          </button>
+          <button onclick="toast('Perbandingan RBA vs Realisasi dalam pengembangan', 'info')">
+            <i class="ph ph-scales"></i>
+            <span>Perbandingan RBA vs Realisasi</span>
+          </button>
+
+          {{-- 4. Laporan Keuangan (SAP Akrual) --}}
+          <div class="submenu-header">Laporan Keuangan (SAP Akrual)</div>
+          <button onclick="toast('Laporan Operasional (LO) dalam pengembangan', 'info')">
+            <i class="ph ph-book"></i>
+            <span>Laporan Operasional (LO)</span>
+          </button>
+          <button onclick="toast('Laporan Perubahan Ekuitas (LPE) dalam pengembangan', 'info')">
+            <i class="ph ph-graph"></i>
+            <span>Laporan Perubahan Ekuitas (LPE)</span>
+          </button>
+          <button onclick="toast('Neraca dalam pengembangan', 'info')">
+            <i class="ph ph-columns"></i>
+            <span>Neraca</span>
+          </button>
+          <button onclick="toast('Laporan Arus Kas (LAK) dalam pengembangan', 'info')">
+            <i class="ph ph-currency-circle-dollar"></i>
+            <span>Laporan Arus Kas (LAK)</span>
+          </button>
+          <button onclick="toast('Laporan Perubahan SAL (LPSAL) dalam pengembangan', 'info')">
+            <i class="ph ph-receipt"></i>
+            <span>Laporan Perubahan SAL (LPSAL)</span>
+          </button>
+          <button onclick="toast('Catatan Atas Laporan Keuangan (CALK) dalam pengembangan', 'info')">
+            <i class="ph ph-notebook"></i>
+            <span>Catatan Atas Laporan Keuangan (CALK)</span>
+          </button>
+
+          {{-- 5. Pengesahan --}}
+          <div class="submenu-header">Pengesahan</div>
+          <button onclick="openPengesahan('SP3BP', this)">
+            <i class="ph ph-file-text"></i>
+            <span>SP3BP</span>
+          </button>
+          <button onclick="openPengesahan('SPTJB', this)">
+            <i class="ph ph-file-doc"></i>
+            <span>SPTJB</span>
+          </button>
+          <button onclick="openPengesahan('LRKB', this)">
+            <i class="ph ph-clipboard-text"></i>
+            <span>LRKB</span>
+          </button>
         </div>
       @endif
 
@@ -442,6 +517,8 @@
   {{-- MODAL PENGELUARAN --}}
   @include('dashboard.partials.pengeluaran-form')
   @include('dashboard.partials.pengeluaran-detail')
+  @include('dashboard.partials.sp3bp-modal')
+  @include('dashboard.partials.lrkb-modal')
 
   {{-- JS --}}
   <script src="{{ asset('js/base.js') }}?v={{ filemtime(public_path('js/base.js')) }}"></script>

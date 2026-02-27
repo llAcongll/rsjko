@@ -56,9 +56,7 @@
                             <th class="text-center" style="vertical-align: middle;">Uraian</th>
                             <th class="text-center" style="text-align:right; vertical-align: middle;">Target Anggaran
                             </th>
-                            <th class="text-center" style="text-align:center">Realisasi (Lalu)</th>
-                            <th class="text-center" style="text-align:center">Realisasi (Kini)</th>
-                            <th class="text-center" style="text-align:center">Realisasi (Total)</th>
+                            <th class="text-center" style="text-align:center">Realisasi</th>
                             <th class="text-center" style="text-align:right; vertical-align: middle;">Selisih</th>
                             <th class="text-center" style="text-align:center; vertical-align: middle;">%</th>
                             <th class="text-center" style="width: 120px; vertical-align: middle;">Progres</th>
