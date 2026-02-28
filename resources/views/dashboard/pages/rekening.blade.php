@@ -47,6 +47,11 @@
         <button class="btn-filter-sm" onclick="applyRekeningFilter()" title="Terapkan Filter">
           <i class="ph ph-magnifying-glass"></i>
         </button>
+        <button class="btn-filter" onclick="openPreviewRekening()" title="Preview & Unduh PDF"
+          style="background: #0ea5e9; color: white; display: flex; align-items: center; gap: 8px;">
+          <i class="ph ph-printer"></i>
+          <span>Preview & Unduh</span>
+        </button>
       </div>
 
       @if(auth()->user()->hasPermission('REKENING_CRUD'))
@@ -153,4 +158,71 @@
     </div>
   </div>
 
+</div>
+
+{{-- MODAL PREVIEW --}}
+<div id="rekeningPreviewModal" class="confirm-overlay">
+  <div class="confirm-box"
+    style="max-width: 1100px; width: 95%; max-height: 95vh; display: flex; flex-direction: column; padding: 25px;">
+    <div class="modal-header"
+      style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px;">
+      <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+        <i class="ph ph-printer" style="color: #0ea5e9;"></i> Preview Rekening Koran
+      </h3>
+      <button onclick="closeRekeningPreview()"
+        style="background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b;">&times;</button>
+    </div>
+
+    <div id="rekeningPreviewBody"
+      style="flex: 1; overflow-y: auto; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+      {{-- Content will be rendered here --}}
+    </div>
+
+    <div class="modal-footer"
+      style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <button class="btn-secondary" onclick="closeRekeningPreview()">
+          <i class="ph ph-x-circle"></i> Tutup
+        </button>
+
+        <div
+          style="display: flex; gap: 10px; background: #f8fafc; padding: 6px 12px; border-radius: 10px; border: 1px solid #e2e8f0;">
+          <div class="filter-item" style="display: flex; align-items: center; gap: 5px;">
+            <label style="font-size: 10px; font-weight: 700; color: #475569;">PT. KIRI:</label>
+            <select id="ptRekeningKiri" onchange="updateRekeningSignatory('Kiri')"
+              style="height: 30px; padding: 0 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 10px; min-width: 140px; background: #fff;">
+              <option value="">-- Kosong --</option>
+            </select>
+          </div>
+          <div class="divider" style="width: 1px; height: 25px; background: #e2e8f0;"></div>
+          <div class="filter-item" style="display: flex; align-items: center; gap: 5px;">
+            <label style="font-size: 10px; font-weight: 700; color: #475569;">PT. TENGAH:</label>
+            <select id="ptRekeningTengah" onchange="updateRekeningSignatory('Tengah')"
+              style="height: 30px; padding: 0 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 10px; min-width: 140px; background: #fff;">
+              <option value="">-- Kosong --</option>
+            </select>
+          </div>
+          <div class="divider" style="width: 1px; height: 25px; background: #e2e8f0;"></div>
+          <div class="filter-item" style="display: flex; align-items: center; gap: 5px;">
+            <label style="font-size: 10px; font-weight: 700; color: #475569;">PT. KANAN:</label>
+            <select id="ptRekeningKanan" onchange="updateRekeningSignatory('Kanan')"
+              style="height: 30px; padding: 0 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 10px; min-width: 140px; background: #fff;">
+              <option value="">-- Kosong --</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px;">
+        <button class="btn-primary" onclick="printRekeningExcel()"
+          style="background: #10b981; border-color: #10b981; color: white;">
+          <i class="ph ph-file-xls"></i> Unduh Excel
+        </button>
+        <button class="btn-primary" onclick="printRekening()"
+          style="background: #ff4d4d; border-color: #ff4d4d; color: white;">
+          <i class="ph ph-file-pdf"></i> Unduh PDF
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

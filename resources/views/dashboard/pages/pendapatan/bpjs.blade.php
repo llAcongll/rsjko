@@ -21,10 +21,16 @@
                     </button>
                 </div>
 
-                <button class="btn-tambah-data" id="btnTambahPendapatanBpjs">
-                    <i class="ph-bold ph-plus"></i>
-                    <span>Entri Data</span>
-                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-toolbar btn-toolbar-outline" onclick="exportSemuaPendapatanBpjs(this)"
+                        title="Export Semua Data Laporan">
+                        <i class="ph ph-file-xls"></i> <span>Unduh Excel</span>
+                    </button>
+                    <button class="btn-tambah-data" id="btnTambahPendapatanBpjs">
+                        <i class="ph-bold ph-plus"></i>
+                        <span>Entri Data</span>
+                    </button>
+                </div>
             </div>
         @else
             <div class="dashboard-header-right">
@@ -37,6 +43,12 @@
                     </button>
                     <button class="bpjs-tab" onclick="switchBpjsTab('OBAT', this)" id="tabObat">
                         <i class="ph ph-pill"></i> Obat
+                    </button>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-toolbar btn-toolbar-outline" onclick="exportSemuaPendapatanBpjs(this)"
+                        title="Export Semua Data Laporan">
+                        <i class="ph ph-file-xls"></i> <span>Unduh Excel</span>
                     </button>
                 </div>
             </div>

@@ -31,6 +31,10 @@
         @endif
       </div>
 
+      <button class="btn-toolbar btn-toolbar-outline" onclick="exportSemuaPendapatanUmum(this)"
+        title="Export Semua Data Laporan">
+        <i class="ph ph-file-xls"></i> <span>Unduh Excel</span>
+      </button>
       @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD'))
         <button class="btn-tambah-data" id="btnTambahPendapatanUmum">
           <i class="ph-bold ph-plus"></i>

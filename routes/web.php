@@ -200,6 +200,8 @@ Route::middleware(['auth', 'role:ADMIN,USER'])
         Route::get('/template', [RekeningKoranController::class, 'downloadTemplate']);
         Route::post('/import', [RekeningKoranController::class, 'import']);
         Route::delete('/bulk-delete', [RekeningKoranController::class, 'bulkDelete']);
+        Route::get('/print', [RekeningKoranController::class, 'print']);
+        Route::get('/export-excel', [RekeningKoranController::class, 'exportExcel']);
         Route::get('/', [RekeningKoranController::class, 'index']);
         Route::post('/', [RekeningKoranController::class, 'store']);
         Route::get('/{rekeningKoran}', [RekeningKoranController::class, 'show']);
@@ -434,6 +436,7 @@ Route::middleware('auth')
             Route::post('/{id}/generate', [\App\Http\Controllers\LRKBController::class, 'generate']);
             Route::post('/{id}/validate', [\App\Http\Controllers\LRKBController::class, 'validateLrkb']);
             Route::post('/{id}/unvalidate', [\App\Http\Controllers\LRKBController::class, 'unvalidateLrkb']);
+            Route::post('/{id}/catatan', [\App\Http\Controllers\LRKBController::class, 'saveCatatan']);
             Route::get('/{id}/print', [\App\Http\Controllers\LRKBController::class, 'print']);
             Route::delete('/{id}', [\App\Http\Controllers\LRKBController::class, 'destroy']);
         });

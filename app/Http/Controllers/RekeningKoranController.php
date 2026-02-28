@@ -242,4 +242,116 @@ class RekeningKoranController extends Controller
 
         return response()->json($count);
     }
+
+    public function print(Request $request)
+    {
+        abort_unless(Auth::user()->hasPermission('REKENING_VIEW'), 403);
+
+        $bank = $request->input('bank');
+        $start = $request->input('start');
+        $end = $request->input('end');
+        $tahun = session('tahun_anggaran');
+
+        // 1. Calculate Saldo Awal (from transactions BEFORE the start date)
+        $saldoAwal = 0;
+        if ($start) {
+            $qAwal = RekeningKoran::where('tahun', $tahun)
+                ->where('tanggal', '<', $start);
+
+            if ($bank && $bank !== 'Semua Bank') {
+                $qAwal->where('bank', $bank);
+            }
+
+            $itemsAwal = $qAwal->get();
+            foreach ($itemsAwal as $item) {
+                $saldoAwal += ($item->cd === 'C' ? $item->jumlah : -$item->jumlah);
+            }
+        }
+
+        // 2. Get the period transactions
+        $query = RekeningKoran::where('tahun', $tahun);
+        if ($bank && $bank !== 'Semua Bank') {
+            $query->where('bank', $bank);
+        }
+        if ($start) {
+            $query->whereDate('tanggal', '>=', $start);
+        }
+        if ($end) {
+            $query->whereDate('tanggal', '<=', $end);
+        }
+
+        $items = $query->orderBy('tanggal')->orderBy('id')->get();
+
+        // 3. Process running balance
+        $running = $saldoAwal;
+        foreach ($items as $item) {
+            $running += ($item->cd === 'C' ? $item->jumlah : -$item->jumlah);
+            $item->saldo_running = $running;
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('dashboard.exports.rekening_pdf', [
+            'items' => $items,
+            'saldoAwal' => $saldoAwal,
+            'bank' => $bank ?: 'Semua Bank',
+            'start' => $start,
+            'end' => $end,
+            'tahun' => $tahun,
+            'ptKiri' => $request->has('ptKiri') ? \App\Models\PenandaTangan::find($request->ptKiri) : null,
+            'ptTengah' => $request->has('ptTengah') ? \App\Models\PenandaTangan::find($request->ptTengah) : null,
+            'ptKanan' => $request->has('ptKanan') ? \App\Models\PenandaTangan::find($request->ptKanan) : null,
+        ])->setPaper('f4', 'portrait');
+
+        return $pdf->stream("Rekening_Koran_{$tahun}.pdf");
+    }
+
+    public function exportExcel(Request $request)
+    {
+        abort_unless(Auth::user()->hasPermission('REKENING_VIEW'), 403);
+
+        $bank = $request->input('bank');
+        $start = $request->input('start');
+        $end = $request->input('end');
+        $tahun = session('tahun_anggaran');
+
+        $saldoAwal = 0;
+        if ($start) {
+            $qAwal = RekeningKoran::where('tahun', $tahun)->where('tanggal', '<', $start);
+            if ($bank && $bank !== 'Semua Bank')
+                $qAwal->where('bank', $bank);
+            $itemsAwal = $qAwal->get();
+            foreach ($itemsAwal as $item) {
+                $saldoAwal += ($item->cd === 'C' ? $item->jumlah : -$item->jumlah);
+            }
+        }
+
+        $query = RekeningKoran::where('tahun', $tahun);
+        if ($bank && $bank !== 'Semua Bank')
+            $query->where('bank', $bank);
+        if ($start)
+            $query->whereDate('tanggal', '>=', $start);
+        if ($end)
+            $query->whereDate('tanggal', '<=', $end);
+
+        $items = $query->orderBy('tanggal')->orderBy('id')->get();
+        $running = $saldoAwal;
+        foreach ($items as $item) {
+            $running += ($item->cd === 'C' ? $item->jumlah : -$item->jumlah);
+            $item->saldo_running = $running;
+        }
+
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=\"Rekening_Koran_{$tahun}.xls\"");
+
+        return view('dashboard.exports.rekening_excel', [
+            'items' => $items,
+            'saldoAwal' => $saldoAwal,
+            'bank' => $bank ?: 'Semua Bank',
+            'start' => $start,
+            'end' => $end,
+            'tahun' => $tahun,
+            'ptKiri' => $request->has('ptKiri') ? \App\Models\PenandaTangan::find($request->ptKiri) : null,
+            'ptTengah' => $request->has('ptTengah') ? \App\Models\PenandaTangan::find($request->ptTengah) : null,
+            'ptKanan' => $request->has('ptKanan') ? \App\Models\PenandaTangan::find($request->ptKanan) : null,
+        ]);
+    }
 }

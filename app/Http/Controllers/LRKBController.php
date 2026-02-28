@@ -90,39 +90,57 @@ class LRKBController extends Controller
             + DB::table('pendapatan_kerjasama')->whereBetween('tanggal', [$startDate, $endDate])->where('tahun', $year)->sum('total')
             + DB::table('pendapatan_lain')->whereBetween('tanggal', [$startDate, $endDate])->where('tahun', $year)->sum('total');
 
+        $penyesuaian = DB::table('penyesuaian_pendapatans')
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->where('tahun', $year)
+            ->sum(DB::raw('IFNULL(potongan, 0) + IFNULL(administrasi_bank, 0)'));
+
+        $pendapatan -= $penyesuaian;
+
         $belanja = DB::table('expenditures')->whereBetween('spending_date', [$startDate, $endDate])->sum('gross_value');
 
-        // 2. Get Saldo Awal (from previous LRKB)
+        // 2. Get Saldo Awal (from MOST RECENT previous LRKB)
         $saldoAwal = 0;
         if ($t) {
             $prevT = $t == 1 ? 4 : $t - 1;
             $prevYear = $t == 1 ? $year - 1 : $year;
             $prevLrkb = LRKB::where('tahun', $prevYear)->where('triwulan', $prevT)->where('status', 'valid')->first();
         } else {
+            // Check for previous month OR previous quarter that includes the previous month
             $prevM = $m == 1 ? 12 : $m - 1;
             $prevYear = $m == 1 ? $year - 1 : $year;
-            $prevLrkb = LRKB::where('tahun', $prevYear)->where('bulan', $prevM)->where('status', 'valid')->first();
+
+            $prevLrkb = LRKB::where('tahun', $prevYear)
+                ->where(function ($q) use ($prevM) {
+                    $q->where('bulan', $prevM)
+                        ->orWhere('triwulan', ceil($prevM / 3));
+                })
+                ->where('status', 'valid')
+                ->orderBy('triwulan', 'desc') // Prefer monthly if both exist? usually only one
+                ->first();
         }
 
         if ($prevLrkb) {
             $saldoAwal = $prevLrkb->saldo_fisik;
         }
 
-        // 3. Get Physical Balances at the end of period
+        // 3. Get Physical Balances at the end of period from BKU
         $bku = $this->reportService->getBkuData($year, $endMonth);
         $summary = $bku['summary'] ?? [];
         $saldoBank = $summary['final_bank'] ?? 0;
         $saldoTunai = $summary['final_tunai'] ?? 0;
         $saldoFisik = $saldoBank + $saldoTunai;
 
+        // 4. Calculate Book Balance
+        // Note: Pendapatan here is from Revenue Modules, which might differ from BKU if not synced
         $saldoAkhirBuku = $saldoAwal + $pendapatan - $belanja;
         $selisih = round($saldoFisik - $saldoAkhirBuku, 2);
 
-        // EXTRA: Calculate Physical In/Out for separation in view
-        $bankIn = DB::table('bank_account_ledgers')->whereBetween('date', [$startDate, $endDate])->sum('debit');
-        $bankOut = DB::table('bank_account_ledgers')->whereBetween('date', [$startDate, $endDate])->sum('credit');
-        $tunaiIn = DB::table('treasurer_cash')->whereBetween('date', [$startDate, $endDate])->sum('debit');
-        $tunaiOut = DB::table('treasurer_cash')->whereBetween('date', [$startDate, $endDate])->sum('credit');
+        // 5. Calculate Physical Flows (Arus) for the period
+        $bankIn = DB::table('bank_account_ledgers')->whereBetween('date', [$startDate, $endDate])->sum('debit') ?? 0;
+        $bankOut = DB::table('bank_account_ledgers')->whereBetween('date', [$startDate, $endDate])->sum('credit') ?? 0;
+        $tunaiIn = DB::table('treasurer_cash')->whereBetween('date', [$startDate, $endDate])->sum('debit') ?? 0;
+        $tunaiOut = DB::table('treasurer_cash')->whereBetween('date', [$startDate, $endDate])->sum('credit') ?? 0;
 
         DB::beginTransaction();
         try {
@@ -130,6 +148,10 @@ class LRKBController extends Controller
                 'saldo_awal' => $saldoAwal,
                 'pendapatan' => $pendapatan,
                 'belanja' => $belanja,
+                'bank_masuk' => $bankIn,
+                'bank_keluar' => $bankOut,
+                'tunai_masuk' => $tunaiIn,
+                'tunai_keluar' => $tunaiOut,
                 'saldo_akhir_buku' => $saldoAkhirBuku,
                 'saldo_fisik' => $saldoFisik,
                 'saldo_bank' => $saldoBank,
@@ -137,13 +159,13 @@ class LRKBController extends Controller
                 'selisih' => $selisih,
             ]);
 
-            // Detailed snapshot (optional but good for audit)
+            // Detailed snapshot rows for the table view
             $lrkb->details()->delete();
             $lrkb->details()->createMany([
-                ['jenis' => 'bank_penerimaan', 'uraian' => 'Arus Bank (Penerimaan)', 'jumlah' => $bankIn],
-                ['jenis' => 'bank_pengeluaran', 'uraian' => 'Arus Bank (Pengeluaran)', 'jumlah' => $bankOut],
-                ['jenis' => 'tunai_penerimaan', 'uraian' => 'Arus Tunai (Penerimaan)', 'jumlah' => $tunaiIn],
-                ['jenis' => 'tunai_pengeluaran', 'uraian' => 'Arus Tunai (Pengeluaran)', 'jumlah' => $tunaiOut],
+                ['jenis' => 'bank_masuk', 'uraian' => 'Arus Bank (Masuk)', 'jumlah' => $bankIn],
+                ['jenis' => 'bank_keluar', 'uraian' => 'Arus Bank (Keluar)', 'jumlah' => $bankOut],
+                ['jenis' => 'tunai_masuk', 'uraian' => 'Arus Tunai (Masuk)', 'jumlah' => $tunaiIn],
+                ['jenis' => 'tunai_keluar', 'uraian' => 'Arus Tunai (Keluar)', 'jumlah' => $tunaiOut],
             ]);
 
             DB::commit();
@@ -198,6 +220,17 @@ class LRKBController extends Controller
         }
         $lrkb->delete();
         return response()->json(['message' => 'Data berhasil dihapus']);
+    }
+
+    public function saveCatatan(Request $request, $id)
+    {
+        $lrkb = LRKB::findOrFail($id);
+        if ($lrkb->status !== 'draft') {
+            return response()->json(['error' => 'Catatan hanya dapat diubah pada status Draft'], 422);
+        }
+
+        $lrkb->update(['catatan_selisih' => $request->catatan]);
+        return response()->json(['success' => true]);
     }
 
     public function print($id)

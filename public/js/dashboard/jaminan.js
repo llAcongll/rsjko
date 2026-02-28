@@ -676,3 +676,82 @@ function renderPaginationJaminan(meta) {
         next.onclick = () => loadPendapatanJaminan(meta.current_page + 1);
     }
 }
+
+window.exportSemuaPendapatanJaminan = function (btn) {
+    const oldHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Menyiapkan...';
+    btn.disabled = true;
+
+    const params = new URLSearchParams({
+        page: 1,
+        per_page: 999999,
+        search: jaminanKeyword
+    });
+
+    fetch(`/dashboard/pendapatan/jaminan?${params.toString()}`, {
+        headers: { Accept: 'application/json' }
+    })
+        .then(res => res.json())
+        .then(res => {
+            const data = res.data || [];
+            let oldTable = document.getElementById('tempExportJaminan');
+            if (oldTable) oldTable.remove();
+
+            const table = document.createElement('table');
+            table.id = 'tempExportJaminan';
+            table.style.display = 'none';
+
+            let tbodyHtml = '';
+            data.forEach((item, index) => {
+                const dateStr = item.tanggal ? item.tanggal.split('T')[0] : '';
+                tbodyHtml += `
+            <tr>
+                <td class="text-center">${dateStr}</td>
+                <td class="font-medium">${escapeHtml(item.nama_pasien ?? '-')}</td>
+                <td>${item.ruangan?.nama ?? '-'}</td>
+                <td>${escapeHtml(item.perusahaan?.nama ?? item.transaksi ?? '-')}</td>
+                <td>${item.metode_pembayaran ?? ''}</td>
+                <td>${item.bank ?? ''}</td>
+                <td>${item.metode_detail ?? ''}</td>
+                <td class="text-right">${item.rs_tindakan || 0}</td>
+                <td class="text-right">${item.rs_obat || 0}</td>
+                <td class="text-right">${item.pelayanan_tindakan || 0}</td>
+                <td class="text-right">${item.pelayanan_obat || 0}</td>
+            </tr>
+            `;
+            });
+
+            table.innerHTML = `
+            <thead>
+                <tr>
+                    <th class="text-center">Tanggal (YYYY-MM-DD)</th>
+                    <th class="text-center">Nama Pasien</th>
+                    <th class="text-center">Ruangan</th>
+                    <th class="text-center">Perusahaan/Penjamin</th>
+                    <th class="text-center">Metode (TUNAI/NON_TUNAI)</th>
+                    <th class="text-center">Bank (BRK/BSI)</th>
+                    <th class="text-center">Detail (SETOR_TUNAI/QRIS/TRANSFER)</th>
+                    <th class="text-right">RS Tindakan</th>
+                    <th class="text-right">RS Obat</th>
+                    <th class="text-right">Pelayanan Tindakan</th>
+                    <th class="text-right">Pelayanan Obat</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tbodyHtml}
+            </tbody>
+        `;
+            document.body.appendChild(table);
+
+            previewExportExcel('tempExportJaminan', 'Data Laporan Pendapatan Jaminan - Semua');
+            setTimeout(() => table.remove(), 2000);
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Gagal mengambil data untuk di-export');
+        })
+        .finally(() => {
+            btn.innerHTML = oldHtml;
+            btn.disabled = false;
+        });
+};

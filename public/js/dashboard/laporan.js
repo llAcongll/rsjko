@@ -1706,10 +1706,10 @@ window.openPreviewModal = function (type) {
         const selisihFinal = saldoBuku - saldoFisik;
 
         // Extract detailed flows
-        const d_bank_in = (data.details || []).find(d => d.jenis === 'bank_penerimaan')?.jumlah || 0;
-        const d_bank_out = (data.details || []).find(d => d.jenis === 'bank_pengeluaran')?.jumlah || 0;
-        const d_tunai_in = (data.details || []).find(d => d.jenis === 'tunai_penerimaan')?.jumlah || 0;
-        const d_tunai_out = (data.details || []).find(d => d.jenis === 'tunai_pengeluaran')?.jumlah || 0;
+        const d_bank_in = (data.details || []).find(d => d.jenis === 'bank_masuk')?.jumlah || 0;
+        const d_bank_out = (data.details || []).find(d => d.jenis === 'bank_keluar')?.jumlah || 0;
+        const d_tunai_in = (data.details || []).find(d => d.jenis === 'tunai_masuk')?.jumlah || 0;
+        const d_tunai_out = (data.details || []).find(d => d.jenis === 'tunai_keluar')?.jumlah || 0;
 
         let html = `
             <div style="padding: 20px; font-family: 'Inter', sans-serif;">
@@ -1811,6 +1811,13 @@ window.openPreviewModal = function (type) {
                             </td>
                             <td style="border: 1px solid black; padding: 20px; text-align: right; border-bottom: 4px double black;">${numFr(selisihFinal)}</td>
                         </tr>
+                        ${data.catatan_selisih ? `
+                        <tr>
+                            <td colspan="2" style="border:1px solid black; padding:12px; background:#fff;">
+                                <strong>Catatan Rekonsiliasi:</strong><br>
+                                <div style="margin-top:5px; color:#475569; font-style:italic;">"${data.catatan_selisih}"</div>
+                            </td>
+                        </tr>` : ''}
                     </tbody>
                 </table>
 
@@ -2333,6 +2340,28 @@ window.initLrkb = function () {
     loadLrkbList();
 };
 
+window.saveLrkbCatatan = async function (id) {
+    const catatan = document.getElementById('catatan_selisih').value;
+    try {
+        const res = await fetch(`/dashboard/pengesahan/lrkb/${id}/catatan`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ catatan })
+        });
+        const data = await res.json();
+        if (data.error) {
+            toast(data.error, 'error');
+        } else {
+            toast('Catatan berhasil disimpan', 'success');
+        }
+    } catch (e) {
+        toast('Gagal menyimpan catatan', 'error');
+    }
+};
+
 window.loadLrkbList = async function () {
     const tbody = document.getElementById('lrkbBody');
     if (!tbody) return;
@@ -2546,10 +2575,10 @@ window.renderLrkbDetail = function (data) {
                             <td style="border: 1px solid black; padding: 15px; text-align: right;"></td>
                         </tr>
                         ${(() => {
-            const d_bank_in = (data.details || []).find(d => d.jenis === 'bank_penerimaan')?.jumlah || 0;
-            const d_bank_out = (data.details || []).find(d => d.jenis === 'bank_pengeluaran')?.jumlah || 0;
-            const d_tunai_in = (data.details || []).find(d => d.jenis === 'tunai_penerimaan')?.jumlah || 0;
-            const d_tunai_out = (data.details || []).find(d => d.jenis === 'tunai_pengeluaran')?.jumlah || 0;
+            const d_bank_in = (data.details || []).find(d => d.jenis === 'bank_masuk')?.jumlah || 0;
+            const d_bank_out = (data.details || []).find(d => d.jenis === 'bank_keluar')?.jumlah || 0;
+            const d_tunai_in = (data.details || []).find(d => d.jenis === 'tunai_masuk')?.jumlah || 0;
+            const d_tunai_out = (data.details || []).find(d => d.jenis === 'tunai_keluar')?.jumlah || 0;
 
             return `
                                 <tr>
@@ -2586,16 +2615,26 @@ window.renderLrkbDetail = function (data) {
                         </tr>
 
                         <!-- SELISIH -->
-                        <tr style="background: ${(data.saldo_akhir_buku - data.saldo_fisik) == 0 ? '#f0fdf4' : '#fef2f2'}; font-weight: 900; font-size: 18px;">
+                        <tr style="height: 30px;"><td colspan="2" style="border: 1px solid black; background: #fafafa;"></td></tr>
+                        <tr style="background: ${data.selisih == 0 ? '#ecfdf5' : '#fef2f2'}; font-weight: 900; font-size: 18px;">
                             <td style="border: 1px solid black; padding: 25px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <span>HASIL REKONSILIASI (SELISIH)</span>
                                     <span style="font-size: 13px; font-weight: 600; padding: 4px 12px; border: 1.5px solid currentColor; border-radius: 6px; letter-spacing: 0.5px;">
-                                        ${(data.saldo_akhir_buku - data.saldo_fisik) == 0 ? 'STATUS: SINKRON (MATCH)' : 'STATUS: SELISIH (UNMATCH)'}
+                                        ${data.selisih == 0 ? 'STATUS: SINKRON (MATCH)' : 'STATUS: SELISIH (UNMATCH)'}
                                     </span>
                                 </div>
                             </td>
-                            <td style="border: 1px solid black; padding: 25px; border-bottom: 6px double black;">${formatRupiahTable(data.saldo_akhir_buku - data.saldo_fisik)}</td>
+                            <td style="border: 1px solid black; padding: 25px; border-bottom: 6px double black;">${formatRupiahTable(data.selisih)}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="border: 1px solid black; padding: 15px; background: #fff;">
+                                <div style="margin-bottom: 8px; font-weight: 700; color: #475569;">PENJELASAN SELISIH / CATATAN REKONSILIASI:</div>
+                                <div style="display: flex; gap: 10px;">
+                                    <textarea id="catatan_selisih" style="flex: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 14px; min-height: 80px;" placeholder="Contoh: Saldo di bank belum tercatat karena setoran di tanggal libur, atau terdapat biaya administrasi bank yang belum dijurnalkan...">${data.catatan_selisih || ''}</textarea>
+                                    <button onclick="saveLrkbCatatan(${data.id})" class="btn-filter" style="height: fit-content; align-self: flex-end; background: #3b82f6;">Simpan Catatan</button>
+                                </div>
+                            </td>
                         </tr>
                     </tbody >
                 </table >
