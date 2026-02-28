@@ -696,7 +696,7 @@ window.exportSemuaPendapatanKerjasama = function (btn) {
 
             let tbodyHtml = '';
             data.forEach((item, index) => {
-                const dateStr = item.tanggal ? item.tanggal.split('T')[0] : '';
+                const dateStr = formatTanggalExcel(item.tanggal);
                 tbodyHtml += `
             <tr>
                 <td class="text-center">${dateStr}</td>

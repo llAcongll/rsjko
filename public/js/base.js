@@ -69,6 +69,14 @@ window.formatTanggal = function (dateStr) {
   });
 };
 
+window.formatTanggalExcel = function (dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  const pad = n => n.toString().padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
 window.formatDateForInput = function (dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
