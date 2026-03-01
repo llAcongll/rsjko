@@ -28,6 +28,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\PenandaTanganController;
 use App\Http\Controllers\SiklusUpController;
 use App\Http\Controllers\BankAccountLedgerController;
+use App\Http\Controllers\RevenueSyncController;
 
 Route::get('/health', function () {
     return response('OK', 200);
@@ -219,6 +220,7 @@ Route::middleware(['auth', 'role:ADMIN,USER'])->group(function () {
     */
     Route::prefix('dashboard/revenue-master')->group(function () {
         Route::get('/', [RevenueMasterController::class, 'index']);
+        Route::post('/sync', [RevenueSyncController::class, 'syncOrphans'])->middleware('permission:REVENUE_SYNC');
         Route::post('/', [RevenueMasterController::class, 'store']);
         Route::get('/{id}', [RevenueMasterController::class, 'show']);
         Route::put('/{id}', [RevenueMasterController::class, 'update']);

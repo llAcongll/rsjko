@@ -132,6 +132,20 @@
             </div>
           </div>
 
+          {{-- SYNC DATA --}}
+          <div
+            style="margin-bottom: 15px; background: #eff6ff; padding: 10px; border-radius: 8px; border: 1px solid #bfdbfe;">
+            <p
+              style="font-size: 11px; font-weight: 700; color: #1e40af; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+              <i class="ph ph-arrows-counter-clockwise"></i> MAINTENANCE
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 6px;">
+              <div class="permission-item"><label title="Sinkronisasi data lama ke kelompok pendapatan"><input
+                    type="checkbox" value="REVENUE_SYNC"> Sinkronisasi Data Lama</label>
+              </div>
+            </div>
+          </div>
+
           {{-- PIUTANG & PENYESUAIAN --}}
           <div style="margin-top: 20px; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
             <p style="font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 8px;">PIUTANG & POTONGAN</p>

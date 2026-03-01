@@ -19,6 +19,13 @@
                         <i class="ph ph-arrow-counter-clockwise"></i>
                         <span>Batal Posting Masal</span>
                     </button>
+                    @if(auth()->user()->hasPermission('REVENUE_SYNC'))
+                        <button class="btn-toolbar btn-toolbar-outline" onclick="syncOldData()"
+                            style="height: 44px; padding: 0 16px; border-color: #3b82f6; color: #2563eb;">
+                            <i class="ph ph-arrows-counter-clockwise"></i>
+                            <span>Sinkronisasi Data Lama</span>
+                        </button>
+                    @endif
                     <button class="btn-tambah-data" onclick="openMasterFormBpjs()">
                         <i class="ph-bold ph-plus"></i>
                         <span>Buat Kelompok Baru</span>

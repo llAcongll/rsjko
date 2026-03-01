@@ -915,6 +915,40 @@
     }
   }
 
+  window.syncOldData = function () {
+    openConfirm('Sinkronisasi Data Lama', 'Sistem akan mencari seluruh data pendapatan yang belum terkelompokkan dan memasukkannya ke kelompok master secara otomatis berdasarkan tanggal. Lanjutkan?', async () => {
+      try {
+        const btn = document.querySelector('button[onclick="syncOldData()"]');
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Sinkronisasi...';
+        }
+
+        const res = await fetch('/dashboard/revenue-master/sync', {
+          method: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+          }
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Gagal sinkronisasi');
+
+        toast(data.message || 'Berhasil sinkronisasi data', 'success');
+        loadMasterUmum(1);
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        const btn = document.querySelector('button[onclick="syncOldData()"]');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="ph ph-arrows-counter-clockwise"></i> <span>Sinkronisasi Data Lama</span>';
+        }
+      }
+    }, 'Sinkronisasi', 'ph-arrows-counter-clockwise', 'btn-primary');
+  };
+
   function initBulkDeleteUmum() {
     const btnBulk = document.getElementById('btnBulkDeleteUmum');
     if (btnBulk) {
