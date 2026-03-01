@@ -181,36 +181,154 @@
           <p
             style="font-weight: 700; font-size: 12px; margin-top: 20px; margin-bottom: 8px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">
             3. MODUL PENGELUARAN (BELANJA)</p>
-          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_VIEW"> Lihat Transaksi
-              Belanja</label></div>
-          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_CREATE"> Tambah/Edit
-              Belanja</label></div>
-          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_DELETE"> Hapus Belanja</label>
+
+          {{-- BELANJA / TRANSAKSI --}}
+          <div
+            style="margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9;">
+            <p
+              style="font-size: 11px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+              <i class="ph ph-shopping-bag"></i> TRANSAKSI BELANJA
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_VIEW"> Lihat</label></div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_CREATE"> Tambah</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_EDIT"> Edit</label></div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_DELETE"> Hapus</label></div>
+            </div>
           </div>
-          <div class="permission-item"><label style="color: #0369a1;"><input type="checkbox" value="PENGELUARAN_CAIR">
-              Posting Cair (SP2D)</label></div>
-          <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_BKU"> Lihat Buku Kas Umum
-              (BKU)</label></div>
+
+          {{-- SPP --}}
+          <div
+            style="margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9;">
+            <p
+              style="font-size: 11px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+              <i class="ph ph-file-text"></i> SPP
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SPP_VIEW"> Lihat</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SPP_CREATE"> Tambah</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SPP_EDIT"> Edit</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SPP_DELETE"> Hapus</label>
+              </div>
+            </div>
+          </div>
+
+          {{-- SPM --}}
+          <div
+            style="margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9;">
+            <p
+              style="font-size: 11px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+              <i class="ph ph-seal-check"></i> SPM
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SPM_VIEW"> Lihat</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SPM_CREATE"> Proses</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SPM_EDIT"> Edit</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SPM_DELETE"> Hapus</label>
+              </div>
+            </div>
+          </div>
+
+          {{-- SP2D --}}
+          <div
+            style="margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9;">
+            <p
+              style="font-size: 11px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+              <i class="ph ph-check-circle"></i> SP2D
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SP2D_VIEW"> Lihat</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SP2D_CREATE"> Proses</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SP2D_EDIT"> Edit</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SP2D_DELETE"> Hapus</label>
+              </div>
+            </div>
+          </div>
+
+          {{-- PENCAIRAN --}}
+          <div
+            style="margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9;">
+            <p
+              style="font-size: 11px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+              <i class="ph ph-wallet"></i> PENCAIRAN (REALISASI)
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_CAIR_VIEW"> Lihat</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_CAIR_CREATE"> Tambah</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_CAIR_EDIT"> Edit</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_CAIR_DELETE"> Hapus</label>
+              </div>
+            </div>
+          </div>
 
           <p
             style="font-weight: 700; font-size: 12px; margin-top: 20px; margin-bottom: 8px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">
-            4. REK. KORAN & PENGESAHAN</p>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
-            <div class="permission-item"><label><input type="checkbox" value="REKENING_VIEW"> Lihat RK</label></div>
-            <div class="permission-item"><label><input type="checkbox" value="REKENING_CREATE"> Kelola RK</label></div>
-            <div class="permission-item"><label><input type="checkbox" value="REKENING_DELETE"> Hapus RK</label></div>
-            <div class="permission-item"><label style="color: #0369a1;"><input type="checkbox" value="REKENING_IMPORT">
-                Import RK</label></div>
+            4. KELOLA KAS & BKU</p>
+
+          {{-- REKENING KORAN --}}
+          <div
+            style="margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9;">
+            <p
+              style="font-size: 11px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+              <i class="ph ph-bank"></i> REK. KORAN PENGELUARAN
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_RK_VIEW"> Lihat</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_RK_CREATE"> Tambah</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_RK_EDIT"> Edit</label></div>
+              <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_RK_DELETE"> Hapus</label>
+              </div>
+            </div>
           </div>
-          <div style="border-top: 1px dashed #cbd5e1; margin: 6px 0;"></div>
-          <div class="permission-item"><label><input type="checkbox" value="PENGESAHAN_VIEW"> Lihat Pengesahan
-              (SP3BP/LRKB)</label></div>
-          <div class="permission-item"><label><input type="checkbox" value="PENGESAHAN_CREATE"> Generate
-              Pengesahan</label></div>
-          <div class="permission-item"><label><input type="checkbox" value="PENGESAHAN_DELETE"> Hapus Pengesahan</label>
+
+          {{-- SALDO & BKU --}}
+          <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+            <div style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9;">
+              <p
+                style="font-size: 11px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+                <i class="ph ph-piggy-bank"></i> SALDO DANA
+              </p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SALDO_VIEW"> Lihat</label>
+                </div>
+                <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SALDO_CREATE">
+                    Tambah</label>
+                </div>
+                <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SALDO_EDIT"> Edit</label>
+                </div>
+                <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SALDO_DELETE">
+                    Hapus</label>
+                </div>
+              </div>
+            </div>
+            <div style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9;">
+              <p
+                style="font-size: 11px; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
+                <i class="ph ph-book"></i> BUKU KAS UMUM
+              </p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_BKU_VIEW"> Lihat</label>
+                </div>
+                <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_BKU_SYNC"> Sync</label>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="permission-item"><label style="color: #0369a1; font-weight: 600;"><input type="checkbox"
-                value="PENGESAHAN_POST"> SAHKAN/BATAL SAHKAN</label></div>
 
           <p
             style="font-weight: 700; font-size: 12px; margin-top: 20px; margin-bottom: 8px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">
@@ -226,10 +344,20 @@
 
           <p
             style="font-weight: 700; font-size: 12px; margin-top: 20px; margin-bottom: 8px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">
-            6. UTILITY & ADMIN</p>
-          <div class="permission-item"><label><input type="checkbox" value="USER_VIEW"> Lihat User</label></div>
-          <div class="permission-item"><label><input type="checkbox" value="USER_CREATE"> Kelola User</label></div>
-          <div class="permission-item"><label><input type="checkbox" value="ACTIVITY_LOG_VIEW"> Lihat Log Sistem</label>
+            6. PENGESAHAN & ADMIN</p>
+          <div style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9;">
+            <div class="permission-item"><label><input type="checkbox" value="PENGESAHAN_VIEW"> Lihat Pengesahan</label>
+            </div>
+            <div class="permission-item"><label><input type="checkbox" value="PENGESAHAN_CREATE"> Generate</label></div>
+            <div class="permission-item"><label><input type="checkbox" value="PENGESAHAN_DELETE"> Hapus</label></div>
+            <div class="permission-item"><label style="color: #0369a1; font-weight: 600;"><input type="checkbox"
+                  value="PENGESAHAN_POST"> SAHKAN/BATAL SAHKAN</label></div>
+          </div>
+          <div style="margin-top: 10px;">
+            <div class="permission-item"><label><input type="checkbox" value="USER_VIEW"> Lihat User</label></div>
+            <div class="permission-item"><label><input type="checkbox" value="USER_CREATE"> Kelola User</label></div>
+            <div class="permission-item"><label><input type="checkbox" value="ACTIVITY_LOG_VIEW"> Lihat Log
+                Sistem</label></div>
           </div>
         </div>
       </div> {{-- End Grid Div --}}

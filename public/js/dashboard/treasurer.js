@@ -254,6 +254,9 @@ function loadSaldoTable() {
                 const statusHtml = '<span style="font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:4px; background:#dcfce7; color:#166534;">CAIR</span>';
                 const siklusLabel = item.siklus_up && item.type === 'GU' ? `GU-${item.siklus_up}` : '-';
 
+                const canDelete = window.hasPermission('PENGELUARAN_SALDO_DELETE') || window.isAdmin;
+                const deleteBtn = canDelete ? `<button class="btn-aksi delete" title="Hapus" onclick="hapusSaldo(${item.id})"><i class="ph ph-trash"></i></button>` : '';
+
                 tbody.insertAdjacentHTML('beforeend', `
                     <tr>
                         <td class="text-center">${index + 1}</td>
@@ -264,7 +267,7 @@ function loadSaldoTable() {
                         <td class="text-right font-mono">${formatRupiahTable(item.value)}</td>
                         <td class="text-center">${statusHtml}</td>
                         <td class="text-center">
-                            <button class="btn-aksi delete" title="Hapus" onclick="hapusSaldo(${item.id})"><i class="ph ph-trash"></i></button>
+                            ${deleteBtn}
                         </td>
                     </tr>
                 `);
@@ -465,21 +468,30 @@ window.loadDisbursements = function () {
 
                 // Build action buttons based on current status AND page mode
                 let actionHtml = '';
+                const canSppCreate = window.hasPermission('PENGELUARAN_SPP_CREATE') || window.isAdmin;
+                const canSppDelete = window.hasPermission('PENGELUARAN_SPP_DELETE') || window.isAdmin;
+                const canSpmCreate = window.hasPermission('PENGELUARAN_SPM_CREATE') || window.isAdmin;
+                const canSpmDelete = window.hasPermission('PENGELUARAN_SPM_DELETE') || window.isAdmin;
+                const canSp2dCreate = window.hasPermission('PENGELUARAN_SP2D_CREATE') || window.isAdmin;
+                const canSp2dDelete = window.hasPermission('PENGELUARAN_SP2D_DELETE') || window.isAdmin;
+                const canCairView = window.hasPermission('PENGELUARAN_CAIR_VIEW') || window.isAdmin;
+                const canCairCreate = window.hasPermission('PENGELUARAN_CAIR_CREATE') || window.isAdmin;
+
                 if (disbursementPageMode === 'SPP') {
                     if (item.status === 'DRAFT' || item.status === 'SPP') {
-                        actionHtml += `<button class="btn-aksi" title="Edit SPP" onclick="editDisbursement(${item.id})" style="color:#2563eb;"><i class="ph ph-pencil-simple"></i></button>`;
-                        actionHtml += `<button class="btn-aksi delete" title="Hapus SPP" onclick="hapusDisbursement(${item.id})"><i class="ph ph-trash"></i></button>`;
+                        if (canSppCreate) actionHtml += `<button class="btn-aksi" title="Edit SPP" onclick="editDisbursement(${item.id})" style="color:#2563eb;"><i class="ph ph-pencil-simple"></i></button>`;
+                        if (canSppDelete) actionHtml += `<button class="btn-aksi delete" title="Hapus SPP" onclick="hapusDisbursement(${item.id})"><i class="ph ph-trash"></i></button>`;
                     }
                 } else if (disbursementPageMode === 'SPM') {
                     if (item.status === 'SPP') {
-                        actionHtml += `<button class="btn-aksi" title="Proses ke SPM" onclick="advanceStatus(${item.id}, 'SPM')" style="color:#047857;"><i class="ph ph-seal-check"></i> <span style='font-size:0.7rem'>Ke SPM</span></button>`;
+                        if (canSpmCreate) actionHtml += `<button class="btn-aksi" title="Proses ke SPM" onclick="advanceStatus(${item.id}, 'SPM')" style="color:#047857;"><i class="ph ph-seal-check"></i> <span style='font-size:0.7rem'>Ke SPM</span></button>`;
                     }
                     if (item.status === 'SPM') {
-                        actionHtml += `<button class="btn-aksi" title="Batalkan SPM" onclick="revertStatus(${item.id}, 'SPP')" style="color:#dc2626;"><i class="ph ph-arrow-counter-clockwise"></i> <span style='font-size:0.7rem'>Batal</span></button>`;
+                        if (canSpmDelete) actionHtml += `<button class="btn-aksi" title="Batalkan SPM" onclick="revertStatus(${item.id}, 'SPP')" style="color:#dc2626;"><i class="ph ph-arrow-counter-clockwise"></i> <span style='font-size:0.7rem'>Batal</span></button>`;
                     }
                 } else if (disbursementPageMode === 'SP2D') {
                     if (item.status === 'SPM') {
-                        actionHtml += `<button class="btn-aksi" title="Cairkan (Assign SP2D)" onclick="advanceStatus(${item.id}, 'CAIR')" style="color:#1d4ed8;"><i class="ph ph-check-circle"></i> <span style='font-size:0.7rem'>Assign SP2D</span></button>`;
+                        if (canSp2dCreate) actionHtml += `<button class="btn-aksi" title="Cairkan (Assign SP2D)" onclick="advanceStatus(${item.id}, 'CAIR')" style="color:#1d4ed8;"><i class="ph ph-check-circle"></i> <span style='font-size:0.7rem'>Assign SP2D</span></button>`;
                     }
                     if (item.status === 'CAIR') {
                         actionHtml += `<span style="font-size:0.7rem; color:#64748b">Selesai (Lihat di Pencairan)</span>`;
@@ -487,29 +499,47 @@ window.loadDisbursements = function () {
                 } else if (disbursementPageMode === 'PENCAIRAN') {
                     // Horizontal Action Group
                     if (item.status === 'CAIR') {
+                        actionHtml += `<div style="display: flex; gap: 6px; justify-content: center; align-items: center;">`;
+
+                        // Detail Belanja (View or Manage)
+                        if (canCairView || canCairCreate) {
+                            actionHtml += `
+                                <button class="btn-aksi" title="Detail Belanja" onclick="openBelanjaItems(${item.id})" 
+                                    style="width: auto; height: 32px; padding: 0 12px; border-radius: 8px; background: #ecfdf5; color: #059669; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1px solid #10b981;">
+                                    <i class="ph ph-shopping-cart" style="font-size: 14px;"></i> <span>Belanja</span>
+                                </button>
+                            `;
+                        }
+
+                        // Always allow view detail of record if they can view pencairan listed here
                         actionHtml += `
-                        <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
-                            <button class="btn-aksi" title="Detail Belanja" onclick="openBelanjaItems(${item.id})" 
-                                style="width: auto; height: 32px; padding: 0 12px; border-radius: 8px; background: #ecfdf5; color: #059669; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1px solid #10b981;">
-                                <i class="ph ph-shopping-cart" style="font-size: 14px;"></i> <span>Belanja</span>
-                            </button>
-                            
                             <button class="btn-aksi" title="Lihat Detail" onclick="viewDisbursement(${item.id})" 
                                 style="width: 32px; height: 32px; background: #eff6ff; color: #2563eb; border: 1px solid #3b82f6;">
                                 <i class="ph ph-eye"></i>
                             </button>
-                            
-                            <button class="btn-aksi" title="Edit Data" onclick="editDisbursement(${item.id})" 
-                                style="width: 32px; height: 32px; background: #fffbeb; color: #d97706; border: 1px solid #f59e0b;">
-                                <i class="ph ph-pencil-simple"></i>
-                            </button>
-
-                            <button class="btn-aksi" title="Batalkan SP2D" onclick="revertStatus(${item.id}, 'SPM')" 
-                                style="width: auto; height: 32px; padding: 0 12px; border-radius: 8px; background: #fef2f2; color: #dc2626; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1px solid #ef4444;">
-                                <i class="ph ph-arrow-counter-clockwise" style="font-size: 14px;"></i> <span>Batal</span>
-                            </button>
-                        </div>
                         `;
+
+                        // Edit record info
+                        if (canCairCreate) {
+                            actionHtml += `
+                                <button class="btn-aksi" title="Edit Data" onclick="editDisbursement(${item.id})" 
+                                    style="width: 32px; height: 32px; background: #fffbeb; color: #d97706; border: 1px solid #f59e0b;">
+                                    <i class="ph ph-pencil-simple"></i>
+                                </button>
+                            `;
+                        }
+
+                        // Revert SP2D
+                        if (canSp2dDelete) {
+                            actionHtml += `
+                                <button class="btn-aksi" title="Batalkan SP2D" onclick="revertStatus(${item.id}, 'SPM')" 
+                                    style="width: auto; height: 32px; padding: 0 12px; border-radius: 8px; background: #fef2f2; color: #dc2626; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1px solid #ef4444;">
+                                    <i class="ph ph-arrow-counter-clockwise" style="font-size: 14px;"></i> <span>Batal</span>
+                                </button>
+                            `;
+                        }
+
+                        actionHtml += `</div>`;
                     }
                 }
 
@@ -1368,6 +1398,8 @@ window.loadBelanjaItems = function (id) {
                         expenditures.forEach((ex, idx) => {
                             usedSum += parseFloat(ex.gross_value) || 0;
                             const rekLabel = ex.kode_rekening ? `[${ex.kode_rekening.kode}] ${ex.kode_rekening.nama}` : '-';
+                            const canCairCreate = window.hasPermission('PENGELUARAN_CAIR_CREATE') || window.isAdmin;
+
                             tbody.insertAdjacentHTML('beforeend', `
                                 <tr>
                                     <td class="text-center" style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${idx + 1}</td>
@@ -1381,14 +1413,16 @@ window.loadBelanjaItems = function (id) {
                                                 style="background: #eff6ff; color: #2563eb; width: 28px; height: 28px; border: 1px solid #3b82f6;">
                                                 <i class="ph ph-eye"></i>
                                             </button>
-                                            <button class="btn-aksi" title="Edit" onclick="openPengeluaranForm('ALL', ${ex.id})" 
-                                                style="background: #fffbeb; color: #d97706; width: 28px; height: 28px; border: 1px solid #f59e0b;">
-                                                <i class="ph ph-pencil-simple"></i>
-                                            </button>
-                                            <button class="btn-aksi delete" title="Hapus" onclick="deleteBelanjaItem(${ex.id})" 
-                                                style="width: 28px; height: 28px; background: #fef2f2; color: #ef4444; border: 1px solid #ef4444;">
-                                                <i class="ph ph-trash"></i>
-                                            </button>
+                                            ${canCairCreate ? `
+                                                <button class="btn-aksi" title="Edit" onclick="openPengeluaranForm('ALL', ${ex.id})" 
+                                                    style="background: #fffbeb; color: #d97706; width: 28px; height: 28px; border: 1px solid #f59e0b;">
+                                                    <i class="ph ph-pencil-simple"></i>
+                                                </button>
+                                                <button class="btn-aksi delete" title="Hapus" onclick="deleteBelanjaItem(${ex.id})" 
+                                                    style="width: 28px; height: 28px; background: #fef2f2; color: #ef4444; border: 1px solid #ef4444;">
+                                                    <i class="ph ph-trash"></i>
+                                                </button>
+                                            ` : ''}
                                         </div>
                                     </td>
                                 </tr>

@@ -26,11 +26,11 @@ class DashboardController extends BaseController
             : abort(403),
 
             'pendapatan' => match ($param) {
-                    'UMUM' => Auth::user()->hasPermission('PENDAPATAN_UMUM_VIEW') ? view('dashboard.pages.pendapatan.umum') : abort(403),
-                    'BPJS' => Auth::user()->hasPermission('PENDAPATAN_BPJS_VIEW') ? view('dashboard.pages.pendapatan.bpjs') : abort(403),
-                    'JAMINAN' => Auth::user()->hasPermission('PENDAPATAN_JAMINAN_VIEW') ? view('dashboard.pages.pendapatan.jaminan') : abort(403),
-                    'KERJASAMA' => Auth::user()->hasPermission('PENDAPATAN_KERJA_VIEW') ? view('dashboard.pages.pendapatan.kerjasama') : abort(403),
-                    'LAIN' => Auth::user()->hasPermission('PENDAPATAN_LAIN_VIEW') ? view('dashboard.pages.pendapatan.lainlain') : abort(403),
+                    'UMUM' => (Auth::user()->hasPermission('PENDAPATAN_UMUM_VIEW') || Auth::user()->hasPermission('PENDAPATAN_UMUM')) ? view('dashboard.pages.pendapatan.umum') : abort(403),
+                    'BPJS' => (Auth::user()->hasPermission('PENDAPATAN_BPJS_VIEW') || Auth::user()->hasPermission('PENDAPATAN_BPJS')) ? view('dashboard.pages.pendapatan.bpjs') : abort(403),
+                    'JAMINAN' => (Auth::user()->hasPermission('PENDAPATAN_JAMINAN_VIEW') || Auth::user()->hasPermission('PENDAPATAN_JAMINAN')) ? view('dashboard.pages.pendapatan.jaminan') : abort(403),
+                    'KERJASAMA' => (Auth::user()->hasPermission('PENDAPATAN_KERJA_VIEW') || Auth::user()->hasPermission('PENDAPATAN_KERJA')) ? view('dashboard.pages.pendapatan.kerjasama') : abort(403),
+                    'LAIN' => (Auth::user()->hasPermission('PENDAPATAN_LAIN_VIEW') || Auth::user()->hasPermission('PENDAPATAN_LAIN')) ? view('dashboard.pages.pendapatan.lainlain') : abort(403),
                     'ANGGARAN' => Auth::user()->hasPermission('KODE_REKENING_VIEW') ? view('dashboard.pages.pendapatan.anggaran') : abort(403),
                     default => abort(404),
                 },
@@ -66,10 +66,10 @@ class DashboardController extends BaseController
             'pengeluaran' => match ($param) {
                     'PEGAWAI', 'BARANG_JASA', 'MODAL' => Auth::user()->hasPermission('PENGELUARAN_VIEW') || Auth::user()->isAdmin() ? view('dashboard.pages.pengeluaran.index', ['param' => $param]) : abort(403),
                     'ANGGARAN' => (Auth::user()->hasPermission('KODE_REKENING_PENGELUARAN_VIEW') || Auth::user()->hasPermission('KODE_REKENING_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.anggaran') : abort(403),
-                    'disbursement' => (Auth::user()->hasPermission('PENGELUARAN_CAIR') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.disbursement') : abort(403),
-                    'saldo' => (Auth::user()->hasPermission('PENGELUARAN_CAIR') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.saldo') : abort(403),
-                    'ledger' => (Auth::user()->hasPermission('PENGELUARAN_BKU') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.ledger') : abort(403),
-                    'rekening-koran' => (Auth::user()->hasPermission('PENGELUARAN_CAIR') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.rekening-koran') : abort(403),
+                    'disbursement' => (Auth::user()->hasPermission('PENGELUARAN_SPP_VIEW') || Auth::user()->hasPermission('PENGELUARAN_SPM_VIEW') || Auth::user()->hasPermission('PENGELUARAN_SP2D_VIEW') || Auth::user()->hasPermission('PENGELUARAN_CAIR_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.disbursement') : abort(403),
+                    'saldo' => (Auth::user()->hasPermission('PENGELUARAN_SALDO_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.saldo') : abort(403),
+                    'ledger' => (Auth::user()->hasPermission('PENGELUARAN_BKU_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.ledger') : abort(403),
+                    'rekening-koran' => (Auth::user()->hasPermission('PENGELUARAN_RK_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.rekening-koran') : abort(403),
                     default => abort(404),
                 },
 

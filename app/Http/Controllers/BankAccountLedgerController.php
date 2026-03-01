@@ -18,7 +18,7 @@ class BankAccountLedgerController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_CAIR') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_VIEW') || auth()->user()->isAdmin(), 403);
 
         $month = $request->get('month', date('n'));
         $year = $request->get('year', date('Y'));
@@ -40,7 +40,7 @@ class BankAccountLedgerController extends Controller
 
     public function deposit(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_CAIR') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_CREATE') || auth()->user()->isAdmin(), 403);
 
         $request->validate([
             'date' => 'required|date',
@@ -75,7 +75,7 @@ class BankAccountLedgerController extends Controller
 
     public function updateDeposit(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_CAIR') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_EDIT') || auth()->user()->isAdmin(), 403);
 
         $request->validate([
             'date' => 'required|date',
@@ -115,7 +115,7 @@ class BankAccountLedgerController extends Controller
 
     public function destroyDeposit($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_CAIR') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_DELETE') || auth()->user()->isAdmin(), 403);
 
         $entry = BankAccountLedger::findOrFail($id);
         if ($entry->type !== 'DEPOSIT_MANUAL') {

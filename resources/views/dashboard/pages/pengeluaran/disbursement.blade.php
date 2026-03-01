@@ -61,10 +61,12 @@
                 dokumen: <span id="belanjaRefNo" style="font-weight: 700; color: #1e293b;">-</span></p>
         </div>
         <div class="dashboard-header-right">
-            <button class="btn-tambah-data" onclick="addNewBelanjaItem()" style="background:#059669; height: 44px;">
-                <i class="ph-bold ph-plus"></i>
-                <span>Tambah Rincian Kegiatan</span>
-            </button>
+            @if(auth()->user()->hasPermission('PENGELUARAN_CAIR_CREATE') || auth()->user()->isAdmin())
+                <button class="btn-tambah-data" onclick="addNewBelanjaItem()" style="background:#059669; height: 44px;">
+                    <i class="ph-bold ph-plus"></i>
+                    <span>Tambah Rincian Kegiatan</span>
+                </button>
+            @endif
         </div>
     </div>
 

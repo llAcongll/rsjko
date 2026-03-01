@@ -85,14 +85,16 @@
 
 
       @php
-        $hasAnyPendapatan = auth()->user()->hasPermission('PENDAPATAN_UMUM_VIEW') ||
-          auth()->user()->hasPermission('PENDAPATAN_BPJS_VIEW') ||
-          auth()->user()->hasPermission('PENDAPATAN_JAMINAN_VIEW') ||
-          auth()->user()->hasPermission('PENDAPATAN_KERJA_VIEW') ||
-          auth()->user()->hasPermission('PENDAPATAN_LAIN_VIEW') ||
+        $hasAnyPendapatan =
+          auth()->user()->hasPermission('PENDAPATAN_UMUM_VIEW') || auth()->user()->hasPermission('PENDAPATAN_UMUM') ||
+          auth()->user()->hasPermission('PENDAPATAN_BPJS_VIEW') || auth()->user()->hasPermission('PENDAPATAN_BPJS') ||
+          auth()->user()->hasPermission('PENDAPATAN_JAMINAN_VIEW') || auth()->user()->hasPermission('PENDAPATAN_JAMINAN') ||
+          auth()->user()->hasPermission('PENDAPATAN_KERJA_VIEW') || auth()->user()->hasPermission('PENDAPATAN_KERJA') ||
+          auth()->user()->hasPermission('PENDAPATAN_LAIN_VIEW') || auth()->user()->hasPermission('PENDAPATAN_LAIN') ||
           auth()->user()->hasPermission('REKENING_VIEW') ||
           auth()->user()->hasPermission('PIUTANG_VIEW') ||
-          auth()->user()->hasPermission('PENYESUAIAN_VIEW');
+          auth()->user()->hasPermission('PENYESUAIAN_VIEW') ||
+          auth()->user()->isAdmin();
       @endphp
 
       @if($hasAnyPendapatan)
@@ -124,31 +126,31 @@
           @endif
 
           <div class="submenu-header">Rincian Pasien</div>
-          @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_VIEW'))
+          @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_VIEW') || auth()->user()->hasPermission('PENDAPATAN_UMUM'))
             <button onclick="openPendapatan('UMUM', this)">
               <i class="ph ph-user"></i>
               <span>Pasien Umum</span>
             </button>
           @endif
-          @if(auth()->user()->hasPermission('PENDAPATAN_BPJS_VIEW'))
+          @if(auth()->user()->hasPermission('PENDAPATAN_BPJS_VIEW') || auth()->user()->hasPermission('PENDAPATAN_BPJS'))
             <button onclick="openPendapatan('BPJS', this)">
               <i class="ph ph-cardholder"></i>
               <span>BPJS</span>
             </button>
           @endif
-          @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_VIEW'))
+          @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_VIEW') || auth()->user()->hasPermission('PENDAPATAN_JAMINAN'))
             <button onclick="openPendapatan('JAMINAN', this)">
               <i class="ph ph-shield-check"></i>
               <span>Jaminan</span>
             </button>
           @endif
-          @if(auth()->user()->hasPermission('PENDAPATAN_KERJA_VIEW'))
+          @if(auth()->user()->hasPermission('PENDAPATAN_KERJA_VIEW') || auth()->user()->hasPermission('PENDAPATAN_KERJA'))
             <button onclick="openPendapatan('KERJASAMA', this)">
               <i class="ph ph-handshake"></i>
               <span>Kerjasama</span>
             </button>
           @endif
-          @if(auth()->user()->hasPermission('PENDAPATAN_LAIN_VIEW'))
+          @if(auth()->user()->hasPermission('PENDAPATAN_LAIN_VIEW') || auth()->user()->hasPermission('PENDAPATAN_LAIN'))
             <button onclick="openPendapatan('LAIN', this)">
               <i class="ph ph-dots-three-circle"></i>
               <span>Lain-lain</span>
@@ -158,7 +160,15 @@
       @endif
 
       @php
-        $hasAnyPengeluaran = auth()->user()->hasPermission('PENGELUARAN_VIEW') || auth()->user()->isAdmin();
+        $hasAnyPengeluaran = auth()->user()->hasPermission('PENGELUARAN_VIEW') ||
+          auth()->user()->hasPermission('PENGELUARAN_SPP_VIEW') ||
+          auth()->user()->hasPermission('PENGELUARAN_SPM_VIEW') ||
+          auth()->user()->hasPermission('PENGELUARAN_SP2D_VIEW') ||
+          auth()->user()->hasPermission('PENGELUARAN_CAIR_VIEW') ||
+          auth()->user()->hasPermission('PENGELUARAN_RK_VIEW') ||
+          auth()->user()->hasPermission('PENGELUARAN_SALDO_VIEW') ||
+          auth()->user()->hasPermission('PENGELUARAN_BKU_VIEW') ||
+          auth()->user()->isAdmin();
       @endphp
 
       @if($hasAnyPengeluaran)
@@ -170,35 +180,47 @@
 
         <div class="submenu-child" id="submenuPengeluaran">
           <div class="submenu-header">Pencairan Dana</div>
-          <button onclick="openSppPage(this)">
-            <i class="ph ph-file-text"></i>
-            <span>SPP</span>
-          </button>
-          <button onclick="openSpmPage(this)">
-            <i class="ph ph-seal-check"></i>
-            <span>SPM</span>
-          </button>
-          <button onclick="openSp2dPage(this)">
-            <i class="ph ph-check-circle"></i>
-            <span>SP2D</span>
-          </button>
-          <button onclick="openPencairanPage(this)">
-            <i class="ph ph-wallet"></i>
-            <span>Pencairan</span>
-          </button>
+          @if(auth()->user()->hasPermission('PENGELUARAN_SPP_VIEW') || auth()->user()->isAdmin())
+            <button onclick="openSppPage(this)">
+              <i class="ph ph-file-text"></i>
+              <span>SPP</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('PENGELUARAN_SPM_VIEW') || auth()->user()->isAdmin())
+            <button onclick="openSpmPage(this)">
+              <i class="ph ph-seal-check"></i>
+              <span>SPM</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('PENGELUARAN_SP2D_VIEW') || auth()->user()->isAdmin())
+            <button onclick="openSp2dPage(this)">
+              <i class="ph ph-check-circle"></i>
+              <span>SP2D</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('PENGELUARAN_CAIR_VIEW') || auth()->user()->isAdmin())
+            <button onclick="openPencairanPage(this)">
+              <i class="ph ph-wallet"></i>
+              <span>Pencairan</span>
+            </button>
+          @endif
 
           <div class="submenu-header">Kelola Kas</div>
-          <button onclick="openRekeningKoranPengeluaran(this)">
-            <i class="ph ph-bank"></i>
-            <span>Rekening Koran Pengeluaran</span>
-          </button>
-          <button onclick="openSaldoDana(this)">
-            <i class="ph ph-piggy-bank"></i>
-            <span>Saldo Dana</span>
-          </button>
+          @if(auth()->user()->hasPermission('PENGELUARAN_RK_VIEW') || auth()->user()->isAdmin())
+            <button onclick="openRekeningKoranPengeluaran(this)">
+              <i class="ph ph-bank"></i>
+              <span>Rekening Koran Pengeluaran</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('PENGELUARAN_SALDO_VIEW') || auth()->user()->isAdmin())
+            <button onclick="openSaldoDana(this)">
+              <i class="ph ph-piggy-bank"></i>
+              <span>Saldo Dana</span>
+            </button>
+          @endif
 
           <div class="submenu-header">Laporan Kas</div>
-          @if(auth()->user()->hasPermission('PENGELUARAN_BKU') || auth()->user()->isAdmin())
+          @if(auth()->user()->hasPermission('PENGELUARAN_BKU_VIEW') || auth()->user()->isAdmin())
             <button onclick="openTreasurerCash(this)">
               <i class="ph ph-book-open"></i>
               <span>Buku Kas Umum</span>

@@ -24,11 +24,12 @@ class PendapatanKerjasamaController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_KERJA_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_KERJA_VIEW') || auth()->user()->hasPermission('PENDAPATAN_KERJA') || auth()->user()->isAdmin(), 403);
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
+        $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
         $query = PendapatanKerjasama::with('ruangan', 'mou')
-            ->where('tahun', session('tahun_anggaran'))
+            ->where('tahun', $tahunAnggaran)
             ->orderBy('tanggal', 'asc')
             ->orderBy('id', 'asc');
 
@@ -78,7 +79,7 @@ class PendapatanKerjasamaController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_KERJA_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_KERJA_CREATE') || auth()->user()->hasPermission('PENDAPATAN_KERJA') || auth()->user()->isAdmin(), 403);
         $data = $request->validate([
             'tanggal' => 'required|date',
             'nama_pasien' => 'required|string|max:255',
@@ -126,7 +127,7 @@ class PendapatanKerjasamaController extends Controller
 
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_KERJA_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_KERJA_CREATE') || auth()->user()->hasPermission('PENDAPATAN_KERJA') || auth()->user()->isAdmin(), 403);
         $pendapatan = PendapatanKerjasama::findOrFail($id);
 
         if ($pendapatan->revenueMaster && $pendapatan->revenueMaster->is_posted) {
@@ -172,7 +173,7 @@ class PendapatanKerjasamaController extends Controller
 
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_KERJA_DELETE'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_KERJA_DELETE') || auth()->user()->hasPermission('PENDAPATAN_KERJA') || auth()->user()->isAdmin(), 403);
         $pendapatan = PendapatanKerjasama::findOrFail($id);
 
         if ($pendapatan->revenueMaster && $pendapatan->revenueMaster->is_posted) {

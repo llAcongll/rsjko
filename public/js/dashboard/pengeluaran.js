@@ -293,12 +293,16 @@ function loadPengeluaran(page = 1) {
                     </td>
                     <td class="text-center">
                         <div class="flex justify-center gap-2">
-                            <button class="btn-aksi edit" onclick="window.openPengeluaranForm('${currentKategori}', ${item.id})" title="Edit">
-                                <i class="ph ph-pencil-simple"></i>
-                            </button>
-                            <button class="btn-aksi delete" onclick="hapusPengeluaran(${item.id})" title="Hapus">
-                                <i class="ph ph-trash"></i>
-                            </button>
+                            ${(window.hasPermission('PENGELUARAN_CREATE') || window.isAdmin) ? `
+                                <button class="btn-aksi edit" onclick="window.openPengeluaranForm('${currentKategori}', ${item.id})" title="Edit">
+                                    <i class="ph ph-pencil-simple"></i>
+                                </button>
+                            ` : ''}
+                            ${(window.hasPermission('PENGELUARAN_DELETE') || window.isAdmin) ? `
+                                <button class="btn-aksi delete" onclick="hapusPengeluaran(${item.id})" title="Hapus">
+                                    <i class="ph ph-trash"></i>
+                                </button>
+                            ` : ''}
                         </div>
                     </td>
                 </tr>

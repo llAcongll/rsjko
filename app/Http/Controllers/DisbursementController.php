@@ -17,7 +17,34 @@ class DisbursementController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_CAIR') || auth()->user()->isAdmin(), 403);
+        $status = $request->get('status');
+        $isSaldo = filter_var($request->get('is_saldo'), FILTER_VALIDATE_BOOLEAN);
+
+        if ($isSaldo) {
+            abort_unless(auth()->user()->hasPermission('PENGELUARAN_SALDO_VIEW') || auth()->user()->isAdmin(), 403);
+        } elseif ($status) {
+            if (str_contains($status, 'SPP') && !str_contains($status, 'SPM')) {
+                abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPP_VIEW') || auth()->user()->isAdmin(), 403);
+            } elseif (str_contains($status, 'SPM') && !str_contains($status, 'CAIR')) {
+                abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPM_VIEW') || auth()->user()->isAdmin(), 403);
+            } elseif (str_contains($status, 'CAIR')) {
+                // Could be SP2D or Pencairan
+                abort_unless(auth()->user()->hasPermission('PENGELUARAN_SP2D_VIEW') || auth()->user()->hasPermission('PENGELUARAN_CAIR_VIEW') || auth()->user()->isAdmin(), 403);
+            }
+        } elseif ($request->has('id')) {
+            // View detail - allow if has any relevant view permission
+            abort_unless(
+                auth()->user()->hasPermission('PENGELUARAN_SPP_VIEW') ||
+                auth()->user()->hasPermission('PENGELUARAN_SPM_VIEW') ||
+                auth()->user()->hasPermission('PENGELUARAN_SP2D_VIEW') ||
+                auth()->user()->hasPermission('PENGELUARAN_CAIR_VIEW') ||
+                auth()->user()->hasPermission('PENGELUARAN_SALDO_VIEW') ||
+                auth()->user()->isAdmin(),
+                403
+            );
+        } else {
+            abort_unless(auth()->user()->isAdmin(), 403);
+        }
 
         $type = $request->get('type');
         $status = $request->get('status');
@@ -285,8 +312,6 @@ class DisbursementController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_CAIR') || auth()->user()->isAdmin(), 403);
-
         $data = $request->validate([
             'type' => 'required|in:UP,GU,LS',
             'sp2d_date' => 'required|date',
@@ -302,6 +327,13 @@ class DisbursementController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        if (request('status') === 'CAIR' && !request('spp_no')) {
+            // Usually Saldo entry
+            abort_unless(auth()->user()->hasPermission('PENGELUARAN_SALDO_CREATE') || auth()->user()->isAdmin(), 403);
+        } else {
+            abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPP_CREATE') || auth()->user()->isAdmin(), 403);
+        }
+
         $disbursement = $this->service->store($data);
 
         return response()->json($disbursement, 201);
@@ -309,15 +341,29 @@ class DisbursementController extends Controller
 
     public function show($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_CAIR') || auth()->user()->isAdmin(), 403);
+        abort_unless(
+            auth()->user()->hasPermission('PENGELUARAN_SPP_VIEW') ||
+            auth()->user()->hasPermission('PENGELUARAN_SPM_VIEW') ||
+            auth()->user()->hasPermission('PENGELUARAN_SP2D_VIEW') ||
+            auth()->user()->hasPermission('PENGELUARAN_CAIR_VIEW') ||
+            auth()->user()->hasPermission('PENGELUARAN_SALDO_VIEW') ||
+            auth()->user()->isAdmin(),
+            403
+        );
         return response()->json(FundDisbursement::findOrFail($id));
     }
 
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_CAIR') || auth()->user()->isAdmin(), 403);
-
         $disbursement = FundDisbursement::findOrFail($id);
+
+        if ($disbursement->status === 'CAIR') {
+            abort_unless(auth()->user()->hasPermission('PENGELUARAN_CAIR_EDIT') || auth()->user()->hasPermission('PENGELUARAN_SP2D_EDIT') || auth()->user()->hasPermission('PENGELUARAN_SALDO_EDIT') || auth()->user()->isAdmin(), 403);
+        } elseif ($disbursement->status === 'SPM') {
+            abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPM_EDIT') || auth()->user()->isAdmin(), 403);
+        } else {
+            abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPP_EDIT') || auth()->user()->isAdmin(), 403);
+        }
         $data = $request->all();
 
         $disbursement->update($data);
@@ -326,7 +372,14 @@ class DisbursementController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_CAIR') || auth()->user()->isAdmin(), 403);
+        $targetStatus = $request->get('status');
+        if ($targetStatus === 'SPM') {
+            abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPM_CREATE') || auth()->user()->isAdmin(), 403);
+        } elseif ($targetStatus === 'CAIR') {
+            abort_unless(auth()->user()->hasPermission('PENGELUARAN_SP2D_CREATE') || auth()->user()->isAdmin(), 403);
+        } else {
+            abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPP_CREATE') || auth()->user()->isAdmin(), 403);
+        }
 
         $data = $request->validate([
             'status' => 'required|in:DRAFT,SPP,SPM,CAIR',
@@ -345,7 +398,22 @@ class DisbursementController extends Controller
 
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_CAIR') || auth()->user()->isAdmin(), 403);
+        $disbursement = FundDisbursement::findOrFail($id);
+        if ($disbursement->status === 'CAIR') {
+            if ($disbursement->spp_no) {
+                // Disbursement record
+                abort_unless(auth()->user()->hasPermission('PENGELUARAN_CAIR_DELETE') || auth()->user()->isAdmin(), 403);
+            } else {
+                // Saldo record
+                abort_unless(auth()->user()->hasPermission('PENGELUARAN_SALDO_DELETE') || auth()->user()->isAdmin(), 403);
+            }
+        } elseif ($disbursement->status === 'SPM') {
+            abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPM_DELETE') || auth()->user()->isAdmin(), 403);
+        } elseif ($disbursement->status === 'SP2D') {
+            abort_unless(auth()->user()->hasPermission('PENGELUARAN_SP2D_DELETE') || auth()->user()->isAdmin(), 403);
+        } else {
+            abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPP_DELETE') || auth()->user()->isAdmin(), 403);
+        }
         try {
             $this->service->destroy($id);
             return response()->json(['status' => 'ok']);
@@ -356,7 +424,16 @@ class DisbursementController extends Controller
 
     public function revertStatus(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_CAIR') || auth()->user()->isAdmin(), 403);
+        $targetStatus = $request->get('target_status');
+        if ($targetStatus === 'SPM') {
+            // From CAIR to SPM
+            abort_unless(auth()->user()->hasPermission('PENGELUARAN_SP2D_DELETE') || auth()->user()->isAdmin(), 403);
+        } elseif ($targetStatus === 'SPP') {
+            // From SPM to SPP 
+            abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPM_DELETE') || auth()->user()->isAdmin(), 403);
+        } else {
+            abort_unless(auth()->user()->isAdmin(), 403);
+        }
 
         $data = $request->validate([
             'target_status' => 'required|in:SPP,SPM'

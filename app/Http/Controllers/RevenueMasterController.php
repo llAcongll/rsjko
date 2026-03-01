@@ -22,22 +22,24 @@ class RevenueMasterController extends Controller
         $category = $request->get('kategori');
 
         // Authorization based on category
+        $user = auth()->user();
         $permMap = [
-            'UMUM' => 'PENDAPATAN_UMUM_VIEW',
-            'BPJS' => 'PENDAPATAN_BPJS_VIEW',
-            'JAMINAN' => 'PENDAPATAN_JAMINAN_VIEW',
-            'LAIN' => 'PENDAPATAN_LAIN_VIEW',
-            'KERJASAMA' => 'PENDAPATAN_KERJA_VIEW',
+            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_VIEW') || $user->hasPermission('PENDAPATAN_UMUM'),
+            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_VIEW') || $user->hasPermission('PENDAPATAN_BPJS'),
+            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_VIEW') || $user->hasPermission('PENDAPATAN_JAMINAN'),
+            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_VIEW') || $user->hasPermission('PENDAPATAN_LAIN'),
+            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_VIEW') || $user->hasPermission('PENDAPATAN_KERJA'),
         ];
 
         if ($category && isset($permMap[$category])) {
-            abort_unless(auth()->user()->hasPermission($permMap[$category]) || auth()->user()->hasPermission('MASTER_VIEW'), 403);
+            abort_unless($permMap[$category] || $user->hasPermission('MASTER_VIEW'), 403);
         }
 
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
 
-        $query = RevenueMaster::where('tahun', session('tahun_anggaran'))
+        $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
+        $query = RevenueMaster::where('tahun', $tahunAnggaran)
             ->when($category, function ($q) use ($category) {
                 $q->where('kategori', $category);
             })
@@ -97,14 +99,16 @@ class RevenueMasterController extends Controller
             'keterangan' => 'nullable|string|max:500',
         ]);
 
+        $user = auth()->user();
         $permMap = [
-            'UMUM' => 'PENDAPATAN_UMUM_CREATE',
-            'BPJS' => 'PENDAPATAN_BPJS_CREATE',
-            'JAMINAN' => 'PENDAPATAN_JAMINAN_CREATE',
-            'LAIN' => 'PENDAPATAN_LAIN_CREATE',
-            'KERJASAMA' => 'PENDAPATAN_KERJA_CREATE',
+            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_CREATE') || $user->hasPermission('PENDAPATAN_UMUM'),
+            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_CREATE') || $user->hasPermission('PENDAPATAN_BPJS'),
+            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_CREATE') || $user->hasPermission('PENDAPATAN_JAMINAN'),
+            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_CREATE') || $user->hasPermission('PENDAPATAN_LAIN'),
+            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_CREATE') || $user->hasPermission('PENDAPATAN_KERJA'),
         ];
-        abort_unless(auth()->user()->hasPermission($permMap[$data['kategori']]) || auth()->user()->hasPermission('MASTER_CREATE'), 403);
+
+        abort_unless($permMap[$data['kategori']] || $user->hasPermission('MASTER_CREATE'), 403);
 
         $data['tahun'] = session('tahun_anggaran');
 
@@ -128,14 +132,16 @@ class RevenueMasterController extends Controller
     {
         $master = RevenueMaster::findOrFail($id);
 
+        $user = auth()->user();
         $permMap = [
-            'UMUM' => 'PENDAPATAN_UMUM_CREATE',
-            'BPJS' => 'PENDAPATAN_BPJS_CREATE',
-            'JAMINAN' => 'PENDAPATAN_JAMINAN_CREATE',
-            'LAIN' => 'PENDAPATAN_LAIN_CREATE',
-            'KERJASAMA' => 'PENDAPATAN_KERJA_CREATE',
+            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_CREATE') || $user->hasPermission('PENDAPATAN_UMUM'),
+            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_CREATE') || $user->hasPermission('PENDAPATAN_BPJS'),
+            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_CREATE') || $user->hasPermission('PENDAPATAN_JAMINAN'),
+            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_CREATE') || $user->hasPermission('PENDAPATAN_LAIN'),
+            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_CREATE') || $user->hasPermission('PENDAPATAN_KERJA'),
         ];
-        abort_unless(auth()->user()->hasPermission($permMap[$master->kategori]) || auth()->user()->hasPermission('MASTER_CREATE'), 403);
+
+        abort_unless($permMap[$master->kategori] || $user->hasPermission('MASTER_CREATE'), 403);
         abort_if($master->is_posted, 403, 'Kelompok yang sudah diposting tidak dapat diubah.');
 
         $data = $request->validate([
@@ -173,14 +179,16 @@ class RevenueMasterController extends Controller
     {
         $master = RevenueMaster::findOrFail($id);
 
+        $user = auth()->user();
         $permMap = [
-            'UMUM' => 'PENDAPATAN_UMUM_DELETE',
-            'BPJS' => 'PENDAPATAN_BPJS_DELETE',
-            'JAMINAN' => 'PENDAPATAN_JAMINAN_DELETE',
-            'LAIN' => 'PENDAPATAN_LAIN_DELETE',
-            'KERJASAMA' => 'PENDAPATAN_KERJA_DELETE',
+            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_DELETE') || $user->hasPermission('PENDAPATAN_UMUM'),
+            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_DELETE') || $user->hasPermission('PENDAPATAN_BPJS'),
+            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_DELETE') || $user->hasPermission('PENDAPATAN_JAMINAN'),
+            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_DELETE') || $user->hasPermission('PENDAPATAN_LAIN'),
+            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_DELETE') || $user->hasPermission('PENDAPATAN_KERJA'),
         ];
-        abort_unless(auth()->user()->hasPermission($permMap[$master->kategori]) || auth()->user()->hasPermission('MASTER_DELETE'), 403);
+
+        abort_unless($permMap[$master->kategori] || $user->hasPermission('MASTER_DELETE'), 403);
         abort_if($master->is_posted, 403, 'Kelompok yang sudah diposting tidak dapat dihapus.');
 
         $hasDetail = false;
@@ -222,15 +230,16 @@ class RevenueMasterController extends Controller
     {
         $master = RevenueMaster::findOrFail($id);
 
+        $user = auth()->user();
         $permMap = [
-            'UMUM' => 'PENDAPATAN_UMUM_POST',
-            'BPJS' => 'PENDAPATAN_BPJS_POST',
-            'JAMINAN' => 'PENDAPATAN_JAMINAN_POST',
-            'LAIN' => 'PENDAPATAN_LAIN_POST',
-            'KERJASAMA' => 'PENDAPATAN_KERJA_POST',
+            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_POST') || $user->hasPermission('PENDAPATAN_UMUM'),
+            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_POST') || $user->hasPermission('PENDAPATAN_BPJS'),
+            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_POST') || $user->hasPermission('PENDAPATAN_JAMINAN'),
+            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_POST') || $user->hasPermission('PENDAPATAN_LAIN'),
+            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_POST') || $user->hasPermission('PENDAPATAN_KERJA'),
         ];
 
-        abort_unless(auth()->user()->hasPermission($permMap[$master->kategori]) || auth()->user()->hasPermission('PENGESAHAN_POST'), 403);
+        abort_unless($permMap[$master->kategori] || $user->hasPermission('PENGESAHAN_POST'), 403);
 
         if (!$master->is_posted && empty($master->tanggal_rk)) {
             return response()->json(['message' => 'Tanggal Rekening Koran (RK) belum diisi pada kelompok ini. Silakan Edit master kelompok dan isi Tanggal RK terlebih dahulu sebelum memposting.'], 422);

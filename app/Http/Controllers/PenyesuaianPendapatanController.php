@@ -15,13 +15,14 @@ class PenyesuaianPendapatanController extends Controller
     ========================= */
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENYESUAIAN_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('PENYESUAIAN_VIEW') || auth()->user()->isAdmin(), 403);
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
         $kategori = $request->get('kategori');
 
+        $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
         $query = PenyesuaianPendapatan::with('perusahaan')
-            ->where('tahun', session('tahun_anggaran'))
+            ->where('tahun', $tahunAnggaran)
             ->orderBy('tanggal', 'asc')
             ->orderBy('id', 'asc');
 
