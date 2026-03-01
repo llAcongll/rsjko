@@ -11,6 +11,8 @@ use App\Services\RevenueService;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+use App\Http\Controllers\RevenueMasterController;
+
 class PendapatanJaminanController extends Controller
 {
     protected $service;
@@ -29,6 +31,10 @@ class PendapatanJaminanController extends Controller
             ->where('tahun', session('tahun_anggaran'))
             ->orderBy('tanggal', 'asc')
             ->orderBy('id', 'asc');
+
+        if ($request->has('revenue_master_id')) {
+            $query->where('revenue_master_id', $request->revenue_master_id);
+        }
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -98,7 +104,7 @@ class PendapatanJaminanController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CREATE'), 403);
         $data = $request->validate([
             'tanggal' => 'required|date',
             'nama_pasien' => 'required|string|max:255',
@@ -112,6 +118,7 @@ class PendapatanJaminanController extends Controller
             'rs_obat' => 'nullable|numeric|min:0',
             'pelayanan_tindakan' => 'nullable|numeric|min:0',
             'pelayanan_obat' => 'nullable|numeric|min:0',
+            'revenue_master_id' => 'required|exists:revenue_masters,id'
         ]);
 
         if ($data['metode_pembayaran'] === 'TUNAI') {
@@ -131,6 +138,9 @@ class PendapatanJaminanController extends Controller
             null,
             $pendapatan->toArray()
         );
+
+        RevenueMasterController::recalculate($pendapatan->revenue_master_id);
+
         return response()->json(['success' => true]);
     }
 
@@ -142,8 +152,12 @@ class PendapatanJaminanController extends Controller
 
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CREATE'), 403);
         $pendapatan = PendapatanJaminan::findOrFail($id);
+
+        if ($pendapatan->revenueMaster && $pendapatan->revenueMaster->is_posted) {
+            return response()->json(['message' => 'Data tidak dapat diubah karena kelompok ini sudah diposting.'], 403);
+        }
         $data = $request->validate([
             'tanggal' => 'required|date',
             'nama_pasien' => 'required|string|max:255',
@@ -176,13 +190,21 @@ class PendapatanJaminanController extends Controller
             $oldValues,
             $pendapatan->toArray()
         );
+
+        RevenueMasterController::recalculate($pendapatan->revenue_master_id);
+
         return response()->json(['success' => true]);
     }
 
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_DELETE'), 403);
         $pendapatan = PendapatanJaminan::findOrFail($id);
+
+        if ($pendapatan->revenueMaster && $pendapatan->revenueMaster->is_posted) {
+            return response()->json(['message' => 'Data tidak dapat dihapus karena kelompok ini sudah diposting.'], 403);
+        }
+
         $oldValues = $pendapatan->toArray();
         $pendapatan->delete();
 
@@ -194,12 +216,17 @@ class PendapatanJaminanController extends Controller
             $oldValues,
             null
         );
+
+        if ($oldValues['revenue_master_id']) {
+            RevenueMasterController::recalculate($oldValues['revenue_master_id']);
+        }
+
         return response()->json(['success' => true]);
     }
 
     public function downloadTemplate()
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_TEMPLATE'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CREATE'), 403);
         $headers = [
             'Content-type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename=template_pendapatan_jaminan.csv',
@@ -234,8 +261,16 @@ class PendapatanJaminanController extends Controller
 
     public function import(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_IMPORT'), 403);
-        $request->validate(['file' => 'required|mimes:csv,txt']);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CREATE'), 403);
+        $request->validate([
+            'file' => 'required|mimes:csv,txt',
+            'revenue_master_id' => 'required|exists:revenue_masters,id'
+        ]);
+
+        $master = \App\Models\RevenueMaster::findOrFail($request->revenue_master_id);
+        if ($master->is_posted) {
+            return response()->json(['message' => 'Tidak dapat impor data ke kelompok yang sudah diposting.'], 403);
+        }
 
         $file = $request->file('file');
         $filePath = $file->getRealPath();
@@ -249,7 +284,7 @@ class PendapatanJaminanController extends Controller
         $perusahaans = Perusahaan::all()->pluck('id', 'nama')->mapWithKeys(fn($id, $name) => [strtoupper($name) => $id]);
 
         $count = 0;
-        $this->service->transaction(function () use ($handle, $delimiter, $ruangans, $perusahaans, &$count) {
+        $this->service->transaction(function () use ($handle, $delimiter, $ruangans, $perusahaans, &$count, $request) {
             while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 if (count($row) < 4 || empty($row[0]))
                     continue;
@@ -266,6 +301,7 @@ class PendapatanJaminanController extends Controller
                 $plO = $this->service->parseNumeric($row[10] ?? 0);
 
                 PendapatanJaminan::create([
+                    'revenue_master_id' => $request->revenue_master_id,
                     'tanggal' => $tanggal,
                     'nama_pasien' => $row[1] ?? 'Pasien Jaminan',
                     'ruangan_id' => $ruanganId,
@@ -286,20 +322,30 @@ class PendapatanJaminanController extends Controller
         });
 
         fclose($handle);
+        RevenueMasterController::recalculate($request->revenue_master_id);
         ActivityLog::log('IMPORT', 'PENDAPATAN_JAMINAN', "Berhasil mengimpor {$count} data pendapatan jaminan", null, null, null);
         return response()->json(['success' => true, 'count' => $count]);
     }
 
     public function bulkDelete(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_BULK'), 403);
-        $request->validate(['tanggal' => 'required|date']);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_DELETE'), 403);
+        $request->validate([
+            'revenue_master_id' => 'required|exists:revenue_masters,id'
+        ]);
 
-        $query = PendapatanJaminan::where('tanggal', $request->tanggal)->where('tahun', session('tahun_anggaran'));
+        $master = \App\Models\RevenueMaster::findOrFail($request->revenue_master_id);
+        if ($master->is_posted) {
+            return response()->json(['message' => 'Tidak dapat menghapus data pada kelompok yang sudah diposting.'], 403);
+        }
+
+        $query = PendapatanJaminan::where('revenue_master_id', $request->revenue_master_id);
         $count = $query->count();
         $query->delete();
 
-        ActivityLog::log('DELETE', 'PENDAPATAN_JAMINAN', "Menghapus massal {$count} data pendapatan jaminan tanggal {$request->tanggal}", null, null, null);
+        RevenueMasterController::recalculate($request->revenue_master_id);
+
+        ActivityLog::log('DELETE', 'PENDAPATAN_JAMINAN', "Menghapus massal {$count} data pendapatan jaminan pada kelompok ID {$request->revenue_master_id}", null, null, null);
         return response()->json(['success' => true, 'count' => $count]);
     }
 }

@@ -112,7 +112,7 @@ window.openPengeluaranForm = function (kategori, id = null) {
                 el.style.cursor = 'not-allowed';
             }
         });
-        document.getElementById('pengeluaranTanggal').value = new Date().toISOString().split('T')[0];
+        document.getElementById('pengeluaranTanggal').value = window.getTodayLocal();
     }
 
     loadRekeningPengeluaran(kategori);

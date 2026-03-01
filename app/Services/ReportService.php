@@ -32,7 +32,7 @@ class ReportService
         $totalAll = 0;
 
         foreach ($tables as $key => $table) {
-            $stats = DB::table($table)
+            $stats = $this->getActiveRevenueQuery($table)
                 ->whereBetween('tanggal', [$start, $end])
                 ->where('tahun', $tahun)
                 ->selectRaw('
@@ -114,7 +114,7 @@ class ReportService
             $totalDed = ($ded->total_potongan ?? 0) + ($ded->total_adm ?? 0);
 
             if ($totalDed > 0) {
-                $gross = DB::table($table)->whereBetween('tanggal', [$start, $end])->where('tahun', $tahun)->sum('total');
+                $gross = $this->getActiveRevenueQuery($table)->whereBetween('tanggal', [$start, $end])->where('tahun', $tahun)->sum('total');
                 $tableDeductions[$table] = [
                     'gross' => $gross,
                     'deduction' => $totalDed
@@ -126,7 +126,7 @@ class ReportService
         $roomPatientStats = [];
 
         foreach ($tables as $table) {
-            $rooms = DB::table($table)
+            $rooms = $this->getActiveRevenueQuery($table)
                 ->join('ruangans', "$table.ruangan_id", '=', 'ruangans.id')
                 ->select('ruangans.nama', DB::raw('SUM(total) as gross_total'), DB::raw('COUNT(*) as count'))
                 ->whereBetween('tanggal', [$start, $end])
@@ -178,11 +178,11 @@ class ReportService
 
         switch ($category) {
             case 'PASIEN_UMUM':
-                $query = DB::table('pendapatan_umum');
+                $query = $this->getActiveRevenueQuery('pendapatan_umum');
                 break;
             case 'BPJS_JAMINAN':
-                $bpjs = $this->getStatsFromQuery(DB::table('pendapatan_bpjs')->where('tahun', $tahun)->whereBetween('tanggal', [$start, $end]));
-                $jam = $this->getStatsFromQuery(DB::table('pendapatan_jaminan')->where('tahun', $tahun)->whereBetween('tanggal', [$start, $end]));
+                $bpjs = $this->getStatsFromQuery($this->getActiveRevenueQuery('pendapatan_bpjs')->where('tahun', $tahun)->whereBetween('tanggal', [$start, $end]));
+                $jam = $this->getStatsFromQuery($this->getActiveRevenueQuery('pendapatan_jaminan')->where('tahun', $tahun)->whereBetween('tanggal', [$start, $end]));
 
                 $ded = DB::table('penyesuaian_pendapatans')
                     ->whereIn('kategori', ['BPJS', 'JAMINAN'])
@@ -198,25 +198,25 @@ class ReportService
                 return $this->mergeStats($bpjs, $jam, $deductions);
 
             case 'KERJASAMA':
-                $query = DB::table('pendapatan_kerjasama');
+                $query = $this->getActiveRevenueQuery('pendapatan_kerjasama');
                 break;
             case 'PKL':
-                $query = DB::table('pendapatan_lain')->where(fn($q) => $q->where('transaksi', 'like', '%PKL%')->orWhere('transaksi', 'like', '%Praktek Kerja Lapangan%'));
+                $query = $this->getActiveRevenueQuery('pendapatan_lain')->where(fn($q) => $q->where('transaksi', 'like', '%PKL%')->orWhere('transaksi', 'like', '%Praktek Kerja Lapangan%'));
                 break;
             case 'MAGANG':
-                $query = DB::table('pendapatan_lain')->where('transaksi', 'like', '%Magang%');
+                $query = $this->getActiveRevenueQuery('pendapatan_lain')->where('transaksi', 'like', '%Magang%');
                 break;
             case 'PENELITIAN':
-                $query = DB::table('pendapatan_lain')->where('transaksi', 'like', '%Penelitian%');
+                $query = $this->getActiveRevenueQuery('pendapatan_lain')->where('transaksi', 'like', '%Penelitian%');
                 break;
             case 'PERMINTAAN_DATA':
-                $query = DB::table('pendapatan_lain')->where('transaksi', 'like', '%Permintaan Data%');
+                $query = $this->getActiveRevenueQuery('pendapatan_lain')->where('transaksi', 'like', '%Permintaan Data%');
                 break;
             case 'STUDY_BANDING':
-                $query = DB::table('pendapatan_lain')->where('transaksi', 'like', '%Study Banding%');
+                $query = $this->getActiveRevenueQuery('pendapatan_lain')->where('transaksi', 'like', '%Study Banding%');
                 break;
             case 'LAIN_LAIN':
-                $query = DB::table('pendapatan_lain')
+                $query = $this->getActiveRevenueQuery('pendapatan_lain')
                     ->where('transaksi', 'NOT LIKE', '%PKL%')
                     ->where('transaksi', 'NOT LIKE', '%Praktek Kerja Lapangan%')
                     ->where('transaksi', 'NOT LIKE', '%Magang%')
@@ -368,7 +368,7 @@ class ReportService
         $tables = ['pendapatan_umum', 'pendapatan_bpjs', 'pendapatan_jaminan', 'pendapatan_kerjasama', 'pendapatan_lain'];
         $revenues = [];
         foreach ($tables as $table) {
-            $data = DB::table($table)
+            $data = $this->getActiveRevenueQuery($table)
                 ->where('tahun', $tahun)
                 ->select(DB::raw('MONTH(tanggal) as bulan'), DB::raw('SUM(total) as total'))
                 ->groupBy('bulan')
@@ -413,7 +413,7 @@ class ReportService
                 foreach ($bankRecords as $bankItem) {
                     $hasMatch = false;
                     foreach ($tables as $table) {
-                        if (DB::table($table)->where('tanggal', $bankItem->tanggal)->where('total', $bankItem->jumlah)->exists()) {
+                        if ($this->getActiveRevenueQuery($table)->where('tanggal', $bankItem->tanggal)->where('total', $bankItem->jumlah)->exists()) {
                             $hasMatch = true;
                             break;
                         }
@@ -563,10 +563,10 @@ class ReportService
     public function getMouData($start, $end, $tahun)
     {
         $queries = [
-            DB::table('pendapatan_kerjasama')->join('mous', 'pendapatan_kerjasama.mou_id', '=', 'mous.id')->where('pendapatan_kerjasama.tahun', $tahun)->whereBetween('pendapatan_kerjasama.tanggal', [$start, $end])->select('mous.nama as nama_mou', DB::raw('COUNT(*) as count'), DB::raw('SUM(rs_tindakan + rs_obat) as rs'), DB::raw('SUM(pelayanan_tindakan + pelayanan_obat) as pelayanan'), DB::raw('SUM(total) as total'), DB::raw('0 as potongan'), DB::raw('0 as adm_bank'))->groupBy('mous.nama'),
-            DB::table('pendapatan_lain')->join('mous', 'pendapatan_lain.mou_id', '=', 'mous.id')->where('pendapatan_lain.tahun', $tahun)->whereBetween('pendapatan_lain.tanggal', [$start, $end])->select('mous.nama as nama_mou', DB::raw('COUNT(*) as count'), DB::raw('SUM(rs_tindakan + rs_obat) as rs'), DB::raw('SUM(pelayanan_tindakan + pelayanan_obat) as pelayanan'), DB::raw('SUM(total) as total'), DB::raw('0 as potongan'), DB::raw('0 as adm_bank'))->groupBy('mous.nama'),
-            DB::table('pendapatan_bpjs')->join('perusahaans', 'pendapatan_bpjs.perusahaan_id', '=', 'perusahaans.id')->where('pendapatan_bpjs.tahun', $tahun)->whereBetween('pendapatan_bpjs.tanggal', [$start, $end])->select('perusahaans.nama as nama_mou', DB::raw('COUNT(*) as count'), DB::raw('SUM(rs_tindakan + rs_obat) as rs'), DB::raw('SUM(pelayanan_tindakan + pelayanan_obat) as pelayanan'), DB::raw('SUM(total) as total'), DB::raw('0 as potongan'), DB::raw('0 as adm_bank'))->groupBy('perusahaans.nama'),
-            DB::table('pendapatan_jaminan')->join('perusahaans', 'pendapatan_jaminan.perusahaan_id', '=', 'perusahaans.id')->where('pendapatan_jaminan.tahun', $tahun)->whereBetween('pendapatan_jaminan.tanggal', [$start, $end])->select('perusahaans.nama as nama_mou', DB::raw('COUNT(*) as count'), DB::raw('SUM(rs_tindakan + rs_obat) as rs'), DB::raw('SUM(pelayanan_tindakan + pelayanan_obat) as pelayanan'), DB::raw('SUM(total) as total'), DB::raw('0 as potongan'), DB::raw('0 as adm_bank'))->groupBy('perusahaans.nama'),
+            $this->getActiveRevenueQuery('pendapatan_kerjasama')->join('mous', 'pendapatan_kerjasama.mou_id', '=', 'mous.id')->where('pendapatan_kerjasama.tahun', $tahun)->whereBetween('pendapatan_kerjasama.tanggal', [$start, $end])->select('mous.nama as nama_mou', DB::raw('COUNT(*) as count'), DB::raw('SUM(rs_tindakan + rs_obat) as rs'), DB::raw('SUM(pelayanan_tindakan + pelayanan_obat) as pelayanan'), DB::raw('SUM(total) as total'), DB::raw('0 as potongan'), DB::raw('0 as adm_bank'))->groupBy('mous.nama'),
+            $this->getActiveRevenueQuery('pendapatan_lain')->join('mous', 'pendapatan_lain.mou_id', '=', 'mous.id')->where('pendapatan_lain.tahun', $tahun)->whereBetween('pendapatan_lain.tanggal', [$start, $end])->select('mous.nama as nama_mou', DB::raw('COUNT(*) as count'), DB::raw('SUM(rs_tindakan + rs_obat) as rs'), DB::raw('SUM(pelayanan_tindakan + pelayanan_obat) as pelayanan'), DB::raw('SUM(total) as total'), DB::raw('0 as potongan'), DB::raw('0 as adm_bank'))->groupBy('mous.nama'),
+            $this->getActiveRevenueQuery('pendapatan_bpjs')->join('perusahaans', 'pendapatan_bpjs.perusahaan_id', '=', 'perusahaans.id')->where('pendapatan_bpjs.tahun', $tahun)->whereBetween('pendapatan_bpjs.tanggal', [$start, $end])->select('perusahaans.nama as nama_mou', DB::raw('COUNT(*) as count'), DB::raw('SUM(rs_tindakan + rs_obat) as rs'), DB::raw('SUM(pelayanan_tindakan + pelayanan_obat) as pelayanan'), DB::raw('SUM(total) as total'), DB::raw('0 as potongan'), DB::raw('0 as adm_bank'))->groupBy('perusahaans.nama'),
+            $this->getActiveRevenueQuery('pendapatan_jaminan')->join('perusahaans', 'pendapatan_jaminan.perusahaan_id', '=', 'perusahaans.id')->where('pendapatan_jaminan.tahun', $tahun)->whereBetween('pendapatan_jaminan.tanggal', [$start, $end])->select('perusahaans.nama as nama_mou', DB::raw('COUNT(*) as count'), DB::raw('SUM(rs_tindakan + rs_obat) as rs'), DB::raw('SUM(pelayanan_tindakan + pelayanan_obat) as pelayanan'), DB::raw('SUM(total) as total'), DB::raw('0 as potongan'), DB::raw('0 as adm_bank'))->groupBy('perusahaans.nama'),
             DB::table('penyesuaian_pendapatans')->join('perusahaans', 'penyesuaian_pendapatans.perusahaan_id', '=', 'perusahaans.id')->where('penyesuaian_pendapatans.tahun', $tahun)->whereBetween('penyesuaian_pendapatans.tanggal', [$start, $end])->select('perusahaans.nama as nama_mou', DB::raw('0 as count'), DB::raw('0 as rs'), DB::raw('0 as pelayanan'), DB::raw('0 as total'), DB::raw('SUM(potongan) as potongan'), DB::raw('SUM(administrasi_bank) as adm_bank'))->groupBy('perusahaans.nama')
         ];
 
@@ -720,26 +720,26 @@ class ReportService
     {
         switch ($sumberData) {
             case 'PASIEN_UMUM':
-                return DB::table('pendapatan_umum')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
+                return $this->getActiveRevenueQuery('pendapatan_umum')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
             case 'BPJS_JAMINAN':
-                $bpjs = DB::table('pendapatan_bpjs')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
-                $jam = DB::table('pendapatan_jaminan')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
+                $bpjs = $this->getActiveRevenueQuery('pendapatan_bpjs')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
+                $jam = $this->getActiveRevenueQuery('pendapatan_jaminan')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
                 $ded = DB::table('penyesuaian_pendapatans')->whereIn('kategori', ['BPJS', 'JAMINAN'])->whereBetween('tanggal', [$startDate, $endDate])->where('tahun', $tahun)->sum(DB::raw('IFNULL(potongan, 0) + IFNULL(administrasi_bank, 0)'));
                 return ($bpjs + $jam) - $ded;
             case 'KERJASAMA':
-                return DB::table('pendapatan_kerjasama')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
+                return $this->getActiveRevenueQuery('pendapatan_kerjasama')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
             case 'PKL':
-                return DB::table('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where(fn($q) => $q->where('transaksi', 'like', '%PKL%')->orWhere('transaksi', 'like', '%Praktek Kerja Lapangan%'))->sum('total');
+                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where(fn($q) => $q->where('transaksi', 'like', '%PKL%')->orWhere('transaksi', 'like', '%Praktek Kerja Lapangan%'))->sum('total');
             case 'MAGANG':
-                return DB::table('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Magang%')->sum('total');
+                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Magang%')->sum('total');
             case 'PENELITIAN':
-                return DB::table('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Penelitian%')->sum('total');
+                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Penelitian%')->sum('total');
             case 'PERMINTAAN_DATA':
-                return DB::table('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Permintaan Data%')->sum('total');
+                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Permintaan Data%')->sum('total');
             case 'STUDY_BANDING':
-                return DB::table('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Study Banding%')->sum('total');
+                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Study Banding%')->sum('total');
             case 'LAIN_LAIN':
-                return DB::table('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'NOT LIKE', '%PKL%')->where('transaksi', 'NOT LIKE', '%Praktek Kerja Lapangan%')->where('transaksi', 'NOT LIKE', '%Magang%')->where('transaksi', 'NOT LIKE', '%Penelitian%')->where('transaksi', 'NOT LIKE', '%Permintaan Data%')->where('transaksi', 'NOT LIKE', '%Study Banding%')->sum('total');
+                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'NOT LIKE', '%PKL%')->where('transaksi', 'NOT LIKE', '%Praktek Kerja Lapangan%')->where('transaksi', 'NOT LIKE', '%Magang%')->where('transaksi', 'NOT LIKE', '%Penelitian%')->where('transaksi', 'NOT LIKE', '%Permintaan Data%')->where('transaksi', 'NOT LIKE', '%Study Banding%')->sum('total');
             case 'PEGAWAI':
             case 'BARANG_JASA':
             case 'MODAL':
@@ -991,5 +991,15 @@ class ReportService
             'payments' => ['TUNAI' => 0, 'NON_TUNAI' => 0, 'TOTAL' => 0],
             'banks' => ['BRK' => 0, 'BSI' => 0, 'TOTAL' => 0]
         ];
+    }
+
+    public function getActiveRevenueQuery($table)
+    {
+        return DB::table($table)->whereExists(function ($query) use ($table) {
+            $query->select(DB::raw(1))
+                ->from('revenue_masters')
+                ->whereColumn('revenue_masters.id', "{$table}.revenue_master_id")
+                ->where('revenue_masters.is_posted', true);
+        });
     }
 }

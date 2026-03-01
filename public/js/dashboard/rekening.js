@@ -293,7 +293,7 @@ function renderRekeningTable(data) {
             <button class="btn-aksi detail" onclick="detailRekening(${row.id})" title="Lihat Detail">
               <i class="ph ph-eye"></i>
             </button>
-            ${canCRUD ? `
+            ${canCRUD && row.cd === 'D' ? `
               <button class="btn-aksi edit" onclick='openRekeningForm(${JSON.stringify(row).replace(/'/g, "&apos;")})' title="Edit Data">
                 <i class="ph ph-pencil-simple"></i>
               </button>

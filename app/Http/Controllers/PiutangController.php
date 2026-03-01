@@ -15,7 +15,6 @@ class PiutangController extends Controller
     ========================= */
     public function index(Request $request)
     {
-        // TODO: Add permission check later if needed
         abort_unless(auth()->user()->hasPermission('PIUTANG_VIEW'), 403);
 
         $perPage = $request->get('per_page', 10);
@@ -90,7 +89,7 @@ class PiutangController extends Controller
     ========================= */
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PIUTANG_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('PIUTANG_CREATE'), 403);
 
         $data = $request->validate([
             'tanggal' => 'required|date',
@@ -118,7 +117,7 @@ class PiutangController extends Controller
     ========================= */
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PIUTANG_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('PIUTANG_CREATE'), 403);
 
         $piutang = Piutang::findOrFail($id);
 
@@ -145,6 +144,7 @@ class PiutangController extends Controller
     ========================= */
     public function show($id)
     {
+        abort_unless(auth()->user()->hasPermission('PIUTANG_VIEW'), 403);
         return Piutang::with('perusahaan')->findOrFail($id);
     }
 
@@ -153,7 +153,7 @@ class PiutangController extends Controller
     ========================= */
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PIUTANG_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('PIUTANG_DELETE'), 403);
         Piutang::findOrFail($id)->delete();
         return response()->json(['success' => true]);
     }

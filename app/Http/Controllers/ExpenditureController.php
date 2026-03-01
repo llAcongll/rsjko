@@ -125,7 +125,7 @@ class ExpenditureController extends Controller
 
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_UPDATE'), 403);
+        abort_unless(auth()->user()->hasPermission('PENGELUARAN_CREATE'), 403);
 
         $data = $request->validate([
             'spending_date' => 'required|date',

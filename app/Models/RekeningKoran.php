@@ -12,6 +12,7 @@ class RekeningKoran extends Model
     protected $table = 'rekening_korans';
 
     protected $fillable = [
+        'revenue_master_id',
         'tanggal',
         'tahun',
         'bank',
@@ -21,7 +22,7 @@ class RekeningKoran extends Model
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'date:Y-m-d',
         'tahun' => 'integer',
         'jumlah' => 'decimal:2',
     ];

@@ -33,7 +33,7 @@ class Pengeluaran extends Model
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'date:Y-m-d',
         'nominal' => 'decimal:2',
         'potongan_pajak' => 'decimal:2',
         'total_dibayarkan' => 'decimal:2',

@@ -11,6 +11,8 @@ use App\Services\RevenueService;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+use App\Http\Controllers\RevenueMasterController;
+
 class PendapatanBpjsController extends Controller
 {
     protected $service;
@@ -34,6 +36,10 @@ class PendapatanBpjsController extends Controller
             ->where('tahun', session('tahun_anggaran'))
             ->orderBy('tanggal', 'asc')
             ->orderBy('id', 'asc');
+
+        if ($request->has('revenue_master_id')) {
+            $query->where('revenue_master_id', $request->revenue_master_id);
+        }
 
         if ($jenisBpjs) {
             $query->where('jenis_bpjs', $jenisBpjs);
@@ -121,7 +127,7 @@ class PendapatanBpjsController extends Controller
     ========================= */
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE'), 403);
         $data = $request->validate([
             'tanggal' => 'required|date',
             'jenis_bpjs' => 'required|in:REGULAR,EVAKUASI,OBAT',
@@ -137,6 +143,7 @@ class PendapatanBpjsController extends Controller
             'rs_obat' => 'nullable|numeric|min:0',
             'pelayanan_tindakan' => 'nullable|numeric|min:0',
             'pelayanan_obat' => 'nullable|numeric|min:0',
+            'revenue_master_id' => 'required|exists:revenue_masters,id'
         ]);
 
         if ($data['jenis_bpjs'] === 'REGULAR' && empty($data['no_sep'])) {
@@ -169,6 +176,8 @@ class PendapatanBpjsController extends Controller
             $pendapatan->toArray()
         );
 
+        RevenueMasterController::recalculate($pendapatan->revenue_master_id);
+
         return response()->json(['success' => true]);
     }
 
@@ -177,8 +186,12 @@ class PendapatanBpjsController extends Controller
     ========================= */
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE'), 403);
         $pendapatan = PendapatanBpjs::findOrFail($id);
+
+        if ($pendapatan->revenueMaster && $pendapatan->revenueMaster->is_posted) {
+            return response()->json(['message' => 'Data tidak dapat diubah karena kelompok ini sudah diposting.'], 403);
+        }
 
         $data = $request->validate([
             'tanggal' => 'required|date',
@@ -227,6 +240,8 @@ class PendapatanBpjsController extends Controller
             $pendapatan->toArray()
         );
 
+        RevenueMasterController::recalculate($pendapatan->revenue_master_id);
+
         return response()->json(['success' => true]);
     }
 
@@ -244,8 +259,13 @@ class PendapatanBpjsController extends Controller
     ========================= */
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_DELETE'), 403);
         $pendapatan = PendapatanBpjs::findOrFail($id);
+
+        if ($pendapatan->revenueMaster && $pendapatan->revenueMaster->is_posted) {
+            return response()->json(['message' => 'Data tidak dapat dihapus karena kelompok ini sudah diposting.'], 403);
+        }
+
         $oldValues = $pendapatan->toArray();
         $pendapatan->delete();
 
@@ -258,6 +278,10 @@ class PendapatanBpjsController extends Controller
             null
         );
 
+        if ($oldValues['revenue_master_id']) {
+            RevenueMasterController::recalculate($oldValues['revenue_master_id']);
+        }
+
         return response()->json(['success' => true]);
     }
 
@@ -266,7 +290,7 @@ class PendapatanBpjsController extends Controller
     ========================= */
     public function downloadTemplate()
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_TEMPLATE'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE'), 403);
         $headers = [
             'Content-type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename=template_pendapatan_bpjs.csv',
@@ -303,8 +327,16 @@ class PendapatanBpjsController extends Controller
 
     public function import(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_IMPORT'), 403);
-        $request->validate(['file' => 'required|mimes:csv,txt']);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE'), 403);
+        $request->validate([
+            'file' => 'required|mimes:csv,txt',
+            'revenue_master_id' => 'required|exists:revenue_masters,id'
+        ]);
+
+        $master = \App\Models\RevenueMaster::findOrFail($request->revenue_master_id);
+        if ($master->is_posted) {
+            return response()->json(['message' => 'Tidak dapat impor data ke kelompok yang sudah diposting.'], 403);
+        }
 
         $file = $request->file('file');
         $filePath = $file->getRealPath();
@@ -318,7 +350,7 @@ class PendapatanBpjsController extends Controller
         $perusahaans = Perusahaan::all()->pluck('id', 'nama')->mapWithKeys(fn($id, $name) => [strtoupper($name) => $id]);
 
         $count = 0;
-        $this->service->transaction(function () use ($handle, $delimiter, $ruangans, $perusahaans, &$count) {
+        $this->service->transaction(function () use ($handle, $delimiter, $ruangans, $perusahaans, &$count, $request) {
             while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 if (count($row) < 4 || empty($row[0]))
                     continue;
@@ -348,6 +380,7 @@ class PendapatanBpjsController extends Controller
                 }
 
                 PendapatanBpjs::create([
+                    'revenue_master_id' => $request->revenue_master_id,
                     'tanggal' => $tanggal,
                     'jenis_bpjs' => $jenisBpjs,
                     'no_sep' => $row[2] ?? null,
@@ -370,23 +403,31 @@ class PendapatanBpjsController extends Controller
         });
 
         fclose($handle);
+        RevenueMasterController::recalculate($request->revenue_master_id);
         ActivityLog::log('IMPORT', 'PENDAPATAN_BPJS', "Berhasil mengimpor {$count} data pendapatan BPJS", null, null, null);
         return response()->json(['success' => true, 'count' => $count]);
     }
 
     public function bulkDelete(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_BULK'), 403);
-        $request->validate(['tanggal' => 'required|date']);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_DELETE'), 403);
+        $request->validate([
+            'revenue_master_id' => 'required|exists:revenue_masters,id'
+        ]);
 
-        $query = PendapatanBpjs::where('tanggal', $request->tanggal)->where('tahun', session('tahun_anggaran'));
-        if ($request->jenis_bpjs)
-            $query->where('jenis_bpjs', $request->jenis_bpjs);
+        $master = \App\Models\RevenueMaster::findOrFail($request->revenue_master_id);
+        if ($master->is_posted) {
+            return response()->json(['message' => 'Tidak dapat menghapus data pada kelompok yang sudah diposting.'], 403);
+        }
+
+        $query = PendapatanBpjs::where('revenue_master_id', $request->revenue_master_id);
 
         $count = $query->count();
         $query->delete();
 
-        ActivityLog::log('DELETE', 'PENDAPATAN_BPJS', "Menghapus massal {$count} data pendapatan BPJS tanggal {$request->tanggal}", null, null, null);
+        RevenueMasterController::recalculate($request->revenue_master_id);
+
+        ActivityLog::log('DELETE', 'PENDAPATAN_BPJS', "Menghapus massal {$count} data pendapatan BPJS pada kelompok ID {$request->revenue_master_id}", null, null, null);
 
         return response()->json(['success' => true, 'count' => $count]);
     }

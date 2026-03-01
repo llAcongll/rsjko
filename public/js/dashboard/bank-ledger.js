@@ -45,7 +45,7 @@
         document.getElementById('bankLedgerModalTitle').innerHTML = '<i class="ph ph-bank"></i> Tambah Saldo Rekening';
 
         const dateEl = document.getElementById('bankLedgerDate');
-        if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+        if (dateEl) dateEl.value = window.getTodayLocal();
 
         const hiddenAmount = document.getElementById('bankLedgerAmountValue');
         if (hiddenAmount) hiddenAmount.value = 0;

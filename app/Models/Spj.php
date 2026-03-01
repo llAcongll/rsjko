@@ -17,7 +17,7 @@ class Spj extends Model
     ];
 
     protected $casts = [
-        'spj_date' => 'date',
+        'spj_date' => 'date:Y-m-d',
     ];
 
     public function bendahara()

@@ -72,10 +72,16 @@ window.openDashboard = async (btn) => {
 };
 
 window.openRekening = (btn) => {
-  hideSubmenus();
-  setActiveMenu(btn);
+  const parentBtn = document.getElementById('btnPendapatan');
+  setActiveMenu(parentBtn);
   closeOnMobile();
+
   loadContent("rekening");
+
+  document
+    .querySelectorAll('#submenuPendapatan button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
 
   setTimeout(() => {
     if (window.loadRekening) loadRekening();
@@ -83,11 +89,16 @@ window.openRekening = (btn) => {
 };
 
 window.openPiutang = async (btn) => {
-  hideSubmenus();
-  setActiveMenu(btn);
+  const parentBtn = document.getElementById('btnPendapatan');
+  setActiveMenu(parentBtn);
   closeOnMobile();
 
   await loadContent("piutang");
+
+  document
+    .querySelectorAll('#submenuPendapatan button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
 
   if (typeof window.initPiutang === 'function') {
     window.initPiutang();
@@ -95,11 +106,16 @@ window.openPiutang = async (btn) => {
 };
 
 window.openPenyesuaian = async (btn) => {
-  hideSubmenus();
-  setActiveMenu(btn);
+  const parentBtn = document.getElementById('btnPendapatan');
+  setActiveMenu(parentBtn);
   closeOnMobile();
 
   await loadContent("penyesuaian");
+
+  document
+    .querySelectorAll('#submenuPendapatan button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
 
   if (typeof window.initPenyesuaian === 'function') {
     window.initPenyesuaian();
@@ -142,10 +158,16 @@ window.openLaporan = async function (type, btn) {
 };
 
 window.openRuangan = async (btn) => {
-  setActiveMenu(btn);
+  const parentBtn = document.getElementById('btnMaster');
+  setActiveMenu(parentBtn);
   closeOnMobile();
 
   await loadContent("ruangan");
+
+  document
+    .querySelectorAll('#submenuMaster button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
 
   const table = document.getElementById('ruanganTable');
   if (!table) return;
@@ -163,10 +185,16 @@ window.openRuangan = async (btn) => {
 };
 
 window.openPerusahaanPage = async (btn) => {
-  setActiveMenu(btn);
+  const parentBtn = document.getElementById('btnMaster');
+  setActiveMenu(parentBtn);
   closeOnMobile();
 
   await loadContent("perusahaan");
+
+  document
+    .querySelectorAll('#submenuMaster button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
 
   const table = document.getElementById('perusahaanTable');
   if (!table) return;
@@ -180,10 +208,16 @@ window.openPerusahaanPage = async (btn) => {
 };
 
 window.openMouPage = async (btn) => {
-  setActiveMenu(btn);
+  const parentBtn = document.getElementById('btnMaster');
+  setActiveMenu(parentBtn);
   closeOnMobile();
 
   await loadContent("mou");
+
+  document
+    .querySelectorAll('#submenuMaster button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
 
   const table = document.getElementById('mouTable');
   if (!table) return;
@@ -197,10 +231,16 @@ window.openMouPage = async (btn) => {
 };
 
 window.openPenandaTangan = async (btn) => {
-  setActiveMenu(btn);
+  const parentBtn = document.getElementById('btnMaster');
+  setActiveMenu(parentBtn);
   closeOnMobile();
 
   await loadContent("penanda_tangan");
+
+  document
+    .querySelectorAll('#submenuMaster button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
 
   if (typeof window.initPenandaTangan === 'function') {
     window.initPenandaTangan();
@@ -208,16 +248,29 @@ window.openPenandaTangan = async (btn) => {
 };
 
 window.openUsers = (btn) => {
-  setActiveMenu(btn);
+  const parentBtn = document.getElementById('btnMaster');
+  setActiveMenu(parentBtn);
   closeOnMobile();
+
   loadContent("users");
+
+  document
+    .querySelectorAll('#submenuMaster button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
 };
 
 window.openActivityLogs = async (btn) => {
-  setActiveMenu(btn);
+  const parentBtn = document.getElementById('btnMaster');
+  setActiveMenu(parentBtn);
   closeOnMobile();
 
   await loadContent("master/logs");
+
+  document
+    .querySelectorAll('#submenuMaster button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
 
   if (typeof window.initLogs === 'function') {
     window.initLogs();
@@ -521,7 +574,7 @@ window.toggleMaster = function (btn) {
    AUTO LOAD
 ========================= */
 document.addEventListener("DOMContentLoaded", () => {
-  console.log('App.js v2 loaded - DOM Ready');
+
   (async () => {
     await loadContent("dashboard");
     if (typeof window.initDashboard === 'function') initDashboard();

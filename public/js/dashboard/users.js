@@ -170,4 +170,3 @@ window.deleteUser = function (id) {
   );
 };
 
-console.log('✅ users.js loaded (FINAL)');

@@ -20,7 +20,7 @@ class PenyesuaianPendapatan extends Model
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'date:Y-m-d',
         'tahun' => 'integer',
         'pelunasan' => 'decimal:2',
         'potongan' => 'decimal:2',

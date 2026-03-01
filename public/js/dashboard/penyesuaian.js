@@ -99,10 +99,12 @@ function renderPenyesuaianTable(items, from) {
                     <button class="btn-aksi detail" onclick="detailPenyesuaian(${item.id})" title="Detail">
                         <i class="ph ph-eye"></i>
                     </button>
-                    ${hasPermission('PENYESUAIAN_CRUD') ? `
+                    ${window.hasPermission('PENYESUAIAN_CREATE') ? `
                     <button class="btn-aksi edit" onclick="editPenyesuaian(${item.id})" title="Edit">
                         <i class="ph ph-pencil-simple"></i>
                     </button>
+                    ` : ''}
+                    ${window.hasPermission('PENYESUAIAN_DELETE') ? `
                     <button class="btn-aksi delete" onclick="deletePenyesuaian(${item.id})" title="Hapus">
                         <i class="ph ph-trash"></i>
                     </button>

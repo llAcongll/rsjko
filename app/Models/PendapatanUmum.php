@@ -9,6 +9,7 @@ class PendapatanUmum extends Model
     protected $table = 'pendapatan_umum';
 
     protected $fillable = [
+        'revenue_master_id',
         'tanggal',
         'tahun',
         'nama_pasien',
@@ -24,7 +25,7 @@ class PendapatanUmum extends Model
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'date:Y-m-d',
         'tahun' => 'integer',
         'rs_tindakan' => 'decimal:2',
         'rs_obat' => 'decimal:2',
@@ -36,5 +37,10 @@ class PendapatanUmum extends Model
     public function ruangan()
     {
         return $this->belongsTo(Ruangan::class);
+    }
+
+    public function revenueMaster()
+    {
+        return $this->belongsTo(RevenueMaster::class, 'revenue_master_id');
     }
 }

@@ -29,7 +29,7 @@ class TreasurerCash extends Model
     ];
 
     protected $casts = [
-        'date' => 'date',
+        'date' => 'date:Y-m-d',
         'debit' => 'decimal:2',
         'credit' => 'decimal:2',
         'balance' => 'decimal:2',

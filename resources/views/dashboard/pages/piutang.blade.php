@@ -8,7 +8,7 @@
         </div>
 
         <div class="dashboard-header-right">
-            @if(auth()->user()->hasPermission('PIUTANG_CRUD'))
+            @if(auth()->user()->hasPermission('PIUTANG_CREATE'))
                 <button class="btn-tambah-data" id="btnTambahPiutang">
                     <i class="ph-bold ph-plus"></i>
                     <span>Catat Piutang</span>

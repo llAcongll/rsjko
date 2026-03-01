@@ -20,7 +20,7 @@ class RuanganController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_RUANGAN_CRUD') || auth()->user()->hasPermission('MASTER_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_CREATE'), 403);
 
         $request->validate([
             'nama' => 'required|string|max:100',
@@ -36,7 +36,7 @@ class RuanganController extends Controller
 
     public function update(Request $request, Ruangan $ruangan)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_RUANGAN_CRUD') || auth()->user()->hasPermission('MASTER_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_CREATE'), 403);
 
         $ruangan->update(
             $request->validate([
@@ -49,7 +49,7 @@ class RuanganController extends Controller
 
     public function destroy(Ruangan $ruangan)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_DELETE'), 403);
 
         $ruangan->delete();
 

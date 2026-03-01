@@ -21,12 +21,14 @@ class LRKBController extends Controller
 
     public function index()
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_VIEW'), 403);
         $lrkbs = LRKB::orderBy('id', 'asc')->get();
         return response()->json($lrkbs);
     }
 
     public function store(Request $request)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_CREATE'), 403);
         $request->validate([
             'triwulan' => 'nullable|integer|between:1,4',
             'bulan' => 'nullable|integer|between:1,12',
@@ -57,12 +59,14 @@ class LRKBController extends Controller
 
     public function show($id)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_VIEW'), 403);
         $lrkb = LRKB::with(['details'])->findOrFail($id);
         return response()->json($lrkb);
     }
 
     public function generate($id)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_CREATE'), 403);
         $lrkb = LRKB::findOrFail($id);
         if ($lrkb->status === 'dikunci') {
             return response()->json(['error' => 'Data sudah dikunci'], 422);
@@ -178,6 +182,7 @@ class LRKBController extends Controller
 
     public function validateLrkb($id)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_POST'), 403);
         $lrkb = LRKB::findOrFail($id);
         if ($lrkb->selisih != 0) {
             return response()->json(['error' => 'Rekonsiliasi tidak bisa divalidasi karena terdapat selisih kas!'], 422);
@@ -189,6 +194,7 @@ class LRKBController extends Controller
 
     public function unvalidateLrkb($id)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_POST'), 403);
         $lrkb = LRKB::findOrFail($id);
 
         // Check if used by final SP3BP
@@ -214,6 +220,7 @@ class LRKBController extends Controller
 
     public function destroy($id)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_DELETE'), 403);
         $lrkb = LRKB::findOrFail($id);
         if ($lrkb->status !== 'draft') {
             return response()->json(['error' => 'Hanya data draft yang dapat dihapus'], 422);
@@ -224,6 +231,7 @@ class LRKBController extends Controller
 
     public function saveCatatan(Request $request, $id)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_CREATE'), 403);
         $lrkb = LRKB::findOrFail($id);
         if ($lrkb->status !== 'draft') {
             return response()->json(['error' => 'Catatan hanya dapat diubah pada status Draft'], 422);
@@ -235,6 +243,7 @@ class LRKBController extends Controller
 
     public function print($id)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_VIEW'), 403);
         $lrkb = LRKB::with(['details'])->findOrFail($id);
         $pdf = Pdf::loadView('dashboard.exports.lrkb_pdf', compact('lrkb'))
             ->setPaper('f4', 'portrait');

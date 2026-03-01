@@ -1,5 +1,5 @@
 window.initLaporan = function (type = 'PENDAPATAN') {
-    const today = new Date().toISOString().split('T')[0];
+    const today = window.getTodayLocal();
     const firstDay = '2026-01-01';
 
     if (document.getElementById('laporanStart')) document.getElementById('laporanStart').value = firstDay;

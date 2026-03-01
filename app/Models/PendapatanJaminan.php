@@ -8,6 +8,7 @@ class PendapatanJaminan extends Model
 {
     protected $table = 'pendapatan_jaminan';
     protected $fillable = [
+        'revenue_master_id',
         'tanggal',
         'tahun',
         'nama_pasien',
@@ -24,7 +25,7 @@ class PendapatanJaminan extends Model
         'total'
     ];
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'date:Y-m-d',
         'tahun' => 'integer',
         'rs_tindakan' => 'decimal:2',
         'rs_obat' => 'decimal:2',
@@ -40,5 +41,10 @@ class PendapatanJaminan extends Model
     public function perusahaan()
     {
         return $this->belongsTo(Perusahaan::class);
+    }
+
+    public function revenueMaster()
+    {
+        return $this->belongsTo(RevenueMaster::class, 'revenue_master_id');
     }
 }

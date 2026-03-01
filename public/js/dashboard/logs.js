@@ -1,4 +1,3 @@
-console.log('📜 logs.js loaded');
 
 let currentLogPage = 1;
 let logSearchTimer = null;

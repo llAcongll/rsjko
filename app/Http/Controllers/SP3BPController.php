@@ -25,6 +25,7 @@ class SP3BPController extends Controller
 
     public function index()
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_VIEW'), 403);
         $periodes = PengesahanPeriode::with('sp3bp')
             ->orderBy('id', 'asc')
             ->get();
@@ -33,6 +34,7 @@ class SP3BPController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_CREATE'), 403);
         $request->validate([
             'triwulan' => 'nullable|integer|between:1,4',
             'bulan' => 'nullable|integer|between:1,12',
@@ -63,6 +65,7 @@ class SP3BPController extends Controller
 
     public function show($id)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_VIEW'), 403);
         $sp3bp = SP3BP::with(['periode', 'detailPendapatan', 'detailBelanja', 'rekonsiliasi'])
             ->where('periode_id', $id)
             ->first();
@@ -81,6 +84,7 @@ class SP3BPController extends Controller
 
     public function generate($id)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_CREATE'), 403);
         $periode = PengesahanPeriode::findOrFail($id);
 
         if ($periode->status === 'terkunci') {
@@ -272,10 +276,11 @@ class SP3BPController extends Controller
 
     public function sahkan($id)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_POST'), 403);
         $sp3bp = SP3BP::with('rekonsiliasi')->where('periode_id', $id)->firstOrFail();
 
         if ($sp3bp->selisih != 0) {
-            return response()->json(['error' => 'Tidak bisa disahkan karena ada selisih saldo!'], 422);
+            return response()->json(['error' => 'Tidak bisa disahkan because ada selisih saldo!'], 422);
         }
 
         $sp3bp->status = 'final';
@@ -291,6 +296,7 @@ class SP3BPController extends Controller
 
     public function batalSah($id)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_POST'), 403);
         $sp3bp = SP3BP::where('periode_id', $id)->firstOrFail();
 
         $sp3bp->status = 'draft';
@@ -304,6 +310,7 @@ class SP3BPController extends Controller
     }
     public function printPdf($id)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_VIEW'), 403);
         $sp3bp = SP3BP::with(['periode', 'detailPendapatan', 'detailBelanja', 'rekonsiliasi'])
             ->where('periode_id', $id)
             ->firstOrFail();
@@ -316,6 +323,7 @@ class SP3BPController extends Controller
 
     public function destroy($id)
     {
+        abort_unless(auth()->user()->hasPermission('PENGESAHAN_DELETE'), 403);
         $periode = PengesahanPeriode::findOrFail($id);
 
         if ($periode->status === 'terkunci') {

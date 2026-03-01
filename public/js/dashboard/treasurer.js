@@ -48,7 +48,7 @@ function getStatusClass(status) {
 window.openSpjForm = function () {
     document.getElementById('formSpj').reset();
     document.getElementById('spjId').value = '';
-    document.getElementById('spjDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('spjDate').value = window.getTodayLocal();
     document.getElementById('spjFormModal').classList.add('show');
     loadUnlinkedExpenditures();
 };
@@ -274,7 +274,7 @@ function loadSaldoTable() {
 
 window.openSaldoForm = function () {
     document.getElementById('formSaldo').reset();
-    document.getElementById('saldoDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('saldoDate').value = window.getTodayLocal();
     document.getElementById('saldoSiklusGroup').style.display = 'none';
     document.getElementById('saldoFormModal').classList.add('show');
 };
@@ -801,7 +801,7 @@ window.openDisbursementForm = function (item = null) {
         const statusEl = document.getElementById('disbursementStatus');
         if (statusEl) statusEl.value = 'SPP';
 
-        document.getElementById('disbursementDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('disbursementDate').value = window.getTodayLocal();
         window._pendingRekeningId = '';
         window._pendingSpjId = '';
     }

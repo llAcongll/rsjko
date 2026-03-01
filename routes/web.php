@@ -11,6 +11,7 @@ use App\Http\Controllers\PendapatanUmumController;
 use App\Http\Controllers\PendapatanBpjsController;
 use App\Http\Controllers\PendapatanJaminanController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\RevenueMasterController;
 use App\Http\Controllers\PendapatanLainController;
 use App\Http\Controllers\PendapatanKerjasamaController;
 use App\Http\Controllers\KodeRekeningController;
@@ -210,6 +211,22 @@ Route::middleware(['auth', 'role:ADMIN,USER'])
     });
 
 Route::middleware(['auth', 'role:ADMIN,USER'])->group(function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | REVENUE MASTER
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('dashboard/revenue-master')->group(function () {
+        Route::get('/', [RevenueMasterController::class, 'index']);
+        Route::post('/', [RevenueMasterController::class, 'store']);
+        Route::get('/{id}', [RevenueMasterController::class, 'show']);
+        Route::put('/{id}', [RevenueMasterController::class, 'update']);
+        Route::delete('/{id}', [RevenueMasterController::class, 'destroy']);
+        Route::post('/bulk-post', [RevenueMasterController::class, 'bulkPost']);
+        Route::post('/bulk-unpost', [RevenueMasterController::class, 'bulkUnpost']);
+        Route::post('/{id}/toggle-post', [RevenueMasterController::class, 'togglePost']);
+    });
 
     /*
     |--------------------------------------------------------------------------

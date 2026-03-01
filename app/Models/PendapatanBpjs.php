@@ -9,6 +9,7 @@ class PendapatanBpjs extends Model
     protected $table = 'pendapatan_bpjs';
 
     protected $fillable = [
+        'revenue_master_id',
         'tanggal',
         'tahun',
         'jenis_bpjs',
@@ -28,7 +29,7 @@ class PendapatanBpjs extends Model
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'date:Y-m-d',
         'tahun' => 'integer',
         'rs_tindakan' => 'decimal:2',
         'rs_obat' => 'decimal:2',
@@ -45,5 +46,10 @@ class PendapatanBpjs extends Model
     public function perusahaan()
     {
         return $this->belongsTo(Perusahaan::class);
+    }
+
+    public function revenueMaster()
+    {
+        return $this->belongsTo(RevenueMaster::class, 'revenue_master_id');
     }
 }

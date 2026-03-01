@@ -1,4 +1,3 @@
-console.log('🔥 dashboard.js loaded');
 
 let dashboardData = {
   summary: {},

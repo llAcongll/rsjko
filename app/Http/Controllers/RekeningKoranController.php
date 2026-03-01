@@ -11,7 +11,7 @@ class RekeningKoranController extends Controller
 {
     public function index(Request $request)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_VIEW'), 403);
+        abort_unless(Auth::user()->hasPermission('REKENING_VIEW') || Auth::user()->hasPermission('MASTER_VIEW'), 403);
 
         $q = RekeningKoran::query()
             ->where('tahun', session('tahun_anggaran'));
@@ -41,7 +41,7 @@ class RekeningKoranController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_CRUD'), 403);
+        abort_unless(Auth::user()->hasPermission('REKENING_CREATE') || Auth::user()->hasPermission('MASTER_CRUD'), 403);
 
         $data = $request->validate([
             'tanggal' => 'required|date',
@@ -59,13 +59,14 @@ class RekeningKoranController extends Controller
 
     public function show(RekeningKoran $rekeningKoran)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_VIEW'), 403);
+        abort_unless(Auth::user()->hasPermission('REKENING_VIEW') || Auth::user()->hasPermission('MASTER_VIEW'), 403);
         return response()->json($rekeningKoran);
     }
 
     public function update(Request $request, RekeningKoran $rekeningKoran)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_CRUD'), 403);
+        abort_unless(Auth::user()->hasPermission('REKENING_CREATE') || Auth::user()->hasPermission('MASTER_CRUD'), 403);
+        abort_if($rekeningKoran->cd === 'C', 403, 'Data Credit (Pendapatan) tidak dapat diedit secara manual.');
 
         $data = $request->validate([
             'tanggal' => 'required|date',
@@ -82,7 +83,8 @@ class RekeningKoranController extends Controller
 
     public function destroy(RekeningKoran $rekeningKoran)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_CRUD'), 403);
+        abort_unless(Auth::user()->hasPermission('REKENING_DELETE') || Auth::user()->hasPermission('MASTER_CRUD'), 403);
+        abort_if($rekeningKoran->cd === 'C', 403, 'Data Credit (Pendapatan) tidak dapat dihapus secara manual.');
 
         $rekeningKoran->delete();
 
@@ -99,7 +101,7 @@ class RekeningKoranController extends Controller
 
     public function downloadTemplate()
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_TEMPLATE'), 403);
+        abort_unless(Auth::user()->hasPermission('REKENING_CREATE') || Auth::user()->hasPermission('MASTER_CRUD'), 403);
 
         $headers = [
             'Content-Type' => 'text/csv',
@@ -118,7 +120,7 @@ class RekeningKoranController extends Controller
 
     public function import(Request $request)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_IMPORT'), 403);
+        abort_unless(Auth::user()->hasPermission('REKENING_IMPORT') || Auth::user()->hasPermission('MASTER_CRUD'), 403);
 
         $request->validate([
             'file' => 'required|file|mimes:csv,txt'
@@ -218,14 +220,14 @@ class RekeningKoranController extends Controller
     }
     public function bulkDelete(Request $request)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_BULK'), 403);
+        abort_unless(Auth::user()->hasPermission('REKENING_DELETE') || Auth::user()->hasPermission('MASTER_CRUD'), 403);
 
         $bank = $request->input('bank');
         $start = $request->input('start');
         $end = $request->input('end');
         $tahun = session('tahun_anggaran');
 
-        $query = RekeningKoran::where('tahun', $tahun);
+        $query = RekeningKoran::where('tahun', $tahun)->where('cd', '!=', 'C');
 
         if ($bank && $bank !== 'Semua Bank') {
             $query->where('bank', $bank);
@@ -245,7 +247,7 @@ class RekeningKoranController extends Controller
 
     public function print(Request $request)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_VIEW'), 403);
+        abort_unless(Auth::user()->hasPermission('REKENING_VIEW') || Auth::user()->hasPermission('MASTER_VIEW'), 403);
 
         $bank = $request->input('bank');
         $start = $request->input('start');

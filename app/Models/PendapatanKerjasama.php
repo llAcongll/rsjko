@@ -8,6 +8,7 @@ class PendapatanKerjasama extends Model
 {
     protected $table = 'pendapatan_kerjasama';
     protected $fillable = [
+        'revenue_master_id',
         'tanggal',
         'tahun',
         'nama_pasien',
@@ -24,7 +25,7 @@ class PendapatanKerjasama extends Model
         'total'
     ];
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'date:Y-m-d',
         'tahun' => 'integer',
         'rs_tindakan' => 'decimal:2',
         'rs_obat' => 'decimal:2',
@@ -40,5 +41,10 @@ class PendapatanKerjasama extends Model
     public function mou()
     {
         return $this->belongsTo(Mou::class);
+    }
+
+    public function revenueMaster()
+    {
+        return $this->belongsTo(RevenueMaster::class, 'revenue_master_id');
     }
 }

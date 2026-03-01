@@ -25,7 +25,7 @@ class Expenditure extends Model
     ];
 
     protected $casts = [
-        'spending_date' => 'date',
+        'spending_date' => 'date:Y-m-d',
         'gross_value' => 'decimal:2',
         'tax' => 'decimal:2',
         'net_value' => 'decimal:2',

@@ -20,7 +20,7 @@ class Piutang extends Model
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'date:Y-m-d',
         'tahun' => 'integer',
         'jumlah_piutang' => 'decimal:2',
         'potongan' => 'decimal:2',

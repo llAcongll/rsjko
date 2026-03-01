@@ -39,7 +39,7 @@ class FundDisbursement extends Model
     ];
 
     protected $casts = [
-        'sp2d_date' => 'date',
+        'sp2d_date' => 'date:Y-m-d',
         'value' => 'decimal:2',
     ];
 

@@ -11,6 +11,8 @@ use App\Services\RevenueService;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+use App\Http\Controllers\RevenueMasterController;
+
 class PendapatanLainController extends Controller
 {
     protected $service;
@@ -29,6 +31,10 @@ class PendapatanLainController extends Controller
             ->where('tahun', session('tahun_anggaran'))
             ->orderBy('tanggal', 'asc')
             ->orderBy('id', 'asc');
+
+        if ($request->has('revenue_master_id')) {
+            $query->where('revenue_master_id', $request->revenue_master_id);
+        }
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -72,7 +78,7 @@ class PendapatanLainController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_CREATE'), 403);
         $data = $request->validate([
             'tanggal' => 'required|date',
             'nama_pasien' => 'required|string|max:255',
@@ -86,6 +92,7 @@ class PendapatanLainController extends Controller
             'rs_obat' => 'nullable|numeric|min:0',
             'pelayanan_tindakan' => 'nullable|numeric|min:0',
             'pelayanan_obat' => 'nullable|numeric|min:0',
+            'revenue_master_id' => 'required|exists:revenue_masters,id'
         ]);
 
         if ($data['metode_pembayaran'] === 'TUNAI') {
@@ -106,6 +113,8 @@ class PendapatanLainController extends Controller
             $pendapatan->toArray()
         );
 
+        RevenueMasterController::recalculate($pendapatan->revenue_master_id);
+
         return response()->json(['success' => true]);
     }
 
@@ -117,8 +126,12 @@ class PendapatanLainController extends Controller
 
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_CREATE'), 403);
         $pendapatan = PendapatanLain::findOrFail($id);
+
+        if ($pendapatan->revenueMaster && $pendapatan->revenueMaster->is_posted) {
+            return response()->json(['message' => 'Data tidak dapat diubah karena kelompok ini sudah diposting.'], 403);
+        }
         $data = $request->validate([
             'tanggal' => 'required|date',
             'nama_pasien' => 'required|string|max:255',
@@ -152,13 +165,20 @@ class PendapatanLainController extends Controller
             $pendapatan->toArray()
         );
 
+        RevenueMasterController::recalculate($pendapatan->revenue_master_id);
+
         return response()->json(['success' => true]);
     }
 
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_DELETE'), 403);
         $pendapatan = PendapatanLain::findOrFail($id);
+
+        if ($pendapatan->revenueMaster && $pendapatan->revenueMaster->is_posted) {
+            return response()->json(['message' => 'Data tidak dapat dihapus karena kelompok ini sudah diposting.'], 403);
+        }
+
         $oldValues = $pendapatan->toArray();
         $pendapatan->delete();
 
@@ -171,12 +191,16 @@ class PendapatanLainController extends Controller
             null
         );
 
+        if ($oldValues['revenue_master_id']) {
+            RevenueMasterController::recalculate($oldValues['revenue_master_id']);
+        }
+
         return response()->json(['success' => true]);
     }
 
     public function downloadTemplate()
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_TEMPLATE'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_CREATE'), 403);
         $headers = [
             'Content-type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename=template_pendapatan_lain.csv',
@@ -211,8 +235,16 @@ class PendapatanLainController extends Controller
 
     public function import(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_IMPORT'), 403);
-        $request->validate(['file' => 'required|mimes:csv,txt']);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_CREATE'), 403);
+        $request->validate([
+            'file' => 'required|mimes:csv,txt',
+            'revenue_master_id' => 'required|exists:revenue_masters,id'
+        ]);
+
+        $master = \App\Models\RevenueMaster::findOrFail($request->revenue_master_id);
+        if ($master->is_posted) {
+            return response()->json(['message' => 'Tidak dapat impor data ke kelompok yang sudah diposting.'], 403);
+        }
 
         $file = $request->file('file');
         $filePath = $file->getRealPath();
@@ -226,7 +258,7 @@ class PendapatanLainController extends Controller
         $mous = Mou::all()->pluck('id', 'nama')->mapWithKeys(fn($id, $name) => [strtoupper($name) => $id]);
 
         $count = 0;
-        $this->service->transaction(function () use ($handle, $delimiter, $ruangans, $mous, &$count) {
+        $this->service->transaction(function () use ($handle, $delimiter, $ruangans, $mous, &$count, $request) {
             while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 if (count($row) < 4 || empty($row[0]))
                     continue;
@@ -243,6 +275,7 @@ class PendapatanLainController extends Controller
                 $plO = $this->service->parseNumeric($row[10] ?? 0);
 
                 PendapatanLain::create([
+                    'revenue_master_id' => $request->revenue_master_id,
                     'tanggal' => $tanggal,
                     'nama_pasien' => $row[1] ?? 'Pasien Lain-lain',
                     'ruangan_id' => $ruanganId,
@@ -263,20 +296,30 @@ class PendapatanLainController extends Controller
         });
 
         fclose($handle);
+        RevenueMasterController::recalculate($request->revenue_master_id);
         ActivityLog::log('IMPORT', 'PENDAPATAN_LAIN', "Berhasil mengimpor {$count} data pendapatan lain-lain", null, null, null);
         return response()->json(['success' => true, 'count' => $count]);
     }
 
     public function bulkDelete(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_BULK'), 403);
-        $request->validate(['tanggal' => 'required|date']);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_DELETE'), 403);
+        $request->validate([
+            'revenue_master_id' => 'required|exists:revenue_masters,id'
+        ]);
 
-        $query = PendapatanLain::where('tanggal', $request->tanggal)->where('tahun', session('tahun_anggaran'));
+        $master = \App\Models\RevenueMaster::findOrFail($request->revenue_master_id);
+        if ($master->is_posted) {
+            return response()->json(['message' => 'Tidak dapat menghapus data pada kelompok yang sudah diposting.'], 403);
+        }
+
+        $query = PendapatanLain::where('revenue_master_id', $request->revenue_master_id);
         $count = $query->count();
         $query->delete();
 
-        ActivityLog::log('DELETE', 'PENDAPATAN_LAIN', "Menghapus massal {$count} data pendapatan lain-lain tanggal {$request->tanggal}", null, null, null);
+        RevenueMasterController::recalculate($request->revenue_master_id);
+
+        ActivityLog::log('DELETE', 'PENDAPATAN_LAIN', "Menghapus massal {$count} data pendapatan lain-lain pada kelompok ID {$request->revenue_master_id}", null, null, null);
         return response()->json(['success' => true, 'count' => $count]);
     }
 }
