@@ -66,7 +66,17 @@ class RekeningKoranController extends Controller
     public function update(Request $request, RekeningKoran $rekeningKoran)
     {
         abort_unless(Auth::user()->hasPermission('REKENING_CREATE') || Auth::user()->hasPermission('MASTER_CRUD'), 403);
-        abort_if($rekeningKoran->cd === 'C', 403, 'Data Credit (Pendapatan) tidak dapat diedit secara manual.');
+
+        // Proteksi data yang sudah diposting
+        if ($rekeningKoran->cd === 'C' && $rekeningKoran->revenue_master_id) {
+            $isPosted = \DB::table('revenue_masters')
+                ->where('id', $rekeningKoran->revenue_master_id)
+                ->where('is_posted', true)
+                ->exists();
+            if ($isPosted) {
+                abort(403, 'Data Pendapatan yang sudah diposting tidak dapat diubah secara manual.');
+            }
+        }
 
         $data = $request->validate([
             'tanggal' => 'required|date',
@@ -84,7 +94,17 @@ class RekeningKoranController extends Controller
     public function destroy(RekeningKoran $rekeningKoran)
     {
         abort_unless(Auth::user()->hasPermission('REKENING_DELETE') || Auth::user()->hasPermission('MASTER_CRUD'), 403);
-        abort_if($rekeningKoran->cd === 'C', 403, 'Data Credit (Pendapatan) tidak dapat dihapus secara manual.');
+
+        // Proteksi data yang sudah diposting
+        if ($rekeningKoran->cd === 'C' && $rekeningKoran->revenue_master_id) {
+            $isPosted = \DB::table('revenue_masters')
+                ->where('id', $rekeningKoran->revenue_master_id)
+                ->where('is_posted', true)
+                ->exists();
+            if ($isPosted) {
+                abort(403, 'Data Pendapatan yang sudah diposting tidak dapat dihapus secara manual.');
+            }
+        }
 
         $rekeningKoran->delete();
 
@@ -227,7 +247,24 @@ class RekeningKoranController extends Controller
         $end = $request->input('end');
         $tahun = session('tahun_anggaran');
 
-        $query = RekeningKoran::where('tahun', $tahun)->where('cd', '!=', 'C');
+        $query = RekeningKoran::where('tahun', $tahun)
+            ->where(function ($q) {
+                // Boleh hapus semua pengeluaran (D)
+                $q->where('cd', '!=', 'C')
+                    // ATAU pendapatan (C) yang belum diposting
+                    ->orWhere(function ($sq) {
+                    $sq->where('cd', 'C')
+                        ->where(function ($ssq) {
+                            $ssq->whereNull('revenue_master_id')
+                                ->orWhereNotExists(function ($eee) {
+                                    $eee->select(\DB::raw(1))
+                                        ->from('revenue_masters')
+                                        ->whereColumn('revenue_masters.id', 'rekening_korans.revenue_master_id')
+                                        ->where('revenue_masters.is_posted', true);
+                                });
+                        });
+                });
+            });
 
         if ($bank && $bank !== 'Semua Bank') {
             $query->where('bank', $bank);

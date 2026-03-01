@@ -296,7 +296,7 @@
             selectedMasterIds = selectedMasterIds.filter(mid => mid !== id);
             isSelectAllPagesAcross = false;
         }
-        updateSelectionUI();
+        updateSelectionUILain();
     };
 
     window.toggleAllMasterLain = function (checkbox) {
@@ -421,7 +421,7 @@
                 if (data.success) {
                     toast(`Berhasil memposting ${data.count} kelompok`, 'success');
                     clearSelectionAcrossLain();
-                    loadMaster();
+                    loadMasterLain();
                 } else {
                     throw new Error(data.message || 'Gagal posting masal');
                 }
@@ -469,7 +469,7 @@
                 if (data.success) {
                     toast(`Berhasil membatalkan ${data.count} kelompok`, 'success');
                     clearSelectionAcrossLain();
-                    loadMaster();
+                    loadMasterLain();
                 } else {
                     throw new Error(data.message || 'Gagal batal posting masal');
                 }

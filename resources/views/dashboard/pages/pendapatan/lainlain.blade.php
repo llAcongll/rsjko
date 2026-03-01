@@ -332,32 +332,32 @@
     </div>
 
     {{-- MODAL MASTER FORM --}}
-    <div id="modalMasterForm" class="confirm-overlay">
+    <div id="modalMasterFormLain" class="confirm-overlay">
         <div class="confirm-box" style="max-width: 500px;">
-            <h3 id="masterFormTitle"><i class="ph ph-folder-plus"></i> Tambah Kelompok Lain-lain</h3>
-            <form id="formMaster" autocomplete="off">
-                <input type="hidden" id="masterId">
+            <h3 id="masterFormTitleLain"><i class="ph ph-folder-plus"></i> Tambah Kelompok Lain-lain</h3>
+            <form id="formMasterLain" autocomplete="off">
+                <input type="hidden" id="masterIdLain">
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>Tanggal Pendapatan</label>
-                    <input type="date" id="masterTanggal" required class="form-input">
+                    <input type="date" id="masterTanggalLain" required class="form-input">
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>Tanggal Rekening Koran (Opsional)</label>
-                    <input type="date" id="masterTanggalRk" class="form-input">
+                    <input type="date" id="masterTanggalRkLain" class="form-input">
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>No. Bukti (Opsional)</label>
-                    <input type="text" id="masterNoBukti" class="form-input"
+                    <input type="text" id="masterNoBuktiLain" class="form-input"
                         placeholder="Masukkan nomor bukti jika ada">
                 </div>
                 <div class="form-group" style="margin-bottom: 20px;">
                     <label>Keterangan / Uraian</label>
-                    <textarea id="masterKeterangan" class="form-input" rows="3"
+                    <textarea id="masterKeteranganLain" class="form-input" rows="3"
                         placeholder="Contoh: Pendapatan Lain-lain Bulan Januari"></textarea>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-secondary" onclick="closeMasterModalLain()">Batal</button>
-                    <button type="submit" class="btn-primary" id="btnSimpanMaster">Simpan</button>
+                    <button type="submit" class="btn-primary" id="btnSimpanMasterLain">Simpan</button>
                 </div>
             </form>
         </div>
