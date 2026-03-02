@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>SIPP BLUD EHD</title>
+  <title>SIK BLUD EHD</title>
 
   {{-- FAVICON & PWA --}}
   <!-- Light mode -->
