@@ -13,6 +13,7 @@ class RevenueMaster extends Model
         'tanggal_rk',
         'tahun',
         'kategori',
+        'metode_pembayaran',
         'no_bukti',
         'keterangan',
         'total_rs',

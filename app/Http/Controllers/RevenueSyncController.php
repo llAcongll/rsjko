@@ -31,33 +31,55 @@ class RevenueSyncController extends Controller
                 if (!\Illuminate\Support\Facades\Schema::hasTable($table))
                     continue;
 
-                $orphans = DB::table($table)
-                    ->whereNull('revenue_master_id')
-                    ->select('tanggal', 'tahun', DB::raw('count(*) as count'))
-                    ->groupBy('tanggal', 'tahun')
+                // 1. Identify data that is either unlinked OR linked to a DRAFT master
+                $candidates = DB::table($table)
+                    ->leftJoin('revenue_masters', "$table.revenue_master_id", '=', 'revenue_masters.id')
+                    ->where(function ($q) use ($table) {
+                        $q->whereNull("$table.revenue_master_id")
+                            ->orWhere('revenue_masters.is_posted', false);
+                    })
+                    ->select("$table.tanggal", "$table.tahun", "$table.metode_pembayaran", DB::raw('count(*) as count'))
+                    ->groupBy("$table.tanggal", "$table.tahun", "$table.metode_pembayaran")
                     ->get();
+
+                // 2. Unlink all data currently in DRAFT status to reset them safely
+                DB::table($table)
+                    ->whereIn('revenue_master_id', function ($q) {
+                        $q->select('id')->from('revenue_masters')->where('is_posted', false);
+                    })
+                    ->update(['revenue_master_id' => null]);
 
                 $processedInCategory = 0;
 
-                foreach ($orphans as $group) {
-                    // Find or create master
+                foreach ($candidates as $group) {
+                    $mType = ($group->metode_pembayaran === 'TUNAI') ? 'TUNAI' : 'NON-TUNAI';
+
+                    // Find or create master including payment method
                     $master = RevenueMaster::firstOrCreate([
                         'tanggal' => $group->tanggal,
                         'tahun' => $group->tahun,
-                        'kategori' => $kategori
+                        'kategori' => $kategori,
+                        'metode_pembayaran' => $mType
                     ], [
-                        'keterangan' => "Sinkronisasi Otomatis $kategori - " . ($group->tanggal),
+                        'keterangan' => "Sinkronisasi Otomatis $kategori [$mType] - " . ($group->tanggal),
                         'total_rs' => 0,
                         'total_pelayanan' => 0,
                         'total_all' => 0,
                         'is_posted' => false
                     ]);
 
-                    // Link orphans to this master
+                    // Link data to this master with matching method
                     $affected = DB::table($table)
                         ->whereNull('revenue_master_id')
                         ->where('tanggal', $group->tanggal)
                         ->where('tahun', $group->tahun)
+                        ->where(function ($q) use ($group) {
+                            if ($group->metode_pembayaran === 'TUNAI') {
+                                $q->where('metode_pembayaran', 'TUNAI');
+                            } else {
+                                $q->where('metode_pembayaran', '!=', 'TUNAI');
+                            }
+                        })
                         ->update(['revenue_master_id' => $master->id]);
 
                     $processedInCategory += $affected;
@@ -68,6 +90,12 @@ class RevenueSyncController extends Controller
 
                 $results[$kategori] = $processedInCategory;
                 $totalProcessed += $processedInCategory;
+
+                // 3. Cleanup empty DRAFT masters for this category
+                RevenueMaster::where('kategori', $kategori)
+                    ->where('is_posted', false)
+                    ->where('total_all', 0)
+                    ->delete();
             }
 
             if ($totalProcessed > 0) {

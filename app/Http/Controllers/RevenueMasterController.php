@@ -444,7 +444,7 @@ class RevenueMasterController extends Controller
                 default => collect()
             };
 
-            $tunaiBucket = [
+            $bankBucket = [
                 'Bank Riau Kepri Syariah' => 0,
                 'Bank Syariah Indonesia' => 0,
             ];
@@ -457,31 +457,18 @@ class RevenueMasterController extends Controller
                     ? 'Bank Syariah Indonesia'
                     : 'Bank Riau Kepri Syariah';
 
-                if ($detail->metode_pembayaran === 'TUNAI') {
-                    $tunaiBucket[$bankName] += (float) $detail->total;
-                } else {
-                    // NON-TUNAI: List individually with patient name
-                    \App\Models\RekeningKoran::create([
-                        'revenue_master_id' => $master->id,
-                        'tanggal' => $master->tanggal_rk,
-                        'tahun' => $master->tahun,
-                        'bank' => $bankName,
-                        'keterangan' => ($master->keterangan ?: "Penerimaan {$master->kategori}") . " - ({$detail->nama_pasien})",
-                        'cd' => 'C',
-                        'jumlah' => $detail->total,
-                    ]);
-                }
+                $bankBucket[$bankName] += (float) $detail->total;
             }
 
-            // Insert Grouped Tunai per bank
-            foreach ($tunaiBucket as $bank => $total) {
+            // Insert Grouped Data per bank
+            foreach ($bankBucket as $bank => $total) {
                 if ($total > 0) {
                     \App\Models\RekeningKoran::create([
                         'revenue_master_id' => $master->id,
                         'tanggal' => $master->tanggal_rk,
                         'tahun' => $master->tahun,
                         'bank' => $bank,
-                        'keterangan' => ($master->keterangan ?: "Penerimaan {$master->kategori}") . " - TUNAI",
+                        'keterangan' => ($master->keterangan ?: "Penerimaan {$master->kategori}") . ($master->metode_pembayaran ? " [{$master->metode_pembayaran}]" : ""),
                         'cd' => 'C',
                         'jumlah' => $total,
                     ]);

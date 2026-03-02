@@ -719,6 +719,7 @@ class ReportService
     private function calculateRealisasiDetail($sumberData, $tahun, $startDate, $endDate, $nodeId = null)
     {
         switch ($sumberData) {
+            case 'UMUM':
             case 'PASIEN_UMUM':
                 return $this->getActiveRevenueQuery('pendapatan_umum')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
             case 'BPJS_JAMINAN':
