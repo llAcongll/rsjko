@@ -810,6 +810,8 @@
       } else { detail.disabled = true; }
       cekSiapSimpan();
     });
+
+    detail.addEventListener('change', cekSiapSimpan);
   }
 
   function resetSelect(el, defaultText) {
@@ -1010,6 +1012,13 @@
     });
 
     setupBankLogic();
+
+    const formUmum = document.getElementById('formPendapatanUmum');
+    if (formUmum) {
+      formUmum.addEventListener('input', cekSiapSimpan);
+      formUmum.addEventListener('change', cekSiapSimpan);
+    }
+
     initImportUmum();
     initBulkDeleteUmum();
   };
