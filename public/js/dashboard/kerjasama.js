@@ -2,6 +2,9 @@
     let masterPage = 1;
     let masterPerPage = 10;
     let masterKeyword = '';
+    let masterStatus = ''; // Added
+    let masterSortBy = 'tanggal'; // Added
+    let masterSortDir = 'desc'; // Added
     let selectedMasterId = null;
     let currentMasterData = null;
 
@@ -37,6 +40,9 @@
             page: masterPage,
             per_page: masterPerPage,
             search: masterKeyword,
+            status: masterStatus, // Added
+            sort_by: masterSortBy, // Added
+            sort_dir: masterSortDir, // Added
             kategori: 'KERJASAMA',
             _t: Date.now()
         });
@@ -56,6 +62,7 @@
                 renderPaginationMasterKerjasama(res);
                 renderMasterSummaryKerjasama(res.aggregates);
                 updateSelectionUIKerjasama();
+                updateSortIconsKerjasama();
 
                 if (data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-500">Belum ada kelompok pendapatan Kerjasama</td></tr>';
@@ -152,6 +159,29 @@
             next.onclick = () => loadMasterKerjasama(meta.current_page + 1);
         }
     }
+
+    function updateSortIconsKerjasama() {
+        document.querySelectorAll('#masterTable th.sortable i').forEach(icon => {
+            icon.className = 'ph ph-caret-up-down text-slate-400';
+        });
+        const activeHeader = document.querySelector(`#masterTable th.sortable[data-sort="${masterSortBy}"]`);
+        if (activeHeader) {
+            const icon = activeHeader.querySelector('i');
+            if (icon) {
+                icon.className = masterSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+            }
+        }
+    }
+
+    window.sortMasterKerjasama = function (column) {
+        if (masterSortBy === column) {
+            masterSortDir = (masterSortDir === 'asc' ? 'desc' : 'asc');
+        } else {
+            masterSortBy = column;
+            masterSortDir = 'desc';
+        }
+        loadMasterKerjasama(1);
+    };
 
     /* =========================
        MASTER ACTIONS
@@ -955,6 +985,14 @@
             searchMasterKerjasama.oninput = (e) => {
                 clearTimeout(timer);
                 timer = setTimeout(() => { masterKeyword = e.target.value.trim(); loadMasterKerjasama(1); }, 400);
+            };
+        }
+
+        const filterStatusMasterKerjasama = document.getElementById('filterStatusMasterKerjasama');
+        if (filterStatusMasterKerjasama) {
+            filterStatusMasterKerjasama.onchange = (e) => {
+                masterStatus = e.target.value;
+                loadMasterKerjasama(1);
             };
         }
 

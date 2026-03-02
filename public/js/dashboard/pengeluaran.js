@@ -9,6 +9,8 @@ let currentKategori = '';
 let isEditPengeluaran = false;
 let editPengeluaranId = null;
 let pengeluaranType = '';
+let pengeluaranSortBy = 'spending_date';
+let pengeluaranSortDir = 'desc';
 
 /* =========================
    ROUTING / APP.JS INTEGRATION
@@ -217,7 +219,9 @@ function loadPengeluaran(page = 1) {
         page: pengeluaranPage,
         limit: pengeluaranPerPage,
         search: pengeluaranKeyword,
-        spending_type: pengeluaranType
+        spending_type: pengeluaranType,
+        sort_by: pengeluaranSortBy,
+        sort_dir: pengeluaranSortDir
     });
 
     fetch(`/dashboard/expenditures?${params.toString()}`, {
@@ -310,6 +314,7 @@ function loadPengeluaran(page = 1) {
             });
 
             renderPaginationPengeluaran(res);
+            updateSortIconsPengeluaran();
         })
         .catch(err => {
             console.error(err);
@@ -637,3 +642,26 @@ window.closeDetailPengeluaran = function () {
     const modal = document.getElementById('pengeluaranDetailModal');
     modal?.classList.remove('show');
 };
+
+window.sortPengeluaran = function (col) {
+    if (pengeluaranSortBy === col) {
+        pengeluaranSortDir = pengeluaranSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        pengeluaranSortBy = col;
+        pengeluaranSortDir = 'asc';
+    }
+    loadPengeluaran(1);
+}
+
+function updateSortIconsPengeluaran() {
+    document.querySelectorAll('#tablePengeluaran th.sortable i').forEach(i => {
+        i.className = 'ph ph-caret-up-down text-slate-400';
+    });
+    const activeHeader = document.querySelector(`#tablePengeluaran th.sortable[data-sort="${pengeluaranSortBy}"]`);
+    if (activeHeader) {
+        const i = activeHeader.querySelector('i');
+        if (i) {
+            i.className = pengeluaranSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+        }
+    }
+}

@@ -64,7 +64,17 @@ class ExpenditureController extends Controller
         $guStats = (clone $query)->where('spending_type', 'GU')->selectRaw('SUM(gross_value) as total, COUNT(*) as count')->first();
         $lsStats = (clone $query)->where('spending_type', 'LS')->selectRaw('SUM(gross_value) as total, COUNT(*) as count')->first();
 
-        $data = $query->orderBy('spending_date', 'asc')->orderBy('id', 'asc')->paginate($limit);
+        // Dynamic Sorting
+        $sortBy = $request->get('sort_by', 'spending_date');
+        $sortDir = $request->get('sort_dir', 'desc');
+
+        $allowedSortColumns = ['spending_date', 'spending_type', 'description', 'gross_value', 'id'];
+        if (!in_array($sortBy, $allowedSortColumns)) {
+            $sortBy = 'spending_date';
+        }
+        $sortDir = strtolower($sortDir) === 'asc' ? 'asc' : 'desc';
+
+        $data = $query->orderBy($sortBy, $sortDir)->orderBy('id', 'desc')->paginate($limit);
 
         $response = $data->toArray();
         $response['aggregates'] = [

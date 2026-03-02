@@ -21,19 +21,55 @@
         </div>
 
         <div class="dashboard-box">
+            <style>
+                th.sortable i {
+                    margin-left: 4px;
+                    font-size: 14px;
+                    vertical-align: middle;
+                    transition: color 0.2s;
+                }
+
+                th.sortable:hover i {
+                    color: #64748b !important;
+                }
+            </style>
             <div class="table-container">
                 <table id="tableDisbursement">
                     <thead>
                         <tr>
                             <th width="40" class="text-center">No</th>
-                            <th width="80" class="text-center">Paket</th>
-                            <th width="70" class="text-center">Tipe</th>
-                            <th width="220" class="text-left">No. Dokumen</th>
-                            <th width="100" class="text-center">Siklus</th>
-                            <th width="100" class="text-center">Tanggal</th>
-                            <th>Kegiatan</th>
-                            <th class="text-right">Nilai (Rp)</th>
-                            <th width="120" class="text-center">Status</th>
+                            <th width="80" class="text-center sortable" data-sort="paket_number"
+                                onclick="sortDisbursement('paket_number')" style="cursor: pointer;">
+                                Paket <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th width="70" class="text-center sortable" data-sort="type"
+                                onclick="sortDisbursement('type')" style="cursor: pointer;">
+                                Tipe <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th width="220" class="text-left sortable" data-sort="sp2d_no"
+                                onclick="sortDisbursement('sp2d_no')" style="cursor: pointer;">
+                                No. Dokumen <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th width="100" class="text-center sortable" data-sort="siklus_up"
+                                onclick="sortDisbursement('siklus_up')" style="cursor: pointer;">
+                                Siklus <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th width="100" class="text-center sortable" data-sort="sp2d_date"
+                                onclick="sortDisbursement('sp2d_date')" style="cursor: pointer;">
+                                Tanggal <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="sortable" data-sort="uraian" onclick="sortDisbursement('uraian')"
+                                style="cursor: pointer;">
+                                Kegiatan <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="text-right sortable" data-sort="value" onclick="sortDisbursement('value')"
+                                style="cursor: pointer;">
+                                Nilai (Rp) <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th width="120" class="text-center sortable" data-sort="status"
+                                onclick="sortDisbursement('status')" style="cursor: pointer;">
+                                Status <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
                             <th width="200" class="text-center">Aksi</th>
                         </tr>
                     </thead>

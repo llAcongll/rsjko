@@ -77,11 +77,20 @@
       margin-bottom: 0px;
     }
 
-    .rekening-summary-container .dashboard-cards {
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      width: 100%;
-      max-width: 900px;
-      gap: 16px;
+    width: 100%;
+    max-width: 900px;
+    gap: 16px;
+    }
+
+    th.sortable i {
+      margin-left: 4px;
+      font-size: 14px;
+      vertical-align: middle;
+      transition: color 0.2s;
+    }
+
+    th.sortable:hover i {
+      color: #64748b !important;
     }
   </style>
 
@@ -128,14 +137,29 @@
       <table class="users-table rekening-table" id="rekeningTable">
         <thead>
           <tr>
-            <th class="text-center">No</th>
-            <th class="text-center">Tanggal</th>
-            <th class="text-center">Bank</th>
-            <th class="text-center">Keterangan</th>
-            <th class="text-center">C/D</th>
-            <th class="text-center">Jumlah</th>
-            <th class="text-center">Saldo</th>
-            <th class="text-center">Aksi</th>
+            <th class="text-center" style="width: 60px;">No</th>
+            <th class="text-center sortable" data-sort="tanggal" onclick="sortRekening('tanggal')"
+              style="width: 140px; cursor: pointer;">
+              Tanggal <i class="ph ph-caret-up-down text-slate-400"></i>
+            </th>
+            <th class="text-center sortable" data-sort="bank" onclick="sortRekening('bank')"
+              style="width: 180px; cursor: pointer;">
+              Bank <i class="ph ph-caret-up-down text-slate-400"></i>
+            </th>
+            <th class="text-center sortable" data-sort="keterangan" onclick="sortRekening('keterangan')"
+              style="cursor: pointer;">
+              Keterangan <i class="ph ph-caret-up-down text-slate-400"></i>
+            </th>
+            <th class="text-center sortable" data-sort="cd" onclick="sortRekening('cd')"
+              style="width: 80px; cursor: pointer;">
+              C/D <i class="ph ph-caret-up-down text-slate-400"></i>
+            </th>
+            <th class="text-center sortable" data-sort="jumlah" onclick="sortRekening('jumlah')"
+              style="width: 150px; cursor: pointer;">
+              Jumlah <i class="ph ph-caret-up-down text-slate-400"></i>
+            </th>
+            <th class="text-center" style="width: 150px;">Saldo</th>
+            <th class="text-center" style="width: 120px;">Aksi</th>
           </tr>
         </thead>
 

@@ -37,14 +37,29 @@ class RevenueMasterController extends Controller
 
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
+        $status = $request->get('status');
+        $sortBy = $request->get('sort_by', 'tanggal');
+        $sortDir = $request->get('sort_dir', 'desc');
+
+        $allowedSortColumns = ['tanggal', 'total_rs', 'total_pelayanan', 'total_all', 'is_posted', 'keterangan'];
+        if (!in_array($sortBy, $allowedSortColumns)) {
+            $sortBy = 'tanggal';
+        }
 
         $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
         $query = RevenueMaster::where('tahun', $tahunAnggaran)
             ->when($category, function ($q) use ($category) {
                 $q->where('kategori', $category);
             })
-            ->orderBy('tanggal', 'asc')
-            ->orderBy('id', 'asc');
+            ->when($status, function ($q) use ($status) {
+                if ($status === 'DRAFT') {
+                    $q->where('is_posted', false);
+                } elseif ($status === 'POSTED') {
+                    $q->where('is_posted', true);
+                }
+            })
+            ->orderBy($sortBy, $sortDir)
+            ->orderBy('id', 'desc');
 
         if ($search) {
             $query->where(function ($q) use ($search) {

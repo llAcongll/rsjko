@@ -3,6 +3,8 @@ let piutangPerPage = 10;
 let piutangKeyword = '';
 let isEditPiutang = false;
 let editPiutangId = null;
+let piutangSortBy = 'tanggal';
+let piutangSortDir = 'desc';
 
 // Global Cache for Perusahaan
 window._cachePerusahaan = window._cachePerusahaan || null;
@@ -70,7 +72,7 @@ async function loadPiutang() {
     tableBody.innerHTML = `<tr><td colspan="9" class="text-center"><i class="ph ph-spinner animate-spin"></i> Memuat data...</td></tr>`;
 
     try {
-        const res = await fetch(`/dashboard/piutang?page=${piutangPage}&per_page=${piutangPerPage}&search=${piutangKeyword}`, {
+        const res = await fetch(`/dashboard/piutang?page=${piutangPage}&per_page=${piutangPerPage}&search=${piutangKeyword}&sort_by=${piutangSortBy}&sort_dir=${piutangSortDir}`, {
             headers: { 'Accept': 'application/json' }
         });
 
@@ -80,6 +82,7 @@ async function loadPiutang() {
         renderPiutangTable(data.data, data.from);
         updatePaginationPiutang(data);
         updateSummaryPiutang(data.aggregates);
+        updateSortIconsPiutang();
 
     } catch (err) {
         tableBody.innerHTML = `<tr><td colspan="9" class="text-center text-red-500">Error: ${err.message}</td></tr>`;
@@ -156,8 +159,30 @@ function updateSummaryPiutang(agg) {
     const potEl = document.getElementById('summaryTotalPotongan');
     if (potEl) potEl.innerText = formatRupiah(agg.total_potongan || 0);
 
-    const admEl = document.getElementById('summaryTotalAdm');
     if (admEl) admEl.innerText = formatRupiah(agg.total_adm_bank || 0);
+}
+
+window.sortPiutang = function (key) {
+    if (piutangSortBy === key) {
+        piutangSortDir = (piutangSortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+        piutangSortBy = key;
+        piutangSortDir = 'asc';
+    }
+    loadPiutang();
+};
+
+function updateSortIconsPiutang() {
+    document.querySelectorAll('#piutangTable th.sortable i').forEach(i => {
+        i.className = 'ph ph-caret-up-down text-slate-400';
+    });
+    const activeHeader = document.querySelector(`#piutangTable th.sortable[data-sort="${piutangSortBy}"]`);
+    if (activeHeader) {
+        const i = activeHeader.querySelector('i');
+        if (i) {
+            i.className = piutangSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+        }
+    }
 }
 
 // ================= MODAL LOGIC =================

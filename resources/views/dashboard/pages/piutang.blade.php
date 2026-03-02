@@ -99,15 +99,42 @@
                     white-space: nowrap !important;
                 }
             </style>
+            <style>
+                th.sortable i {
+                    margin-left: 4px;
+                    font-size: 14px;
+                    vertical-align: middle;
+                    transition: color 0.2s;
+                }
+
+                th.sortable:hover i {
+                    color: #64748b !important;
+                }
+            </style>
             <table id="piutangTable">
                 <thead>
                     <tr>
                         <th class="text-center" style="width: 50px;">No</th>
-                        <th class="text-center" style="width: 110px;">Tanggal</th>
-                        <th class="text-center">Perusahaan / Debitur</th>
-                        <th class="text-center">Bulan Pelayanan</th>
-                        <th class="text-center">Jumlah Tagihan</th>
-                        <th class="text-center">Status</th>
+                        <th class="text-center sortable" style="width: 110px; cursor: pointer;" data-sort="tanggal"
+                            onclick="sortPiutang('tanggal')">
+                            Tanggal <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th class="text-center sortable" style="cursor: pointer;" data-sort="perusahaan_id"
+                            onclick="sortPiutang('perusahaan_id')">
+                            Perusahaan / Debitur <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th class="text-center sortable" style="cursor: pointer;" data-sort="bulan_pelayanan"
+                            onclick="sortPiutang('bulan_pelayanan')">
+                            Bulan Pelayanan <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th class="text-center sortable" style="cursor: pointer;" data-sort="jumlah_piutang"
+                            onclick="sortPiutang('jumlah_piutang')">
+                            Jumlah Tagihan <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th class="text-center sortable" style="cursor: pointer;" data-sort="status"
+                            onclick="sortPiutang('status')">
+                            Status <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
                         <th class="text-center" style="width: 100px;">Aksi</th>
                     </tr>
                 </thead>

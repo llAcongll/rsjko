@@ -27,36 +27,52 @@
         </div>
     </div>
 
-    {{-- TABLE BOX --}}
-    <div class="dashboard-box">
-        <div class="table-container">
-            <table id="mouTable" class="users-table">
-                <thead>
-                    <tr>
-                        <th data-sort="number" style="width: 60px;" class="text-center">No</th>
-                        <th data-sort="string" style="width: 140px;" class="text-center">Kode</th>
-                        <th data-sort="string" class="text-center">Nama Instansi</th>
-                        <th style="width: 120px;" class="text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
+    <style>
+        th.sortable i {
+            margin-left: 4px;
+            font-size: 14px;
+            vertical-align: middle;
+            transition: color 0.2s;
+        }
 
-        <div class="flex justify-between items-center mt-4">
-            <p id="mouInfo" class="text-slate-500" style="font-size: 13px;"></p>
+        th.sortable:hover i {
+            color: #64748b !important;
+        }
+    </style>
+    <div class="table-container">
+        <table id="mouTable" class="users-table">
+            <thead>
+                <tr>
+                    <th class="text-center sortable" data-sort="id" style="width: 60px; cursor: pointer;">
+                        No <i class="ph ph-caret-up-down text-slate-400"></i>
+                    </th>
+                    <th class="text-center sortable" data-sort="kode" style="width: 140px; cursor: pointer;">
+                        Kode <i class="ph ph-caret-up-down text-slate-400"></i>
+                    </th>
+                    <th class="text-center sortable" data-sort="nama" style="cursor: pointer;">
+                        Nama Instansi <i class="ph ph-caret-up-down text-slate-400"></i>
+                    </th>
+                    <th style="width: 120px;" class="text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-            <div class="flex items-center gap-2">
-                <button id="prevPageMou" class="btn-aksi">
-                    <i class="ph ph-caret-left"></i>
-                </button>
-                <span id="pageInfoMou" class="font-medium"
-                    style="font-size: 14px; min-width: 100px; text-align: center;"></span>
-                <button id="nextPageMou" class="btn-aksi">
-                    <i class="ph ph-caret-right"></i>
-                </button>
-            </div>
+    <div class="flex justify-between items-center mt-4">
+        <p id="mouInfo" class="text-slate-500" style="font-size: 13px;"></p>
+
+        <div class="flex items-center gap-2">
+            <button id="prevPageMou" class="btn-aksi">
+                <i class="ph ph-caret-left"></i>
+            </button>
+            <span id="pageInfoMou" class="font-medium"
+                style="font-size: 14px; min-width: 100px; text-align: center;"></span>
+            <button id="nextPageMou" class="btn-aksi">
+                <i class="ph ph-caret-right"></i>
+            </button>
         </div>
     </div>
+</div>
 
 </div>

@@ -20,12 +20,17 @@ class PiutangController extends Controller
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
         $status = $request->get('status'); // LUNAS | BELUM_LUNAS
+        $sortBy = $request->get('sort_by', 'tanggal');
+        $sortDir = $request->get('sort_dir', 'desc');
+
+        $allowedSortColumns = ['tanggal', 'bulan_pelayanan', 'jumlah_piutang', 'status', 'id'];
+        if (!in_array($sortBy, $allowedSortColumns)) {
+            $sortBy = 'tanggal';
+        }
 
         $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
         $query = Piutang::with('perusahaan')
-            ->where('tahun', $tahunAnggaran)
-            ->orderBy('tanggal', 'asc')
-            ->orderBy('id', 'asc');
+            ->where('tahun', $tahunAnggaran);
 
         if ($status) {
             $query->where('status', $status);
@@ -40,6 +45,8 @@ class PiutangController extends Controller
                     });
             });
         }
+
+        $query->orderBy($sortBy, $sortDir)->orderBy('id', $sortDir);
 
         if ($request->header('Accept') === 'application/json') {
             $totalQuery = clone $query;

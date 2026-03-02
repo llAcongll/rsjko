@@ -110,6 +110,7 @@ window.loadMouTable = function () {
 
             renderMouPage();
             updatePaginationInfoMou(filteredMou.length);
+            updateSortIconsMou();
 
             initSearchMou();
             initSortableMou();
@@ -165,12 +166,11 @@ function initSortableMou() {
     const table = document.getElementById('mouTable');
     if (!table) return;
 
-    const headers = table.querySelectorAll('th[data-sort]');
+    const headers = table.querySelectorAll('th.sortable');
 
-    headers.forEach((th, index) => {
+    headers.forEach((th) => {
         th.addEventListener('click', () => {
-            const map = ['no', 'kode', 'nama'];
-            const key = map[index];
+            const key = th.dataset.sort;
 
             if (mouSort.key === key) {
                 mouSort.direction =
@@ -180,17 +180,26 @@ function initSortableMou() {
                 mouSort.direction = 'asc';
             }
 
-            headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
-            th.classList.add(
-                mouSort.direction === 'asc' ? 'sort-asc' : 'sort-desc'
-            );
-
             applySortMou();
             currentPageMou = 1;
             renderMouPage();
             updatePaginationInfoMou(filteredMou.length);
+            updateSortIconsMou();
         });
     });
+}
+
+function updateSortIconsMou() {
+    document.querySelectorAll('#mouTable th.sortable i').forEach(i => {
+        i.className = 'ph ph-caret-up-down text-slate-400';
+    });
+    const activeHeader = document.querySelector(`#mouTable th.sortable[data-sort="${mouSort.key}"]`);
+    if (activeHeader) {
+        const i = activeHeader.querySelector('i');
+        if (i) {
+            i.className = mouSort.direction === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+        }
+    }
 }
 
 function applySortMou() {
@@ -199,12 +208,12 @@ function applySortMou() {
     filteredMou.sort((a, b) => {
         let A, B;
 
-        if (mouSort.key === 'no') {
-            A = a.id;
-            B = b.id;
+        if (mouSort.key === 'id') {
+            A = Number(a.id);
+            B = Number(b.id);
         } else {
-            A = a[mouSort.key].toLowerCase();
-            B = b[mouSort.key].toLowerCase();
+            A = String(a[mouSort.key]).toLowerCase();
+            B = String(b[mouSort.key]).toLowerCase();
         }
 
         if (A < B) return mouSort.direction === 'asc' ? -1 : 1;
@@ -228,9 +237,11 @@ function initSearchMou() {
             r.nama.toLowerCase().includes(keyword)
         );
 
+        applySortMou();
         currentPageMou = 1;
         renderMouPage();
         updatePaginationInfoMou(filteredMou.length);
+        updateSortIconsMou();
     });
 }
 

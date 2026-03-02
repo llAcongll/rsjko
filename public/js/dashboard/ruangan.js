@@ -112,6 +112,7 @@ window.loadRuanganTable = function () {
       // 🔥 RENDER LEWAT SATU PINTU
       renderRuanganPage();
       updatePaginationInfo(filteredRuangan.length);
+      updateSortIconsRuangan();
 
       // init fitur
       initSearchRuangan();
@@ -181,34 +182,40 @@ function initSortableRuangan() {
   const table = document.getElementById('ruanganTable');
   if (!table) return;
 
-  const headers = table.querySelectorAll('th[data-sort]');
+  const headers = table.querySelectorAll('th.sortable');
 
-  headers.forEach((th, index) => {
+  headers.forEach((th) => {
     th.addEventListener('click', () => {
-      const map = ['no', 'kode', 'nama'];
-      const key = map[index];
+      const key = th.dataset.sort;
 
       // toggle arah
       if (ruanganSort.key === key) {
-        ruanganSort.direction =
-          ruanganSort.direction === 'asc' ? 'desc' : 'asc';
+        ruanganSort.direction = (ruanganSort.direction === 'asc' ? 'desc' : 'asc');
       } else {
         ruanganSort.key = key;
-        ruanganSort.direction = 'asc';
+        ruanganSort.direction = (key === 'id' ? 'asc' : 'asc');
       }
-
-      // reset indikator
-      headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
-      th.classList.add(
-        ruanganSort.direction === 'asc' ? 'sort-asc' : 'sort-desc'
-      );
 
       applySortRuangan();
       currentPage = 1;
       renderRuanganPage();
       updatePaginationInfo(filteredRuangan.length);
+      updateSortIconsRuangan();
     });
   });
+}
+
+function updateSortIconsRuangan() {
+  document.querySelectorAll('#ruanganTable th.sortable i').forEach(i => {
+    i.className = 'ph ph-caret-up-down text-slate-400';
+  });
+  const activeHeader = document.querySelector(`#ruanganTable th.sortable[data-sort="${ruanganSort.key}"]`);
+  if (activeHeader) {
+    const i = activeHeader.querySelector('i');
+    if (i) {
+      i.className = ruanganSort.direction === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+    }
+  }
 }
 
 function applySortRuangan() {
@@ -217,12 +224,12 @@ function applySortRuangan() {
   filteredRuangan.sort((a, b) => {
     let A, B;
 
-    if (ruanganSort.key === 'no') {
-      A = a.id;
-      B = b.id;
+    if (ruanganSort.key === 'id') {
+      A = Number(a.id);
+      B = Number(b.id);
     } else {
-      A = a[ruanganSort.key].toLowerCase();
-      B = b[ruanganSort.key].toLowerCase();
+      A = String(a[ruanganSort.key]).toLowerCase();
+      B = String(b[ruanganSort.key]).toLowerCase();
     }
 
     if (A < B) return ruanganSort.direction === 'asc' ? -1 : 1;
@@ -246,9 +253,11 @@ function initSearchRuangan() {
       r.nama.toLowerCase().includes(keyword)
     );
 
+    applySortRuangan();
     currentPage = 1;
     renderRuanganPage();
     updatePaginationInfo(filteredRuangan.length);
+    updateSortIconsRuangan();
   });
 }
 

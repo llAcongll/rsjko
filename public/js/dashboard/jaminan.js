@@ -2,6 +2,9 @@
     let masterPage = 1;
     let masterPerPage = 10;
     let masterKeyword = '';
+    let masterStatus = ''; // Added
+    let masterSortBy = 'tanggal'; // Added
+    let masterSortDir = 'desc'; // Added
     let selectedMasterId = null;
     let currentMasterData = null;
 
@@ -37,6 +40,9 @@
             page: masterPage,
             per_page: masterPerPage,
             search: masterKeyword,
+            status: masterStatus, // Added
+            sort_by: masterSortBy, // Added
+            sort_dir: masterSortDir, // Added
             kategori: 'JAMINAN',
             _t: Date.now()
         });
@@ -56,6 +62,7 @@
                 renderPaginationMasterJaminan(res);
                 renderMasterSummaryJaminan(res.aggregates);
                 updateSelectionUIJaminan();
+                updateSortIconsJaminan();
 
                 if (data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-500">Belum ada kelompok pendapatan Jaminan</td></tr>';
@@ -152,6 +159,29 @@
             next.onclick = () => loadMasterJaminan(meta.current_page + 1);
         }
     }
+
+    function updateSortIconsJaminan() {
+        document.querySelectorAll('#masterTable th.sortable i').forEach(icon => {
+            icon.className = 'ph ph-caret-up-down text-slate-400';
+        });
+        const activeHeader = document.querySelector(`#masterTable th.sortable[data-sort="${masterSortBy}"]`);
+        if (activeHeader) {
+            const icon = activeHeader.querySelector('i');
+            if (icon) {
+                icon.className = masterSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+            }
+        }
+    }
+
+    window.sortMasterJaminan = function (column) {
+        if (masterSortBy === column) {
+            masterSortDir = (masterSortDir === 'asc' ? 'desc' : 'asc');
+        } else {
+            masterSortBy = column;
+            masterSortDir = 'desc';
+        }
+        loadMasterJaminan(1);
+    };
 
     /* =========================
        MASTER ACTIONS
@@ -1005,6 +1035,14 @@
                     masterKeyword = e.target.value.trim();
                     loadMasterJaminan(1);
                 }, 400);
+            };
+        }
+
+        const filterStatusMasterJaminan = document.getElementById('filterStatusMasterJaminan');
+        if (filterStatusMasterJaminan) {
+            filterStatusMasterJaminan.onchange = (e) => {
+                masterStatus = e.target.value;
+                loadMasterJaminan(1);
             };
         }
 

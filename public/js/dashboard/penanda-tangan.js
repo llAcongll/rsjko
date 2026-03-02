@@ -3,6 +3,7 @@ let penandaTanganData = [];
 let filteredPt = [];
 let currentPtPage = 1;
 const ptPerPage = 10;
+let ptSort = { key: 'id', direction: 'asc' };
 
 /* =========================
    OPEN MODAL (ADD / EDIT)
@@ -109,6 +110,7 @@ window.loadPenandaTanganTable = function () {
 
             renderPtPage();
             updatePtPaginationInfo(filteredPt.length);
+            updateSortIconsPt();
             initSearchPt();
         })
         .catch(() => {
@@ -165,15 +167,61 @@ function initSearchPt() {
             (d.nip && d.nip.toLowerCase().includes(keyword))
         );
 
+        applySortPt();
         currentPtPage = 1;
         renderPtPage();
         updatePtPaginationInfo(filteredPt.length);
+        updateSortIconsPt();
     });
 }
 
-/* =========================
-   RENDER TABLE
-========================= */
+function applySortPt() {
+    if (!ptSort.key) return;
+
+    filteredPt.sort((a, b) => {
+        let A = a[ptSort.key] || '';
+        let B = b[ptSort.key] || '';
+
+        if (ptSort.key === 'id') {
+            A = Number(A);
+            B = Number(B);
+        } else {
+            A = A.toString().toLowerCase();
+            B = B.toString().toLowerCase();
+        }
+
+        if (A < B) return ptSort.direction === 'asc' ? -1 : 1;
+        if (A > B) return ptSort.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+}
+
+window.sortPt = function (key) {
+    if (ptSort.key === key) {
+        ptSort.direction = (ptSort.direction === 'asc' ? 'desc' : 'asc');
+    } else {
+        ptSort.key = key;
+        ptSort.direction = 'asc';
+    }
+    applySortPt();
+    currentPtPage = 1;
+    renderPtPage();
+    updatePtPaginationInfo(filteredPt.length);
+    updateSortIconsPt();
+};
+
+function updateSortIconsPt() {
+    document.querySelectorAll('#penandaTanganTable th.sortable i').forEach(i => {
+        i.className = 'ph ph-caret-up-down text-slate-400';
+    });
+    const activeHeader = document.querySelector(`#penandaTanganTable th.sortable[data-sort="${ptSort.key}"]`);
+    if (activeHeader) {
+        const i = activeHeader.querySelector('i');
+        if (i) {
+            i.className = ptSort.direction === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+        }
+    }
+}
 function renderPtPage() {
     const tbody = document.querySelector('#penandaTanganTable tbody');
     if (!tbody) return;

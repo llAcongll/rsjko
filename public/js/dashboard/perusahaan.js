@@ -110,6 +110,7 @@ window.loadPerusahaanTable = function () {
 
             renderPerusahaanPage();
             updatePaginationInfoPerusahaan(filteredPerusahaan.length);
+            updateSortIconsPerusahaan();
 
             initSearchPerusahaan();
             initSortablePerusahaan();
@@ -165,12 +166,11 @@ function initSortablePerusahaan() {
     const table = document.getElementById('perusahaanTable');
     if (!table) return;
 
-    const headers = table.querySelectorAll('th[data-sort]');
+    const headers = table.querySelectorAll('th.sortable');
 
-    headers.forEach((th, index) => {
+    headers.forEach((th) => {
         th.addEventListener('click', () => {
-            const map = ['no', 'kode', 'nama'];
-            const key = map[index];
+            const key = th.dataset.sort;
 
             if (perusahaanSort.key === key) {
                 perusahaanSort.direction =
@@ -180,17 +180,26 @@ function initSortablePerusahaan() {
                 perusahaanSort.direction = 'asc';
             }
 
-            headers.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
-            th.classList.add(
-                perusahaanSort.direction === 'asc' ? 'sort-asc' : 'sort-desc'
-            );
-
             applySortPerusahaan();
             currentPagePerusahaan = 1;
             renderPerusahaanPage();
             updatePaginationInfoPerusahaan(filteredPerusahaan.length);
+            updateSortIconsPerusahaan();
         });
     });
+}
+
+function updateSortIconsPerusahaan() {
+    document.querySelectorAll('#perusahaanTable th.sortable i').forEach(i => {
+        i.className = 'ph ph-caret-up-down text-slate-400';
+    });
+    const activeHeader = document.querySelector(`#perusahaanTable th.sortable[data-sort="${perusahaanSort.key}"]`);
+    if (activeHeader) {
+        const i = activeHeader.querySelector('i');
+        if (i) {
+            i.className = perusahaanSort.direction === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+        }
+    }
 }
 
 function applySortPerusahaan() {
@@ -199,12 +208,12 @@ function applySortPerusahaan() {
     filteredPerusahaan.sort((a, b) => {
         let A, B;
 
-        if (perusahaanSort.key === 'no') {
-            A = a.id;
-            B = b.id;
+        if (perusahaanSort.key === 'id') {
+            A = Number(a.id);
+            B = Number(b.id);
         } else {
-            A = a[perusahaanSort.key].toLowerCase();
-            B = b[perusahaanSort.key].toLowerCase();
+            A = String(a[perusahaanSort.key]).toLowerCase();
+            B = String(b[perusahaanSort.key]).toLowerCase();
         }
 
         if (A < B) return perusahaanSort.direction === 'asc' ? -1 : 1;
@@ -228,9 +237,11 @@ function initSearchPerusahaan() {
             r.nama.toLowerCase().includes(keyword)
         );
 
+        applySortPerusahaan();
         currentPagePerusahaan = 1;
         renderPerusahaanPage();
         updatePaginationInfoPerusahaan(filteredPerusahaan.length);
+        updateSortIconsPerusahaan();
     });
 }
 

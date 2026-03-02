@@ -3,6 +3,8 @@ let rekeningRawData = [];
 let rekeningCurrentPage = 1;
 const REKENING_PER_PAGE = 10;
 let rekeningFilteredData = [];
+let rekeningSortBy = 'tanggal';
+let rekeningSortDir = 'asc';
 
 // Helper untuk mendapatkan base URL dashboard secara dinamis
 const getDashboardUrl = (path) => {
@@ -188,16 +190,9 @@ window.loadRekening = function () {
       // Pastikan data adalah array
       if (!Array.isArray(data)) data = [];
 
-      // Urutkan dari tanggal paling awal (asc by tanggal)
-      data.sort((a, b) => {
-        const da = new Date(a.tanggal).getTime();
-        const db = new Date(b.tanggal).getTime();
-        if (da !== db) return da - db;
-        // Penentu urutan jika tanggal sama: ID (berdasarkan input)
-        return a.id - b.id;
-      });
       rekeningRawData = data;
-      rekeningFilteredData = data;
+      rekeningFilteredData = [...data];
+      applySortRekening();
       rekeningCurrentPage = 1;
       renderRekeningTable(rekeningFilteredData);
     })
@@ -308,6 +303,53 @@ function renderRekeningTable(data) {
   });
 
   renderRekeningPagination(data.length);
+  updateSortIconsRekening();
+}
+
+function applySortRekening() {
+  rekeningFilteredData.sort((a, b) => {
+    let valA = a[rekeningSortBy];
+    let valB = b[rekeningSortBy];
+
+    if (rekeningSortBy === 'tanggal') {
+      valA = new Date(valA).getTime();
+      valB = new Date(valB).getTime();
+    } else if (rekeningSortBy === 'jumlah') {
+      valA = Number(valA);
+      valB = Number(valB);
+    } else {
+      valA = String(valA).toLowerCase();
+      valB = String(valB).toLowerCase();
+    }
+
+    if (valA < valB) return rekeningSortDir === 'asc' ? -1 : 1;
+    if (valA > valB) return rekeningSortDir === 'asc' ? 1 : -1;
+    return a.id - b.id; // Tie-breaker
+  });
+}
+
+window.sortRekening = function (col) {
+  if (rekeningSortBy === col) {
+    rekeningSortDir = rekeningSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    rekeningSortBy = col;
+    rekeningSortDir = (col === 'tanggal' ? 'asc' : 'desc');
+  }
+  applySortRekening();
+  renderRekeningTable(rekeningFilteredData);
+};
+
+function updateSortIconsRekening() {
+  document.querySelectorAll('#rekeningTable th.sortable i').forEach(i => {
+    i.className = 'ph ph-caret-up-down text-slate-400';
+  });
+  const activeHeader = document.querySelector(`#rekeningTable th.sortable[data-sort="${rekeningSortBy}"]`);
+  if (activeHeader) {
+    const i = activeHeader.querySelector('i');
+    if (i) {
+      i.className = rekeningSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+    }
+  }
 }
 
 /* =========================
@@ -325,6 +367,7 @@ window.applyRekeningFilter = function () {
   if (end) filtered = filtered.filter(r => r.tanggal <= end);
 
   rekeningFilteredData = filtered;
+  applySortRekening();
   rekeningCurrentPage = 1; // reset ke hal 1 tiap filter
   renderRekeningTable(rekeningFilteredData);
 };

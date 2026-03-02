@@ -389,6 +389,8 @@ function executeHapusSaldo(id) {
 
 let disbursementStatusFilter = '';
 let disbursementPageMode = '';
+let disbursementSortBy = 'sp2d_date';
+let disbursementSortDir = 'desc';
 
 window.initDisbursement = function () {
     disbursementPageMode = window._disbursementPageMode || 'SPP';
@@ -440,7 +442,7 @@ window.loadDisbursements = function () {
     const tbody = document.getElementById('tableDisbursementBody');
     if (!tbody) return;
 
-    let url = '/dashboard/disbursements?limit=50&is_saldo=0';
+    let url = `/dashboard/disbursements?limit=50&is_saldo=0&sort_by=${disbursementSortBy}&sort_dir=${disbursementSortDir}`;
     if (disbursementStatusFilter) url += `&status=${disbursementStatusFilter}`;
 
     // Apply Type Filter for PENCAIRAN mode (UP/GU/LS)
@@ -570,8 +572,32 @@ window.loadDisbursements = function () {
                     </tr>
                 `);
             });
+            updateSortIconsDisbursement();
         });
 };
+
+window.sortDisbursement = function (key) {
+    if (disbursementSortBy === key) {
+        disbursementSortDir = (disbursementSortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+        disbursementSortBy = key;
+        disbursementSortDir = 'asc';
+    }
+    loadDisbursements();
+};
+
+function updateSortIconsDisbursement() {
+    document.querySelectorAll('#tableDisbursement th.sortable i').forEach(i => {
+        i.className = 'ph ph-caret-up-down text-slate-400';
+    });
+    const activeHeader = document.querySelector(`#tableDisbursement th.sortable[data-sort="${disbursementSortBy}"]`);
+    if (activeHeader) {
+        const i = activeHeader.querySelector('i');
+        if (i) {
+            i.className = disbursementSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+        }
+    }
+}
 
 function getStatusBadge(status) {
     const steps = ['SPP', 'SPM', 'CAIR'];
@@ -988,7 +1014,13 @@ function updateSaldoKasInfo() {
     if (id) url += `&exclude_id=${id}`;
 
     fetch(url)
-        .then(res => res.json())
+        .then(async res => {
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message || 'Gagal memuat saldo kas');
+            }
+            return res.json();
+        })
         .then(data => {
             if (window.disbursementPageMode === 'PENCAIRAN') {
                 saldoPanel.style.display = 'block';
@@ -1017,7 +1049,7 @@ function updateSaldoKasInfo() {
         })
         .catch(err => {
             console.error('Gagal memuat saldo kas:', err);
-            toast('Gagal memuat informasi saldo kas', 'error');
+            toast('Saldo Kas: ' + err.message, 'error');
             window.currentSisaKas = 0;
             if (saldoPanel) saldoPanel.style.display = 'none';
         });

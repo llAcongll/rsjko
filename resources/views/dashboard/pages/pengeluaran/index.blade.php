@@ -244,6 +244,17 @@
 
         <div class="table-container">
             <style>
+                th.sortable i {
+                    margin-left: 4px;
+                    font-size: 14px;
+                    vertical-align: middle;
+                    transition: color 0.2s;
+                }
+
+                th.sortable:hover i {
+                    color: #64748b !important;
+                }
+
                 #tablePengeluaran th,
                 #tablePengeluaran td {
                     font-size: 11px !important;
@@ -317,10 +328,22 @@
                 <thead>
                     <tr>
                         <th width="40" class="text-center">No</th>
-                        <th width="100" class="text-center">Tanggal</th>
-                        <th width="280" class="text-center">Administrasi</th>
-                        <th class="class=" text-center"">Uraian</th>
-                        <th width="240" class="text-right">Rincian Nominal (Bruto/Pajak/Netto)</th>
+                        <th width="100" class="text-center sortable" data-sort="spending_date"
+                            onclick="sortPengeluaran('spending_date')" style="cursor: pointer;">
+                            Tanggal <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th width="280" class="text-center sortable" data-sort="spending_type"
+                            onclick="sortPengeluaran('spending_type')" style="cursor: pointer;">
+                            Administrasi <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th class="text-center sortable" data-sort="description"
+                            onclick="sortPengeluaran('description')" style="cursor: pointer;">
+                            Uraian <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th width="240" class="text-right sortable" data-sort="gross_value"
+                            onclick="sortPengeluaran('gross_value')" style="cursor: pointer;">
+                            Rincian Nominal (Bruto/Pajak/Netto) <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
                         <th width="80" class="text-center">Aksi</th>
                     </tr>
                 </thead>

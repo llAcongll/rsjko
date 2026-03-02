@@ -52,6 +52,17 @@
                 max-width: 850px;
                 gap: 16px;
             }
+
+            th.sortable i {
+                margin-left: 4px;
+                font-size: 14px;
+                vertical-align: middle;
+                transition: color 0.2s;
+            }
+
+            th.sortable:hover i {
+                color: #64748b !important;
+            }
         </style>
         <div class="pendapatan-summary-container">
             <div class="dashboard-cards">
@@ -82,7 +93,7 @@
         {{-- MAIN CONTENT (MASTER) --}}
         <div class="dashboard-box">
             <div class="box-header">
-                <div class="flex items-center gap-4" style="width: 100%;">
+                <div class="flex items-center gap-3" style="width: 100%;">
                     <div class="search-wrapper flex-1">
                         <div class="input-group" style="position: relative;">
                             <i class="ph ph-magnifying-glass"
@@ -91,6 +102,14 @@
                                 placeholder="Cari tanggal, no bukti, atau keterangan..."
                                 style="width: 100%; height: 48px; padding-left: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
                         </div>
+                    </div>
+                    <div class="filter-wrapper">
+                        <select id="filterStatusMasterJaminan"
+                            style="height: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px; padding: 0 16px; background: #fff; color: #475569; font-weight: 600; cursor: pointer; outline: none; transition: all 0.2s;">
+                            <option value="">Semua Status</option>
+                            <option value="DRAFT">📑 Draft</option>
+                            <option value="POSTED">✅ Diposting</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -117,12 +136,30 @@
                                 <input type="checkbox" id="checkAllMasterJaminan"
                                     onclick="toggleAllMasterJaminan(this)" />
                             </th>
-                            <th class="text-center" style="width: 140px;">Tanggal PDPT/RK</th>
-                            <th class="text-center">Keterangan / No. Bukti</th>
-                            <th class="text-right" style="width: 180px;">Jasa RS</th>
-                            <th class="text-right" style="width: 180px;">Jasa Pelayanan</th>
-                            <th class="text-right" style="width: 180px;">Total (Rp)</th>
-                            <th class="text-center" style="width: 120px;">Status</th>
+                            <th class="text-center sortable" data-sort="tanggal" onclick="sortMasterJaminan('tanggal')"
+                                style="width: 140px; cursor: pointer;">
+                                Tanggal PDPT/RK <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="text-center sortable" data-sort="keterangan"
+                                onclick="sortMasterJaminan('keterangan')" style="cursor: pointer;">
+                                Keterangan / No. Bukti <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="text-right sortable" data-sort="total_rs" onclick="sortMasterJaminan('total_rs')"
+                                style="width: 180px; cursor: pointer;">
+                                Jasa RS <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="text-right sortable" data-sort="total_pelayanan"
+                                onclick="sortMasterJaminan('total_pelayanan')" style="width: 180px; cursor: pointer;">
+                                Jasa Pelayanan <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="text-right sortable" data-sort="total_all"
+                                onclick="sortMasterJaminan('total_all')" style="width: 180px; cursor: pointer;">
+                                Total (Rp) <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="text-center sortable" data-sort="is_posted"
+                                onclick="sortMasterJaminan('is_posted')" style="width: 120px; cursor: pointer;">
+                                Status <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
                             <th class="text-center" style="width: 180px;">Aksi</th>
                         </tr>
                     </thead>
