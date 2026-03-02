@@ -210,7 +210,7 @@ class LaporanController extends Controller
 
     public function getBku(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_BKU') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('PENGELUARAN_BKU_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW'), 403);
         $month = $request->get('month');
         $year = $request->get('year', session('tahun_anggaran', date('Y')));
 

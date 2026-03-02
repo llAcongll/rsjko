@@ -346,19 +346,42 @@
 
           <p
             style="font-weight: 700; font-size: 12px; margin-top: 20px; margin-bottom: 8px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">
-            5. ANGGARAN & LAPORAN</p>
+            5. ANGGARAN & PENYUSUNAN</p>
           <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_VIEW"> Lihat Kode Rek. &
               Anggaran</label></div>
           <div class="permission-item"><label><input type="checkbox" value="KODE_REKENING_CREATE"> Kelola Kode Rek. &
               Anggaran</label></div>
-          <div class="permission-item"><label><input type="checkbox" value="LAPORAN_VIEW"> Lihat Dashboard &
-              Laporan</label></div>
-          <div class="permission-item"><label><input type="checkbox" value="LAPORAN_EXPORT"> Ekspor Laporan
-              (Excel/PDF)</label></div>
+
+          <p
+            style="font-weight: 700; font-size: 12px; margin-top: 15px; margin-bottom: 8px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">
+            6. MODUL LAPORAN KEUANGAN</p>
+          <div
+            style="background: #f0fdf4; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #dcfce7;">
+            <div class="permission-item"><label><input type="checkbox" value="LAPORAN_PENDAPATAN"> Laporan
+                Pendapatan</label></div>
+            <div class="permission-item"><label><input type="checkbox" value="LAPORAN_REKON"> Laporan Rekon</label>
+            </div>
+            <div class="permission-item"><label><input type="checkbox" value="LAPORAN_PIUTANG"> Laporan Piutang</label>
+            </div>
+            <div class="permission-item"><label><input type="checkbox" value="LAPORAN_MOU"> Laporan MOU</label></div>
+            <div class="permission-item"><label><input type="checkbox" value="LAPORAN_PENGELUARAN"> Laporan
+                Pengeluaran</label></div>
+            <div class="permission-item"><label><input type="checkbox" value="LAPORAN_ANGGARAN"> Laporan Realisasi
+                Anggaran</label></div>
+            <div style="border-top: 1px solid #bbf7d0; margin: 8px 0; padding-top: 8px;"></div>
+            <div class="permission-item"><label style="font-weight: 600; color: #15803d;"><input type="checkbox"
+                  value="LAPORAN_VIEW"> LIHAT SEMUA LAPORAN</label></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+              <div class="permission-item"><label style="color: #0369a1;"><input type="checkbox" value="LAPORAN_EXPORT">
+                  Ekspor Excel</label></div>
+              <div class="permission-item"><label style="color: #b91c1c;"><input type="checkbox"
+                    value="LAPORAN_EXPORT_PDF"> Ekspor PDF</label></div>
+            </div>
+          </div>
 
           <p
             style="font-weight: 700; font-size: 12px; margin-top: 20px; margin-bottom: 8px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">
-            6. PENGESAHAN & ADMIN</p>
+            7. PENGESAHAN & ADMIN</p>
           <div style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9;">
             <div class="permission-item"><label><input type="checkbox" value="PENGESAHAN_VIEW"> Lihat Pengesahan</label>
             </div>

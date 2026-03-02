@@ -88,6 +88,40 @@ window.openRekening = (btn) => {
   }, 300);
 };
 
+window.openKodeRekening = async (type, btn) => {
+  const parentBtn = document.getElementById('btnPerencanaan');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  await loadContent(`master/kode-rekening/${type}`);
+
+  document
+    .querySelectorAll('#submenuPerencanaan button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  if (typeof window.initKodeRekening === 'function') {
+    window.initKodeRekening(type);
+  }
+};
+
+window.openAnggaranRekening = async (type, btn) => {
+  const parentBtn = document.getElementById('btnPerencanaan');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  await loadContent(`master/anggaran-rekening/${type}`);
+
+  document
+    .querySelectorAll('#submenuPerencanaan button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  if (typeof window.initAnggaranRekening === 'function') {
+    window.initAnggaranRekening(type);
+  }
+};
+
 window.openPiutang = async (btn) => {
   const parentBtn = document.getElementById('btnPendapatan');
   setActiveMenu(parentBtn);
@@ -282,6 +316,20 @@ window.openActivityLogs = async (btn) => {
 ========================= */
 window.togglePendapatan = function (btn) {
   const sub = document.getElementById("submenuPendapatan");
+  const caret = btn.querySelector('.dropdown-icon');
+
+  const isOpen = sub && sub.style.display === "block";
+  hideSubmenus();
+
+  if (sub && !isOpen) {
+    sub.style.display = "block";
+    if (caret) caret.style.transform = 'rotate(180deg)';
+    setActiveMenu(btn);
+  }
+};
+
+window.togglePerencanaan = function (btn) {
+  const sub = document.getElementById("submenuPerencanaan");
   const caret = btn.querySelector('.dropdown-icon');
 
   const isOpen = sub && sub.style.display === "block";
