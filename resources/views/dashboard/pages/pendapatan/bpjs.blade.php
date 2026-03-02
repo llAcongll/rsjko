@@ -354,11 +354,26 @@
                     <thead>
                         <tr>
                             <th class="text-center" style="width: 50px;">No</th>
-                            <th class="text-center" style="width: 110px;">Tanggal</th>
-                            <th id="thNoSep" class="text-center" style="width: 150px;">No SEP</th>
-                            <th class="text-center">Nama Pasien</th>
-                            <th class="text-center">Ruangan</th>
-                            <th class="text-right" style="width: 200px;">RS / Pelayanan / Total</th>
+                            <th class="text-center sortable" data-sort="tanggal" onclick="sortBpjs('tanggal')"
+                                style="width: 110px; cursor: pointer;">
+                                Tanggal <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th id="thNoSep" class="text-center sortable" data-sort="no_sep"
+                                onclick="sortBpjs('no_sep')" style="width: 150px; cursor: pointer;">
+                                No SEP <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="text-center sortable" data-sort="nama_pasien" onclick="sortBpjs('nama_pasien')"
+                                style="cursor: pointer;">
+                                Nama Pasien <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="text-center sortable" data-sort="ruangan" onclick="sortBpjs('ruangan')"
+                                style="cursor: pointer;">
+                                Ruangan <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="text-right sortable" data-sort="total" onclick="sortBpjs('total')"
+                                style="width: 200px; cursor: pointer;">
+                                RS / Pelayanan / Total <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
                             <th class="text-center" style="width: 120px;">Aksi</th>
                         </tr>
                     </thead>

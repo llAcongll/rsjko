@@ -58,16 +58,10 @@ class DisbursementService
                     $qPending->where('siklus_up', $pSiklus);
                 }
 
-                $totalCair = (float) (clone $qCair)->where(function ($q) {
-                    $q->whereNull('spp_no')->orWhereNull('kode_rekening_id');
-                })->sum('value');
-                $sppKeluar = (float) (clone $qCair)->where(function ($q) {
-                    $q->whereNotNull('kode_rekening_id')->orWhereNotNull('expenditure_id');
-                })->sum('value');
+                $totalCair = (float) (clone $qCair)->isCashRefill()->sum('value');
+                $sppKeluar = (float) (clone $qCair)->isActivityBased()->sum('value');
                 $totalBelanja = (float) $qBelanja->sum('gross_value') + $sppKeluar;
-                $sppPending = (float) $qPending->where(function ($q) {
-                    $q->whereNotNull('kode_rekening_id')->orWhereNotNull('expenditure_id');
-                })->sum('value');
+                $sppPending = (float) $qPending->isActivityBased()->sum('value');
 
                 $sisaKas = $totalCair - $totalBelanja - $sppPending;
 
@@ -309,7 +303,8 @@ class DisbursementService
         $totalVal = $disbursement->value;
         if ($refNo) {
             $totalVal = FundDisbursement::where(function ($q) use ($refNo) {
-                $q->where('sp2d_no', $refNo)->orWhere('spm_no', $refNo)->orWhere('spp_no', $refNo);
+                $table = (new FundDisbursement)->getTable();
+                $q->where("{$table}.sp2d_no", $refNo)->orWhere("{$table}.spm_no", $refNo)->orWhere("{$table}.spp_no", $refNo);
             })->sum('value');
         }
 
@@ -441,6 +436,7 @@ class DisbursementService
             // Delete all linked expenditures and their ledger entries
             $linkedExpenditures = \App\Models\Expenditure::where('fund_disbursement_id', $disbursement->id)->get();
             foreach ($linkedExpenditures as $exp) {
+                /** @var \App\Models\Expenditure $exp */
                 $this->ledgerService->removeEntry('expenditures', $exp->id);
                 $this->bankService->removeEntry('expenditures', $exp->id);
                 ActivityLog::log('DELETE', 'EXPENDITURE', "Otomatis dihapus karena penghapusan pencairan: {$exp->description}", $exp->id, $exp->toArray());

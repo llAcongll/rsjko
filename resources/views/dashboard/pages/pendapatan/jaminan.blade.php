@@ -341,11 +341,26 @@
                     <thead>
                         <tr>
                             <th class="text-center" style="width: 50px;">No</th>
-                            <th class="text-center" style="width: 110px;">Tanggal</th>
-                            <th class="text-center">Nama Pasien</th>
-                            <th class="text-center">Perusahaan</th>
-                            <th class="text-center">Ruangan</th>
-                            <th class="text-right" style="width: 200px;">RS / Pelayanan / Total</th>
+                            <th class="text-center sortable" data-sort="tanggal" onclick="sortJaminan('tanggal')"
+                                style="width: 110px; cursor: pointer;">
+                                Tanggal <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="text-center sortable" data-sort="nama_pasien"
+                                onclick="sortJaminan('nama_pasien')" style="cursor: pointer;">
+                                Nama Pasien <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="text-center sortable" data-sort="perusahaan" onclick="sortJaminan('perusahaan')"
+                                style="cursor: pointer;">
+                                Perusahaan <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="text-center sortable" data-sort="ruangan" onclick="sortJaminan('ruangan')"
+                                style="cursor: pointer;">
+                                Ruangan <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="text-right sortable" data-sort="total" onclick="sortJaminan('total')"
+                                style="width: 200px; cursor: pointer;">
+                                RS / Pelayanan / Total <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
                             <th class="text-center" style="width: 120px;">Aksi</th>
                         </tr>
                     </thead>

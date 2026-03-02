@@ -2,6 +2,8 @@ let penyesuaianPage = 1;
 let penyesuaianPerPage = 10;
 let penyesuaianKeyword = '';
 let penyesuaianBatchKategori = '';
+let penyesuaianSortBy = 'tanggal';
+let penyesuaianSortDir = 'desc';
 let isEditPenyesuaian = false;
 let editPenyesuaianId = null;
 
@@ -47,10 +49,18 @@ async function loadPenyesuaian() {
     const tbody = document.getElementById('penyesuaianBody');
     if (!tbody) return;
 
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center"><i class="ph ph-spinner animate-spin"></i> Memuat data...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center"><i class="ph ph-spinner animate-spin"></i> Memuat data...</td></tr>`;
 
     try {
-        const res = await fetch(`/dashboard/penyesuaian?page=${penyesuaianPage}&per_page=${penyesuaianPerPage}&search=${penyesuaianKeyword}&kategori=${penyesuaianBatchKategori}`, {
+        const query = new URLSearchParams({
+            page: penyesuaianPage,
+            per_page: penyesuaianPerPage,
+            search: penyesuaianKeyword,
+            kategori: penyesuaianBatchKategori,
+            sort_by: penyesuaianSortBy,
+            sort_dir: penyesuaianSortDir
+        });
+        const res = await fetch(`/dashboard/penyesuaian?${query.toString()}`, {
             headers: { 'Accept': 'application/json' }
         });
         const data = await res.json();
@@ -58,8 +68,33 @@ async function loadPenyesuaian() {
         renderPenyesuaianTable(data.data, data.from);
         updatePaginationPenyesuaian(data);
         updateSummaryPenyesuaian(data.aggregates);
+        updateSortIconsPenyesuaian();
     } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-red-500">Error: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-red-500">Error: ${err.message}</td></tr>`;
+    }
+}
+
+window.sortPenyesuaian = function (col) {
+    if (penyesuaianSortBy === col) {
+        penyesuaianSortDir = penyesuaianSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        penyesuaianSortBy = col;
+        penyesuaianSortDir = (col === 'tanggal' ? 'desc' : 'asc');
+    }
+    penyesuaianPage = 1;
+    loadPenyesuaian();
+};
+
+function updateSortIconsPenyesuaian() {
+    document.querySelectorAll('#penyesuaianTable th.sortable i').forEach(i => {
+        i.className = 'ph ph-caret-up-down text-slate-400';
+    });
+    const activeHeader = document.querySelector(`#penyesuaianTable th.sortable[data-sort="${penyesuaianSortBy}"]`);
+    if (activeHeader) {
+        const i = activeHeader.querySelector('i');
+        if (i) {
+            i.className = penyesuaianSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+        }
     }
 }
 

@@ -32,13 +32,23 @@ class PendapatanUmumController extends Controller
         $revenue_master_id = $request->get('revenue_master_id');
         $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
 
+        $sortBy = $request->get('sort_by', 'tanggal');
+        $sortDir = $request->get('sort_dir', 'asc');
+
         $query = PendapatanUmum::with('ruangan')
             ->where('tahun', $tahunAnggaran)
             ->when($revenue_master_id, function ($q) use ($revenue_master_id) {
                 $q->where('revenue_master_id', $revenue_master_id);
-            })
-            ->orderBy('tanggal', 'asc')
-            ->orderBy('id', 'asc');
+            });
+
+        if ($sortBy === 'ruangan') {
+            $query->join('ruangans', 'pendapatan_umum.ruangan_id', '=', 'ruangans.id')
+                ->select('pendapatan_umum.*')
+                ->orderBy('ruangans.nama', $sortDir);
+        } else {
+            $query->orderBy($sortBy, $sortDir);
+        }
+        $query->orderBy('id', 'asc');
 
         if ($search) {
             $query->where(function ($q) use ($search) {

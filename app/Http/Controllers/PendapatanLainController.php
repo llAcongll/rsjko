@@ -28,10 +28,24 @@ class PendapatanLainController extends Controller
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
         $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
+        $sortBy = $request->get('sort_by', 'tanggal');
+        $sortDir = $request->get('sort_dir', 'asc');
+
         $query = PendapatanLain::with('ruangan', 'mou')
-            ->where('tahun', $tahunAnggaran)
-            ->orderBy('tanggal', 'asc')
-            ->orderBy('id', 'asc');
+            ->where('tahun', $tahunAnggaran);
+
+        if ($sortBy === 'ruangan') {
+            $query->join('ruangans', 'pendapatan_lain.ruangan_id', '=', 'ruangans.id')
+                ->select('pendapatan_lain.*')
+                ->orderBy('ruangans.nama', $sortDir);
+        } elseif ($sortBy === 'mou') {
+            $query->leftJoin('mous', 'pendapatan_lain.mou_id', '=', 'mous.id')
+                ->select('pendapatan_lain.*')
+                ->orderBy('mous.nama', $sortDir);
+        } else {
+            $query->orderBy($sortBy, $sortDir);
+        }
+        $query->orderBy('id', 'asc');
 
         if ($request->has('revenue_master_id')) {
             $query->where('revenue_master_id', $request->revenue_master_id);

@@ -10,7 +10,32 @@
 
     let bpjsPage = 1;
     let bpjsPerPage = 10;
+    let bpjsSortBy = 'tanggal';
+    let bpjsSortDir = 'asc';
     let bpjsKeyword = '';
+
+    window.sortBpjs = function (col) {
+        if (bpjsSortBy === col) {
+            bpjsSortDir = (bpjsSortDir === 'asc' ? 'desc' : 'asc');
+        } else {
+            bpjsSortBy = col;
+            bpjsSortDir = 'asc';
+        }
+        loadPendapatanBpjs(1);
+    };
+
+    function updateSortIconsDetailBpjs() {
+        document.querySelectorAll('#pendapatanBpjsTable th.sortable i').forEach(icon => {
+            icon.className = 'ph ph-caret-up-down text-slate-400';
+        });
+        const activeHeader = document.querySelector(`#pendapatanBpjsTable th.sortable[data-sort="${bpjsSortBy}"]`);
+        if (activeHeader) {
+            const icon = activeHeader.querySelector('i');
+            if (icon) {
+                icon.className = bpjsSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+            }
+        }
+    }
     let currentBpjsTab = 'REGULAR'; // REGULAR, EVAKUASI, OBAT
     let isEditBpjs = false;
     let editBpjsId = null;
@@ -586,6 +611,8 @@
             page: bpjsPage,
             per_page: bpjsPerPage,
             search: bpjsKeyword,
+            sort_by: bpjsSortBy,
+            sort_dir: bpjsSortDir,
             revenue_master_id: selectedMasterId,
             jenis_bpjs: currentBpjsTab,
             _t: Date.now()
@@ -603,6 +630,7 @@
                 const data = res.data || [];
                 renderPaginationBpjs(res);
                 renderDetailSummaryBpjs(res.aggregates);
+                updateSortIconsDetailBpjs();
 
                 if (data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-500">Belum ada rincian data klaim</td></tr>';

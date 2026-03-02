@@ -10,7 +10,32 @@
 
     let jaminanPage = 1;
     let jaminanPerPage = 10;
+    let jaminanSortBy = 'tanggal';
+    let jaminanSortDir = 'asc';
     let jaminanKeyword = '';
+
+    window.sortJaminan = function (col) {
+        if (jaminanSortBy === col) {
+            jaminanSortDir = (jaminanSortDir === 'asc' ? 'desc' : 'asc');
+        } else {
+            jaminanSortBy = col;
+            jaminanSortDir = 'asc';
+        }
+        loadPendapatanJaminan(1);
+    };
+
+    function updateSortIconsDetailJaminan() {
+        document.querySelectorAll('#pendapatanJaminanTable th.sortable i').forEach(icon => {
+            icon.className = 'ph ph-caret-up-down text-slate-400';
+        });
+        const activeHeader = document.querySelector(`#pendapatanJaminanTable th.sortable[data-sort="${jaminanSortBy}"]`);
+        if (activeHeader) {
+            const icon = activeHeader.querySelector('i');
+            if (icon) {
+                icon.className = jaminanSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+            }
+        }
+    }
     let isEditJaminan = false;
     let editJaminanId = null;
     let activeMasterPosted = false;
@@ -575,6 +600,8 @@
             page: jaminanPage,
             per_page: jaminanPerPage,
             search: jaminanKeyword,
+            sort_by: jaminanSortBy,
+            sort_dir: jaminanSortDir,
             revenue_master_id: selectedMasterId,
             _t: Date.now()
         });
@@ -591,6 +618,7 @@
                 const data = res.data || [];
                 renderPaginationJaminan(res);
                 renderDetailSummaryJaminan(res.aggregates);
+                updateSortIconsDetailJaminan();
 
                 if (data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-500">Belum ada rincian data jaminan</td></tr>';

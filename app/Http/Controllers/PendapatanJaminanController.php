@@ -28,10 +28,24 @@ class PendapatanJaminanController extends Controller
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
         $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
+        $sortBy = $request->get('sort_by', 'tanggal');
+        $sortDir = $request->get('sort_dir', 'asc');
+
         $query = PendapatanJaminan::with('ruangan', 'perusahaan')
-            ->where('tahun', $tahunAnggaran)
-            ->orderBy('tanggal', 'asc')
-            ->orderBy('id', 'asc');
+            ->where('tahun', $tahunAnggaran);
+
+        if ($sortBy === 'ruangan') {
+            $query->join('ruangans', 'pendapatan_jaminan.ruangan_id', '=', 'ruangans.id')
+                ->select('pendapatan_jaminan.*')
+                ->orderBy('ruangans.nama', $sortDir);
+        } elseif ($sortBy === 'perusahaan') {
+            $query->leftJoin('perusahaans', 'pendapatan_jaminan.perusahaan_id', '=', 'perusahaans.id')
+                ->select('pendapatan_jaminan.*')
+                ->orderBy('perusahaans.nama', $sortDir);
+        } else {
+            $query->orderBy($sortBy, $sortDir);
+        }
+        $query->orderBy('id', 'asc');
 
         if ($request->has('revenue_master_id')) {
             $query->where('revenue_master_id', $request->revenue_master_id);

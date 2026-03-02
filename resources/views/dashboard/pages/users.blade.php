@@ -32,10 +32,16 @@
 
         <thead>
           <tr>
-            <th class="text-center">No</th>
-            <th class="text-center">Username</th>
-            <th class="text-center">Role</th>
-            <th class="text-center">Aksi</th>
+            <th class="text-center" style="width: 60px;">No</th>
+            <th class="text-center sortable" data-sort="username" onclick="sortUsers('username')"
+              style="cursor: pointer;">
+              Username <i class="ph ph-caret-up-down text-slate-400"></i>
+            </th>
+            <th class="text-center sortable" data-sort="role" onclick="sortUsers('role')"
+              style="width: 140px; cursor: pointer;">
+              Role <i class="ph ph-caret-up-down text-slate-400"></i>
+            </th>
+            <th class="text-center" style="width: 160px;">Aksi</th>
           </tr>
         </thead>
 

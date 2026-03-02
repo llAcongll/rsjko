@@ -21,7 +21,7 @@ class DashboardController extends BaseController
 
             'users' => (Auth::user()->isAdmin() || Auth::user()->hasPermission('USER_VIEW'))
             ? view('dashboard.pages.users', [
-                'users' => User::orderBy('username')->get()
+                'users' => User::orderBy(request('sort_by', 'username'), request('sort_dir', 'asc'))->get()
             ])
             : abort(403),
 

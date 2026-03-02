@@ -33,10 +33,20 @@ class PendapatanBpjsController extends Controller
         $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
         $jenisBpjs = $request->get('jenis_bpjs');
 
+        $sortBy = $request->get('sort_by', 'tanggal');
+        $sortDir = $request->get('sort_dir', 'asc');
+
         $query = PendapatanBpjs::with('ruangan', 'perusahaan')
-            ->where('tahun', $tahunAnggaran)
-            ->orderBy('tanggal', 'asc')
-            ->orderBy('id', 'asc');
+            ->where('tahun', $tahunAnggaran);
+
+        if ($sortBy === 'ruangan') {
+            $query->join('ruangans', 'pendapatan_bpjs.ruangan_id', '=', 'ruangans.id')
+                ->select('pendapatan_bpjs.*')
+                ->orderBy('ruangans.nama', $sortDir);
+        } else {
+            $query->orderBy($sortBy, $sortDir);
+        }
+        $query->orderBy('id', 'asc');
 
         if ($request->has('revenue_master_id')) {
             $query->where('revenue_master_id', $request->revenue_master_id);

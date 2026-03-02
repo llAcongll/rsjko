@@ -3,6 +3,40 @@
 ================================================== */
 
 let editingUserId = null;
+let usersSortBy = 'username';
+let usersSortDir = 'asc';
+
+window.sortUsers = function (col) {
+  if (usersSortBy === col) {
+    usersSortDir = usersSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    usersSortBy = col;
+    usersSortDir = 'asc';
+  }
+
+  const mainContent = document.getElementById("mainContent");
+  mainContent.innerHTML = "<div style='display:flex;justify-content:center;padding:40px;'><p>⏳ Mengurutkan...</p></div>";
+
+  fetch(`/dashboard/content/users?sort_by=${usersSortBy}&sort_dir=${usersSortDir}`)
+    .then(r => r.text())
+    .then(html => {
+      mainContent.innerHTML = html;
+      updateSortIconsUsers();
+    });
+};
+
+function updateSortIconsUsers() {
+  document.querySelectorAll('th.sortable i').forEach(i => {
+    i.className = 'ph ph-caret-up-down text-slate-400';
+  });
+  const activeHeader = document.querySelector(`th.sortable[data-sort="${usersSortBy}"]`);
+  if (activeHeader) {
+    const i = activeHeader.querySelector('i');
+    if (i) {
+      i.className = usersSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+    }
+  }
+}
 
 /* ==================================================
    SAFE JSON PARSER (ANTI <!DOCTYPE ERROR)

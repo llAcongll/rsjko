@@ -10,7 +10,32 @@
 
     let lainPage = 1;
     let lainPerPage = 10;
+    let lainSortBy = 'tanggal';
+    let lainSortDir = 'asc';
     let lainKeyword = '';
+
+    window.sortLain = function (col) {
+        if (lainSortBy === col) {
+            lainSortDir = (lainSortDir === 'asc' ? 'desc' : 'asc');
+        } else {
+            lainSortBy = col;
+            lainSortDir = 'asc';
+        }
+        loadPendapatanLain(1);
+    };
+
+    function updateSortIconsDetailLain() {
+        document.querySelectorAll('#pendapatanLainTable th.sortable i').forEach(icon => {
+            icon.className = 'ph ph-caret-up-down text-slate-400';
+        });
+        const activeHeader = document.querySelector(`#pendapatanLainTable th.sortable[data-sort="${lainSortBy}"]`);
+        if (activeHeader) {
+            const icon = activeHeader.querySelector('i');
+            if (icon) {
+                icon.className = lainSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+            }
+        }
+    }
     let isEditLain = false;
     let editLainId = null;
     let activeMasterPosted = false;
@@ -555,6 +580,8 @@
             page: lainPage,
             per_page: lainPerPage,
             search: lainKeyword,
+            sort_by: lainSortBy,
+            sort_dir: lainSortDir,
             revenue_master_id: selectedMasterId,
             _t: Date.now()
         });
@@ -571,6 +598,7 @@
                 const data = res.data || [];
                 renderPaginationLain(res);
                 renderDetailSummaryLain(res.aggregates);
+                updateSortIconsDetailLain();
 
                 if (data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-500">Belum ada rincian data lain-lain</td></tr>';

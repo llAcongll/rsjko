@@ -297,25 +297,25 @@
         <div class="submenu-child" id="submenuLaporan">
           {{-- 1. Pendapatan --}}
           <div class="submenu-header">Pendapatan</div>
-          @if(auth()->user()->hasPermission('LAPORAN_PENDAPATAN') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+          @if(auth()->user()->hasPermission('LAPORAN_PENDAPATAN_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin())
             <button onclick="openLaporan('PENDAPATAN', this)">
               <i class="ph ph-money"></i>
               <span>Laporan Pendapatan</span>
             </button>
           @endif
-          @if(auth()->user()->hasPermission('LAPORAN_REKON') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+          @if(auth()->user()->hasPermission('LAPORAN_REKON_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin())
             <button onclick="openLaporan('REKON', this)">
               <i class="ph ph-arrows-left-right"></i>
               <span>Laporan Rekonsiliasi</span>
             </button>
           @endif
-          @if(auth()->user()->hasPermission('LAPORAN_PIUTANG') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+          @if(auth()->user()->hasPermission('LAPORAN_PIUTANG_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin())
             <button onclick="openLaporan('PIUTANG', this)">
               <i class="ph ph-invoice"></i>
               <span>Laporan Piutang</span>
             </button>
           @endif
-          @if(auth()->user()->hasPermission('LAPORAN_MOU') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+          @if(auth()->user()->hasPermission('LAPORAN_MOU_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin())
             <button onclick="openLaporan('MOU', this)">
               <i class="ph ph-file-text"></i>
               <span>Laporan MOU</span>
@@ -324,13 +324,13 @@
 
           {{-- 2. Belanja --}}
           <div class="submenu-header">Belanja</div>
-          @if(auth()->user()->hasPermission('LAPORAN_PENGELUARAN') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+          @if(auth()->user()->hasPermission('LAPORAN_PENGELUARAN_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin())
             <button onclick="openLaporan('PENGELUARAN', this)">
               <i class="ph ph-hand-coins"></i>
               <span>Laporan Pengeluaran</span>
             </button>
           @endif
-          @if(auth()->user()->hasPermission('LAPORAN_ANGGARAN') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+          @if(auth()->user()->hasPermission('LAPORAN_ANGGARAN_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin())
             <button onclick="openLaporan('DPA', this)">
               <i class="ph ph-article"></i>
               <span>Laporan DPA</span>
@@ -340,41 +340,63 @@
               <span>Realisasi Anggaran</span>
             </button>
           @endif
-          <button onclick="toast('Laporan RKA dalam pengembangan', 'info')">
-            <i class="ph ph-file-pdf"></i>
-            <span>Laporan RKA</span>
-          </button>
-          <button onclick="toast('Laporan RBA dalam pengembangan', 'info')">
-            <i class="ph ph-file-text"></i>
-            <span>Rencana Bisnis & Anggaran (RBA)</span>
-          </button>
+          @if(auth()->user()->hasPermission('LAPORAN_BKU_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin())
+            <button onclick="openLaporan('BKU', this)">
+              <i class="ph ph-book-open"></i>
+              <span>Buku Kas Umum</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('LAPORAN_RKA') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+            <button onclick="toast('Laporan RKA dalam pengembangan', 'info')">
+              <i class="ph ph-file-pdf"></i>
+              <span>Laporan RKA</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('LAPORAN_RBA') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+            <button onclick="toast('Laporan RBA dalam pengembangan', 'info')">
+              <i class="ph ph-file-text"></i>
+              <span>Rencana Bisnis & Anggaran (RBA)</span>
+            </button>
+          @endif
 
           {{-- 3. Laporan Keuangan (SAP Akrual) --}}
           <div class="submenu-header">Laporan Keuangan (SAP Akrual)</div>
-          <button onclick="toast('Laporan Operasional (LO) dalam pengembangan', 'info')">
-            <i class="ph ph-book"></i>
-            <span>Laporan Operasional (LO)</span>
-          </button>
-          <button onclick="toast('Laporan Perubahan Ekuitas (LPE) dalam pengembangan', 'info')">
-            <i class="ph ph-graph"></i>
-            <span>Laporan Perubahan Ekuitas (LPE)</span>
-          </button>
-          <button onclick="toast('Neraca dalam pengembangan', 'info')">
-            <i class="ph ph-columns"></i>
-            <span>Neraca</span>
-          </button>
-          <button onclick="toast('Laporan Arus Kas (LAK) dalam pengembangan', 'info')">
-            <i class="ph ph-currency-circle-dollar"></i>
-            <span>Laporan Arus Kas (LAK)</span>
-          </button>
-          <button onclick="toast('Laporan Perubahan SAL (LPSAL) dalam pengembangan', 'info')">
-            <i class="ph ph-receipt"></i>
-            <span>Laporan Perubahan SAL (LPSAL)</span>
-          </button>
-          <button onclick="toast('Catatan Atas Laporan Keuangan (CALK) dalam pengembangan', 'info')">
-            <i class="ph ph-notebook"></i>
-            <span>Catatan Atas Laporan Keuangan (CALK)</span>
-          </button>
+          @if(auth()->user()->hasPermission('LAPORAN_LO') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+            <button onclick="toast('Laporan Operasional (LO) dalam pengembangan', 'info')">
+              <i class="ph ph-book"></i>
+              <span>Laporan Operasional (LO)</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('LAPORAN_LPE') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+            <button onclick="toast('Laporan Perubahan Ekuitas (LPE) dalam pengembangan', 'info')">
+              <i class="ph ph-graph"></i>
+              <span>Laporan Perubahan Ekuitas (LPE)</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('LAPORAN_NERACA') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+            <button onclick="toast('Neraca dalam pengembangan', 'info')">
+              <i class="ph ph-columns"></i>
+              <span>Neraca</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('LAPORAN_LAK') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+            <button onclick="toast('Laporan Arus Kas (LAK) dalam pengembangan', 'info')">
+              <i class="ph ph-currency-circle-dollar"></i>
+              <span>Laporan Arus Kas (LAK)</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('LAPORAN_LPSAL') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+            <button onclick="toast('Laporan Perubahan SAL (LPSAL) dalam pengembangan', 'info')">
+              <i class="ph ph-receipt"></i>
+              <span>Laporan Perubahan SAL (LPSAL)</span>
+            </button>
+          @endif
+          @if(auth()->user()->hasPermission('LAPORAN_CALK') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+            <button onclick="toast('Catatan Atas Laporan Keuangan (CALK) dalam pengembangan', 'info')">
+              <i class="ph ph-notebook"></i>
+              <span>Catatan Atas Laporan Keuangan (CALK)</span>
+            </button>
+          @endif
         </div>
       @endif
 

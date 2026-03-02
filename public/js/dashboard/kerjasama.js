@@ -10,7 +10,32 @@
 
     let kerjasamaPage = 1;
     let kerjasamaPerPage = 10;
+    let kerjasamaSortBy = 'tanggal';
+    let kerjasamaSortDir = 'asc';
     let kerjasamaKeyword = '';
+
+    window.sortKerjasama = function (col) {
+        if (kerjasamaSortBy === col) {
+            kerjasamaSortDir = (kerjasamaSortDir === 'asc' ? 'desc' : 'asc');
+        } else {
+            kerjasamaSortBy = col;
+            kerjasamaSortDir = 'asc';
+        }
+        loadPendapatanKerjasama(1);
+    };
+
+    function updateSortIconsDetailKerjasama() {
+        document.querySelectorAll('#pendapatanKerjasamaTable th.sortable i').forEach(icon => {
+            icon.className = 'ph ph-caret-up-down text-slate-400';
+        });
+        const activeHeader = document.querySelector(`#pendapatanKerjasamaTable th.sortable[data-sort="${kerjasamaSortBy}"]`);
+        if (activeHeader) {
+            const icon = activeHeader.querySelector('i');
+            if (icon) {
+                icon.className = kerjasamaSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+            }
+        }
+    }
     let isEditKerjasama = false;
     let editKerjasamaId = null;
     let activeMasterPosted = false;
@@ -558,6 +583,8 @@
             page: kerjasamaPage,
             per_page: kerjasamaPerPage,
             search: kerjasamaKeyword,
+            sort_by: kerjasamaSortBy,
+            sort_dir: kerjasamaSortDir,
             revenue_master_id: selectedMasterId,
             _t: Date.now()
         });
@@ -574,6 +601,7 @@
                 const data = res.data || [];
                 renderPaginationKerjasama(res);
                 renderDetailSummaryKerjasama(res.aggregates);
+                updateSortIconsDetailKerjasama();
 
                 if (data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-500">Belum ada rincian data kerjasama</td></tr>';

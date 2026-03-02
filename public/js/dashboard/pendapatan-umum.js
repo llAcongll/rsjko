@@ -6,9 +6,9 @@
   let masterPage = 1;
   let masterPerPage = 10;
   let masterKeyword = '';
-  let masterStatus = ''; // Added
-  let masterSortBy = 'tanggal'; // Added
-  let masterSortDir = 'desc'; // Added
+  let masterStatus = '';
+  let masterSortBy = 'tanggal';
+  let masterSortDir = 'desc';
   let isEditMaster = false;
   let editMasterId = null;
   let selectionAcrossMode = null; // 'DRAFT', 'POSTED', or null
@@ -18,7 +18,32 @@
   // Detail State
   let detailPage = 1;
   let detailPerPage = 10;
+  let detailSortBy = 'tanggal';
+  let detailSortDir = 'asc';
   let detailKeyword = '';
+
+  window.sortUmum = function (col) {
+    if (detailSortBy === col) {
+      detailSortDir = (detailSortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      detailSortBy = col;
+      detailSortDir = 'asc';
+    }
+    loadPendapatanUmum(1);
+  };
+
+  function updateSortIconsDetailUmum() {
+    document.querySelectorAll('#pendapatanUmumTable th.sortable i').forEach(icon => {
+      icon.className = 'ph ph-caret-up-down text-slate-400';
+    });
+    const activeHeader = document.querySelector(`#pendapatanUmumTable th.sortable[data-sort="${detailSortBy}"]`);
+    if (activeHeader) {
+      const icon = activeHeader.querySelector('i');
+      if (icon) {
+        icon.className = detailSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+      }
+    }
+  }
   let isEditDetail = false;
   let editDetailId = null;
   let activeMasterId = null;
@@ -44,8 +69,8 @@
       per_page: masterPerPage,
       search: masterKeyword,
       status: masterStatus, // Added
-      sort_by: masterSortBy, // Added
-      sort_dir: masterSortDir, // Added
+      sort_by: masterSortBy,
+      sort_dir: masterSortDir,
       kategori: 'UMUM',
       _t: Date.now()
     });
@@ -522,6 +547,8 @@
       page: detailPage,
       per_page: detailPerPage,
       search: detailKeyword,
+      sort_by: detailSortBy,
+      sort_dir: detailSortDir,
       revenue_master_id: activeMasterId,
       _t: Date.now()
     });
@@ -536,6 +563,7 @@
         const data = res.data || [];
         renderPaginationUmum(res);
         renderSummaryDetailUmum(res.aggregates);
+        updateSortIconsDetailUmum();
 
         if (data.length === 0) {
           tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-500" style="padding: 20px;">Belum ada rincian pasien.</td></tr>';
@@ -794,16 +822,44 @@
     if (el) el.innerText = formatRupiah(total);
   }
 
-  function cekSiapSimpan() {
+  window.cekSiapSimpan = function () {
     const form = document.getElementById('formPendapatanUmum');
     if (!form) return;
-    const data = new FormData(form);
-    let valid = data.get('tanggal') && data.get('nama_pasien') && data.get('ruangan_id') && data.get('metode_pembayaran');
-    const metode = data.get('metode_pembayaran');
-    if (metode === 'NON_TUNAI' && (!data.get('bank') || !data.get('metode_detail'))) valid = false;
+
+    const tanggal = form.querySelector('[name="tanggal"]')?.value;
+    const nama = form.querySelector('[name="nama_pasien"]')?.value;
+    const ruangan = form.querySelector('[name="ruangan_id"]')?.value;
+    const metode = form.querySelector('[name="metode_pembayaran"]')?.value;
+    const bank = form.querySelector('[name="bank"]')?.value;
+    const detail = form.querySelector('[name="metode_detail"]')?.value;
+
+    // Check if total nominal > 0
+    let totalNominal = 0;
+    form.querySelectorAll('.nominal-value').forEach(input => {
+      totalNominal += parseFloat(input.value || 0);
+    });
+
+    let valid = !!(tanggal && nama && ruangan && metode && totalNominal > 0);
+
+    if (metode === 'NON_TUNAI') {
+      if (!bank || !detail) {
+        valid = false;
+      }
+    }
+
     const btn = document.getElementById('btnSimpanPendapatan');
-    if (btn) btn.disabled = !valid;
-  }
+    if (btn) {
+      btn.disabled = !valid;
+      // Also apply a visual style for clarity
+      if (valid) {
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+      } else {
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'not-allowed';
+      }
+    }
+  };
 
   function setupBankLogic() {
     const metode = document.getElementById('metodePembayaran');

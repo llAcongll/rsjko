@@ -110,12 +110,30 @@
                 <thead>
                     <tr>
                         <th class="text-center" style="width: 50px;">No</th>
-                        <th class="text-center" style="width: 110px;">Tanggal</th>
-                        <th class="text-center">Keterangan</th>
-                        <th class="text-center" style="width: 80px;">Tahun</th>
-                        <th class="text-center">Pelunasan</th>
-                        <th class="text-center">Potongan</th>
-                        <th class="text-center">Adm Bank</th>
+                        <th class="text-center sortable" data-sort="tanggal" onclick="sortPenyesuaian('tanggal')"
+                            style="width: 110px; cursor: pointer;">
+                            Tanggal <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th class="text-center sortable" data-sort="keterangan" onclick="sortPenyesuaian('keterangan')"
+                            style="cursor: pointer;">
+                            Keterangan <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th class="text-center sortable" data-sort="tahun_piutang"
+                            onclick="sortPenyesuaian('tahun_piutang')" style="width: 80px; cursor: pointer;">
+                            Tahun <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th class="text-center sortable" data-sort="pelunasan" onclick="sortPenyesuaian('pelunasan')"
+                            style="cursor: pointer;">
+                            Pelunasan <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th class="text-center sortable" data-sort="potongan" onclick="sortPenyesuaian('potongan')"
+                            style="cursor: pointer;">
+                            Potongan <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th class="text-center sortable" data-sort="administrasi_bank"
+                            onclick="sortPenyesuaian('administrasi_bank')" style="cursor: pointer;">
+                            Adm Bank <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
                         <th class="text-center" style="width: 100px;">Aksi</th>
                     </tr>
                 </thead>

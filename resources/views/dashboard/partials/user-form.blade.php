@@ -357,17 +357,39 @@
             6. MODUL LAPORAN KEUANGAN</p>
           <div
             style="background: #f0fdf4; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #dcfce7;">
-            <div class="permission-item"><label><input type="checkbox" value="LAPORAN_PENDAPATAN"> Laporan
-                Pendapatan</label></div>
-            <div class="permission-item"><label><input type="checkbox" value="LAPORAN_REKON"> Laporan Rekon</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+              <div class="permission-item"><label><input type="checkbox" value="LAPORAN_PENDAPATAN"> Pendapatan</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="LAPORAN_REKON"> Rekonsiliasi</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="LAPORAN_PIUTANG"> Piutang</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="LAPORAN_MOU"> MOU</label></div>
+              <div class="permission-item"><label><input type="checkbox" value="LAPORAN_PENGELUARAN"> Belanja</label>
+              </div>
+              <div class="permission-item"><label><input type="checkbox" value="LAPORAN_ANGGARAN"> Realisasi
+                  Anggaran</label></div>
+              <div class="permission-item"><label><input type="checkbox" value="LAPORAN_RKA"> Laporan RKA</label></div>
+              <div class="permission-item"><label><input type="checkbox" value="LAPORAN_RBA"> Laporan RBA</label></div>
             </div>
-            <div class="permission-item"><label><input type="checkbox" value="LAPORAN_PIUTANG"> Laporan Piutang</label>
+
+            <div style="border-top: 1px dashed #bbf7d0; margin: 8px 0; padding-top: 8px;">
+              <p style="font-size: 10px; font-weight: 700; color: #15803d; margin-bottom: 4px;">LAPORAN KEUANGAN (SAP
+                AKRUAL)</p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                <div class="permission-item"><label><input type="checkbox" value="LAPORAN_LO"> Laporan LO</label></div>
+                <div class="permission-item"><label><input type="checkbox" value="LAPORAN_LPE"> Laporan LPE</label>
+                </div>
+                <div class="permission-item"><label><input type="checkbox" value="LAPORAN_NERACA"> Neraca</label></div>
+                <div class="permission-item"><label><input type="checkbox" value="LAPORAN_LAK"> Laporan LAK</label>
+                </div>
+                <div class="permission-item"><label><input type="checkbox" value="LAPORAN_LPSAL"> Laporan LPSAL</label>
+                </div>
+                <div class="permission-item"><label><input type="checkbox" value="LAPORAN_CALK"> Laporan CALK</label>
+                </div>
+              </div>
             </div>
-            <div class="permission-item"><label><input type="checkbox" value="LAPORAN_MOU"> Laporan MOU</label></div>
-            <div class="permission-item"><label><input type="checkbox" value="LAPORAN_PENGELUARAN"> Laporan
-                Pengeluaran</label></div>
-            <div class="permission-item"><label><input type="checkbox" value="LAPORAN_ANGGARAN"> Laporan Realisasi
-                Anggaran</label></div>
+
             <div style="border-top: 1px solid #bbf7d0; margin: 8px 0; padding-top: 8px;"></div>
             <div class="permission-item"><label style="font-weight: 600; color: #15803d;"><input type="checkbox"
                   value="LAPORAN_VIEW"> LIHAT SEMUA LAPORAN</label></div>

@@ -87,12 +87,11 @@ class DisbursementController extends Controller
         if ($request->has('is_saldo')) {
             $isSaldo = filter_var($request->get('is_saldo'), FILTER_VALIDATE_BOOLEAN);
             if ($isSaldo) {
-                $query->where('status', 'CAIR')->where(function ($q) {
-                    $q->whereNull('spp_no')->orWhereNull('kode_rekening_id');
-                });
+                $query->isCashRefill();
             } else {
                 $query->where(function ($q) {
-                    $q->whereNotNull('spp_no')->orWhere('status', '!=', 'CAIR');
+                    $table = (new FundDisbursement)->getTable();
+                    $q->whereNotNull("{$table}.spp_no")->orWhere("{$table}.status", '!=', 'CAIR');
                 });
             }
         }
@@ -210,23 +209,15 @@ class DisbursementController extends Controller
                 $qPending->where('siklus_up', $siklus);
             }
 
-            // Total dana yang sudah CAIR untuk tipe ini (Dana Awal / Masuk)
             // Includes legacy (null spp_no) or workflow refills (null kode_rekening_id)
-            $totalCair = (float) (clone $qCair)->where(function ($q) {
-                $q->whereNull('spp_no')->orWhereNull('kode_rekening_id');
-            })->sum('value');
+            $totalCair = (float) (clone $qCair)->isCashRefill()->sum('value');
 
-            // Total belanja yang menggunakan metode ini (Expenditure Lapor BKU + SPP Keluar)
             // SPP Keluar is disbursement WITH an activity (kode_rekening_id or expenditure_id)
-            $sppKeluar = (float) (clone $qCair)->where(function ($q) {
-                $q->whereNotNull('kode_rekening_id')->orWhereNotNull('expenditure_id');
-            })->sum('value');
+            $sppKeluar = (float) (clone $qCair)->isActivityBased()->sum('value');
             $totalBelanja = (float) $qBelanja->sum('gross_value') + $sppKeluar;
 
             // SPP/SPM yang masih dalam proses (belum cair) - Hanya yang bersifat pengeluaran (ada rekening/uraian kegiatan)
-            $sppPending = (float) $qPending->where(function ($q) {
-                $q->whereNotNull('kode_rekening_id')->orWhereNotNull('expenditure_id');
-            })->sum('value');
+            $sppPending = (float) $qPending->isActivityBased()->sum('value');
 
             $sisaKas = $totalCair - $totalBelanja - $sppPending;
 
@@ -260,16 +251,10 @@ class DisbursementController extends Controller
             $result = [];
 
             // UP — satu kartu, tanpa siklus
-            $upCair = (float) FundDisbursement::where('tahun', $year)->where('type', 'UP')->where('status', 'CAIR')->where(function ($q) {
-                $q->whereNull('spp_no')->orWhereNull('kode_rekening_id');
-            })->sum('value');
-            $upSppCair = (float) FundDisbursement::where('tahun', $year)->where('type', 'UP')->whereIn('status', ['SPP', 'SPM', 'CAIR'])->where(function ($q) {
-                $q->whereNotNull('kode_rekening_id')->orWhereNotNull('expenditure_id');
-            })->sum('value');
+            $upCair = (float) FundDisbursement::where('tahun', (int) $year)->where('type', 'UP')->isCashRefill()->sum('value');
+            $upSppCair = (float) FundDisbursement::where('tahun', (int) $year)->where('type', 'UP')->whereIn('status', ['SPP', 'SPM', 'CAIR'])->isActivityBased()->sum('value');
             $upBelanja = (float) \App\Models\Expenditure::whereYear('spending_date', $year)->where('spending_type', 'UP')->sum('gross_value') + $upSppCair;
-            $upPending = (float) FundDisbursement::where('tahun', $year)->where('type', 'UP')->whereIn('status', ['SPP', 'SPM'])->where(function ($q) {
-                $q->whereNotNull('kode_rekening_id')->orWhereNotNull('expenditure_id');
-            })->sum('value');
+            $upPending = (float) FundDisbursement::where('tahun', (int) $year)->where('type', 'UP')->whereIn('status', ['SPP', 'SPM'])->isActivityBased()->sum('value');
             $result[] = [
                 'label' => 'UP',
                 'type' => 'UP',
@@ -303,16 +288,10 @@ class DisbursementController extends Controller
             } else {
                 foreach ($guSiklus as $siklus) {
                     // Including SPP, SPM, CAIR as "Liquid" in the treasurer's perspective for these cards
-                    $cair = (float) FundDisbursement::where('tahun', $year)->where('type', 'GU')->where('siklus_up', $siklus)->where('status', 'CAIR')->where(function ($q) {
-                        $q->whereNull('spp_no')->orWhereNull('kode_rekening_id');
-                    })->sum('value');
-                    $sppCair = (float) FundDisbursement::where('tahun', $year)->where('type', 'GU')->where('siklus_up', $siklus)->whereIn('status', ['SPP', 'SPM', 'CAIR'])->where(function ($q) {
-                        $q->whereNotNull('kode_rekening_id')->orWhereNotNull('expenditure_id');
-                    })->sum('value');
+                    $cair = (float) FundDisbursement::where('tahun', (int) $year)->where('type', 'GU')->where('siklus_up', $siklus)->isCashRefill()->sum('value');
+                    $sppCair = (float) FundDisbursement::where('tahun', (int) $year)->where('type', 'GU')->where('siklus_up', $siklus)->whereIn('status', ['SPP', 'SPM', 'CAIR'])->isActivityBased()->sum('value');
                     $belanja = (float) \App\Models\Expenditure::whereYear('spending_date', $year)->where('spending_type', 'GU')->where('siklus_up', $siklus)->sum('gross_value') + $sppCair;
-                    $pending = (float) FundDisbursement::where('tahun', $year)->where('type', 'GU')->where('siklus_up', $siklus)->whereIn('status', ['SPP', 'SPM'])->where(function ($q) {
-                        $q->whereNotNull('kode_rekening_id')->orWhereNotNull('expenditure_id');
-                    })->sum('value');
+                    $pending = (float) FundDisbursement::where('tahun', (int) $year)->where('type', 'GU')->where('siklus_up', $siklus)->whereIn('status', ['SPP', 'SPM'])->isActivityBased()->sum('value');
 
                     $result[] = [
                         'label' => "GU-{$siklus}",

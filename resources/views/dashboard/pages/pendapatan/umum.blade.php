@@ -266,12 +266,30 @@
           <thead>
             <tr>
               <th class="text-center" style="width: 50px;">No</th>
-              <th class="text-center" style="width: 110px;">Tanggal</th>
-              <th class="text-center">Nama Pasien</th>
-              <th class="text-center">Ruangan</th>
-              <th class="text-right" style="width: 140px;">Jasa RS</th>
-              <th class="text-right" style="width: 140px;">Jasa Pelayanan</th>
-              <th class="text-right" style="width: 140px;">Total (Rp)</th>
+              <th class="text-center sortable" data-sort="tanggal" onclick="sortUmum('tanggal')"
+                style="width: 110px; cursor: pointer;">
+                Tanggal <i class="ph ph-caret-up-down text-slate-400"></i>
+              </th>
+              <th class="text-center sortable" data-sort="nama_pasien" onclick="sortUmum('nama_pasien')"
+                style="cursor: pointer;">
+                Nama Pasien <i class="ph ph-caret-up-down text-slate-400"></i>
+              </th>
+              <th class="text-center sortable" data-sort="ruangan" onclick="sortUmum('ruangan')"
+                style="cursor: pointer;">
+                Ruangan <i class="ph ph-caret-up-down text-slate-400"></i>
+              </th>
+              <th class="text-right sortable" data-sort="rs_tindakan" onclick="sortUmum('rs_tindakan')"
+                style="width: 140px; cursor: pointer;">
+                Jasa RS <i class="ph ph-caret-up-down text-slate-400"></i>
+              </th>
+              <th class="text-right sortable" data-sort="pelayanan_tindakan" onclick="sortUmum('pelayanan_tindakan')"
+                style="width: 140px; cursor: pointer;">
+                Jasa Pelayanan <i class="ph ph-caret-up-down text-slate-400"></i>
+              </th>
+              <th class="text-right sortable" data-sort="total" onclick="sortUmum('total')"
+                style="width: 140px; cursor: pointer;">
+                Total (Rp) <i class="ph ph-caret-up-down text-slate-400"></i>
+              </th>
               <th class="text-center" style="width: 120px;">Aksi</th>
             </tr>
           </thead>

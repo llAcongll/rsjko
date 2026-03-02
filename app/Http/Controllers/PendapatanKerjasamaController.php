@@ -28,10 +28,24 @@ class PendapatanKerjasamaController extends Controller
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
         $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
+        $sortBy = $request->get('sort_by', 'tanggal');
+        $sortDir = $request->get('sort_dir', 'asc');
+
         $query = PendapatanKerjasama::with('ruangan', 'mou')
-            ->where('tahun', $tahunAnggaran)
-            ->orderBy('tanggal', 'asc')
-            ->orderBy('id', 'asc');
+            ->where('tahun', $tahunAnggaran);
+
+        if ($sortBy === 'ruangan') {
+            $query->join('ruangans', 'pendapatan_kerjasama.ruangan_id', '=', 'ruangans.id')
+                ->select('pendapatan_kerjasama.*')
+                ->orderBy('ruangans.nama', $sortDir);
+        } elseif ($sortBy === 'mou') {
+            $query->leftJoin('mous', 'pendapatan_kerjasama.mou_id', '=', 'mous.id')
+                ->select('pendapatan_kerjasama.*')
+                ->orderBy('mous.nama', $sortDir);
+        } else {
+            $query->orderBy($sortBy, $sortDir);
+        }
+        $query->orderBy('id', 'asc');
 
         if ($request->has('revenue_master_id')) {
             $query->where('revenue_master_id', $request->revenue_master_id);

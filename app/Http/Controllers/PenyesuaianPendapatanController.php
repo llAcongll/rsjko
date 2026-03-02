@@ -19,12 +19,22 @@ class PenyesuaianPendapatanController extends Controller
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
         $kategori = $request->get('kategori');
+        $sortBy = $request->get('sort_by', 'tanggal');
+        $sortDir = $request->get('sort_dir', 'desc');
 
         $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
         $query = PenyesuaianPendapatan::with('perusahaan')
-            ->where('tahun', $tahunAnggaran)
-            ->orderBy('tanggal', 'asc')
-            ->orderBy('id', 'asc');
+            ->where('tahun', $tahunAnggaran);
+
+        if ($sortBy === 'perusahaan') {
+            $query->leftJoin('perusahaans', 'penyesuaian_pendapatans.perusahaan_id', '=', 'perusahaans.id')
+                ->select('penyesuaian_pendapatans.*')
+                ->orderBy('perusahaans.nama', $sortDir);
+        } else {
+            $query->orderBy($sortBy, $sortDir);
+        }
+
+        $query->orderBy('id', 'desc');
 
         if ($kategori) {
             $query->where('kategori', $kategori);

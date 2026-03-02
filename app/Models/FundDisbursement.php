@@ -75,4 +75,31 @@ class FundDisbursement extends Model
     {
         return $this->hasMany(Expenditure::class, 'fund_disbursement_id');
     }
+
+    /**
+     * Scope for UP/GU/LS that represents a CASH INFLOW (refill) to the treasurer.
+     * Logic: status is CAIR and (has no SPP number OR is not mapped to an account/activity).
+     */
+    public function scopeIsCashRefill($query)
+    {
+        return $query->where('status', 'CAIR')
+            ->where(function ($q) {
+                $table = $this->getTable();
+                $q->whereNull("{$table}.spp_no")
+                    ->orWhereNull("{$table}.kode_rekening_id");
+            });
+    }
+
+    /**
+     * Scope for disbursements that represent an ACTUAL EXPENDITURE activity.
+     * Logic: is mapped to a Kode Rekening (Activity) or an Expenditure record.
+     */
+    public function scopeIsActivityBased($query)
+    {
+        return $query->where(function ($q) {
+            $table = $this->getTable();
+            $q->whereNotNull("{$table}.kode_rekening_id")
+                ->orWhereNotNull("{$table}.expenditure_id");
+        });
+    }
 }

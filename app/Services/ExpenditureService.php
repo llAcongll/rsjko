@@ -66,9 +66,7 @@ class ExpenditureService
         $pendingAmount = \App\Models\FundDisbursement::where('tahun', $year)
             ->whereIn('status', ['SPP', 'SPM'])
             ->whereIn('type', ['UP', 'GU'])
-            ->where(function ($q) {
-                $q->whereNotNull('kode_rekening_id')->orWhereNotNull('expenditure_id');
-            })
+            ->isActivityBased()
             ->sum('value');
 
         $currentBalance -= (float) $pendingAmount;
