@@ -59,31 +59,34 @@ class ExpenditureService
     public function checkLedgerBalance($tanggal, $nominal, $excludeId = null)
     {
         $year = Carbon::parse($tanggal)->year;
-        // RACE CONDITION PREVENTION: Lock balance during check
-        $currentBalance = (float) $this->ledgerService->getCurrentBalance($year, true);
 
-        // Also deduct pending SPP/SPM from the balance to prevent overspending
-        $pendingAmount = \App\Models\FundDisbursement::where('tahun', $year)
-            ->whereIn('status', ['SPP', 'SPM'])
-            ->whereIn('type', ['UP', 'GU'])
-            ->isActivityBased()
-            ->sum('value');
+        // Core Integrity Check with Locking
+        $available = $this->ledgerService->getAvailableLiquidity($year, true, $excludeId);
 
-        $currentBalance -= (float) $pendingAmount;
-
-        if ($excludeId) {
-            $existingEntry = Expenditure::find($excludeId);
-            if ($existingEntry && $existingEntry->spending_type === 'UP') {
-                $currentBalance += (float) $existingEntry->gross_value;
-            }
+        if ($nominal > $available) {
+            throw new \Exception("Transaksi menyebabkan saldo kas menjadi negatif");
         }
 
-        if ($nominal > $currentBalance) {
-            return [
-                'isValid' => false,
-                'balance' => $currentBalance,
-                'message' => 'Saldo UP tidak mencukupi (Saldo: Rp ' . number_format($currentBalance, 0, ',', '.') . ')'
-            ];
+        return ['isValid' => true];
+    }
+
+    public function checkDisbursementLimit($fundDisbursementId, $nominal, $excludeId = null)
+    {
+        if (!$fundDisbursementId) return ['isValid' => true];
+
+        $disbursement = \App\Models\FundDisbursement::find($fundDisbursementId);
+        if (!$disbursement) return ['isValid' => true];
+
+        $query = Expenditure::where('fund_disbursement_id', $fundDisbursementId);
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        $existingTotal = (float) $query->sum('gross_value');
+        $sisa = (float) $disbursement->value - $existingTotal;
+
+        if ($nominal > $sisa) {
+            throw new \Exception("Transaksi ditolak: Nominal Melebihi Sisa Pencairan (Sisa: Rp " . number_format($sisa, 0, ',', '.') . ")");
         }
 
         return ['isValid' => true];
@@ -103,11 +106,16 @@ class ExpenditureService
             $data['siklus_up'] = $data['siklus_up'] ?? ((in_array($data['spending_type'], ['UP', 'GU'])) ? $this->siklusService->getActiveSiklus($year) : 0);
             $data['nomor_dalam_siklus'] = \App\Models\DocumentSequence::nextNumber('BUKTI_CYCLE', $year, $data['siklus_up'], $data['spending_type']);
 
-            if (in_array($data['spending_type'], ['UP', 'GU'])) {
-                $check = $this->checkLedgerBalance($data['spending_date'], $data['gross_value']);
-                if (!$check['isValid']) {
-                    throw new \Exception($check['message']);
-                }
+            // Strict Integrity Guard for ALL expenditure types
+            // Strict Integrity Guard for ALL expenditure types
+            $check = $this->checkLedgerBalance($data['spending_date'], $data['gross_value']);
+            if (!$check['isValid']) {
+                throw new \Exception($check['message']);
+            }
+
+            // Disbursement Limit Guard (if attached to a specific SP2D/Disbursement)
+            if (!empty($data['fund_disbursement_id'])) {
+                $this->checkDisbursementLimit($data['fund_disbursement_id'], $data['gross_value']);
             }
 
             $expenditure = Expenditure::create($data);
@@ -160,17 +168,22 @@ class ExpenditureService
     public function update($id, array $data)
     {
         return DB::transaction(function () use ($id, $data) {
-            $expenditure = Expenditure::findOrFail($id);
+            $expenditure = Expenditure::lockForUpdate()->findOrFail($id);
             $oldValues = $expenditure->toArray();
 
             $data['tax'] = $data['tax'] ?? 0;
             $data['net_value'] = (float) $data['gross_value'] - (float) $data['tax'];
 
-            if (isset($data['spending_type']) && in_array($data['spending_type'], ['UP', 'GU'])) {
-                $check = $this->checkLedgerBalance($data['spending_date'] ?? $expenditure->spending_date, $data['gross_value'], $id);
-                if (!$check['isValid']) {
-                    throw new \Exception($check['message']);
-                }
+            // Strict Integrity Guard for ALL expenditure types
+            $check = $this->checkLedgerBalance($data['spending_date'] ?? $expenditure->spending_date, $data['gross_value'], $id);
+            if (!$check['isValid']) {
+                throw new \Exception($check['message']);
+            }
+
+            // Disbursement Limit Guard
+            $disbursementId = $data['fund_disbursement_id'] ?? $expenditure->fund_disbursement_id;
+            if (!empty($disbursementId)) {
+                $this->checkDisbursementLimit($disbursementId, $data['gross_value'], $id);
             }
 
             $expenditure->update($data);

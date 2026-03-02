@@ -42,31 +42,17 @@ class DisbursementService
                 }
             }
 
-            // Validation: Saldo Kas UP/GU check for activity SPPs
-            if (in_array($data['type'], ['UP', 'GU']) && !empty($data['kode_rekening_id'])) {
-                $year = \Carbon\Carbon::parse($data['sp2d_date'] ?? now())->year;
-                $pType = $data['type'];
-                $pSiklus = $data['siklus_up'] ?? null;
+            // Strict Integrity Guard: For activity-based disbursements, reserve cash must be available.
+            $intendedStatus = $data['status'] ?? 'SPP';
+            $isActivity = !empty($data['kode_rekening_id']) || !empty($data['expenditure_id']);
 
-                $qCair = FundDisbursement::where('tahun', $year)->where('type', $pType)->where('status', 'CAIR');
-                $qBelanja = \App\Models\Expenditure::whereYear('spending_date', $year)->where('spending_type', $pType);
-                $qPending = FundDisbursement::where('tahun', $year)->where('type', $pType)->whereIn('status', ['SPP', 'SPM']);
+            if ($intendedStatus !== 'DRAFT' && $isActivity) {
+                $checkDate = $data['sp2d_date'] ?? now();
+                $year = \Carbon\Carbon::parse($checkDate)->year;
+                $available = $this->ledgerService->getAvailableLiquidity($year, true);
 
-                if ($pType === 'GU' && $pSiklus) {
-                    $qCair->where('siklus_up', $pSiklus);
-                    $qBelanja->where('siklus_up', $pSiklus);
-                    $qPending->where('siklus_up', $pSiklus);
-                }
-
-                $totalCair = (float) (clone $qCair)->isCashRefill()->sum('value');
-                $sppKeluar = (float) (clone $qCair)->isActivityBased()->sum('value');
-                $totalBelanja = (float) $qBelanja->sum('gross_value') + $sppKeluar;
-                $sppPending = (float) $qPending->isActivityBased()->sum('value');
-
-                $sisaKas = $totalCair - $totalBelanja - $sppPending;
-
-                if ($data['value'] > $sisaKas) {
-                    throw new \Exception("Gagal: Nominal pengajuan (Rp " . number_format($data['value'], 0, ',', '.') . ") melebihi Sisa Saldo Kas yang tersedia (Rp " . number_format($sisaKas, 0, ',', '.') . ")!");
+                if ($data['value'] > $available) {
+                    throw new \Exception("Transaksi menyebabkan saldo kas menjadi negatif");
                 }
             }
 
@@ -167,6 +153,42 @@ class DisbursementService
         });
     }
 
+    public function update($id, array $data)
+    {
+        return DB::transaction(function () use ($id, $data) {
+            $disbursement = FundDisbursement::lockForUpdate()->findOrFail($id);
+            $oldData = $disbursement->toArray();
+
+            // Check if value/date changed and needs integrity validation
+            $newValue = $data['value'] ?? $disbursement->value;
+            $newDate = $data['sp2d_date'] ?? $disbursement->sp2d_date;
+            $newStatus = $data['status'] ?? $disbursement->status;
+
+            if ($newStatus !== 'DRAFT' && ($disbursement->kode_rekening_id || $disbursement->expenditure_id)) {
+                $year = \Carbon\Carbon::parse($newDate)->year;
+                $available = $this->ledgerService->getAvailableLiquidity($year, true, null, $id);
+                if ($newValue > $available) {
+                    throw new \Exception("Transaksi menyebabkan saldo kas menjadi negatif");
+                }
+            }
+
+            $disbursement->update($data);
+
+            // If it was already SPP or higher, we might need to update ledger or numbering
+            // But for now we just log it. General applyLedgerImpact handles changes.
+            if (in_array($disbursement->status, ['SPP', 'SPM', 'CAIR'])) {
+                $this->applyLedgerImpact($disbursement);
+            }
+
+            ActivityLog::log('UPDATE', 'DISBURSEMENT', "Mengubah pengajuan: #{$disbursement->nomor_paket}", $id, $oldData, $disbursement->toArray());
+
+            // Global Liquidity Safety Net
+            $this->ledgerService->validateGlobalLiquidity(\Carbon\Carbon::parse($disbursement->sp2d_date ?? now())->year);
+
+            return $disbursement;
+        });
+    }
+
     /**
      * Update status and generate corresponding numbers.
      */
@@ -175,6 +197,14 @@ class DisbursementService
         return DB::transaction(function () use ($id, $newStatus, $manualData) {
             $disbursement = FundDisbursement::lockForUpdate()->findOrFail($id);
             $year = $disbursement->tahun;
+
+            // Integrity Guard for status change
+            if ($newStatus !== 'DRAFT' && ($disbursement->kode_rekening_id || $disbursement->expenditure_id)) {
+                $available = $this->ledgerService->getAvailableLiquidity($year, true, null, $id);
+                if ($disbursement->value > $available) {
+                    throw new \Exception("Transaksi menyebabkan saldo kas menjadi negatif");
+                }
+            }
 
             // Handle manual status override from $manualData
             if ($newStatus === 'SPP' && !$disbursement->spp_no) {
@@ -260,6 +290,9 @@ class DisbursementService
 
             // Apply Ledger Impact for the new status
             $this->applyLedgerImpact($disbursement);
+
+            // Global Liquidity Safety Net
+            $this->ledgerService->validateGlobalLiquidity($disbursement->tahun);
 
             return $disbursement;
         });
@@ -409,6 +442,9 @@ class DisbursementService
 
             ActivityLog::log('REVERT', 'DISBURSEMENT', "Membatalkan {$currentStatus} -> {$targetStatus}: {$disbursement->type} #{$disbursement->nomor_paket}", $disbursement->id, $oldData, $disbursement->toArray());
 
+            // Global Liquidity Safety Net
+            $this->ledgerService->validateGlobalLiquidity($disbursement->tahun);
+
             return $disbursement;
         });
     }
@@ -454,6 +490,9 @@ class DisbursementService
             $deletedCount = $linkedExpenditures->count();
             $extraLog = $deletedCount > 0 ? " ({$deletedCount} belanja ikut dihapus)" : "";
             ActivityLog::log('DELETE', 'DISBURSEMENT', "Menghapus pencairan: {$label}{$extraLog}", $id, $oldData);
+
+            // Global Liquidity Safety Net
+            $this->ledgerService->validateGlobalLiquidity($disbursement->tahun);
 
             return true;
         });

@@ -1,13 +1,15 @@
 :root {
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
+  --primary: #0f766e;
+  /* Teal-700 for government formal look */
+  --primary-dark: #0f4a47;
+  /* Darker teal */
   --bg-main: #f8fafc;
   --text-main: #0f172a;
   --text-muted: #64748b;
   --white: #ffffff;
   --border: #e2e8f0;
-  --radius: 16px;
-  --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --radius: 12px;
+  --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
 }
 
 * {
@@ -18,23 +20,179 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #f0f4f8;
-  background-image:
-    radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(30, 64, 175, 0.1) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(37, 99, 235, 0.05) 0px, transparent 50%);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  overflow-x: hidden;
+  margin: 0;
+}
+
+.split-layout {
+  display: flex;
+  width: 100vw;
+  min-height: 100vh;
+}
+
+/* LEFT PANEL (60%) */
+.left-panel {
+  flex: 0 0 60%;
+  position: relative;
+  background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%);
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  color: var(--text-main);
-  overflow-x: hidden;
+  color: #ffffff;
+  padding: 40px;
+}
+
+.left-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url('https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w400');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 75%;
+  opacity: 0.09;
+  z-index: 1;
+  pointer-events: none;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.left-panel>* {
+  position: relative;
+  z-index: 2;
+}
+
+.left-content {
+  position: relative;
+  z-index: 2;
+  max-width: 650px;
+  width: 100%;
+}
+
+.brand-header {
+  margin-bottom: 40px;
+}
+
+
+.brand-text h1 {
+  font-size: 30px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  line-height: 1.3;
+}
+
+.brand-text h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #f8fafc;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.provinsi-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #cbd5e1;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.description-box {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  border-left: 4px solid #38bdf8;
+  padding: 24px;
+  border-radius: 8px;
+  margin-bottom: 32px;
+  font-size: 16px;
+  line-height: 1.6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.active-year-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.active-year-indicator i {
+  color: #fbbf24;
+  font-size: 20px;
+}
+
+.feature-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.3s ease, background 0.3s;
+}
+
+.feature-item:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.feature-item i {
+  font-size: 24px;
+  color: #38bdf8;
+}
+
+.feature-item span {
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.system-warning {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+  text-align: center;
+}
+
+
+/* RIGHT PANEL (40%) */
+.right-panel {
+  flex: 0 0 40%;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
+  z-index: 5;
 }
 
 .login-container {
   width: 100%;
-  max-width: 540px;
-  padding: 24px;
+  max-width: 440px;
+  padding: 32px;
   animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -52,53 +210,27 @@ body {
 
 .login-card {
   background: var(--white);
-  padding: 48px 56px;
-  border-radius: 28px;
-  box-shadow: var(--shadow);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  padding: 0;
 }
 
-.login-header {
-  text-align: center;
-  margin-bottom: 24px;
+.d-mobile-only {
+  display: none;
 }
 
-.logo {
-  width: 320px;
-  height: auto;
-  margin-bottom: 8px;
-  transition: transform 0.3s ease;
-  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.12));
+.login-form-title {
+  margin-bottom: 32px;
 }
 
-.logo:hover {
-  transform: scale(1.05);
-}
-
-.branding h1 {
-  font-size: 22px;
-  font-weight: 800;
+.login-form-title h3 {
+  font-size: 24px;
+  font-weight: 700;
   color: var(--text-main);
-  letter-spacing: -0.01em;
-  margin-bottom: 8px;
-  line-height: 1.25;
-  width: 100%;
-  text-transform: uppercase;
-}
-
-.branding h2 {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--primary);
   margin-bottom: 8px;
 }
 
-.instansi {
-  font-size: 12px;
-  font-weight: 500;
+.login-form-title p {
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 15px;
 }
 
 .login-body {
@@ -144,11 +276,11 @@ body {
 .select-year {
   width: 100%;
   padding: 14px 48px 14px 48px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
   font-family: inherit;
   font-size: 15px;
-  background: #fbfcfe;
+  background: var(--bg-main);
   transition: all 0.2s;
   outline: none;
   color: var(--text-main);
@@ -159,7 +291,7 @@ body {
 .select-year:focus {
   border-color: var(--primary);
   background: var(--white);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
 }
 
 .select-caret {
@@ -181,11 +313,11 @@ body {
 .input-wrapper input {
   width: 100%;
   padding: 14px 48px 14px 48px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
   font-family: inherit;
   font-size: 15px;
-  background: #fbfcfe;
+  background: var(--bg-main);
   transition: all 0.2s;
   outline: none;
   color: var(--text-main);
@@ -200,7 +332,7 @@ input::-ms-clear {
 .input-wrapper input:focus {
   border-color: var(--primary);
   background: var(--white);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
 }
 
 .input-wrapper input:focus+i {
@@ -220,7 +352,7 @@ input::-ms-clear {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0 12px 12px 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
   transition: color 0.2s;
   z-index: 10;
 }
@@ -236,10 +368,10 @@ input::-ms-clear {
 
 .btn-login {
   margin-top: 10px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%);
   color: white;
   padding: 16px;
-  border-radius: 14px;
+  border-radius: var(--radius);
   border: none;
   font-size: 16px;
   font-weight: 700;
@@ -249,12 +381,13 @@ input::-ms-clear {
   justify-content: center;
   gap: 8px;
   transition: all 0.3s;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 8px 16px rgba(15, 118, 110, 0.2);
 }
 
 .btn-login:hover {
+  background: linear-gradient(135deg, #0d655f 0%, #025785 100%);
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 12px 20px rgba(15, 118, 110, 0.3);
 }
 
 .btn-login:active {
@@ -288,9 +421,9 @@ input::-ms-clear {
 }
 
 .login-footer {
-  margin-top: 32px;
+  margin-top: 48px;
   text-align: center;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -320,7 +453,7 @@ input::-ms-clear {
   width: 90%;
   max-width: 400px;
   padding: 32px;
-  border-radius: 24px;
+  border-radius: 20px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   transform: scale(0.9);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -339,7 +472,7 @@ input::-ms-clear {
 .confirm-actions button {
   flex: 1;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -361,13 +494,17 @@ input::-ms-clear {
   color: white;
 }
 
+.btn-danger:hover {
+  background: var(--primary-dark);
+}
+
 /* Toast Styling */
 .toast {
   position: fixed;
   top: 24px;
   right: 24px;
   padding: 16px 24px;
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--text-main);
   color: white;
   font-size: 14px;
@@ -395,8 +532,79 @@ input::-ms-clear {
   background: #ef4444;
 }
 
+@media (max-width: 992px) {
+  .split-layout {
+    flex-direction: column;
+  }
+
+  .left-panel {
+    display: none;
+    /* Hide left panel on mobile devices */
+  }
+
+  .right-panel {
+    flex: 1;
+    background: #f0f4f8;
+  }
+
+  .login-card {
+    background: var(--white);
+    padding: 40px;
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+  }
+
+  .d-mobile-only {
+    display: block;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .logo {
+    width: 280px;
+    height: auto;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.1));
+  }
+
+  .branding h1 {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+    line-height: 1.25;
+  }
+
+  .branding h2 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 6px;
+  }
+
+  .instansi {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+    width: 100%;
+  }
+}
+
 @media (max-width: 480px) {
   .login-card {
     padding: 32px 24px;
+  }
+
+  .logo {
+    width: 240px;
   }
 }

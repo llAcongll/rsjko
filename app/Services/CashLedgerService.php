@@ -70,6 +70,7 @@ class CashLedgerService
                 DB::table('treasurer_cash')->whereYear('date', $year)->lockForUpdate()->count();
 
                 foreach ($entries as $entry) {
+                    /** @var \App\Models\TreasurerCash $entry */
                     $entry->delete();
                 }
 
@@ -94,6 +95,11 @@ class CashLedgerService
             $runningBalance += (float) $entry->debit;
             $runningBalance -= (float) $entry->credit;
 
+            // Historical Integrity Guard: BKU Physical Balance can NEVER be negative at any point in time.
+            if ($runningBalance < -0.01) { // -0.01 to avoid float zero tolerance issues
+                throw new \Exception("Mutasi ditolak: Saldo Kas BKU menjadi negatif (Rp " . number_format($runningBalance, 2, ',', '.') . ") pada tanggal " . \Carbon\Carbon::parse($entry->date)->format('d/m/Y'));
+            }
+
             $entry->setAttribute('balance', $runningBalance);
             $entry->saveQuietly();
         }
@@ -113,6 +119,50 @@ class CashLedgerService
         }
 
         return $query->value('balance') ?? 0;
+    }
+
+    /**
+     * Calculate available liquidity for the treasurer.
+     * Formula: current_bku_balance - sum(pending_activity_spp_values)
+     */
+    public function getAvailableLiquidity($year, $lock = false, $excludeExpenditureId = null, $excludeDisbursementId = null)
+    {
+        // 1. Physical Balance in BKU (Refills - Recorded Expenditures)
+        $balance = (float) $this->getCurrentBalance($year, $lock);
+
+        // If we are updating an expenditure, the existing balance already has its (possibly old) CREDIT deducted.
+        // We should "add it back" to see the potential balance BEFORE this expenditure.
+        if ($excludeExpenditureId) {
+            $oldEntryCount = TreasurerCash::where('ref_table', 'expenditures')
+                ->where('ref_id', $excludeExpenditureId)
+                ->sum('credit');
+            $balance += (float) $oldEntryCount;
+        }
+
+        // 2. Reservations (Pending Activity Disbursements that will eventually become Expenditures)
+        $pendingQuery = \App\Models\FundDisbursement::where('tahun', $year)
+            ->whereIn('status', ['SPP', 'SPM'])
+            ->isActivityBased();
+
+        if ($excludeDisbursementId) {
+            $pendingQuery->where('id', '!=', $excludeDisbursementId);
+        }
+
+        $pending = (float) $pendingQuery->sum('value');
+
+        return $balance - $pending;
+    }
+
+    /**
+     * Audit global liquidity constraint. Ensures the current state of the ledger
+     * is valid and not overdrawn. 
+     */
+    public function validateGlobalLiquidity($year)
+    {
+        $available = $this->getAvailableLiquidity($year, true);
+        if ($available < -0.01) {
+            throw new \Exception("Mutasi ditolak: Transaksi menyebabkan total saldo kas (termasuk antrean SPP) menjadi negatif (Defisit: Rp " . number_format(abs($available), 0, ',', '.') . ")");
+        }
     }
 
     /**

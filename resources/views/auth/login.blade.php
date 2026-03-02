@@ -9,11 +9,8 @@
   <title>SIPP BLUD EHD</title>
 
   {{-- FAVICON & PWA --}}
-  <!-- Light mode -->
   <link rel="icon" type="image/png" href="{{ asset('favicon-light.png') }}?v=1.2" media="(prefers-color-scheme: light)">
-  <!-- Dark mode -->
   <link rel="icon" type="image/png" href="{{ asset('favicon-dark.png') }}?v=1.2" media="(prefers-color-scheme: dark)">
-  <!-- Fallback -->
   <link rel="icon" type="image/png" href="{{ asset('favicon-light.png') }}?v=1.2">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}?v=1.2">
   <link rel="manifest" href="{{ asset('site.webmanifest') }}?v=1.2">
@@ -31,63 +28,129 @@
 
 <body>
 
-  <div class="login-container">
-    <div class="login-card">
-      <div class="login-header">
-        <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w400" class="logo"
-          alt="Logo Provinsi Kepulauan Riau" title="SIPPBLUD EHD">
-        <div class="branding">
-          <h1>SISTEM INFORMASI<br>PENDAPATAN DAN PENGELUARAN BLUD</h1>
-          <h2>RSJKO ENGKU HAJI DAUD</h2>
-          <p class="instansi">Provinsi Kepulauan Riau</p>
-        </div>
-      </div>
-
-      <div class="login-body">
-        <div class="input-group">
-          <label for="username">Username</label>
-          <div class="input-wrapper">
-            <i class="ph ph-user"></i>
-            <input type="text" id="username" placeholder="Masukkan username">
+  <div class="split-layout">
+    <!-- Left Panel: Government Info (60%) -->
+    <div class="left-panel">
+      <div class="left-content">
+        <div class="brand-header">
+          <div class="brand-text">
+            <h1>SISTEM INFORMASI KEUANGAN BLUD</h1>
+            <h2>RSJKO ENGKU HAJI DAUD</h2>
+            <p class="provinsi-name">PROVINSI KEPULAUAN RIAU</p>
           </div>
         </div>
 
-        <div class="input-group">
-          <label for="password">Password</label>
-          <div class="input-wrapper">
-            <i class="ph ph-lock"></i>
-            <input type="password" id="password" placeholder="Masukkan password">
-            <button type="button" class="toggle-pass" id="btn-toggle-pass">
-              <i class="ph ph-eye" id="eye-icon"></i>
+        <div class="description-box">
+          <p>Sistem terintegrasi untuk pengelolaan, pemantauan, dan pertanggungjawaban keuangan Badan Layanan Umum
+            Daerah secara transparan dan akuntabel.</p>
+        </div>
+
+        <div class="active-year-indicator">
+          <i class="ph ph-calendar-check"></i> <span>Tahun Anggaran Aktif: {{ date('Y') }}</span>
+        </div>
+
+        <div class="feature-list">
+          <div class="feature-item">
+            <i class="ph ph-money"></i>
+            <span>Pencairan Dana</span>
+          </div>
+          <div class="feature-item">
+            <i class="ph ph-book-bookmark"></i>
+            <span>Buku Kas Umum</span>
+          </div>
+          <div class="feature-item">
+            <i class="ph ph-receipt"></i>
+            <span>Belanja BLUD</span>
+          </div>
+          <div class="feature-item">
+            <i class="ph ph-coins"></i>
+            <span>Pendapatan BLUD</span>
+          </div>
+          <div class="feature-item">
+            <i class="ph ph-chart-bar"></i>
+            <span>Laporan Realisasi Anggaran</span>
+          </div>
+          <div class="feature-item">
+            <i class="ph ph-monitor"></i>
+            <span>Pemantauan Kas</span>
+          </div>
+        </div>
+
+        <div class="system-warning">
+          <p>Akses sistem ini diawasi dan dicatat dalam log aktivitas.<br>Penggunaan di luar kewenangan menjadi tanggung
+            jawab pengguna.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Login Form (40%) -->
+    <div class="right-panel">
+      <div class="login-container">
+        <div class="login-card">
+          <div class="login-header d-mobile-only">
+            <!-- Tampil hanya di mobile -->
+            <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w400" class="logo"
+              alt="Logo Provinsi Kepulauan Riau">
+            <div class="branding">
+              <h1>SISTEM INFORMASI<br>KEUANGAN BLUD</h1>
+              <h2>RSJKO ENGKU HAJI DAUD</h2>
+              <p class="instansi">Provinsi Kepulauan Riau</p>
+            </div>
+            <div class="divider"></div>
+          </div>
+
+          <div class="login-form-title">
+            <h3>Autentikasi Pengguna</h3>
+            <p>Masukkan kredensial untuk mengakses sistem</p>
+          </div>
+
+          <div class="login-body">
+            <div class="input-group">
+              <label for="username">Username</label>
+              <div class="input-wrapper">
+                <i class="ph ph-user"></i>
+                <input type="text" id="username" placeholder="Masukkan username">
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="password">Password</label>
+              <div class="input-wrapper">
+                <i class="ph ph-lock"></i>
+                <input type="password" id="password" placeholder="Masukkan password">
+                <button type="button" class="toggle-pass" id="btn-toggle-pass">
+                  <i class="ph ph-eye" id="eye-icon"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="tahun">Tahun Anggaran</label>
+              <div class="input-wrapper">
+                <i class="ph ph-calendar-blank"></i>
+                <select id="tahun" class="select-year">
+                  <option value="2025">Tahun Anggaran 2025</option>
+                  <option value="2026" selected>Tahun Anggaran 2026</option>
+                  <option value="2027">Tahun Anggaran 2027</option>
+                  <option value="2028">Tahun Anggaran 2028</option>
+                  <option value="2029">Tahun Anggaran 2029</option>
+                </select>
+                <i class="ph ph-caret-down select-caret"></i>
+              </div>
+            </div>
+
+            <button id="btn" class="btn-login">
+              <span>Masuk ke Sistem</span>
+              <i class="ph ph-arrow-right"></i>
             </button>
+
+            <div class="msg" id="msg"></div>
+          </div>
+
+          <div class="login-footer">
+            &copy; {{ date('Y') }} RSJKO Engku Haji Daud
           </div>
         </div>
-
-        <div class="input-group">
-          <label for="tahun">Tahun Anggaran</label>
-          <div class="input-wrapper">
-            <i class="ph ph-calendar-blank"></i>
-            <select id="tahun" class="select-year">
-              <option value="2025">Tahun Anggaran 2025</option>
-              <option value="2026" selected>Tahun Anggaran 2026</option>
-              <option value="2027">Tahun Anggaran 2027</option>
-              <option value="2028">Tahun Anggaran 2028</option>
-              <option value="2029">Tahun Anggaran 2029</option>
-            </select>
-            <i class="ph ph-caret-down select-caret"></i>
-          </div>
-        </div>
-
-        <button id="btn" class="btn-login">
-          <span>Masuk ke Sistem</span>
-          <i class="ph ph-arrow-right"></i>
-        </button>
-
-        <div class="msg" id="msg"></div>
-      </div>
-
-      <div class="login-footer">
-        &copy; {{ date('Y') }} RSJKO Engku Haji Daud
       </div>
     </div>
   </div>
@@ -116,8 +179,6 @@
       });
     </script>
   @endif
-
-
 
 </body>
 

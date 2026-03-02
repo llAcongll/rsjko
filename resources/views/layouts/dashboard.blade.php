@@ -648,6 +648,29 @@
     </div>
   </div>
 
+  {{-- AUTO LOGOUT TIMER (30 MINS) --}}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      let inactivityTimer;
+      const timeoutMillis = 30 * 60 * 1000; // 30 minutes
+      const logoutForm = document.getElementById('logoutForm');
+
+      if (!logoutForm) return;
+
+      function resetTimer() {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(function () {
+          logoutForm.submit();
+        }, timeoutMillis);
+      }
+
+      window.onload = resetTimer;
+      document.onmousemove = resetTimer;
+      document.onkeypress = resetTimer;
+      document.onclick = resetTimer;
+      document.onscroll = resetTimer;
+    });
+  </script>
 </body>
 
 </html>
