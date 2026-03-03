@@ -124,7 +124,7 @@
                 <button type="button" class="btn-secondary" onclick="closePendapatanBpjsModal()">
                     <i class="ph ph-x"></i> Batal
                 </button>
-                <button type="submit" id="btnSimpanPendapatanBpjs" class="btn-primary" disabled>
+                <button type="submit" id="btnSimpanPendapatanBpjs" class="btn-primary">
                     <i class="ph ph-floppy-disk"></i> Simpan
                 </button>
             </div>

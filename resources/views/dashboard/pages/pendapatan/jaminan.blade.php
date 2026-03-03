@@ -221,7 +221,7 @@
                     </div>
                     @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CREATE'))
                         <button class="btn-tambah-data" id="btnTambahPendapatanJaminan"
-                            style="background:#059669; height: 44px;">
+                            style="background:#059669; height: 44px;" onclick="openPendapatanJaminanModal()">
                             <i class="ph-bold ph-plus"></i>
                             <span>Tambah Data</span>
                         </button>
@@ -418,6 +418,6 @@
     </div>
 
     {{-- MODALS DETAIL --}}
-    @include('dashboard.partials.pendapatan-jaminan-detail')
+    @include('dashboard.partials.pendapatan-jaminan-form')
     @include('dashboard.partials.pendapatan-jaminan-import')
 </div>

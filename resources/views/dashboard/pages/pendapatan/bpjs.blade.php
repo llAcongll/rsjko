@@ -235,7 +235,7 @@
                     </div>
                     @if(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE'))
                         <button class="btn-tambah-data" id="btnTambahPendapatanBpjs"
-                            style="background:#059669; height: 44px;">
+                            style="background:#059669; height: 44px;" onclick="openPendapatanBpjsModal()">
                             <i class="ph-bold ph-plus"></i>
                             <span>Tambah Pasien</span>
                         </button>
@@ -431,7 +431,7 @@
     </div>
 
     {{-- MODALS DETAIL --}}
-    @include('dashboard.partials.pendapatan-bpjs-detail')
+    @include('dashboard.partials.pendapatan-bpjs-form')
     @include('dashboard.partials.pendapatan-bpjs-import')
 </div>
 

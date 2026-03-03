@@ -231,6 +231,9 @@
     document.getElementById('masterFormTitleUmum').innerHTML = '<i class="ph ph-folder-plus"></i> Tambah Kelompok Pendapatan';
     isEditMaster = false;
     document.getElementById('modalMasterFormUmum').classList.add('show');
+
+    const btn = document.getElementById('btnSimpanMasterUmum');
+    if (btn) btn.disabled = true;
   };
 
   window.closeMasterModalUmum = function () {
@@ -250,6 +253,10 @@
         document.getElementById('masterKeteranganUmum').value = data.keterangan || '';
         document.getElementById('masterFormTitleUmum').innerHTML = '<i class="ph ph-pencil-simple"></i> Edit Kelompok Pendapatan';
         document.getElementById('modalMasterFormUmum').classList.add('show');
+
+        const form = document.getElementById('formMasterUmum');
+        const btn = document.getElementById('btnSimpanMasterUmum');
+        if (btn && form) btn.disabled = !form.checkValidity();
       });
   };
 
@@ -641,6 +648,9 @@
 
     modal.classList.add('show');
     loadRuangan();
+
+    const btnSimpan = document.getElementById('btnSimpanPendapatan');
+    if (btnSimpan) btnSimpan.disabled = true;
   };
 
   window.closePendapatanModal = function () {
@@ -1115,6 +1125,17 @@
 
     initImportUmum();
     initBulkDeleteUmum();
+
+    // Form Validation for Master Group (Kelompok)
+    const formMasterUmumVal = document.getElementById('formMasterUmum');
+    if (formMasterUmumVal) {
+      const validateMasterForm = () => {
+        const btn = document.getElementById('btnSimpanMasterUmum');
+        if (btn) btn.disabled = !formMasterUmumVal.checkValidity();
+      };
+      formMasterUmumVal.addEventListener('input', validateMasterForm);
+      formMasterUmumVal.addEventListener('change', validateMasterForm);
+    }
   };
 
 })();

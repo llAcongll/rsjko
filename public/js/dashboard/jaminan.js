@@ -216,6 +216,9 @@
         document.getElementById('formMasterJaminan').reset();
         document.getElementById('masterFormTitleJaminan').innerHTML = '<i class="ph ph-folder-plus"></i> Tambah Kelompok Jaminan';
         document.getElementById('modalMasterFormJaminan').classList.add('show');
+
+        const btn = document.getElementById('btnSimpanMasterJaminan');
+        if (btn) btn.disabled = true;
     };
 
     window.closeMasterModalJaminan = function () {
@@ -233,6 +236,10 @@
                 document.getElementById('masterKeteranganJaminan').value = data.keterangan || '';
                 document.getElementById('masterFormTitleJaminan').innerHTML = '<i class="ph ph-pencil-simple"></i> Edit Kelompok Jaminan';
                 document.getElementById('modalMasterFormJaminan').classList.add('show');
+
+                const form = document.getElementById('formMasterJaminan');
+                const btn = document.getElementById('btnSimpanMasterJaminan');
+                if (btn && form) btn.disabled = !form.checkValidity();
             });
     };
 
@@ -635,7 +642,9 @@
                         <td class="text-center">${formatTanggal(item.tanggal)}</td>
                         <td>
                             <div class="font-medium">${escapeHtml(item.nama_pasien ?? '-')}</div>
-                            <div class="text-xs text-slate-400">${item.perusahaan?.nama ?? (item.transaksi || '-')}</div>
+                        </td>
+                        <td>
+                            <div class="text-sm">${item.perusahaan?.nama ?? (item.transaksi || '-')}</div>
                         </td>
                         <td><span class="badge badge-info">${item.ruangan?.nama ?? '-'}</span></td>
                         <td class="text-right">
@@ -721,8 +730,17 @@
         ]);
 
         if (!isEditJaminan) {
-            document.getElementById('formPendapatanJaminan').reset();
-            document.getElementById('jaminanTanggal').value = formatDateForInput(currentMasterData.tanggal);
+            const form = document.getElementById('formPendapatanJaminan');
+            form.reset();
+            const dateInput = form.querySelector('[name="tanggal"]');
+            if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+
+            document.querySelectorAll('.nominal-display-jaminan').forEach(disp => disp.value = '');
+            document.querySelectorAll('.nominal-value-jaminan').forEach(val => val.value = '0');
+            hitungTotalJaminan();
+
+            const btn = document.getElementById('btnSimpanPendapatanJaminan');
+            if (btn) btn.disabled = true;
         }
         document.getElementById('jaminanMetodePembayaran')?.dispatchEvent(new Event('change'));
     };
@@ -810,6 +828,10 @@
         });
 
         hitungTotalJaminan();
+        setTimeout(() => {
+            const btn = document.getElementById('btnSimpanPendapatanJaminan');
+            if (btn) btn.disabled = !form.checkValidity();
+        }, 150);
     };
 
     window.hapusPendapatanJaminan = function (id) {
@@ -1139,6 +1161,28 @@
 
         initImportJaminan();
         initBulkDeleteJaminan();
+
+        // Form Validation for Tambah Data
+        const formJaminan = document.getElementById('formPendapatanJaminan');
+        if (formJaminan) {
+            const validateForm = () => {
+                const btn = document.getElementById('btnSimpanPendapatanJaminan');
+                if (btn) btn.disabled = !formJaminan.checkValidity();
+            };
+            formJaminan.addEventListener('input', validateForm);
+            formJaminan.addEventListener('change', validateForm);
+        }
+
+        // Form Validation for Master Group (Kelompok)
+        const formMasterJaminanVal = document.getElementById('formMasterJaminan');
+        if (formMasterJaminanVal) {
+            const validateMasterForm = () => {
+                const btn = document.getElementById('btnSimpanMasterJaminan');
+                if (btn) btn.disabled = !formMasterJaminanVal.checkValidity();
+            };
+            formMasterJaminanVal.addEventListener('input', validateMasterForm);
+            formMasterJaminanVal.addEventListener('change', validateMasterForm);
+        }
     };
 
 })();

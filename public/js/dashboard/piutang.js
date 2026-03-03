@@ -159,6 +159,7 @@ function updateSummaryPiutang(agg) {
     const potEl = document.getElementById('summaryTotalPotongan');
     if (potEl) potEl.innerText = formatRupiah(agg.total_potongan || 0);
 
+    const admEl = document.getElementById('summaryTotalAdm');
     if (admEl) admEl.innerText = formatRupiah(agg.total_adm_bank || 0);
 }
 

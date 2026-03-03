@@ -218,6 +218,9 @@
         document.getElementById('formMasterKerjasama').reset();
         document.getElementById('masterFormTitleKerjasama').innerHTML = '<i class="ph ph-folder-plus"></i> Tambah Kelompok Kerjasama';
         modal.classList.add('show');
+
+        const btn = document.getElementById('btnSimpanMasterKerjasama');
+        if (btn) btn.disabled = true;
     };
 
     window.closeMasterModalKerjasama = function () {
@@ -236,6 +239,10 @@
                 document.getElementById('masterKeteranganKerjasama').value = data.keterangan || '';
                 document.getElementById('masterFormTitleKerjasama').innerHTML = '<i class="ph ph-pencil-simple"></i> Edit Kelompok Kerjasama';
                 document.getElementById('modalMasterFormKerjasama').classList.add('show');
+
+                const form = document.getElementById('formMasterKerjasama');
+                const btn = document.getElementById('btnSimpanMasterKerjasama');
+                if (btn && form) btn.disabled = !form.checkValidity();
             });
     };
 
@@ -618,7 +625,9 @@
                         <td class="text-center">${formatTanggal(item.tanggal)}</td>
                         <td>
                             <div class="font-medium">${escapeHtml(item.nama_pasien ?? '-')}</div>
-                            <div class="text-xs text-slate-400">${item.mou?.nama ?? (item.transaksi || '-')}</div>
+                        </td>
+                        <td>
+                            <div class="text-sm">${item.mou?.nama ?? (item.transaksi || '-')}</div>
                         </td>
                         <td><span class="badge badge-info">${item.ruangan?.nama ?? '-'}</span></td>
                         <td class="text-right">
@@ -699,8 +708,17 @@
         modal.classList.add('show');
         await Promise.all([loadRuanganKerjasama(), loadMouKerjasama()]);
         if (!isEditKerjasama) {
-            document.getElementById('formPendapatanKerjasama').reset();
-            document.getElementById('kerjasamaTanggal').value = formatDateForInput(currentMasterData.tanggal);
+            const form = document.getElementById('formPendapatanKerjasama');
+            form.reset();
+            const dateInput = form.querySelector('[name="tanggal"]');
+            if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+
+            document.querySelectorAll('.nominal-display-kerjasama').forEach(disp => disp.value = '');
+            document.querySelectorAll('.nominal-value-kerjasama').forEach(val => val.value = '0');
+            hitungTotalKerjasama();
+
+            const btn = document.getElementById('btnSimpanPendapatanKerjasama');
+            if (btn) btn.disabled = true;
         }
         document.getElementById('kerjasamaMetodePembayaran')?.dispatchEvent(new Event('change'));
     };
@@ -784,6 +802,10 @@
             disp.value = formatRibuan(val);
         });
         hitungTotalKerjasama();
+        setTimeout(() => {
+            const btn = document.getElementById('btnSimpanPendapatanKerjasama');
+            if (btn) btn.disabled = !form.checkValidity();
+        }, 150);
     };
 
     window.hapusPendapatanKerjasama = function (id) {
@@ -1081,6 +1103,28 @@
 
         initImportKerjasama();
         initBulkDeleteKerjasama();
+
+        // Form Validation for Tambah Data
+        const formKerjasama = document.getElementById('formPendapatanKerjasama');
+        if (formKerjasama) {
+            const validateForm = () => {
+                const btn = document.getElementById('btnSimpanPendapatanKerjasama');
+                if (btn) btn.disabled = !formKerjasama.checkValidity();
+            };
+            formKerjasama.addEventListener('input', validateForm);
+            formKerjasama.addEventListener('change', validateForm);
+        }
+
+        // Form Validation for Master Group (Kelompok)
+        const formMasterKerjasamaVal = document.getElementById('formMasterKerjasama');
+        if (formMasterKerjasamaVal) {
+            const validateMasterForm = () => {
+                const btn = document.getElementById('btnSimpanMasterKerjasama');
+                if (btn) btn.disabled = !formMasterKerjasamaVal.checkValidity();
+            };
+            formMasterKerjasamaVal.addEventListener('input', validateMasterForm);
+            formMasterKerjasamaVal.addEventListener('change', validateMasterForm);
+        }
     };
 
 })();

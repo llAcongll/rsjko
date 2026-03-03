@@ -215,6 +215,9 @@
         document.getElementById('formMasterBpjs').reset();
         document.getElementById('masterFormTitleBpjs').innerHTML = '<i class="ph ph-folder-plus"></i> Tambah Kelompok BPJS';
         modal.classList.add('show');
+
+        const btn = document.getElementById('btnSimpanMasterBpjs');
+        if (btn) btn.disabled = true;
     };
 
     window.closeMasterModalBpjs = function () {
@@ -233,6 +236,10 @@
                 document.getElementById('masterKeteranganBpjs').value = data.keterangan || '';
                 document.getElementById('masterFormTitleBpjs').innerHTML = '<i class="ph ph-pencil-simple"></i> Edit Kelompok BPJS';
                 document.getElementById('modalMasterFormBpjs').classList.add('show');
+
+                const form = document.getElementById('formMasterBpjs');
+                const btn = document.getElementById('btnSimpanMasterBpjs');
+                if (btn && form) btn.disabled = !form.checkValidity();
             });
     };
 
@@ -738,11 +745,21 @@
         ]);
 
         if (!isEditBpjs) {
-            document.getElementById('formPendapatanBpjs').reset();
-            document.getElementById('bpjsTanggal').value = formatDateForInput(currentMasterData.tanggal);
+            const form = document.getElementById('formPendapatanBpjs');
+            form.reset();
+            const dateInput = form.querySelector('[name="tanggal"]');
+            if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
             document.getElementById('bpjsJenisSelect').value = currentBpjsTab;
+
+            document.querySelectorAll('.nominal-display-bpjs').forEach(disp => disp.value = '');
+            document.querySelectorAll('.nominal-value-bpjs').forEach(val => val.value = '0');
+            hitungTotalBpjs();
+
             toggleNoSepField();
             toggleBpjsNomis();
+
+            const btn = document.getElementById('btnSimpanPendapatanBpjs');
+            if (btn) btn.disabled = true;
         }
         document.getElementById('bpjsMetodePembayaran')?.dispatchEvent(new Event('change'));
     };
@@ -834,6 +851,10 @@
         });
 
         hitungTotalBpjs();
+        setTimeout(() => {
+            const btn = document.getElementById('btnSimpanPendapatanBpjs');
+            if (btn) btn.disabled = !form.checkValidity();
+        }, 150);
     };
 
     window.hapusPendapatanBpjs = function (id) {
@@ -1211,6 +1232,28 @@
 
         initImportBpjs();
         initBulkDeleteBpjs();
+
+        // Form Validation for Tambah Data
+        const formBpjs = document.getElementById('formPendapatanBpjs');
+        if (formBpjs) {
+            const validateForm = () => {
+                const btn = document.getElementById('btnSimpanPendapatanBpjs');
+                if (btn) btn.disabled = !formBpjs.checkValidity();
+            };
+            formBpjs.addEventListener('input', validateForm);
+            formBpjs.addEventListener('change', validateForm);
+        }
+
+        // Form Validation for Master Group (Kelompok)
+        const formMasterBpjsVal = document.getElementById('formMasterBpjs');
+        if (formMasterBpjsVal) {
+            const validateMasterForm = () => {
+                const btn = document.getElementById('btnSimpanMasterBpjs');
+                if (btn) btn.disabled = !formMasterBpjsVal.checkValidity();
+            };
+            formMasterBpjsVal.addEventListener('input', validateMasterForm);
+            formMasterBpjsVal.addEventListener('change', validateMasterForm);
+        }
     };
 
 })();

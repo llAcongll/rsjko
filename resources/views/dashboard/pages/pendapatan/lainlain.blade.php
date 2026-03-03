@@ -219,7 +219,7 @@
                     </div>
                     @if(auth()->user()->hasPermission('PENDAPATAN_LAIN_CREATE'))
                         <button class="btn-tambah-data" id="btnTambahPendapatanLain"
-                            style="background:#059669; height: 44px;">
+                            style="background:#059669; height: 44px;" onclick="openPendapatanLainModal()">
                             <i class="ph-bold ph-plus"></i>
                             <span>Tambah Data</span>
                         </button>

@@ -66,7 +66,7 @@
                 <button type="button" class="btn-secondary" onclick="closePendapatanLainModal()">
                     <i class="ph ph-x"></i> Batal
                 </button>
-                <button type="submit" id="btnSimpanPendapatanLain" class="btn-primary" disabled>
+                <button type="submit" id="btnSimpanPendapatanLain" class="btn-primary">
                     <i class="ph ph-floppy-disk"></i> Simpan
                 </button>
             </div>

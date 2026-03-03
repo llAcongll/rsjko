@@ -64,7 +64,7 @@
                 <button type="button" class="btn-secondary" onclick="closePendapatanJaminanModal()">
                     <i class="ph ph-x"></i> Batal
                 </button>
-                <button type="submit" id="btnSimpanPendapatanJaminan" class="btn-primary" disabled>
+                <button type="submit" id="btnSimpanPendapatanJaminan" class="btn-primary">
                     <i class="ph ph-floppy-disk"></i> Simpan
                 </button>
             </div>

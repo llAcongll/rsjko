@@ -216,6 +216,9 @@
         document.getElementById('formMasterLain').reset();
         document.getElementById('masterFormTitleLain').innerHTML = '<i class="ph ph-folder-plus"></i> Tambah Kelompok Lain-lain';
         document.getElementById('modalMasterFormLain').classList.add('show');
+
+        const btn = document.getElementById('btnSimpanMasterLain');
+        if (btn) btn.disabled = true;
     };
 
     window.closeMasterModalLain = function () {
@@ -233,6 +236,10 @@
                 document.getElementById('masterKeteranganLain').value = data.keterangan || '';
                 document.getElementById('masterFormTitleLain').innerHTML = '<i class="ph ph-pencil-simple"></i> Edit Kelompok Lain-lain';
                 document.getElementById('modalMasterFormLain').classList.add('show');
+
+                const form = document.getElementById('formMasterLain');
+                const btn = document.getElementById('btnSimpanMasterLain');
+                if (btn && form) btn.disabled = !form.checkValidity();
             });
     };
 
@@ -696,8 +703,17 @@
         modal.classList.add('show');
         await Promise.all([loadRuanganLain(), loadMouLain()]);
         if (!isEditLain) {
-            document.getElementById('formPendapatanLain').reset();
-            document.getElementById('lainTanggal').value = formatDateForInput(currentMasterData.tanggal);
+            const form = document.getElementById('formPendapatanLain');
+            form.reset();
+            const dateInput = form.querySelector('[name="tanggal"]');
+            if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+
+            document.querySelectorAll('.nominal-display-lain').forEach(disp => disp.value = '');
+            document.querySelectorAll('.nominal-value-lain').forEach(val => val.value = '0');
+            hitungTotalLain();
+
+            const btn = document.getElementById('btnSimpanPendapatanLain');
+            if (btn) btn.disabled = true;
         }
         document.getElementById('lainMetodePembayaran')?.dispatchEvent(new Event('change'));
     };
@@ -781,6 +797,10 @@
             disp.value = formatRibuan(val);
         });
         hitungTotalLain();
+        setTimeout(() => {
+            const btn = document.getElementById('btnSimpanPendapatanLain');
+            if (btn) btn.disabled = !form.checkValidity();
+        }, 150);
     };
 
     window.hapusPendapatanLain = function (id) {
@@ -1078,6 +1098,29 @@
 
         initImportLain();
         initBulkDeleteLain();
+
+        // Form Validation for Tambah Data
+        const formLain = document.getElementById('formPendapatanLain');
+        if (formLain) {
+            const validateForm = () => {
+                const btn = document.getElementById('btnSimpanPendapatanLain');
+                // Khusus Lain-lain: pastikan field dinamis terpenuhi
+                if (btn) btn.disabled = !formLain.checkValidity();
+            };
+            formLain.addEventListener('input', validateForm);
+            formLain.addEventListener('change', validateForm);
+        }
+
+        // Form Validation for Master Group (Kelompok)
+        const formMasterLainVal = document.getElementById('formMasterLain');
+        if (formMasterLainVal) {
+            const validateMasterForm = () => {
+                const btn = document.getElementById('btnSimpanMasterLain');
+                if (btn) btn.disabled = !formMasterLainVal.checkValidity();
+            };
+            formMasterLainVal.addEventListener('input', validateMasterForm);
+            formMasterLainVal.addEventListener('change', validateMasterForm);
+        }
     };
 
 })();
