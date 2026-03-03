@@ -46,7 +46,7 @@ class DisbursementService
             $intendedStatus = $data['status'] ?? 'SPP';
             $isActivity = !empty($data['kode_rekening_id']) || !empty($data['expenditure_id']);
 
-            if ($intendedStatus !== 'DRAFT' && $isActivity) {
+            if ($intendedStatus !== 'DRAFT' && $isActivity && $data['type'] !== 'LS') {
                 $checkDate = $data['sp2d_date'] ?? now();
                 $year = \Carbon\Carbon::parse($checkDate)->year;
                 $available = $this->ledgerService->getAvailableLiquidity($year, true);
@@ -164,7 +164,7 @@ class DisbursementService
             $newDate = $data['sp2d_date'] ?? $disbursement->sp2d_date;
             $newStatus = $data['status'] ?? $disbursement->status;
 
-            if ($newStatus !== 'DRAFT' && ($disbursement->kode_rekening_id || $disbursement->expenditure_id)) {
+            if ($newStatus !== 'DRAFT' && ($disbursement->kode_rekening_id || $disbursement->expenditure_id) && $disbursement->type !== 'LS') {
                 $year = \Carbon\Carbon::parse($newDate)->year;
                 $available = $this->ledgerService->getAvailableLiquidity($year, true, null, $id);
                 if ($newValue > $available) {
@@ -199,7 +199,7 @@ class DisbursementService
             $year = $disbursement->tahun;
 
             // Integrity Guard for status change
-            if ($newStatus !== 'DRAFT' && ($disbursement->kode_rekening_id || $disbursement->expenditure_id)) {
+            if ($newStatus !== 'DRAFT' && ($disbursement->kode_rekening_id || $disbursement->expenditure_id) && $disbursement->type !== 'LS') {
                 $available = $this->ledgerService->getAvailableLiquidity($year, true, null, $id);
                 if ($disbursement->value > $available) {
                     throw new \Exception("Transaksi menyebabkan saldo kas menjadi negatif");

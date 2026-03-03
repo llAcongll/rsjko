@@ -56,8 +56,11 @@ class ExpenditureService
     /**
      * Check if the treasurer has enough UP balance.
      */
-    public function checkLedgerBalance($tanggal, $nominal, $excludeId = null)
+    public function checkLedgerBalance($tanggal, $nominal, $excludeId = null, $type = null)
     {
+        if ($type === 'LS')
+            return ['isValid' => true];
+
         $year = Carbon::parse($tanggal)->year;
 
         // Core Integrity Check with Locking
@@ -72,10 +75,12 @@ class ExpenditureService
 
     public function checkDisbursementLimit($fundDisbursementId, $nominal, $excludeId = null)
     {
-        if (!$fundDisbursementId) return ['isValid' => true];
+        if (!$fundDisbursementId)
+            return ['isValid' => true];
 
         $disbursement = \App\Models\FundDisbursement::find($fundDisbursementId);
-        if (!$disbursement) return ['isValid' => true];
+        if (!$disbursement)
+            return ['isValid' => true];
 
         $query = Expenditure::where('fund_disbursement_id', $fundDisbursementId);
         if ($excludeId) {
@@ -107,8 +112,7 @@ class ExpenditureService
             $data['nomor_dalam_siklus'] = \App\Models\DocumentSequence::nextNumber('BUKTI_CYCLE', $year, $data['siklus_up'], $data['spending_type']);
 
             // Strict Integrity Guard for ALL expenditure types
-            // Strict Integrity Guard for ALL expenditure types
-            $check = $this->checkLedgerBalance($data['spending_date'], $data['gross_value']);
+            $check = $this->checkLedgerBalance($data['spending_date'], $data['gross_value'], null, $data['spending_type'] ?? null);
             if (!$check['isValid']) {
                 throw new \Exception($check['message']);
             }
@@ -175,7 +179,8 @@ class ExpenditureService
             $data['net_value'] = (float) $data['gross_value'] - (float) $data['tax'];
 
             // Strict Integrity Guard for ALL expenditure types
-            $check = $this->checkLedgerBalance($data['spending_date'] ?? $expenditure->spending_date, $data['gross_value'], $id);
+            $spendingType = $data['spending_type'] ?? $expenditure->spending_type;
+            $check = $this->checkLedgerBalance($data['spending_date'] ?? $expenditure->spending_date, $data['gross_value'], $id, $spendingType);
             if (!$check['isValid']) {
                 throw new \Exception($check['message']);
             }

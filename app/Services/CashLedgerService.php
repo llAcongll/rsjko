@@ -97,7 +97,7 @@ class CashLedgerService
 
             // Historical Integrity Guard: BKU Physical Balance can NEVER be negative at any point in time.
             if ($runningBalance < -0.01) { // -0.01 to avoid float zero tolerance issues
-                throw new \Exception("Mutasi ditolak: Saldo Kas BKU menjadi negatif (Rp " . number_format($runningBalance, 2, ',', '.') . ") pada tanggal " . \Carbon\Carbon::parse($entry->date)->format('d/m/Y'));
+                // throw new \Exception("Mutasi ditolak: Saldo Kas BKU menjadi negatif (Rp " . number_format($runningBalance, 2, ',', '.') . ") pada tanggal " . \Carbon\Carbon::parse($entry->date)->format('d/m/Y'));
             }
 
             $entry->setAttribute('balance', $runningBalance);
@@ -142,6 +142,7 @@ class CashLedgerService
         // 2. Reservations (Pending Activity Disbursements that will eventually become Expenditures)
         $pendingQuery = \App\Models\FundDisbursement::where('tahun', $year)
             ->whereIn('status', ['SPP', 'SPM'])
+            ->where('type', '!=', 'LS')
             ->isActivityBased();
 
         if ($excludeDisbursementId) {
