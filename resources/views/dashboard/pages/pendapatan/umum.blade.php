@@ -217,7 +217,8 @@
           @endif
         </div>
         @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE') || auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD'))
-          <button class="btn-tambah-data" id="btnTambahPendapatanUmum" style="background:#059669; height: 44px;">
+          <button class="btn-tambah-data" id="btnTambahPendapatanUmum" style="background:#059669; height: 44px;"
+            onclick="openPendapatanModal()">
             <i class="ph-bold ph-plus"></i>
             <span>Tambah Pasien</span>
           </button>
@@ -313,6 +314,7 @@
   </div>
 
   {{-- MODALS --}}
+  @include('dashboard.partials.pendapatan-umum-form')
   @include('dashboard.partials.pendapatan-umum-detail')
 
   {{-- MODAL MASTER FORM --}}
