@@ -16,12 +16,6 @@
         </div>
 
         <div class="dashboard-header-right">
-            @if(auth()->user()->hasPermission('PENGELUARAN_CREATE') || auth()->user()->isAdmin())
-                <button class="btn-tambah-data" onclick="openPengeluaranForm('{{ $param }}')">
-                    <i class="ph-bold ph-plus"></i>
-                    <span>Tambah Data</span>
-                </button>
-            @endif
         </div>
     </div>
 
@@ -344,7 +338,6 @@
                             onclick="sortPengeluaran('gross_value')" style="cursor: pointer;">
                             Rincian Nominal (Bruto/Pajak/Netto) <i class="ph ph-caret-up-down text-slate-400"></i>
                         </th>
-                        <th width="80" class="text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="tablePengeluaranBody">

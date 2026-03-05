@@ -261,15 +261,15 @@
 
           <div class="submenu-header">Belanja (Direct)</div>
           @if(auth()->user()->hasPermission('BELANJA_VIEW'))
-            <button onclick="openExpenditure('PEGAWAI', this)">
+            <button onclick="openPengeluaran('PEGAWAI', this)">
               <i class="ph ph-users"></i>
               <span>Pegawai</span>
             </button>
-            <button onclick="openExpenditure('BARANG_JASA', this)">
+            <button onclick="openPengeluaran('BARANG_JASA', this)">
               <i class="ph ph-shopping-cart"></i>
               <span>Barang & Jasa</span>
             </button>
-            <button onclick="openExpenditure('MODAL', this)">
+            <button onclick="openPengeluaran('MODAL', this)">
               <i class="ph ph-package"></i>
               <span>Modal</span>
             </button>

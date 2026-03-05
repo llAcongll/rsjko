@@ -502,20 +502,6 @@ function loadPengeluaran(page = 1) {
                             </div>
                         </div>
                     </td>
-                    <td class="text-center">
-                        <div class="flex justify-center gap-2">
-                            ${(window.hasPermission('PENGELUARAN_CREATE') || window.isAdmin) ? `
-                                <button class="btn-aksi edit" onclick="window.openPengeluaranForm('${currentKategori}', ${item.id})" title="Edit">
-                                    <i class="ph ph-pencil-simple"></i>
-                                </button>
-                            ` : ''}
-                            ${(window.hasPermission('PENGELUARAN_DELETE') || window.isAdmin) ? `
-                                <button class="btn-aksi delete" onclick="hapusPengeluaran(${item.id})" title="Hapus">
-                                    <i class="ph ph-trash"></i>
-                                </button>
-                            ` : ''}
-                        </div>
-                    </td>
                 </tr>
             `);
             });
@@ -693,12 +679,18 @@ window.submitPengeluaran = async function (event) {
     }
 
     const form = document.getElementById('formPengeluaran');
+    const formData = new FormData(form);
+
+    if (!formData.get('kode_rekening_id')) {
+        toast('Silakan pilih kode rekening terlebih dahulu.', 'error');
+        return;
+    }
+
     const btn = document.getElementById('btnSimpanPengeluaran');
 
     btn.disabled = true;
     btn.innerText = 'Menyimpan...';
 
-    const formData = new FormData(form);
     const id = formData.get('id');
     const url = id ? `/dashboard/expenditures/${id}` : '/dashboard/expenditures';
 

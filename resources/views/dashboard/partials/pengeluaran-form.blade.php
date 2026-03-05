@@ -42,7 +42,7 @@
                 <div id="rekeningSearchableSelect" style="position: relative;">
                     <input type="text" id="pengeluaranRekeningSearch" class="form-input"
                         placeholder="Ketik untuk mencari kode rekening..." autocomplete="off" style="height: 42px;">
-                    <input type="hidden" name="kode_rekening_id" id="pengeluaranRekening" required>
+                    <input type="hidden" name="kode_rekening_id" id="pengeluaranRekening">
                     <div id="pengeluaranRekeningDropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000;
                             background: #fff; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;
                             max-height: 220px; overflow-y: auto; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">

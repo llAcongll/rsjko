@@ -47,6 +47,10 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth');
 
+Route::get('/logout', function () {
+    return redirect()->route('login')->with('info', 'Silakan gunakan tombol keluar pada menu untuk logout.');
+});
+
 /*
 |--------------------------------------------------------------------------
 | DASHBOARD (BASE & AJAX)
