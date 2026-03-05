@@ -135,26 +135,16 @@ window.viewSpjDetail = function (id) {
 };
 
 window.hapusSpj = function (id) {
-    const modal = document.getElementById('modalConfirmAction');
-    if (modal) {
-        document.getElementById('confirmActionIcon').innerHTML = '<i class="ph ph-trash-simple" style="color:#dc2626;"></i>';
-        document.getElementById('confirmActionTitle').innerText = 'Hapus SPJ';
-        document.getElementById('confirmActionMessage').innerHTML = 'Hapus SPJ ini? Belanja yang terkait akan menjadi UNLINKED kembali.';
-
-        const btn = document.getElementById('btnConfirmActionProceed');
-        btn.innerHTML = `<i class="ph ph-trash"></i> Ya, Hapus SPJ`;
-        btn.style.backgroundColor = '#dc2626';
-        btn.style.color = '#ffffff';
-        btn.onclick = function () {
-            closeConfirmActionModal();
-            executeHapusSpj(id);
-        };
-        modal.classList.add('show');
-    } else {
-        if (confirm('Hapus SPJ ini? Belanja yang terkait akan menjadi UNLINKED kembali.')) {
-            executeHapusSpj(id);
-        }
-    }
+    showActionModal({
+        icon: 'trash-simple',
+        iconColor: '#dc2626',
+        title: 'Hapus SPJ',
+        message: 'Hapus SPJ ini? Belanja yang terkait akan menjadi UNLINKED kembali.',
+        confirmText: 'Ya, Hapus SPJ',
+        confirmIcon: 'trash',
+        confirmColor: '#dc2626',
+        onConfirm: () => executeHapusSpj(id)
+    });
 };
 
 function executeHapusSpj(id) {
@@ -254,7 +244,7 @@ function loadSaldoTable() {
                 const statusHtml = '<span style="font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:4px; background:#dcfce7; color:#166534;">CAIR</span>';
                 const siklusLabel = item.siklus_up && item.type === 'GU' ? `GU-${item.siklus_up}` : '-';
 
-                const canDelete = window.hasPermission('SALDO_DANA_CRUD') || window.isAdmin;
+                const canDelete = window.hasPermission('SALDO_DANA_CRUD');
                 const deleteBtn = canDelete ? `<button class="btn-aksi delete" title="Hapus" onclick="hapusSaldo(${item.id})"><i class="ph ph-trash"></i></button>` : '';
 
                 tbody.insertAdjacentHTML('beforeend', `
@@ -341,26 +331,16 @@ window.submitSaldo = function (e) {
 };
 
 window.hapusSaldo = function (id) {
-    const modal = document.getElementById('modalConfirmAction');
-    if (modal) {
-        document.getElementById('confirmActionIcon').innerHTML = '<i class="ph ph-trash" style="color:#dc2626;"></i>';
-        document.getElementById('confirmActionTitle').innerText = 'Hapus Saldo';
-        document.getElementById('confirmActionMessage').innerText = 'Hapus data saldo ini? Entri BKU juga akan dihapus.';
-
-        const btn = document.getElementById('btnConfirmActionProceed');
-        btn.innerHTML = `<i class="ph ph-trash"></i> Hapus Saldo`;
-        btn.style.backgroundColor = '#dc2626';
-        btn.style.color = '#ffffff';
-        btn.onclick = function () {
-            closeConfirmActionModal();
-            executeHapusSaldo(id);
-        };
-        modal.classList.add('show');
-    } else {
-        if (confirm('Hapus data saldo ini? Entri BKU juga akan dihapus.')) {
-            executeHapusSaldo(id);
-        }
-    }
+    showActionModal({
+        icon: 'trash',
+        iconColor: '#dc2626',
+        title: 'Hapus Saldo',
+        message: 'Hapus data saldo ini? Entri BKU juga akan dihapus.',
+        confirmText: 'Hapus Saldo',
+        confirmIcon: 'trash',
+        confirmColor: '#dc2626',
+        onConfirm: () => executeHapusSaldo(id)
+    });
 };
 
 function executeHapusSaldo(id) {
@@ -528,14 +508,14 @@ window.loadDisbursements = function () {
                 } else {
                     // Build action buttons based on current status AND page mode
                     let actionHtml = '';
-                    const canSppCreate = window.hasPermission('SPP_CRUD') || window.isAdmin;
-                    const canSppDelete = window.hasPermission('SPP_CRUD') || window.isAdmin;
-                    const canSpmCreate = window.hasPermission('SPM_CRUD') || window.isAdmin;
-                    const canSpmDelete = window.hasPermission('SPM_CRUD') || window.isAdmin;
-                    const canSp2dCreate = window.hasPermission('SP2D_CRUD') || window.isAdmin;
-                    const canSp2dDelete = window.hasPermission('SP2D_CRUD') || window.isAdmin;
-                    const canCairView = window.hasPermission('PENCAIRAN_VIEW') || window.isAdmin;
-                    const canCairCreate = window.hasPermission('PENCAIRAN_CRUD') || window.isAdmin;
+                    const canSppCreate = window.hasPermission('SPP_CRUD') || window.hasPermission('PENCAIRAN_CRUD');
+                    const canSppDelete = window.hasPermission('SPP_CRUD') || window.hasPermission('PENCAIRAN_CRUD');
+                    const canSpmCreate = window.hasPermission('SPM_CRUD') || window.hasPermission('PENCAIRAN_CRUD');
+                    const canSpmDelete = window.hasPermission('SPM_CRUD') || window.hasPermission('PENCAIRAN_CRUD');
+                    const canSp2dCreate = window.hasPermission('SP2D_CRUD') || window.hasPermission('PENCAIRAN_CRUD');
+                    const canSp2dDelete = window.hasPermission('SP2D_CRUD') || window.hasPermission('PENCAIRAN_CRUD');
+                    const canCairView = window.hasPermission('PENCAIRAN_VIEW') || window.hasPermission('PENCAIRAN_CRUD');
+                    const canCairCreate = window.hasPermission('PENCAIRAN_CRUD');
 
                     if (disbursementPageMode === 'SPP') {
                         if (item.status === 'DRAFT' || item.status === 'SPP') {
@@ -666,52 +646,107 @@ function getStatusBadge(status) {
 window.closeConfirmActionModal = function () {
     const modal = document.getElementById('modalConfirmAction');
     if (modal) modal.classList.remove('show');
+    // Also remove any dynamic modals
+    document.querySelectorAll('.dynamic-confirm-overlay').forEach(el => el.remove());
 };
+
+/**
+ * Dynamic modal that creates its own DOM — immune to CSS stacking context issues.
+ * @param {object} opts - { icon, iconColor, title, message, confirmText, confirmColor, onConfirm, showInput?, inputPlaceholder? }
+ */
+window.showActionModal = function showActionModal(opts) {
+    // Remove any existing dynamic modal
+    document.querySelectorAll('.dynamic-confirm-overlay').forEach(el => el.remove());
+
+    const overlay = document.createElement('div');
+    overlay.className = 'dynamic-confirm-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,0.55);backdrop-filter:blur(6px);opacity:0;transition:opacity .2s ease;';
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:22px;max-width:400px;width:90%;padding:30px;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,.28);transform:translateY(20px) scale(.96);opacity:0;transition:all .25s cubic-bezier(.22,1,.36,1);';
+
+    const iconColor = opts.iconColor || '#047857';
+    const confirmColor = opts.confirmColor || '#047857';
+
+    box.innerHTML = `
+        <div style="font-size:3.5rem;margin-bottom:15px;">
+            <i class="ph ph-${opts.icon || 'seal-check'}" style="color:${iconColor};"></i>
+        </div>
+        <h3 style="margin-bottom:12px;font-size:1.25rem;font-weight:700;color:#0f172a;">${opts.title || 'Konfirmasi'}</h3>
+        <div style="color:#64748b;font-size:14px;margin-bottom:20px;line-height:1.6;">${opts.message || ''}</div>
+        ${opts.showInput ? `
+            <div style="margin-bottom:20px;text-align:left;">
+                <label style="font-size:12px;font-weight:700;color:#475569;">${opts.inputLabel || 'Input'}</label>
+                <input type="text" id="dynamicModalInput" class="form-input" placeholder="${opts.inputPlaceholder || ''}" 
+                    style="margin-top:5px;width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;">
+            </div>
+        ` : ''}
+        <div style="display:flex;gap:12px;justify-content:center;">
+            <button id="dynamicModalCancel" style="flex:1;height:44px;font-size:14px;font-weight:600;border-radius:14px;border:none;cursor:pointer;background:#e5e7eb;color:#334155;transition:all .18s ease;">
+                Batal
+            </button>
+            <button id="dynamicModalConfirm" style="flex:1.5;height:44px;font-size:14px;font-weight:700;border-radius:14px;border:none;cursor:pointer;color:#fff;background:${confirmColor};transition:all .18s ease;">
+                <i class="ph ph-${opts.confirmIcon || 'check'}"></i> ${opts.confirmText || 'Lanjutkan'}
+            </button>
+        </div>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    // Animate in
+    requestAnimationFrame(() => {
+        overlay.style.opacity = '1';
+        box.style.transform = 'translateY(0) scale(1)';
+        box.style.opacity = '1';
+    });
+
+    function closeModal() {
+        overlay.style.opacity = '0';
+        box.style.transform = 'translateY(20px) scale(.96)';
+        box.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 250);
+    }
+
+    document.getElementById('dynamicModalCancel').onclick = closeModal;
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+    document.getElementById('dynamicModalConfirm').onclick = function () {
+        const inputVal = opts.showInput ? (document.getElementById('dynamicModalInput')?.value || '') : null;
+        closeModal();
+        if (opts.onConfirm) opts.onConfirm(inputVal);
+    };
+}
 
 window.advanceStatus = function (id, newStatus) {
     const labels = { SPP: 'SPP', SPM: 'SPM', CAIR: 'SP2D (Cairkan)' };
     const label = labels[newStatus] || newStatus;
 
-    const modal = document.getElementById('modalConfirmAction');
-    if (modal) {
-        document.getElementById('confirmActionIcon').innerHTML = '<i class="ph ph-seal-check" style="color:#047857;"></i>';
-        document.getElementById('confirmActionTitle').innerText = 'Proses ' + label;
-
-        let message = `Lanjutkan ke tahap ${label}?`;
-
-        if (newStatus === 'SPM' || newStatus === 'CAIR') {
-            message += `<br><span style="font-size:13px; color:#64748b;">Nomor ${label} akan dibuat otomatis oleh sistem.</span>`;
-        } else {
-            message += `\nNomor dokumen akan dibuat otomatis jika dikosongkan.`;
-            message += `
-                <div style="margin-top:15px; text-align:left;">
-                    <label style="font-size:12px; font-weight:700; color:#475569;">Masukkan Nomor ${label} (Opsional)</label>
-                    <input type="text" id="manualDocNumber" class="form-input" placeholder="Kosongkan untuk auto-generate" style="margin-top:5px; width:100%;">
-                </div>
-            `;
-        }
-
-        document.getElementById('confirmActionMessage').innerHTML = message;
-
-        const btn = document.getElementById('btnConfirmActionProceed');
-        btn.innerHTML = `<i class="ph ph-check"></i> Ya, Lanjutkan`;
-        btn.style.backgroundColor = '#047857';
-        btn.style.color = '#ffffff';
-        btn.onclick = function () {
-            const manualNo = document.getElementById('manualDocNumber')?.value;
-            closeConfirmActionModal();
-            executeAdvance(id, newStatus, label, manualNo);
-        };
-        modal.classList.add('show');
+    if (newStatus === 'SPM' || newStatus === 'CAIR') {
+        showActionModal({
+            icon: 'seal-check',
+            iconColor: '#047857',
+            title: 'Proses ' + label,
+            message: `Lanjutkan ke tahap ${label}?<br><span style="font-size:13px;color:#64748b;">Nomor ${label} akan dibuat otomatis oleh sistem.</span>`,
+            confirmText: 'Ya, Lanjutkan',
+            confirmIcon: 'check',
+            confirmColor: '#047857',
+            onConfirm: () => executeAdvance(id, newStatus, label, '')
+        });
     } else {
-        let manualNo = '';
-        if (newStatus !== 'SPM' && newStatus !== 'CAIR') {
-            manualNo = prompt(`Lanjutkan ke tahap ${label}?\nMasukkan nomor manual jika ingin menggunakan nomor tertentu (atau kosongkan untuk otomatis):`);
-            if (manualNo === null) return;
-        } else {
-            if (!confirm(`Lanjutkan ke tahap ${label}?`)) return;
-        }
-        executeAdvance(id, newStatus, label, manualNo);
+        showActionModal({
+            icon: 'seal-check',
+            iconColor: '#047857',
+            title: 'Proses ' + label,
+            message: `Lanjutkan ke tahap ${label}?<br><span style="font-size:13px;color:#64748b;">Nomor dokumen akan dibuat otomatis jika dikosongkan.</span>`,
+            confirmText: 'Ya, Lanjutkan',
+            confirmIcon: 'check',
+            confirmColor: '#047857',
+            showInput: true,
+            inputLabel: `Masukkan Nomor ${label} (Opsional)`,
+            inputPlaceholder: 'Kosongkan untuk auto-generate',
+            onConfirm: (manualNo) => executeAdvance(id, newStatus, label, manualNo || '')
+        });
     }
 };
 
@@ -734,8 +769,9 @@ function executeAdvance(id, newStatus, label, manualNo = '') {
     })
         .then(async res => {
             if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.message || `Gagal memproses ${label}`);
+                let msg = `Gagal memproses ${label} (HTTP ${res.status})`;
+                try { const err = await res.json(); msg = err.message || msg; } catch (e) { }
+                throw new Error(msg);
             }
             toast(`${label} berhasil diproses`, 'success');
             loadDisbursements();
@@ -747,25 +783,16 @@ window.revertStatus = function (id, targetStatus) {
     const labels = { SPP: 'SPM → SPP', SPM: 'SP2D → SPM' };
     const label = labels[targetStatus] || targetStatus;
 
-    const modal = document.getElementById('modalConfirmAction');
-    if (modal) {
-        document.getElementById('confirmActionIcon').innerHTML = '<i class="ph ph-warning-circle" style="color:#dc2626;"></i>';
-        document.getElementById('confirmActionTitle').innerText = 'Batalkan Tahap';
-        document.getElementById('confirmActionMessage').innerText = `Batalkan dan kembalikan status ke ${targetStatus}?\nNomor dokumen dan pembukuan BKU yang sudah dibuat di tahap saat ini akan dihapus/dibatalkan.`;
-
-        const btn = document.getElementById('btnConfirmActionProceed');
-        btn.innerHTML = `<i class="ph ph-arrow-counter-clockwise"></i> Batalkan`;
-        btn.style.backgroundColor = '#dc2626';
-        btn.style.color = '#ffffff';
-        btn.onclick = function () {
-            closeConfirmActionModal();
-            executeRevert(id, targetStatus, label);
-        };
-        modal.classList.add('show');
-    } else {
-        if (!confirm(`Batalkan dan kembalikan status ke ${targetStatus}?\nNomor dokumen yang sudah dibuat akan dihapus.`)) return;
-        executeRevert(id, targetStatus, label);
-    }
+    showActionModal({
+        icon: 'warning-circle',
+        iconColor: '#dc2626',
+        title: 'Batalkan Tahap',
+        message: `Batalkan dan kembalikan status ke ${targetStatus}?<br><span style="font-size:13px;color:#64748b;">Nomor dokumen dan pembukuan BKU akan dihapus/dibatalkan.</span>`,
+        confirmText: 'Batalkan',
+        confirmIcon: 'arrow-counter-clockwise',
+        confirmColor: '#dc2626',
+        onConfirm: () => executeRevert(id, targetStatus, label)
+    });
 };
 
 function executeRevert(id, targetStatus, label) {
@@ -780,8 +807,9 @@ function executeRevert(id, targetStatus, label) {
     })
         .then(async res => {
             if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.message || `Gagal membatalkan`);
+                let msg = 'Gagal membatalkan';
+                try { const err = await res.json(); msg = err.message || msg; } catch (e) { }
+                throw new Error(msg);
             }
             toast(`Berhasil dibatalkan (${label})`, 'success');
             loadDisbursements();
@@ -1291,11 +1319,8 @@ window.submitDisbursement = function (e) {
 
     const val = parseFloat(data.value) || 0;
 
-    // Validate if exceeding Saldo Kas (Only for UP or GU and if it's an ACTIVITY SPP)
-    // LS is direct from bank, so it bypasses this internal cash check
-    if ((data.type === 'UP' || data.type === 'GU') && data.kode_rekening_id && val > (window.currentSisaKas || 0)) {
-        return toast('Gagal: Nominal pengajuan melebihi Sisa Saldo Kas yang tersedia!', 'error');
-    }
+    // SPP UP and GU are requests for cash, so they DO NOT decrease Sisa Saldo Kas.
+    // They bring cash in. Thus, we should not block their submission based on currentSisaKas.
 
     // Validate if exceeding Anggaran
     if (data.kode_rekening_id) {
@@ -1360,25 +1385,16 @@ function formatTanggalInput(dateStr) {
 }
 
 window.hapusDisbursement = function (id) {
-    const modal = document.getElementById('modalConfirmAction');
-    if (modal) {
-        document.getElementById('confirmActionIcon').innerHTML = '<i class="ph ph-trash" style="color:#dc2626;"></i>';
-        document.getElementById('confirmActionTitle').innerText = 'Hapus Pengajuan';
-        document.getElementById('confirmActionMessage').innerText = 'Yakin ingin menghapus data pengajuan SPP ini secara permanen?';
-
-        const btn = document.getElementById('btnConfirmActionProceed');
-        btn.innerHTML = `<i class="ph ph-trash"></i> Hapus Sekarang`;
-        btn.style.backgroundColor = '#dc2626';
-        btn.style.color = '#ffffff';
-        btn.onclick = function () {
-            closeConfirmActionModal();
-            executeHapusDisbursement(id);
-        };
-        modal.classList.add('show');
-    } else {
-        if (!confirm('Hapus data pencairan ini? Ledger akan disesuaikan otomatis.')) return;
-        executeHapusDisbursement(id);
-    }
+    showActionModal({
+        icon: 'trash',
+        iconColor: '#dc2626',
+        title: 'Hapus Pengajuan',
+        message: 'Yakin ingin menghapus data pengajuan SPP ini secara permanen?',
+        confirmText: 'Hapus Sekarang',
+        confirmIcon: 'trash',
+        confirmColor: '#dc2626',
+        onConfirm: () => executeHapusDisbursement(id)
+    });
 };
 
 function executeHapusDisbursement(id) {
@@ -1391,8 +1407,9 @@ function executeHapusDisbursement(id) {
     })
         .then(async res => {
             if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.message || 'Gagal menghapus data');
+                let msg = 'Gagal menghapus data';
+                try { const err = await res.json(); msg = err.message || msg; } catch (e) { }
+                throw new Error(msg);
             }
             toast('Pengajuan berhasil dihapus', 'success');
             loadDisbursements();
@@ -1602,7 +1619,7 @@ window.loadBelanjaItems = function (id) {
                         expenditures.forEach((ex, idx) => {
                             usedSum += parseFloat(ex.gross_value) || 0;
                             const rekLabel = ex.kode_rekening ? `[${ex.kode_rekening.kode}] ${ex.kode_rekening.nama}` : '-';
-                            const canCairCreate = window.hasPermission('PENCAIRAN_CRUD') || window.isAdmin;
+                            const canCairCreate = window.hasPermission('PENCAIRAN_CRUD') || window.hasPermission('SPP_CRUD');
 
                             tbody.insertAdjacentHTML('beforeend', `
                                 <tr>
@@ -1793,27 +1810,16 @@ window.addNewBelanjaItem = function () {
 };
 
 window.deleteBelanjaItem = function (id) {
-    const modal = document.getElementById('modalConfirmAction');
-    if (modal) {
-        document.getElementById('confirmActionIcon').innerHTML = '<i class="ph ph-trash" style="color:#ef4444; font-size: 3.5rem;"></i>';
-        document.getElementById('confirmActionTitle').innerText = 'Hapus Rincian Kegiatan';
-        document.getElementById('confirmActionMessage').innerHTML = 'Hapus rincian kegiatan ini dari BKU?<br><span style="font-size:13px; color:#64748b;">Tindakan ini akan menghapus data belanja secara permanen dan tidak dapat dibatalkan.</span>';
-
-        const btn = document.getElementById('btnConfirmActionProceed');
-        btn.innerHTML = `<i class="ph ph-trash"></i> Ya, Hapus`;
-        btn.style.backgroundColor = '#ef4444';
-        btn.style.borderColor = '#ef4444';
-        btn.style.color = '#ffffff';
-        btn.onclick = function () {
-            closeConfirmActionModal();
-            executeDeleteBelanjaItem(id);
-        };
-        modal.classList.add('show');
-    } else {
-        if (confirm('Hapus rincian kegiatan ini dari BKU?')) {
-            executeDeleteBelanjaItem(id);
-        }
-    }
+    showActionModal({
+        icon: 'trash',
+        iconColor: '#ef4444',
+        title: 'Hapus Rincian Kegiatan',
+        message: 'Hapus rincian kegiatan ini dari BKU?<br><span style="font-size:13px;color:#64748b;">Tindakan ini tidak dapat dibatalkan.</span>',
+        confirmText: 'Ya, Hapus',
+        confirmIcon: 'trash',
+        confirmColor: '#ef4444',
+        onConfirm: () => executeDeleteBelanjaItem(id)
+    });
 };
 
 function executeDeleteBelanjaItem(id) {
@@ -1826,8 +1832,9 @@ function executeDeleteBelanjaItem(id) {
     })
         .then(async res => {
             if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.message || 'Gagal menghapus');
+                let msg = 'Gagal menghapus';
+                try { const err = await res.json(); msg = err.message || msg; } catch (e) { }
+                throw new Error(msg);
             }
             toast('Kegiatan berhasil dihapus', 'success');
             if (window.currentBelanjaDisbursement) {

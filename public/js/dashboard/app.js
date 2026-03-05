@@ -698,32 +698,27 @@ window.confirmCallback = null;
 let isLoggingOut = false;
 
 window.openConfirm = function (title, message, onOk, btnText = 'Hapus', icon = 'ph-trash', btnClass = 'btn-danger') {
-  const modal = document.getElementById('confirmModal');
-  if (!modal) return;
-
-  modal.classList.remove('show');
-
-  const titleEl = document.getElementById('confirmTitle');
-  const msgEl = document.getElementById('confirmMessage');
-  if (titleEl) titleEl.innerText = title;
-  if (msgEl) msgEl.innerText = message;
-
-  const iconEl = modal.querySelector('.confirm-icon i');
-  if (iconEl) {
-    iconEl.className = `ph ${icon}`;
-    iconEl.style.color = (btnClass === 'btn-danger') ? '#ef4444' : '#3b82f6';
+  // Use dynamic modal from treasurer.js if available (immune to CSS stacking issues)
+  if (typeof window.showActionModal === 'function') {
+    const iconName = icon.replace('ph-', '');
+    const color = (btnClass === 'btn-danger') ? '#dc2626' : '#047857';
+    window.showActionModal({
+      icon: iconName,
+      iconColor: color,
+      title: title,
+      message: message,
+      confirmText: btnText,
+      confirmIcon: iconName,
+      confirmColor: color,
+      onConfirm: () => { if (typeof onOk === 'function') onOk(); }
+    });
+    return;
   }
 
-  const okBtn = modal.querySelector('.modal-actions .btn-ok');
-  if (okBtn) {
-    okBtn.innerText = btnText;
-    okBtn.className = `btn-ok ${btnClass}`;
+  // Fallback: native confirm
+  if (confirm(message)) {
+    if (typeof onOk === 'function') onOk();
   }
-
-  window.confirmCallback = onOk;
-  setTimeout(() => {
-    modal.classList.add('show');
-  }, 10);
 };
 
 window.closeConfirm = function () {
@@ -731,6 +726,8 @@ window.closeConfirm = function () {
   if (modal) {
     modal.classList.remove('show');
   }
+  // Also close dynamic modals
+  document.querySelectorAll('.dynamic-confirm-overlay').forEach(el => el.remove());
   window.confirmCallback = null;
 };
 

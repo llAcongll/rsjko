@@ -361,9 +361,9 @@ class DisbursementService
                 }
             } else {
                 // SALDO DANA (Non-activity): This is a cash refill (UP/GU)
-                // When CAIR: Money flows INTO the Treasurer Cash (DEBIT only)
+                // Money flows INTO the Treasurer Cash ONLY when SP2D actually settled (CAIR)
                 // No CREDIT here — the CREDIT happens when Expenditures are recorded
-                if (in_array($disbursement->status, ['SPP', 'SPM', 'CAIR'])) {
+                if ($disbursement->status === 'CAIR') {
                     $type = "AJU_{$disbursement->type}";
                     $desc = ($disbursement->uraian ?: ($disbursement->description ?: "Isi Saldo Kas {$disbursement->type}"));
 
@@ -373,7 +373,7 @@ class DisbursementService
                     // Decreases Rekening Koran (Moves money from Bank to Cash/Dana)
                     $this->bankService->recordEntry($date, "WITHDRAW_{$disbursement->type}", $totalVal, 'fund_disbursements', $id, 'CREDIT', "Penarikan SP2D {$disbursement->type} ({$refNo})", $refNo, $disbursement->bank);
                 } else {
-                    // If status reverted back to DRAFT, remove everything
+                    // Status SPP, SPM, or DRAFT: remove any existing entries (revert scenario)
                     $this->ledgerService->removeEntry('fund_disbursements', $id);
                     $this->bankService->removeEntry('fund_disbursements', $id);
                 }

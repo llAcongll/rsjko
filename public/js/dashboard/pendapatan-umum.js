@@ -638,15 +638,21 @@
     const modal = document.getElementById('pendapatanUmumModal');
     if (!modal) return;
 
-    document.getElementById('formPendapatanUmum').reset();
+    const form = document.getElementById('formPendapatanUmum');
+    if (form) form.reset();
     isEditDetail = false;
 
     // Set default values
-    formPendapatanUmum.querySelector('[name="tanggal"]').value = window.getTodayLocal();
+    if (form) {
+      const tanggalInput = form.querySelector('[name="tanggal"]');
+      if (tanggalInput) tanggalInput.value = window.getTodayLocal();
+    }
     document.querySelectorAll('.nominal-display').forEach(i => i.value = '0');
     document.querySelectorAll('.nominal-value').forEach(i => i.value = '0');
-    document.getElementById('totalPembayaran').innerText = 'Rp 0';
-    document.querySelector('.modal-title').innerText = '➕ Tambah Pasien Umum';
+    const totalEl = document.getElementById('totalPembayaran');
+    if (totalEl) totalEl.innerText = 'Rp 0';
+    const titleEl = document.querySelector('.modal-title');
+    if (titleEl) titleEl.innerText = '➕ Tambah Pasien Umum';
 
     modal.classList.add('show');
     loadRuangan();

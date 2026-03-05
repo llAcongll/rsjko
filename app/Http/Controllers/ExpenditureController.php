@@ -19,7 +19,7 @@ class ExpenditureController extends Controller
     public function index(Request $request)
     {
         // Permission check (using same names as before or mapping)
-        abort_unless(auth()->user()->hasPermission('BELANJA_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_VIEW') || auth()->user()->hasPermission('PENCAIRAN_CRUD') || auth()->user()->hasPermission('SPP_CRUD') || auth()->user()->isAdmin(), 403);
 
         $kategori = $request->get('kategori'); // PEGAWAI, BARANG_JASA, MODAL
         $type = $request->get('spending_type'); // UP, LS
@@ -92,7 +92,7 @@ class ExpenditureController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->hasPermission('PENCAIRAN_CRUD') || auth()->user()->hasPermission('SPP_CRUD') || auth()->user()->isAdmin(), 403);
 
         $data = $request->validate([
             'spending_date' => 'required|date',
@@ -138,14 +138,14 @@ class ExpenditureController extends Controller
 
     public function show($id)
     {
-        abort_unless(auth()->user()->hasPermission('BELANJA_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_VIEW') || auth()->user()->hasPermission('PENCAIRAN_CRUD') || auth()->user()->hasPermission('SPP_CRUD') || auth()->user()->isAdmin(), 403);
         $expenditure = Expenditure::with('kodeRekening')->findOrFail($id);
         return response()->json($expenditure);
     }
 
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->hasPermission('PENCAIRAN_CRUD') || auth()->user()->hasPermission('SPP_CRUD') || auth()->user()->isAdmin(), 403);
 
         $data = $request->validate([
             'spending_date' => 'required|date',
@@ -209,7 +209,7 @@ class ExpenditureController extends Controller
 
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->hasPermission('PENCAIRAN_CRUD') || auth()->user()->hasPermission('SPP_CRUD') || auth()->user()->isAdmin(), 403);
         try {
             $this->service->delete($id);
             return response()->json(['status' => 'ok']);

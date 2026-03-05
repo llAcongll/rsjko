@@ -387,6 +387,11 @@
 </div>
 
 <script>
+    window.hasSppCrud = @json(auth()->user()->hasPermission('SPP_CRUD') || auth()->user()->isAdmin());
+    window.hasSpmCrud = @json(auth()->user()->hasPermission('SPM_CRUD') || auth()->user()->isAdmin());
+    window.hasSp2dCrud = @json(auth()->user()->hasPermission('SP2D_CRUD') || auth()->user()->isAdmin());
+    window.hasPencairanCrud = @json(auth()->user()->hasPermission('PENCAIRAN_CRUD') || auth()->user()->isAdmin());
+    window.hasSaldoDanaCrud = @json(auth()->user()->hasPermission('SALDO_DANA_CRUD') || auth()->user()->isAdmin());
     if (typeof initDisbursement === 'function') {
         initDisbursement();
     }

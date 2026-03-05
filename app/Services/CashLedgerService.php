@@ -201,19 +201,26 @@ class CashLedgerService
                 $totalVal = $consolidationTotals[$refNo] ?? $d->value;
 
                 if ($d->type === 'LS') {
+                    // LS only records when CAIR
+                    if ($d->status !== 'CAIR')
+                        continue;
+
                     // LS always records DEBIT in BKU (Receipt)
                     $this->createEntry($date, 'LS_IN', $d->value, 'fund_disbursements', $d->id, ($d->uraian ?: $d->description));
 
                     // Bank: Only CREDIT (money goes out to vendor)
                     $bankService->recordEntry($date, 'LS_BANK_OUT', $totalVal, 'fund_disbursements', $d->id, 'CREDIT', "Pembayaran LS ke Vendor ({$refNo})", $refNo);
                 } elseif (!$d->expenditure_id && !$d->kode_rekening_id) {
-                    // This is a REFILL (UP/GU) - Inflow to Treasurer Cash
+                    // REFILL (UP/GU) - Only create entries when SP2D is actually CAIR
+                    if ($d->status !== 'CAIR')
+                        continue;
+
                     $this->createEntry($date, "AJU_{$d->type}", $d->value, 'fund_disbursements', $d->id, ($d->uraian ?: ($d->description ?: "Isi Saldo Kas {$d->type}")));
 
                     // Bank: Only CREDIT (money withdrawn from bank to treasurer cash)
                     $bankService->recordEntry($date, "WITHDRAW_{$d->type}", $totalVal, 'fund_disbursements', $d->id, 'CREDIT', "Penarikan Tunai Kas Bendahara ({$refNo})", $refNo);
                 } else {
-                    // This is an activity SPP (Outflow check). 
+                    // This is an activity SPP (Outflow check). Trace at all statuses.
                     $this->createEntry($date, "TRACE_ACTIVITY_{$d->type}", 0, 'fund_disbursements', $d->id, "[Audit Trace] " . ($d->uraian ?: $d->description));
                 }
             }

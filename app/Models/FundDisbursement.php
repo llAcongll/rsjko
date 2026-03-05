@@ -31,6 +31,8 @@ class FundDisbursement extends Model
         'spp_urut',
         'spm_urut',
         'sp2d_urut',
+        'created_by',
+        'bank',
     ];
 
     protected $appends = [

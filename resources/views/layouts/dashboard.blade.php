@@ -662,8 +662,8 @@
       <h3 id="confirmActionTitle" style="margin-bottom: 12px; font-size: 1.25rem; font-weight: 700; color: #0f172a;">
         Konfirmasi
       </h3>
-      <p id="confirmActionMessage" style="color: #64748b; font-size: 14px; margin-bottom: 30px; line-height: 1.6;">
-      </p>
+      <div id="confirmActionMessage" style="color: #64748b; font-size: 14px; margin-bottom: 30px; line-height: 1.6;">
+      </div>
       <div class="confirm-actions" style="justify-content: center; display: flex; gap: 12px;">
         <button type="button" class="btn-secondary" onclick="closeConfirmActionModal()"
           style="flex: 1; padding: 10px; font-weight: 600;">

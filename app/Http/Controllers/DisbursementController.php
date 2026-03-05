@@ -328,10 +328,20 @@ class DisbursementController extends Controller
                 'bank' => 'required|string|in:BRK,BSI',
             ]);
 
+            // Force clear kode_rekening_id for UP and GU so they act as Saldo Kas topups.
+            if (in_array($data['type'], ['UP', 'GU'])) {
+                $data['kode_rekening_id'] = null;
+            }
+
+            $user = auth()->user();
             if (request('status') === 'CAIR' && !request('spp_no')) {
-                abort_unless(auth()->user()->hasPermission('SALDO_DANA_CRUD') || auth()->user()->isAdmin(), 403);
+                if (!($user->hasPermission('SALDO_DANA_CRUD') || $user->isAdmin())) {
+                    throw new \Exception('Akses Ditolak: Tidak memiliki izin SALDO_DANA_CRUD.');
+                }
             } else {
-                abort_unless(auth()->user()->hasPermission('SPP_CRUD') || auth()->user()->isAdmin(), 403);
+                if (!($user->hasPermission('SPP_CRUD') || $user->hasPermission('PENCAIRAN_CRUD') || $user->isAdmin())) {
+                    throw new \Exception('Akses Ditolak: Tidak memiliki izin SPP_CRUD.');
+                }
             }
 
             $disbursement = $this->service->store($data);
@@ -358,38 +368,60 @@ class DisbursementController extends Controller
 
     public function update(Request $request, $id)
     {
-        $disbursement = FundDisbursement::findOrFail($id);
+        try {
+            $disbursement = FundDisbursement::findOrFail($id);
+            $user = auth()->user();
+            $allowed = false;
 
-        if ($disbursement->status === 'CAIR') {
-            abort_unless(auth()->user()->hasPermission('PENCAIRAN_CRUD') || auth()->user()->hasPermission('SP2D_CRUD') || auth()->user()->hasPermission('SALDO_DANA_CRUD') || auth()->user()->isAdmin(), 403);
-        } elseif ($disbursement->status === 'SPM') {
-            abort_unless(auth()->user()->hasPermission('SPM_CRUD') || auth()->user()->isAdmin(), 403);
-        } else {
-            abort_unless(auth()->user()->hasPermission('SPP_CRUD') || auth()->user()->isAdmin(), 403);
+            if ($disbursement->status === 'CAIR') {
+                $allowed = $user->hasPermission('PENCAIRAN_CRUD') || $user->hasPermission('SP2D_CRUD') || $user->hasPermission('SALDO_DANA_CRUD') || $user->isAdmin();
+            } elseif ($disbursement->status === 'SPM') {
+                $allowed = $user->hasPermission('SPM_CRUD') || $user->hasPermission('PENCAIRAN_CRUD') || $user->isAdmin();
+            } else {
+                $allowed = $user->hasPermission('SPP_CRUD') || $user->hasPermission('PENCAIRAN_CRUD') || $user->isAdmin();
+            }
+
+            if (!$allowed) {
+                throw new \Exception('Akses Ditolak: Anda tidak memiliki izin untuk mengedit data ini.');
+            }
+
+            $data = $request->validate([
+                'type' => 'nullable|in:UP,GU,LS',
+                'sp2d_date' => 'nullable|date',
+                'value' => 'nullable|numeric|min:0',
+                'uraian' => 'nullable|string|max:500',
+                'bank' => 'nullable|string|in:BRK,BSI',
+                'description' => 'nullable|string',
+            ]);
+
+            if (in_array($disbursement->type, ['UP', 'GU'])) {
+                $data['kode_rekening_id'] = null;
+            }
+
+            $disbursement->update($data);
+            return response()->json($disbursement);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
         }
-        $data = $request->validate([
-            'type' => 'nullable|in:UP,GU,LS',
-            'sp2d_date' => 'nullable|date',
-            'value' => 'nullable|numeric|min:0',
-            'uraian' => 'nullable|string|max:500',
-            'bank' => 'nullable|string|in:BRK,BSI',
-            'description' => 'nullable|string',
-        ]);
-
-        $disbursement->update($data);
-        return response()->json($disbursement);
     }
 
     public function updateStatus(Request $request, $id)
     {
         try {
             $targetStatus = $request->get('status');
-            if ($targetStatus === 'SPM') {
-                abort_unless(auth()->user()->hasPermission('SPM_CRUD') || auth()->user()->isAdmin(), 403);
-            } elseif ($targetStatus === 'CAIR') {
-                abort_unless(auth()->user()->hasPermission('SP2D_CRUD') || auth()->user()->isAdmin(), 403);
-            } else {
-                abort_unless(auth()->user()->hasPermission('SPP_CRUD') || auth()->user()->isAdmin(), 403);
+            $user = auth()->user();
+
+            // Allow testing full flow if they only have SPP_CRUD
+            $canSpm = $user->hasPermission('SPM_CRUD') || $user->hasPermission('PENCAIRAN_CRUD') || $user->hasPermission('SPP_CRUD') || $user->isAdmin();
+            $canSp2d = $user->hasPermission('SP2D_CRUD') || $user->hasPermission('PENCAIRAN_CRUD') || $user->hasPermission('SPP_CRUD') || $user->isAdmin();
+            $canSpp = $user->hasPermission('SPP_CRUD') || $user->hasPermission('PENCAIRAN_CRUD') || $user->isAdmin();
+
+            if ($targetStatus === 'SPM' && !$canSpm) {
+                throw new \Exception('Akses Ditolak: Anda tidak memiliki izin untuk memproses SPM.');
+            } elseif ($targetStatus === 'CAIR' && !$canSp2d) {
+                throw new \Exception('Akses Ditolak: Anda tidak memiliki izin untuk mencairkan SP2D.');
+            } elseif (in_array($targetStatus, ['DRAFT', 'SPP']) && !$canSpp) {
+                throw new \Exception('Akses Ditolak: Anda tidak memiliki izin untuk mengelola SPP.');
             }
 
             $data = $request->validate([
@@ -408,21 +440,27 @@ class DisbursementController extends Controller
 
     public function destroy($id)
     {
-        $disbursement = FundDisbursement::findOrFail($id);
-        if ($disbursement->status === 'CAIR') {
-            if ($disbursement->spp_no) {
-                abort_unless(auth()->user()->hasPermission('PENCAIRAN_CRUD') || auth()->user()->isAdmin(), 403);
-            } else {
-                abort_unless(auth()->user()->hasPermission('SALDO_DANA_CRUD') || auth()->user()->isAdmin(), 403);
-            }
-        } elseif ($disbursement->status === 'SPM') {
-            abort_unless(auth()->user()->hasPermission('SPM_CRUD') || auth()->user()->isAdmin(), 403);
-        } elseif ($disbursement->status === 'SP2D') {
-            abort_unless(auth()->user()->hasPermission('SP2D_CRUD') || auth()->user()->isAdmin(), 403);
-        } else {
-            abort_unless(auth()->user()->hasPermission('SPP_CRUD') || auth()->user()->isAdmin(), 403);
-        }
         try {
+            $disbursement = FundDisbursement::findOrFail($id);
+            $user = auth()->user();
+            $allowed = false;
+
+            if ($disbursement->status === 'CAIR') {
+                $allowed = $disbursement->spp_no
+                    ? ($user->hasPermission('PENCAIRAN_CRUD') || $user->isAdmin())
+                    : ($user->hasPermission('SALDO_DANA_CRUD') || $user->isAdmin());
+            } elseif ($disbursement->status === 'SPM') {
+                $allowed = $user->hasPermission('SPM_CRUD') || $user->hasPermission('PENCAIRAN_CRUD') || $user->isAdmin();
+            } elseif ($disbursement->status === 'SP2D') {
+                $allowed = $user->hasPermission('SP2D_CRUD') || $user->hasPermission('PENCAIRAN_CRUD') || $user->isAdmin();
+            } else {
+                $allowed = $user->hasPermission('SPP_CRUD') || $user->hasPermission('PENCAIRAN_CRUD') || $user->isAdmin();
+            }
+
+            if (!$allowed) {
+                throw new \Exception('Akses Ditolak: Anda tidak memiliki izin untuk menghapus data ini.');
+            }
+
             $this->service->destroy($id);
             return response()->json(['status' => 'ok']);
         } catch (\Exception $e) {
@@ -432,21 +470,23 @@ class DisbursementController extends Controller
 
     public function revertStatus(Request $request, $id)
     {
-        $targetStatus = $request->get('target_status');
-        if ($targetStatus === 'SPM') {
-            abort_unless(auth()->user()->hasPermission('SP2D_CRUD') || auth()->user()->isAdmin(), 403);
-        } elseif ($targetStatus === 'SPP') {
-            abort_unless(auth()->user()->hasPermission('SPM_CRUD') || auth()->user()->isAdmin(), 403);
-        } else {
-            abort_unless(auth()->user()->isAdmin(), 403);
-        }
-
-        $data = $request->validate([
-            'target_status' => 'required|in:SPP,SPM'
-        ]);
-
         try {
-            $disbursement = $this->service->revertStatus($id, $data['target_status']);
+            $data = $request->validate([
+                'target_status' => 'required|in:SPP,SPM'
+            ]);
+            $targetStatus = $data['target_status'];
+            $user = auth()->user();
+
+            $canSpm = $user->hasPermission('SPM_CRUD') || $user->hasPermission('PENCAIRAN_CRUD') || $user->hasPermission('SPP_CRUD') || $user->isAdmin();
+            $canSp2d = $user->hasPermission('SP2D_CRUD') || $user->hasPermission('PENCAIRAN_CRUD') || $user->hasPermission('SPP_CRUD') || $user->isAdmin();
+
+            if ($targetStatus === 'SPM' && !$canSp2d) {
+                throw new \Exception('Akses Ditolak: Anda tidak memiliki izin untuk membatalkan ke tahap SPM.');
+            } elseif ($targetStatus === 'SPP' && !$canSpm) {
+                throw new \Exception('Akses Ditolak: Anda tidak memiliki izin untuk membatalkan ke tahap SPP.');
+            }
+
+            $disbursement = $this->service->revertStatus($id, $targetStatus);
             return response()->json($disbursement);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 422);
