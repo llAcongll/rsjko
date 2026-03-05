@@ -254,7 +254,7 @@ function loadSaldoTable() {
                 const statusHtml = '<span style="font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:4px; background:#dcfce7; color:#166534;">CAIR</span>';
                 const siklusLabel = item.siklus_up && item.type === 'GU' ? `GU-${item.siklus_up}` : '-';
 
-                const canDelete = window.hasPermission('PENGELUARAN_SALDO_DELETE') || window.isAdmin;
+                const canDelete = window.hasPermission('SALDO_DANA_CRUD') || window.isAdmin;
                 const deleteBtn = canDelete ? `<button class="btn-aksi delete" title="Hapus" onclick="hapusSaldo(${item.id})"><i class="ph ph-trash"></i></button>` : '';
 
                 tbody.insertAdjacentHTML('beforeend', `
@@ -528,14 +528,14 @@ window.loadDisbursements = function () {
                 } else {
                     // Build action buttons based on current status AND page mode
                     let actionHtml = '';
-                    const canSppCreate = window.hasPermission('PENGELUARAN_SPP_CREATE') || window.isAdmin;
-                    const canSppDelete = window.hasPermission('PENGELUARAN_SPP_DELETE') || window.isAdmin;
-                    const canSpmCreate = window.hasPermission('PENGELUARAN_SPM_CREATE') || window.isAdmin;
-                    const canSpmDelete = window.hasPermission('PENGELUARAN_SPM_DELETE') || window.isAdmin;
-                    const canSp2dCreate = window.hasPermission('PENGELUARAN_SP2D_CREATE') || window.isAdmin;
-                    const canSp2dDelete = window.hasPermission('PENGELUARAN_SP2D_DELETE') || window.isAdmin;
-                    const canCairView = window.hasPermission('PENGELUARAN_CAIR_VIEW') || window.isAdmin;
-                    const canCairCreate = window.hasPermission('PENGELUARAN_CAIR_CREATE') || window.isAdmin;
+                    const canSppCreate = window.hasPermission('SPP_CRUD') || window.isAdmin;
+                    const canSppDelete = window.hasPermission('SPP_CRUD') || window.isAdmin;
+                    const canSpmCreate = window.hasPermission('SPM_CRUD') || window.isAdmin;
+                    const canSpmDelete = window.hasPermission('SPM_CRUD') || window.isAdmin;
+                    const canSp2dCreate = window.hasPermission('SP2D_CRUD') || window.isAdmin;
+                    const canSp2dDelete = window.hasPermission('SP2D_CRUD') || window.isAdmin;
+                    const canCairView = window.hasPermission('PENCAIRAN_VIEW') || window.isAdmin;
+                    const canCairCreate = window.hasPermission('PENCAIRAN_CRUD') || window.isAdmin;
 
                     if (disbursementPageMode === 'SPP') {
                         if (item.status === 'DRAFT' || item.status === 'SPP') {
@@ -1602,7 +1602,7 @@ window.loadBelanjaItems = function (id) {
                         expenditures.forEach((ex, idx) => {
                             usedSum += parseFloat(ex.gross_value) || 0;
                             const rekLabel = ex.kode_rekening ? `[${ex.kode_rekening.kode}] ${ex.kode_rekening.nama}` : '-';
-                            const canCairCreate = window.hasPermission('PENGELUARAN_CAIR_CREATE') || window.isAdmin;
+                            const canCairCreate = window.hasPermission('PENCAIRAN_CRUD') || window.isAdmin;
 
                             tbody.insertAdjacentHTML('beforeend', `
                                 <tr>

@@ -208,6 +208,8 @@
                     Pencairan</label></div>
                 <div class="permission-item"><label><input type="checkbox" value="PENCAIRAN_CRUD"> Kelola
                     Pencairan</label></div>
+                <div class="permission-item"><label><input type="checkbox" value="PENGELUARAN_SPJ"> Kelola SPJ</label>
+                </div>
               </div>
 
               <p style="font-size: 10px; font-weight: 700; margin-bottom: 5px;">B. KAS & BKU</p>

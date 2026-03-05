@@ -109,15 +109,7 @@ window.loadLaporan = async function (type) {
             case 'MOU': url = `/dashboard/laporan/mou?${params}`; break;
             case 'ANGGARAN': {
                 const cat = document.getElementById('lraCategory')?.value || 'SEMUA';
-                const level = document.getElementById('lraLevel')?.value;
-                if (!level) {
-                    const cardsE = document.getElementById('lraCardsContainer');
-                    const tableE = document.getElementById('lraTableContainer');
-                    if (cardsE) cardsE.innerHTML = '';
-                    if (tableE) tableE.innerHTML = '<div class="text-center py-5 text-slate-400" style="background:#f8fafc; border-radius:8px; border:2px dashed #e2e8f0;">Silakan pilih Klasifikasi terlebih dahulu untuk menampilkan rincian realisasi.</div>';
-                    if (container) container.classList.remove('loading');
-                    return;
-                }
+                const level = document.getElementById('lraLevel')?.value || '3'; // Default to Jenis (Level 3)
                 url = `/dashboard/laporan/anggaran?${params}&category=${cat}&level=${level}`;
                 break;
             }

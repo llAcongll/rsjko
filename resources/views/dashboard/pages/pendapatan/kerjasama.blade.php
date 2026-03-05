@@ -421,4 +421,5 @@
     {{-- MODALS DETAIL --}}
     @include('dashboard.partials.pendapatan-kerjasama-form')
     @include('dashboard.partials.pendapatan-kerjasama-import')
+    @include('dashboard.partials.pendapatan-kerjasama-detail')
 </div>

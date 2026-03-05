@@ -420,4 +420,5 @@
     {{-- MODALS DETAIL --}}
     @include('dashboard.partials.pendapatan-jaminan-form')
     @include('dashboard.partials.pendapatan-jaminan-import')
+    @include('dashboard.partials.pendapatan-jaminan-detail')
 </div>

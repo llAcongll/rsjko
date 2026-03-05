@@ -11,7 +11,7 @@
             </div>
 
             <div class="dashboard-header-right">
-                @if(auth()->user()->hasPermission('PENGELUARAN_CREATE') || auth()->user()->isAdmin())
+                @if(auth()->user()->hasPermission('SPP_CRUD') || auth()->user()->isAdmin())
                     <button class="btn-tambah-data" onclick="openDisbursementForm()">
                         <i class="ph-bold ph-plus"></i>
                         <span>Buat Pengajuan SPP</span>
@@ -128,7 +128,7 @@
                 dokumen: <span id="belanjaRefNo" style="font-weight: 700; color: #1e293b;">-</span></p>
         </div>
         <div class="dashboard-header-right">
-            @if(auth()->user()->hasPermission('PENGELUARAN_CAIR_CREATE') || auth()->user()->isAdmin())
+            @if(auth()->user()->hasPermission('PENCAIRAN_CRUD') || auth()->user()->isAdmin())
                 <button class="btn-tambah-data" onclick="addNewBelanjaItem()" style="background:#059669; height: 44px;">
                     <i class="ph-bold ph-plus"></i>
                     <span>Tambah Rincian Kegiatan</span>

@@ -596,11 +596,34 @@ class ReportService
             ->orderBy('category', 'asc')
             ->orderBy('kode');
 
-        if ($category !== 'SEMUA') {
-            $query->where('category', $category);
+        $initialRoots = $query->get();
+        $actualRoots = collect();
+
+        foreach ($initialRoots as $root) {
+            // Bypass the overall hospital unit node to show Pendapatan / Belanja directly
+            if (
+                str_contains(strtoupper($root->nama), 'RUMAH SAKIT') ||
+                str_contains(strtoupper($root->nama), 'RSUD') ||
+                str_contains(strtoupper($root->nama), 'RSJKO') ||
+                $root->kode === '1.02.0.00.0.00.02.0002'
+            ) {
+
+                foreach ($root->children as $child) {
+                    if ($category !== 'SEMUA' && $child->category !== $category)
+                        continue;
+                    $actualRoots->push($child);
+                }
+            } else {
+                if ($category !== 'SEMUA' && $root->category !== $category)
+                    continue;
+                $actualRoots->push($root);
+            }
         }
 
-        $roots = $query->get();
+        $roots = $actualRoots->sortBy(function ($item) {
+            return $item->category . '-' . $item->kode;
+        })->values();
+
         $report = [];
         foreach ($roots as $root) {
             $this->processLraNode($root, $tahun, $start, $end, $startOfYear, $prevEnd, $report, $requestedLevel);

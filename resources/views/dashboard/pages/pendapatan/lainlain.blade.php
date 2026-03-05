@@ -418,4 +418,5 @@
     {{-- MODALS --}}
     @include('dashboard.partials.pendapatan-lain-form')
     @include('dashboard.partials.pendapatan-lain-import')
+    @include('dashboard.partials.pendapatan-lain-detail')
 </div>

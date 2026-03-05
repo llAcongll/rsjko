@@ -10,7 +10,7 @@
         </div>
 
         <div class="dashboard-header-right">
-            @if(auth()->user()->hasPermission('PENGELUARAN_CREATE') || auth()->user()->isAdmin())
+            @if(auth()->user()->hasPermission('PENGELUARAN_SPJ') || auth()->user()->isAdmin())
                 <button class="btn-tambah-data" onclick="openSpjForm()">
                     <i class="ph-bold ph-plus"></i>
                     <span>Buat SPJ Baru</span>

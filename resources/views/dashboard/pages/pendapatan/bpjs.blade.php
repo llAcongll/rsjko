@@ -433,6 +433,7 @@
     {{-- MODALS DETAIL --}}
     @include('dashboard.partials.pendapatan-bpjs-form')
     @include('dashboard.partials.pendapatan-bpjs-import')
+    @include('dashboard.partials.pendapatan-bpjs-detail')
 </div>
 
 <style>

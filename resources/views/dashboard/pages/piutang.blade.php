@@ -161,8 +161,9 @@
             </div>
         </div>
     </div>
-
 </div>
 
-
+{{-- MODALS --}}
+@include('dashboard.partials.piutang-form')
+@include('dashboard.partials.piutang-detail')
 </div>

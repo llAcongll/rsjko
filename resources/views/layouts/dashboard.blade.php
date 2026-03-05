@@ -258,6 +258,12 @@
               <span>Pencairan</span>
             </button>
           @endif
+          {{-- @if(auth()->user()->hasPermission('PENGELUARAN_SPJ'))
+          <button onclick="openSpj(this)">
+            <i class="ph ph-file-doc"></i>
+            <span>Surat Pertanggungjawaban (SPJ)</span>
+          </button>
+          @endif --}}
 
           <div class="submenu-header">Belanja (Direct)</div>
           @if(auth()->user()->hasPermission('BELANJA_VIEW'))

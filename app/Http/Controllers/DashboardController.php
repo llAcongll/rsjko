@@ -75,6 +75,7 @@ class DashboardController extends BaseController
                     'PEGAWAI', 'BARANG_JASA', 'MODAL' => (auth()->user()->hasPermission('BELANJA_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengeluaran.index', ['param' => $param]) : abort(403),
                     'ANGGARAN' => (auth()->user()->hasPermission('KODE_REKENING_PENGELUARAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengeluaran.anggaran') : abort(403),
                     'disbursement' => (auth()->user()->hasPermission('SPP_VIEW') || auth()->user()->hasPermission('SPM_VIEW') || auth()->user()->hasPermission('SP2D_VIEW') || auth()->user()->hasPermission('PENCAIRAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengeluaran.disbursement') : abort(403),
+                    'spj' => (auth()->user()->hasPermission('PENGELUARAN_SPJ') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengeluaran.spj') : abort(403),
                     'saldo' => (auth()->user()->hasPermission('SALDO_DANA_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengeluaran.saldo') : abort(403),
                     'ledger' => (auth()->user()->hasPermission('BKU_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengeluaran.ledger') : abort(403),
                     'rekening-koran' => (auth()->user()->hasPermission('REKENING_PENGELUARAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengeluaran.rekening-koran') : abort(403),

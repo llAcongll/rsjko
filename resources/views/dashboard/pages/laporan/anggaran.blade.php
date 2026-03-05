@@ -29,10 +29,9 @@
                 <div class="filter-item">
                     <label>Klasifikasi</label>
                     <select id="lraLevel" class="filter-date-input" style="width: 160px;">
-                        <option value="" selected disabled>-- Pilih Klasifikasi --</option>
                         <option value="1">Akun</option>
                         <option value="2">Kelompok</option>
-                        <option value="3">Jenis</option>
+                        <option value="3" selected>Jenis</option>
                         <option value="4">Objek</option>
                         <option value="5">Rincian Objek</option>
                         <option value="6">Sub Rincian Objek</option>
@@ -58,8 +57,10 @@
     </div>
 
     <div id="lraTableContainer">
-        <div class="text-center py-5 text-slate-400" style="background:#f8fafc; border-radius:8px; border:2px dashed #e2e8f0; margin-top:20px;">
-            Silakan pilih Klasifikasi terlebih dahulu untuk menampilkan rincian realisasi.
+        <div style="padding: 60px 0; text-align: center; color: #94a3b8;">
+            <i class="ph ph-calendar-check"
+                style="font-size: 40px; display: block; margin-bottom: 10px; opacity: 0.3;"></i>
+            <p>Klik tombol 'Tampilkan' untuk melihat rincian realisasi</p>
         </div>
     </div>
 </div>

@@ -27,10 +27,26 @@ class KodeRekeningController extends Controller
     public function index(Request $request)
     {
         $category = $request->get('category', 'PENDAPATAN');
-        $permission = ($category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_VIEW' : 'KODE_REKENING_PENDAPATAN_VIEW';
-        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->isAdmin(), 403);
 
-        if ($request->expectsJson()) {
+        $hasAccess = auth()->user()->isAdmin();
+        if (!$hasAccess) {
+            // Izinkan semua user yang valid mengambil data API JSON untuk interaksi form dan laporan
+            if ($request->expectsJson() || $request->wantsJson() || $request->ajax()) {
+                $hasAccess = true;
+            } else {
+                if ($category === 'PENGELUARAN') {
+                    $hasAccess = auth()->user()->hasPermission('KODE_REKENING_PENGELUARAN_VIEW')
+                        || auth()->user()->hasPermission('SPP_CRUD')
+                        || auth()->user()->hasPermission('PENCAIRAN_CRUD');
+                } else {
+                    $hasAccess = auth()->user()->hasPermission('KODE_REKENING_PENDAPATAN_VIEW');
+                }
+            }
+        }
+
+        abort_unless($hasAccess, 403);
+
+        if ($request->expectsJson() || $request->wantsJson() || $request->ajax()) {
             return $this->service->buildTree($category);
         }
 
@@ -185,8 +201,9 @@ class KodeRekeningController extends Controller
     public function treeAnggaran($tahun, Request $request)
     {
         $category = $request->get('category', 'PENDAPATAN');
-        $permission = ($category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_VIEW' : 'KODE_REKENING_PENDAPATAN_VIEW';
-        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->isAdmin(), 403);
+
+        // Endpoint ini murni API untuk Laporan dan Form (Sp3bp, dsb), jadi izinkan semua user valid
+        // Halaman antarmuka akan terproteksi di Rute Tampilan masing-masing
 
         return $this->service->buildTree($category, $tahun);
     }
