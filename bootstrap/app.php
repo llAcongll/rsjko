@@ -23,10 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->respond(function ($request, Throwable $e) {
-            if ($e instanceof \Illuminate\Session\TokenMismatchException) {
-                return redirect()->route('login')->with('error', 'Sesi Anda telah berakhir, silakan login kembali.');
-            }
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, \Illuminate\Http\Request $request) {
+            return redirect()->route('login')->with('error', 'Sesi Anda telah berakhir, silakan login kembali.');
         });
     })
     ->create();

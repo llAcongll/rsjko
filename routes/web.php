@@ -52,9 +52,14 @@ Route::post('/logout', [AuthController::class, 'logout'])
 | DASHBOARD (BASE & AJAX)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    return redirect()->route('login');
+});
 
-    Route::get('/', fn() => redirect()->route('dashboard'));
+Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', fn() => view('layouts.dashboard'))
         ->name('dashboard');
