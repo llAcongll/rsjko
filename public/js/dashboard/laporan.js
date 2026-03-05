@@ -109,7 +109,16 @@ window.loadLaporan = async function (type) {
             case 'MOU': url = `/dashboard/laporan/mou?${params}`; break;
             case 'ANGGARAN': {
                 const cat = document.getElementById('lraCategory')?.value || 'SEMUA';
-                url = `/dashboard/laporan/anggaran?${params}&category=${cat}`;
+                const level = document.getElementById('lraLevel')?.value;
+                if (!level) {
+                    const cardsE = document.getElementById('lraCardsContainer');
+                    const tableE = document.getElementById('lraTableContainer');
+                    if (cardsE) cardsE.innerHTML = '';
+                    if (tableE) tableE.innerHTML = '<div class="text-center py-5 text-slate-400" style="background:#f8fafc; border-radius:8px; border:2px dashed #e2e8f0;">Silakan pilih Klasifikasi terlebih dahulu untuk menampilkan rincian realisasi.</div>';
+                    if (container) container.classList.remove('loading');
+                    return;
+                }
+                url = `/dashboard/laporan/anggaran?${params}&category=${cat}&level=${level}`;
                 break;
             }
             case 'PENGELUARAN': url = `/dashboard/laporan/pengeluaran?${params}`; break;
@@ -1652,19 +1661,6 @@ window.openPreviewModal = function (type) {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td style="border:1px solid #000; padding:4px; text-align:center;">-</td>
-                        <td style="border:1px solid #000; padding:4px; text-align:center;">-</td>
-                        <td style="border:1px solid #000; padding:4px; text-align:center;">-</td>
-                        <td style="border:1px solid #000; padding:4px; font-weight:bold;">SALDO AWAL</td>
-                        <td style="border:1px solid #000; padding:4px; text-align:center;">-</td>
-                        <td style="border:1px solid #000; padding:4px; text-align:right;">-</td>
-                        <td style="border:1px solid #000; padding:4px; text-align:right;">-</td>
-                        <td style="border:1px solid #000; padding:4px; text-align:right;">-</td>
-                        <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.opening_saldo_dana || 0)}</td>
-                        <td style="border:1px solid #000; padding:4px; text-align:right;">${numFr(data.opening_bank)}</td>
-                        <td style="border:1px solid #000; padding:4px; text-align:right; font-weight:bold;">${numFr(data.opening_balance)}</td>
-                    </tr>
 
                     ${data.data.map((item, i) => `
                     <tr>
@@ -1693,6 +1689,42 @@ window.openPreviewModal = function (type) {
                 </tbody>
             </table>`;
         tablesContainer.innerHTML = bkuHtml;
+
+        // Add special BKU footer info
+        const bkuFooter = `
+            <div style="margin-top:20px; font-size:9pt; font-family: 'Inter', sans-serif;">
+                <div style="display:flex; margin-bottom:4px;">
+                    <div style="width:250px;">Jumlah Penarikan Cek sampai periode ini</div>
+                    <div style="width:20px;">:</div>
+                    <div style="font-weight:bold;">Rp ${numFr(data.summary.ytd_receipts)}</div>
+                </div>
+                <div style="display:flex; margin-bottom:15px;">
+                    <div style="width:250px;">Jumlah Pengeluaran sampai periode ini</div>
+                    <div style="width:20px;">:</div>
+                    <div style="font-weight:bold;">Rp ${numFr(data.summary.ytd_expenditures)}</div>
+                </div>
+                
+                <div style="margin-top:15px;">
+                    <div style="font-weight:bold; text-decoration:underline;">Catatan :</div>
+                    <div style="display:flex; margin-top:4px;">
+                        <div style="width:250px;">Saldo Rekening Per akhir bulan</div>
+                        <div style="width:20px;">:</div>
+                        <div style="font-weight:bold;">Rp ${numFr(data.summary.final_bank)}</div>
+                    </div>
+                    <div style="display:flex; margin-top:2px; font-style: italic; color: #4b5563; font-size: 8.5pt;">
+                        <div style="width:250px; padding-left: 20px;">- Bank Riau Kepri Syariah</div>
+                        <div style="width:20px;">:</div>
+                        <div>Rp ${numFr(data.summary.final_bank_brk || 0)}</div>
+                    </div>
+                    <div style="display:flex; margin-top:2px; font-style: italic; color: #4b5563; font-size: 8.5pt;">
+                        <div style="width:250px; padding-left: 20px;">- Bank Syariah Indonesia</div>
+                        <div style="width:20px;">:</div>
+                        <div>Rp ${numFr(data.summary.final_bank_bsi || 0)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        tablesContainer.insertAdjacentHTML('beforeend', bkuFooter);
     } else if (reportType === 'LRKB') {
         const triwulans = ["", "I (SATU)", "II (DUA)", "III (TIGA)", "IV (EMPAT)"];
         const months = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];

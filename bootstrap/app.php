@@ -13,6 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
 
+        $middleware->redirectTo('/login', '/dashboard');
+
         // ✅ REGISTER ALIAS MIDDLEWARE (LARAVEL 11 WAY)
         $middleware->alias([
             'role' => RoleMiddleware::class,
@@ -21,6 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->respond(function ($request, Throwable $e) {
+            if ($e instanceof \Illuminate\Session\TokenMismatchException) {
+                return redirect()->route('login')->with('error', 'Sesi Anda telah berakhir, silakan login kembali.');
+            }
+        });
     })
     ->create();

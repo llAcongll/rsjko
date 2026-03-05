@@ -506,6 +506,63 @@ window.openPencairanPage = async function (btn) {
   }
 };
 
+window.openLaporanSpp = async function (btn) {
+  const parentBtn = document.getElementById('btnLaporan');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  window._disbursementPageMode = 'REPORT_SPP';
+  await loadContent('pengeluaran/disbursement');
+
+  document
+    .querySelectorAll('#submenuLaporan button')
+    .forEach(b => b.classList.remove('active'));
+
+  if (btn) btn.classList.add('active');
+
+  if (typeof window.initDisbursement === 'function') {
+    window.initDisbursement();
+  }
+};
+
+window.openLaporanSpm = async function (btn) {
+  const parentBtn = document.getElementById('btnLaporan');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  window._disbursementPageMode = 'REPORT_SPM';
+  await loadContent('pengeluaran/disbursement');
+
+  document
+    .querySelectorAll('#submenuLaporan button')
+    .forEach(b => b.classList.remove('active'));
+
+  if (btn) btn.classList.add('active');
+
+  if (typeof window.initDisbursement === 'function') {
+    window.initDisbursement();
+  }
+};
+
+window.openLaporanSp2d = async function (btn) {
+  const parentBtn = document.getElementById('btnLaporan');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+
+  window._disbursementPageMode = 'REPORT_SP2D';
+  await loadContent('pengeluaran/disbursement');
+
+  document
+    .querySelectorAll('#submenuLaporan button')
+    .forEach(b => b.classList.remove('active'));
+
+  if (btn) btn.classList.add('active');
+
+  if (typeof window.initDisbursement === 'function') {
+    window.initDisbursement();
+  }
+};
+
 window.openTreasurerCash = async function (btn) {
   const parentBtn = document.getElementById('btnPengeluaran');
   setActiveMenu(parentBtn);

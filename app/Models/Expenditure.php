@@ -21,6 +21,7 @@ class Expenditure extends Model
         'no_bukti',
         'no_bukti_urut',
         'nomor_dalam_siklus',
+        'number_locked_at',
         'created_by',
     ];
 

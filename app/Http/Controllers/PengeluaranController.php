@@ -18,7 +18,7 @@ class PengeluaranController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_VIEW') || auth()->user()->isAdmin(), 403);
         $kategori = $request->get('kategori');
         $search = $request->get('search');
         $limit = $request->get('limit', 10);
@@ -97,7 +97,7 @@ class PengeluaranController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->isAdmin(), 403);
         $data = $request->validate([
             'tanggal' => 'required|date',
             'kategori' => 'required|in:PEGAWAI,BARANG_JASA,MODAL',
@@ -132,14 +132,14 @@ class PengeluaranController extends Controller
 
     public function show($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_VIEW') || auth()->user()->isAdmin(), 403);
         $pengeluaran = Pengeluaran::with('kodeRekening')->findOrFail($id);
         return response()->json($pengeluaran);
     }
 
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_UPDATE'), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->isAdmin(), 403);
         $data = $request->validate([
             'tanggal' => 'required|date',
             'kategori' => 'required|in:PEGAWAI,BARANG_JASA,MODAL',
@@ -174,7 +174,7 @@ class PengeluaranController extends Controller
 
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_DELETE'), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->isAdmin(), 403);
         $this->service->delete($id);
 
         return response()->json(['status' => 'ok']);

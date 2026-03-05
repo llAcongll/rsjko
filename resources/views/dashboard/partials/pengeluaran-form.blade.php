@@ -22,12 +22,31 @@
 
                 <div class="form-group">
                     <label
-                        style="font-weight: 700; color: #475569; margin-bottom: 8px; display: block; font-size: 13px;">Kode
-                        Rekening (Kegiatan)</label>
-                    <select name="kode_rekening_id" id="pengeluaranRekening" class="form-input" required
-                        style="height: 42px;">
-                        <option value="">-- Pilih Rekening --</option>
-                    </select>
+                        style="font-weight: 700; color: #475569; margin-bottom: 8px; display: block; font-size: 13px;">No.
+                        Bukti <span style="color: #ef4444;">*</span></label>
+                    <div style="position: relative;">
+                        <input type="text" name="no_bukti" id="pengeluaranNoBukti" class="form-input" required
+                            style="height: 42px; padding-right: 38px;" placeholder="Masukkan nomor bukti..."
+                            autocomplete="off">
+                        <span id="noBuktiStatus"
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; display: none;"></span>
+                    </div>
+                    <small id="noBuktiMessage" style="display: none; margin-top: 4px; font-size: 11px;"></small>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label
+                    style="font-weight: 700; color: #475569; margin-bottom: 8px; display: block; font-size: 13px;">Kode
+                    Rekening (Kegiatan) <span style="color: #ef4444;">*</span></label>
+                <div id="rekeningSearchableSelect" style="position: relative;">
+                    <input type="text" id="pengeluaranRekeningSearch" class="form-input"
+                        placeholder="Ketik untuk mencari kode rekening..." autocomplete="off" style="height: 42px;">
+                    <input type="hidden" name="kode_rekening_id" id="pengeluaranRekening" required>
+                    <div id="pengeluaranRekeningDropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000;
+                            background: #fff; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;
+                            max-height: 220px; overflow-y: auto; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+                    </div>
                 </div>
             </div>
 

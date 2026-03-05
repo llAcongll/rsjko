@@ -24,8 +24,17 @@
       <label>C / D</label>
       <select id="rkCD" class="form-input">
         <option value="">-- Pilih Jenis --</option>
-        <option value="C">C (Credit)</option>
-        <option value="D">D (Debit)</option>
+        <option value="C">C (Credit / Masuk)</option>
+        <option value="D">D (Debit / Keluar)</option>
+      </select>
+    </div>
+
+    <div class="form-group" id="rkDestinationBankGroup" style="display: none;">
+      <label>Kirim ke Bank (Untuk Pengeluaran)</label>
+      <select id="rkDestinationBank" class="form-input">
+        <option value="">-- Gunakan Bank Yang Sama --</option>
+        <option value="BRK">Bank Riau Kepri Syariah</option>
+        <option value="BSI">Bank Syariah Indonesia</option>
       </select>
     </div>
 

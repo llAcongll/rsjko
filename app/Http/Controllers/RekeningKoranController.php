@@ -3,15 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Models\RekeningKoran;
+use App\Services\BankLedgerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class RekeningKoranController extends Controller
 {
+    protected $bankLedgerService;
+    protected $cashLedgerService;
+
+    public function __construct(BankLedgerService $bankLedgerService, \App\Services\CashLedgerService $cashLedgerService)
+    {
+        $this->bankLedgerService = $bankLedgerService;
+        $this->cashLedgerService = $cashLedgerService;
+    }
+
     public function index(Request $request)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_VIEW') || Auth::user()->hasPermission('MASTER_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_VIEW') || auth()->user()->hasPermission('REKENING_PENGELUARAN_VIEW') || auth()->user()->isAdmin(), 403);
 
         $q = RekeningKoran::query()
             ->where('tahun', session('tahun_anggaran'));
@@ -39,9 +49,63 @@ class RekeningKoranController extends Controller
         return response()->json($q->get());
     }
 
+    public function setSaldoAwal(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
+
+        $request->validate([
+            'bank' => 'required',
+            'jumlah' => 'required|numeric|min:0'
+        ]);
+
+        $tahun = session('tahun_anggaran', date('Y'));
+
+        // Find existing saldo awal for this bank in this year
+        $existing = RekeningKoran::where('tahun', $tahun)
+            ->where('bank', $request->bank)
+            ->where('is_saldo_awal', true)
+            ->first();
+
+        if ($existing) {
+            $existing->update([
+                'jumlah' => $request->jumlah
+            ]);
+        } else {
+            RekeningKoran::create([
+                'tahun' => $tahun,
+                'tanggal' => $tahun . '-01-01',
+                'bank' => $request->bank,
+                'keterangan' => 'Saldo Awal Tahun ' . $tahun,
+                'cd' => 'D',
+                'jumlah' => $request->jumlah,
+                'is_saldo_awal' => true
+            ]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteSaldoAwal(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
+
+        $request->validate([
+            'bank' => 'required',
+        ]);
+
+        $tahun = session('tahun_anggaran', date('Y'));
+
+        RekeningKoran::where('tahun', $tahun)
+            ->where('bank', $request->bank)
+            ->where('is_saldo_awal', true)
+            ->delete();
+
+        return response()->json(['success' => true, 'message' => 'Saldo awal berhasil dihapus']);
+    }
+
     public function store(Request $request)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_CREATE') || Auth::user()->hasPermission('MASTER_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
 
         $data = $request->validate([
             'tanggal' => 'required|date',
@@ -49,23 +113,52 @@ class RekeningKoranController extends Controller
             'keterangan' => 'required|string|max:255',
             'cd' => 'required|in:C,D',
             'jumlah' => 'required|numeric|min:0',
+            'destination_bank' => 'nullable|string|in:BRK,BSI',
         ]);
 
         $data['tahun'] = session('tahun_anggaran');
-        RekeningKoran::create($data);
+        $rekeningKoran = RekeningKoran::create($data);
+
+        // Auto-Credit ke Rekening Koran Pengeluaran jika cd == 'D' (Uang Masuk ke Pengeluaran)
+        if ($rekeningKoran->cd === 'D') {
+            $targetBank = $rekeningKoran->destination_bank ?: $this->mapBank($rekeningKoran->bank);
+
+            $this->bankLedgerService->recordEntry(
+                $rekeningKoran->tanggal,
+                'PENDAPATAN_TRANSFER',
+                $rekeningKoran->jumlah,
+                'rekening_korans',
+                $rekeningKoran->id,
+                'DEBIT',
+                $rekeningKoran->keterangan,
+                null,
+                $targetBank
+            );
+
+            // Sync to BKU
+            $this->cashLedgerService->recordEntry(
+                $rekeningKoran->tanggal,
+                'TRANSFER_PENERIMAAN',
+                $rekeningKoran->jumlah,
+                'rekening_korans',
+                $rekeningKoran->id,
+                'DEBIT',
+                $rekeningKoran->keterangan
+            );
+        }
 
         return response()->json(['success' => true]);
     }
 
     public function show(RekeningKoran $rekeningKoran)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_VIEW') || Auth::user()->hasPermission('MASTER_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_VIEW') || auth()->user()->hasPermission('REKENING_PENGELUARAN_VIEW') || auth()->user()->isAdmin(), 403);
         return response()->json($rekeningKoran);
     }
 
     public function update(Request $request, RekeningKoran $rekeningKoran)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_CREATE') || Auth::user()->hasPermission('MASTER_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
 
         // Proteksi data yang sudah diposting
         if ($rekeningKoran->cd === 'C' && $rekeningKoran->revenue_master_id) {
@@ -84,16 +177,58 @@ class RekeningKoranController extends Controller
             'keterangan' => 'required|string|max:255',
             'cd' => 'required|in:C,D',
             'jumlah' => 'required|numeric|min:0',
+            'destination_bank' => 'nullable|string|in:BRK,BSI',
         ]);
 
         $rekeningKoran->update($data);
+
+        // Auto-Credit / Sync dengan Rekening Koran Pengeluaran
+        if ($rekeningKoran->cd === 'D') {
+            $targetBank = $rekeningKoran->destination_bank ?: $this->mapBank($rekeningKoran->bank);
+
+            // Update / Insert di bank_account_ledgers
+            $this->bankLedgerService->recordEntry(
+                $rekeningKoran->tanggal,
+                'PENDAPATAN_TRANSFER',
+                $rekeningKoran->jumlah,
+                'rekening_korans',
+                $rekeningKoran->id,
+                'DEBIT',
+                $rekeningKoran->keterangan,
+                null,
+                $targetBank
+            );
+
+            // Sync to BKU
+            $this->cashLedgerService->recordEntry(
+                $rekeningKoran->tanggal,
+                'TRANSFER_PENERIMAAN',
+                $rekeningKoran->jumlah,
+                'rekening_korans',
+                $rekeningKoran->id,
+                'DEBIT',
+                $rekeningKoran->keterangan
+            );
+        } else {
+            // Jika berubah menjadi 'C', pastikan dihapus dari bank_account_ledgers dan BKU
+            $this->bankLedgerService->removeEntry(
+                'rekening_korans',
+                $rekeningKoran->id,
+                'PENDAPATAN_TRANSFER'
+            );
+            $this->cashLedgerService->removeEntry(
+                'rekening_korans',
+                $rekeningKoran->id,
+                'TRANSFER_PENERIMAAN'
+            );
+        }
 
         return response()->json(['success' => true]);
     }
 
     public function destroy(RekeningKoran $rekeningKoran)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_DELETE') || Auth::user()->hasPermission('MASTER_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
 
         // Proteksi data yang sudah diposting
         if ($rekeningKoran->cd === 'C' && $rekeningKoran->revenue_master_id) {
@@ -105,6 +240,11 @@ class RekeningKoranController extends Controller
                 abort(403, 'Data Pendapatan yang sudah diposting tidak dapat dihapus secara manual.');
             }
         }
+
+        // Hapus auto-credit dari Rekening Koran Pengeluaran (jika ada)
+        $this->bankLedgerService->removeEntry('rekening_korans', $rekeningKoran->id, 'PENDAPATAN_TRANSFER');
+        // Hapus dari BKU
+        $this->cashLedgerService->removeEntry('rekening_korans', $rekeningKoran->id, 'TRANSFER_PENERIMAAN');
 
         $rekeningKoran->delete();
 
@@ -119,9 +259,17 @@ class RekeningKoranController extends Controller
         ];
     }
 
+    private function mapBank($fullName)
+    {
+        if (str_contains($fullName, 'Indonesia')) {
+            return 'BSI';
+        }
+        return 'BRK';
+    }
+
     public function downloadTemplate()
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_CREATE') || Auth::user()->hasPermission('MASTER_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
 
         $headers = [
             'Content-Type' => 'text/csv',
@@ -140,7 +288,7 @@ class RekeningKoranController extends Controller
 
     public function import(Request $request)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_IMPORT') || Auth::user()->hasPermission('MASTER_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
 
         $request->validate([
             'file' => 'required|file|mimes:csv,txt'
@@ -218,7 +366,7 @@ class RekeningKoranController extends Controller
                 continue;
             }
 
-            RekeningKoran::create([
+            $rekeningKoran = RekeningKoran::create([
                 'tahun' => session('tahun_anggaran'), // Asumsi tahun sesuai sesi
                 'tanggal' => date('Y-m-d', strtotime($tanggalFixed)),
                 'bank' => $bank,
@@ -226,6 +374,30 @@ class RekeningKoranController extends Controller
                 'cd' => $cd,
                 'jumlah' => $jumlah
             ]);
+
+            // Auto-Credit ke Rekening Koran Pengeluaran
+            if ($cd === 'D') {
+                $this->bankLedgerService->recordEntry(
+                    $rekeningKoran->tanggal,
+                    'PENDAPATAN_TRANSFER',
+                    $rekeningKoran->jumlah,
+                    'rekening_korans',
+                    $rekeningKoran->id,
+                    'DEBIT',
+                    $rekeningKoran->keterangan
+                );
+
+                // Sync to BKU
+                $this->cashLedgerService->recordEntry(
+                    $rekeningKoran->tanggal,
+                    'TRANSFER_PENERIMAAN',
+                    $rekeningKoran->jumlah,
+                    'rekening_korans',
+                    $rekeningKoran->id,
+                    'DEBIT',
+                    $rekeningKoran->keterangan
+                );
+            }
 
             $count++;
         }
@@ -240,7 +412,7 @@ class RekeningKoranController extends Controller
     }
     public function bulkDelete(Request $request)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_DELETE') || Auth::user()->hasPermission('MASTER_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
 
         $bank = $request->input('bank');
         $start = $request->input('start');
@@ -277,6 +449,16 @@ class RekeningKoranController extends Controller
         }
 
         $count = $query->count();
+
+        // Hapus auto-credit dari Rekening Koran Pengeluaran untuk item yang akan dihapus
+        $itemsToDelete = $query->get();
+        foreach ($itemsToDelete as $item) {
+            if ($item->cd === 'D') {
+                $this->bankLedgerService->removeEntry('rekening_korans', $item->id, 'PENDAPATAN_TRANSFER');
+                $this->cashLedgerService->removeEntry('rekening_korans', $item->id, 'TRANSFER_PENERIMAAN');
+            }
+        }
+
         $query->delete();
 
         return response()->json($count);
@@ -284,7 +466,7 @@ class RekeningKoranController extends Controller
 
     public function print(Request $request)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_VIEW') || Auth::user()->hasPermission('MASTER_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_VIEW') || auth()->user()->hasPermission('REKENING_PENGELUARAN_VIEW') || auth()->user()->isAdmin(), 403);
 
         $bank = $request->input('bank');
         $start = $request->input('start');
@@ -345,7 +527,7 @@ class RekeningKoranController extends Controller
 
     public function exportExcel(Request $request)
     {
-        abort_unless(Auth::user()->hasPermission('REKENING_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_VIEW') || auth()->user()->hasPermission('REKENING_PENGELUARAN_VIEW') || auth()->user()->isAdmin(), 403);
 
         $bank = $request->input('bank');
         $start = $request->input('start');

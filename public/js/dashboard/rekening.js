@@ -33,6 +33,13 @@ window.openRekeningForm = function (row = null) {
   rkCD.value = row ? row.cd : '';
   rkJumlah.value = row ? formatNumber(row.jumlah) : '';
 
+  const destGroup = document.getElementById('rkDestinationBankGroup');
+  const destBank = document.getElementById('rkDestinationBank');
+  if (destGroup && destBank) {
+    destGroup.style.display = rkCD.value === 'D' ? 'block' : 'none';
+    destBank.value = row?.destination_bank || '';
+  }
+
   rekeningModal.classList.add('show');
 
   validateRekeningForm();
@@ -42,6 +49,62 @@ window.closeRekeningModal = function () {
   rekeningModal.classList.remove('show');
   editingRekeningId = null;
 };
+
+/* =========================
+   SALDO AWAL MODAL
+========================= */
+window.openRekeningSaldoAwalModal = function () {
+  const modal = document.getElementById('modalRekeningSaldoAwal');
+  const form = document.getElementById('formRekeningSaldoAwal');
+  if (form) form.reset();
+
+  const displayInput = document.getElementById('rekeningSaldoAwalDisplayInput');
+  const hiddenInput = document.getElementById('rekeningSaldoAwalValue');
+
+  if (displayInput && hiddenInput) {
+    displayInput.value = '0';
+    hiddenInput.value = 0;
+
+    displayInput.oninput = () => { hiddenInput.value = parseAngka(displayInput.value); };
+    displayInput.onblur = () => { displayInput.value = formatRibuan(hiddenInput.value); };
+    displayInput.onfocus = () => {
+      const val = parseAngka(displayInput.value);
+      displayInput.value = val === 0 ? '' : val.toString().replace('.', ',');
+    };
+  }
+
+  if (modal) modal.classList.add('show');
+};
+
+window.closeRekeningSaldoAwalModal = function () {
+  const modal = document.getElementById('modalRekeningSaldoAwal');
+  if (modal) modal.classList.remove('show');
+};
+
+window.submitRekeningSaldoAwal = function (e) {
+  e.preventDefault();
+  const form = document.getElementById('formRekeningSaldoAwal');
+  const data = Object.fromEntries(new FormData(form));
+
+  fetch('/dashboard/rekening-korans/saldo-awal', {
+    method: 'POST',
+    headers: {
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify(data)
+  })
+    .then(async res => {
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Gagal menyimpan saldo awal');
+      toast(json.message || 'Saldo awal berhasil diset', 'success');
+      closeRekeningSaldoAwalModal();
+      loadRekening();
+    })
+    .catch(err => toast(err.message, 'error'));
+};
+
 
 /* =========================
    DETAIL
@@ -119,7 +182,8 @@ window.submitRekening = function () {
     bank: rkBank.value,
     keterangan: rkKeterangan.value.trim(),
     cd: rkCD.value,
-    jumlah
+    jumlah,
+    destination_bank: document.getElementById('rkDestinationBank')?.value || null
   };
 
   if (!BANK_LIST.includes(payload.bank)) {
@@ -208,8 +272,20 @@ function getRekeningProcessedData(data) {
   const startDateFilter = document.getElementById('filterStart')?.value || '';
 
   let saldoAwal = 0;
+  let saldoAwalDisplay = 0; // The actual base balance set for this year
+
   rekeningRawData.forEach(r => {
-    if (startDateFilter && r.tanggal < startDateFilter) {
+    const isBaseSaldoAwal = r.is_saldo_awal === 1 || r.is_saldo_awal === true;
+
+    if (isBaseSaldoAwal) {
+      if (!bankFilter || r.bank === bankFilter) {
+        saldoAwalDisplay += Number(r.jumlah) || 0;
+        // Also adds to standard saldoAwal if it's within filter ranges (or before start date)
+        if (!startDateFilter || r.tanggal < startDateFilter) {
+          saldoAwal += Number(r.jumlah) || 0;
+        }
+      }
+    } else if (startDateFilter && r.tanggal < startDateFilter) {
       if (!bankFilter || r.bank === bankFilter) {
         const j = Number(r.jumlah) || 0;
         saldoAwal += r.cd === 'C' ? j : -j;
@@ -218,14 +294,31 @@ function getRekeningProcessedData(data) {
   });
 
   let running = saldoAwal;
-  const processed = data.map(r => {
-    const j = Number(r.jumlah) || 0;
-    running += r.cd === 'C' ? j : -j;
-    return { ...r, saldo_running: running };
+  let processed = [];
+
+  data.forEach(r => {
+    // Only calculate running balance for non-saldo-awal entries or if we just want to show them 
+    // Wait, the data array passed in is the FILTERED data to be shown.
+    // We want to calculate running balance including saldo_awal, but NOT display saldo_awal in the table rows
+    const isBaseSaldoAwal = r.is_saldo_awal === 1 || r.is_saldo_awal === true;
+
+    // We already accounted for is_saldo_awal in `saldoAwal` if its date matched.
+    // BUT what if its date is within the table range? We must add it to running balance but not display it.
+    if (isBaseSaldoAwal) {
+      // If it wasn't added before startDateFilter, we add it now
+      if (!startDateFilter || r.tanggal >= startDateFilter) {
+        running += Number(r.jumlah) || 0;
+      }
+    } else {
+      const j = Number(r.jumlah) || 0;
+      running += r.cd === 'C' ? j : -j;
+      processed.push({ ...r, saldo_running: running });
+    }
   });
 
-  return { processed, saldoAwal };
+  return { processed, saldoAwal, saldoAwalDisplay };
 }
+
 
 function renderRekeningTable(data) {
   const tbody = document.querySelector('#rekeningTable tbody');
@@ -264,7 +357,14 @@ function renderRekeningTable(data) {
     elBSI.className = Number(pBSI) > 0 ? 'growth-up' : '';
   }
 
-  const { processed } = getRekeningProcessedData(data);
+  const { processed, saldoAwalDisplay } = getRekeningProcessedData(data);
+
+  // Update Saldo Awal Display Block
+  const saldoAwalDisplayEl = document.getElementById('rekeningSaldoAwalDisplay');
+  if (saldoAwalDisplayEl) {
+    saldoAwalDisplayEl.innerText = `Saldo Awal Tahun: ${formatRupiah(saldoAwalDisplay)}`;
+  }
+
 
   // 3. Render PAGINATED rows
   const start = (rekeningCurrentPage - 1) * REKENING_PER_PAGE;
@@ -657,11 +757,18 @@ rkJumlah?.addEventListener('focus', function (e) {
 /* =========================
    EVENT BINDING
 ========================= */
-['rkTanggal', 'rkBank', 'rkKeterangan', 'rkCD', 'rkJumlah'].forEach(id => {
+['rkTanggal', 'rkBank', 'rkKeterangan', 'rkCD', 'rkJumlah', 'rkDestinationBank'].forEach(id => {
   const el = document.getElementById(id);
   if (!el) return;
   el.addEventListener('input', validateRekeningForm);
   el.addEventListener('change', validateRekeningForm);
+});
+
+rkCD?.addEventListener('change', function () {
+  const destGroup = document.getElementById('rkDestinationBankGroup');
+  if (destGroup) {
+    destGroup.style.display = this.value === 'D' ? 'block' : 'none';
+  }
 });
 
 function updateRekeningInfo(from, to, total) {
@@ -799,6 +906,142 @@ window.deleteBulkRekening = function () {
     'ph-trash',
     'btn-danger'
   );
+};
+
+
+/* =========================
+   SALDO AWAL TAHUN
+========================= */
+window.openRekeningSaldoAwalModal = function () {
+  const form = document.getElementById('formRekeningSaldoAwal');
+  if (form) form.reset();
+
+  const hiddenInput = document.getElementById('rekeningSaldoAwalValue');
+  const displayInput = document.getElementById('rekeningSaldoAwalDisplayInput');
+  const bankInput = document.getElementById('rekeningSaldoAwalBank');
+  const btnHapus = document.getElementById('btnHapusRekeningSaldoAwal');
+
+  // Find existing saldo awal from raw data
+  const currentFilterBank = document.getElementById('filterBank')?.value;
+  let existingAmount = 0;
+  let selectedBank = '';
+
+  if (currentFilterBank && currentFilterBank !== 'Semua Bank') {
+    selectedBank = currentFilterBank;
+    const existing = rekeningRawData.find(r => r.bank === selectedBank && (r.is_saldo_awal === 1 || r.is_saldo_awal === true));
+    if (existing) {
+      existingAmount = Number(existing.jumlah) || 0;
+    }
+  }
+
+  if (bankInput) {
+    bankInput.value = selectedBank;
+    bankInput.onchange = function () {
+      const bank = this.value;
+      const existing = rekeningRawData.find(r => r.bank === bank && (r.is_saldo_awal === 1 || r.is_saldo_awal === true));
+      const amt = existing ? (Number(existing.jumlah) || 0) : 0;
+      if (hiddenInput) hiddenInput.value = amt;
+      if (displayInput) displayInput.value = amt > 0 ? formatRibuan(amt) : '';
+      if (btnHapus) btnHapus.style.display = amt > 0 ? 'inline-flex' : 'none';
+    };
+  }
+
+  if (hiddenInput) hiddenInput.value = existingAmount;
+  if (displayInput) {
+    displayInput.value = existingAmount > 0 ? formatRibuan(existingAmount) : '';
+    // Bind currency formatting for this input
+    displayInput.oninput = function () {
+      let val = parseAngka(this.value);
+      if (hiddenInput) hiddenInput.value = val;
+    };
+    displayInput.onblur = function () {
+      let val = Number(hiddenInput.value) || 0;
+      this.value = val > 0 ? formatRibuan(val) : '';
+    };
+    displayInput.onfocus = function () {
+      let val = Number(hiddenInput.value) || 0;
+      this.value = val === 0 ? '' : val.toString().replace('.', ',');
+    };
+  }
+
+  if (btnHapus) {
+    btnHapus.style.display = existingAmount > 0 ? 'inline-flex' : 'none';
+  }
+
+  const modal = document.getElementById('modalRekeningSaldoAwal');
+  if (modal) modal.classList.add('show');
+};
+
+window.closeRekeningSaldoAwalModal = function () {
+  const modal = document.getElementById('modalRekeningSaldoAwal');
+  if (modal) modal.classList.remove('show');
+};
+
+window.deleteRekeningSaldoAwal = function () {
+  const bank = document.getElementById('rekeningSaldoAwalBank').value;
+  if (!bank) return toast('Pilih bank terlebih dahulu', 'error');
+
+  openConfirm(
+    'Hapus Saldo Awal',
+    `Yakin ingin menghapus saldo awal tahun untuk ${bank}?`,
+    () => {
+      fetch('/dashboard/rekening-korans/saldo-awal', {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-TOKEN': csrfToken(),
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ bank })
+      })
+        .then(async r => {
+          const json = await r.json();
+          if (!r.ok) throw new Error(json.message || 'Gagal menghapus');
+          return json;
+        })
+        .then(res => {
+          toast(res.message || 'Saldo awal dihapus', 'success');
+          closeRekeningSaldoAwalModal();
+          loadRekening();
+        })
+        .catch(err => toast(err.message || err, 'error'));
+    },
+    'Hapus Saldo',
+    'ph-trash',
+    'btn-danger'
+  );
+}
+
+window.submitRekeningSaldoAwal = function (e) {
+  e.preventDefault();
+  const form = document.getElementById('formRekeningSaldoAwal');
+  const formData = new FormData(form);
+  const payload = {
+    bank: formData.get('bank'),
+    jumlah: formData.get('jumlah'),
+    tahun: window.tahunAnggaran || new Date().getFullYear()
+  };
+
+  fetch('/dashboard/rekening-korans/saldo-awal', {
+    method: 'POST',
+    headers: {
+      'X-CSRF-TOKEN': csrfToken(),
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  })
+    .then(async r => {
+      const json = await r.json();
+      if (!r.ok) throw new Error(json.message || 'Gagal menyimpan saldo awal');
+      return json;
+    })
+    .then(res => {
+      toast(res.message || 'Saldo awal berhasil disimpan', 'success');
+      closeRekeningSaldoAwalModal();
+      loadRekening();
+    })
+    .catch(err => toast(err.message || err, 'error'));
 };
 
 document.querySelector('.main')?.classList.add('rekening-mode');

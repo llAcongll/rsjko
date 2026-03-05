@@ -203,9 +203,11 @@ Route::middleware(['auth', 'role:ADMIN,USER'])
         Route::post('/import', [RekeningKoranController::class, 'import']);
         Route::delete('/bulk-delete', [RekeningKoranController::class, 'bulkDelete']);
         Route::get('/print', [RekeningKoranController::class, 'print']);
-        Route::get('/export-excel', [RekeningKoranController::class, 'exportExcel']);
+        Route::post('/saldo-awal', [RekeningKoranController::class, 'setSaldoAwal']);
+        Route::delete('/saldo-awal', [RekeningKoranController::class, 'deleteSaldoAwal']);
         Route::get('/', [RekeningKoranController::class, 'index']);
         Route::post('/', [RekeningKoranController::class, 'store']);
+
         Route::get('/{rekeningKoran}', [RekeningKoranController::class, 'show']);
         Route::put('/{rekeningKoran}', [RekeningKoranController::class, 'update']);
         Route::delete('/{rekeningKoran}', [RekeningKoranController::class, 'destroy']);
@@ -345,6 +347,7 @@ Route::middleware(['auth', 'role:ADMIN,USER'])->group(function () {
         Route::get('/', [ExpenditureController::class, 'index']);
         Route::post('/', [ExpenditureController::class, 'store']);
         Route::get('/unlinked', [SpjController::class, 'getUnlinkedExpenditures']);
+        Route::get('/check-no-bukti', [ExpenditureController::class, 'checkNoBukti']);
         Route::get('/{id}', [ExpenditureController::class, 'show']);
         Route::put('/{id}', [ExpenditureController::class, 'update']);
         Route::delete('/{id}', [ExpenditureController::class, 'destroy']);
@@ -376,6 +379,11 @@ Route::middleware(['auth', 'role:ADMIN,USER'])->group(function () {
 
     Route::get('dashboard/bank-account-ledger', [BankAccountLedgerController::class, 'index']);
     Route::post('dashboard/bank-account-ledger/deposit', [BankAccountLedgerController::class, 'deposit']);
+    Route::post('dashboard/bank-account-ledger/saldo-awal', [BankAccountLedgerController::class, 'setSaldoAwal']);
+    Route::delete('dashboard/bank-account-ledger/saldo-awal', [BankAccountLedgerController::class, 'deleteSaldoAwal']);
+    Route::post('dashboard/bank-account-ledger/adjustment', [BankAccountLedgerController::class, 'adjustment']);
+    Route::put('dashboard/bank-account-ledger/adjustment/{id}', [BankAccountLedgerController::class, 'updateAdjustment']);
+    Route::delete('dashboard/bank-account-ledger/adjustment/{id}', [BankAccountLedgerController::class, 'destroyAdjustment']);
     Route::put('dashboard/bank-account-ledger/deposit/{id}', [BankAccountLedgerController::class, 'updateDeposit']);
     Route::delete('dashboard/bank-account-ledger/deposit/{id}', [BankAccountLedgerController::class, 'destroyDeposit']);
 

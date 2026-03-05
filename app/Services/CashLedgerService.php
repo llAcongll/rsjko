@@ -228,13 +228,24 @@ class CashLedgerService
                 $this->createEntry($e->spending_date, "BELANJA_{$e->spending_type}", $e->gross_value, 'expenditures', $e->id, "{$e->no_bukti} - {$e->description}", 'CREDIT');
             }
 
-            // 4. MANUAL DEPOSITS (Direct to Bank)
-            $deposits = \App\Models\BankAccountLedger::whereYear('date', $year)
-                ->where('type', 'DEPOSIT_MANUAL')
+            // 4. BANK ACCOUNT LEDGER EXTENSIONS (New manual/semi-auto types)
+            $bankEntries = \App\Models\BankAccountLedger::whereYear('date', $year)
+                ->whereIn('type', ['DEPOSIT_MANUAL', 'PENDAPATAN_TRANSFER', 'SALDO_AWAL', 'PENYESUAIAN'])
                 ->get();
 
-            foreach ($deposits as $dep) {
-                $this->createEntry($dep->date, $dep->type, $dep->debit, 'bank_account_ledgers', $dep->id, $dep->description ?: "Setoran Manual");
+            foreach ($bankEntries as $be) {
+                if ($be->type === 'SALDO_AWAL') {
+                    $this->createEntry($be->date, 'SISA_KAS', $be->debit, 'bank_account_ledgers', $be->id, $be->description ?: "Sisa Kas");
+                } elseif ($be->type === 'PENDAPATAN_TRANSFER') {
+                    $this->createEntry($be->date, 'TRANSFER_PENERIMAAN', $be->debit, 'bank_account_ledgers', $be->id, $be->description ?: "Transfer Penerimaan");
+                } elseif ($be->type === 'PENYESUAIAN') {
+                    // Record both Debit and Credit for net zero balance but visibility in BKU
+                    $this->createEntry($be->date, 'PENYESUAIAN_SP2D', $be->debit + $be->credit, 'bank_account_ledgers', $be->id, ($be->description ?: "Penyesuaian") . " (Penerimaan)");
+                    $this->createEntry($be->date, 'PENYESUAIAN_REALISASI', $be->debit + $be->credit, 'bank_account_ledgers', $be->id, ($be->description ?: "Penyesuaian") . " (Pengeluaran)", 'CREDIT');
+                } else {
+                    // DEPOSIT_MANUAL
+                    $this->createEntry($be->date, $be->type, $be->debit, 'bank_account_ledgers', $be->id, $be->description ?: "Setoran Manual");
+                }
             }
 
             // 5. Rebuild final running balances

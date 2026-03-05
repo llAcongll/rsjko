@@ -347,7 +347,7 @@ class DisbursementService
             $desc = $disbursement->uraian ?: ($disbursement->description ?: ($disbursement->sp2d_no ?? $disbursement->nomor_paket));
             $type = $isActivity ? 'ACTIVITY_LS' : 'LS_RECEIPT';
             $this->ledgerService->recordEntry($date, $type, $disbursement->value, 'fund_disbursements', $id, 'DEBIT', $desc);
-            $this->bankService->recordEntry($date, 'WITHDRAW_LS', $totalVal, 'fund_disbursements', $id, 'CREDIT', "Penarikan SP2D LS " . ($refNo ?? 'Manual'), $refNo);
+            $this->bankService->recordEntry($date, 'WITHDRAW_LS', $totalVal, 'fund_disbursements', $id, 'CREDIT', "Penarikan SP2D LS " . ($refNo ?? 'Manual'), $refNo, $disbursement->bank);
         } else {
             // UP or GU
             if ($isActivity) {
@@ -371,7 +371,7 @@ class DisbursementService
                     $this->ledgerService->recordEntry($date, $type, $disbursement->value, 'fund_disbursements', $id, 'DEBIT', $desc);
 
                     // Decreases Rekening Koran (Moves money from Bank to Cash/Dana)
-                    $this->bankService->recordEntry($date, "WITHDRAW_{$disbursement->type}", $totalVal, 'fund_disbursements', $id, 'CREDIT', "Penarikan SP2D {$disbursement->type} ({$refNo})", $refNo);
+                    $this->bankService->recordEntry($date, "WITHDRAW_{$disbursement->type}", $totalVal, 'fund_disbursements', $id, 'CREDIT', "Penarikan SP2D {$disbursement->type} ({$refNo})", $refNo, $disbursement->bank);
                 } else {
                     // If status reverted back to DRAFT, remove everything
                     $this->ledgerService->removeEntry('fund_disbursements', $id);

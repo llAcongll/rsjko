@@ -11,13 +11,17 @@ class BankLedgerService
     /**
      * Record a transaction into the bank account ledger (Rekening Koran)
      */
-    public function recordEntry($date, $type, $amount, $refTable, $refId, $direction = 'DEBIT', $description = null, $refNo = null)
+    public function recordEntry($date, $type, $amount, $refTable, $refId, $direction = 'DEBIT', $description = null, $refNo = null, $bank = 'BRK')
     {
-        return DB::transaction(function () use ($date, $type, $amount, $refTable, $refId, $direction, $description, $refNo) {
+        return DB::transaction(function () use ($date, $type, $amount, $refTable, $refId, $direction, $description, $refNo, $bank) {
             $year = Carbon::parse($date)->year;
 
-            // Lock ledger for year
-            DB::table('bank_account_ledgers')->whereYear('date', $year)->lockForUpdate()->count();
+            // Lock ledger for year and bank
+            DB::table('bank_account_ledgers')
+                ->whereYear('date', $year)
+                ->where('bank', $bank)
+                ->lockForUpdate()
+                ->count();
 
             // Find existing entry: Check ref_table, ref_id AND type
             $query = BankAccountLedger::where('ref_table', $refTable)
@@ -42,6 +46,7 @@ class BankLedgerService
             $entry->type = $type;
             $entry->ref_no = $refNo;
             $entry->description = $description;
+            $entry->bank = $bank;
 
             if ($direction === 'DEBIT') { // Uang Masuk
                 $entry->debit = $amount;
@@ -52,7 +57,7 @@ class BankLedgerService
             }
 
             $entry->save();
-            $this->rebuildBalances($year);
+            $this->rebuildBalances($year, $bank);
 
             return $entry;
         });
@@ -71,22 +76,38 @@ class BankLedgerService
             $entries = $query->lockForUpdate()->get();
 
             if ($entries->count() > 0) {
-                $year = Carbon::parse($entries->first()->date)->year;
-                DB::table('bank_account_ledgers')->whereYear('date', $year)->lockForUpdate()->count();
+                $first = $entries->first();
+                $year = Carbon::parse($first->date)->year;
+                $bank = $first->bank;
+
+                DB::table('bank_account_ledgers')
+                    ->whereYear('date', $year)
+                    ->where('bank', $bank)
+                    ->lockForUpdate()
+                    ->count();
 
                 foreach ($entries as $entry) {
                     $entry->delete();
                 }
 
-                $this->rebuildBalances($year);
+                $this->rebuildBalances($year, $bank);
             }
         });
     }
 
-    public function rebuildBalances($year)
+    public function rebuildBalances($year, $bank = null)
     {
-        DB::transaction(function () use ($year) {
+        if (!$bank) {
+            $banks = BankAccountLedger::distinct()->pluck('bank');
+            foreach ($banks as $b) {
+                $this->rebuildBalances($year, $b);
+            }
+            return;
+        }
+
+        DB::transaction(function () use ($year, $bank) {
             $entries = BankAccountLedger::whereYear('date', $year)
+                ->where('bank', $bank)
                 ->orderBy('date', 'asc')
                 ->orderBy('id', 'asc')
                 ->lockForUpdate()
@@ -96,6 +117,7 @@ class BankLedgerService
 
             // Getting balance from previous year if any
             $previousBalance = BankAccountLedger::whereYear('date', '<', $year)
+                ->where('bank', $bank)
                 ->orderBy('date', 'desc')
                 ->orderBy('id', 'desc')
                 ->value('balance');
@@ -116,9 +138,12 @@ class BankLedgerService
         });
     }
 
-    public function getCurrentBalance()
+    public function getCurrentBalance($bank = 'BRK')
     {
-        $latest = BankAccountLedger::orderBy('date', 'desc')->orderBy('id', 'desc')->first();
+        $latest = BankAccountLedger::where('bank', $bank)
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->first();
         return $latest ? (float) $latest->balance : 0;
     }
 }

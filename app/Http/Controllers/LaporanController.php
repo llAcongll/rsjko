@@ -19,7 +19,7 @@ class LaporanController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_PENDAPATAN_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_PENDAPATAN_VIEW') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
@@ -57,7 +57,7 @@ class LaporanController extends Controller
 
     public function export(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_EXCEL') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
@@ -100,7 +100,7 @@ class LaporanController extends Controller
 
     public function exportPdf(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
@@ -143,7 +143,7 @@ class LaporanController extends Controller
 
     public function getRekon(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_REKON_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_REKON_VIEW') || auth()->user()->isAdmin(), 403);
         $tahun = session('tahun_anggaran', date('Y'));
         $data = $this->service->getRekonData($tahun);
         return response()->json($data);
@@ -151,7 +151,7 @@ class LaporanController extends Controller
 
     public function getPiutang(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_PIUTANG_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_PIUTANG_VIEW') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start');
         $end = $request->get('end');
         $tahun = $request->get('tahun', session('tahun_anggaran', date('Y')));
@@ -162,7 +162,7 @@ class LaporanController extends Controller
 
     public function getMou(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_MOU_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_MOU_VIEW') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
@@ -173,20 +173,21 @@ class LaporanController extends Controller
 
     public function getAnggaran(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_ANGGARAN_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_ANGGARAN_VIEW') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
         $category = $request->get('category', 'SEMUA');
+        $level = $request->get('level', 6);
 
-        $res = $this->service->getAnggaranData($category, $start, $end, $tahun);
+        $res = $this->service->getAnggaranData($category, $start, $end, $tahun, $level);
         $res['category'] = $category;
         return response()->json($res);
     }
 
     public function getPengeluaran(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_PENGELUARAN_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_PENGELUARAN_VIEW') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
@@ -201,7 +202,7 @@ class LaporanController extends Controller
 
     public function getDpa(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_ANGGARAN_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_DPA_VIEW') || auth()->user()->isAdmin(), 403);
         $tahun = session('tahun_anggaran');
         $data = $this->service->getDpaData($tahun);
 
@@ -210,7 +211,7 @@ class LaporanController extends Controller
 
     public function getBku(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_BKU_VIEW') || auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('BKU_VIEW') || auth()->user()->isAdmin(), 403);
         $month = $request->get('month');
         $year = $request->get('year', session('tahun_anggaran', date('Y')));
 
@@ -221,7 +222,7 @@ class LaporanController extends Controller
     // Export Methods
     public function exportRekon(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_EXCEL') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran', date('Y'));
@@ -239,7 +240,7 @@ class LaporanController extends Controller
 
     public function exportRekonPdf(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran', date('Y'));
@@ -258,7 +259,7 @@ class LaporanController extends Controller
 
     public function exportPiutang(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_EXCEL') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = $request->get('tahun', session('tahun_anggaran', date('Y')));
@@ -277,7 +278,7 @@ class LaporanController extends Controller
 
     public function exportPiutangPdf(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = $request->get('tahun', session('tahun_anggaran', date('Y')));
@@ -297,7 +298,7 @@ class LaporanController extends Controller
 
     public function exportMou(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_EXCEL') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
@@ -315,7 +316,7 @@ class LaporanController extends Controller
 
     public function exportMouPdf(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
@@ -334,7 +335,7 @@ class LaporanController extends Controller
 
     public function exportAnggaran(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_EXCEL') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
@@ -355,7 +356,7 @@ class LaporanController extends Controller
 
     public function exportAnggaranPdf(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
@@ -377,7 +378,7 @@ class LaporanController extends Controller
 
     public function exportPengeluaran(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_EXCEL') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
@@ -396,7 +397,7 @@ class LaporanController extends Controller
 
     public function exportPengeluaranPdf(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF') || auth()->user()->isAdmin(), 403);
         $start = $request->get('start', '2026-01-01');
         $end = $request->get('end', Carbon::now()->toDateString());
         $tahun = session('tahun_anggaran');
@@ -416,7 +417,7 @@ class LaporanController extends Controller
 
     public function exportDpa(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_EXCEL') || auth()->user()->isAdmin(), 403);
         $tahun = session('tahun_anggaran');
         $data = $this->service->getDpaData($tahun);
 
@@ -431,7 +432,7 @@ class LaporanController extends Controller
 
     public function exportDpaPdf(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF') || auth()->user()->isAdmin(), 403);
         $tahun = session('tahun_anggaran');
         $data = $this->service->getDpaData($tahun);
 
@@ -447,7 +448,7 @@ class LaporanController extends Controller
 
     public function exportBku(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_EXCEL') || auth()->user()->isAdmin(), 403);
         $month = $request->get('month');
         $year = $request->get('year', session('tahun_anggaran', date('Y')));
         $res = $this->service->getBkuData($year, $month);
@@ -465,7 +466,7 @@ class LaporanController extends Controller
 
     public function exportBkuPdf(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'), 403);
+        abort_unless(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF') || auth()->user()->isAdmin(), 403);
         $month = $request->get('month');
         $year = $request->get('year', session('tahun_anggaran', date('Y')));
         $res = $this->service->getBkuData($year, $month);

@@ -71,19 +71,6 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td class="text-center">-</td>
-                <td class="text-center">-</td>
-                <td class="text-center">-</td>
-                <td class="font-bold">SALDO AWAL</td>
-                <td class="text-center">-</td>
-                <td class="text-right">-</td>
-                <td class="text-right">-</td>
-                <td class="text-right">-</td>
-                <td class="text-right">{{ number_format($opening_balance - $opening_bank, 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($opening_bank, 2, ',', '.') }}</td>
-                <td class="text-right font-bold">{{ number_format($opening_balance, 2, ',', '.') }}</td>
-            </tr>
             @foreach($data as $i => $item)
                 <tr>
                     <td class="text-center">{{ $i + 1 }}</td>
@@ -115,6 +102,54 @@
             </tr>
         </tbody>
     </table>
+
+    <div style="margin-top:20px; font-family: Arial, sans-serif; font-size: 10pt;">
+        <table style="border: none; width: auto;">
+            <tr>
+                <td style="border: none; width: 250px;">Jumlah Penarikan Cek sampai periode ini</td>
+                <td style="border: none; width: 20px;">:</td>
+                <td style="border: none; font-weight: bold;">Rp
+                    {{ number_format($summary['ytd_receipts'] ?? 0, 2, ',', '.') }}
+                </td>
+            </tr>
+            <tr>
+                <td style="border: none;">Jumlah Pengeluaran sampai periode ini</td>
+                <td style="border: none;">:</td>
+                <td style="border: none; font-weight: bold;">Rp
+                    {{ number_format($summary['ytd_expenditures'] ?? 0, 2, ',', '.') }}
+                </td>
+            </tr>
+            <tr>
+                <td style="border: none; height: 10px;"></td>
+            </tr>
+            <tr>
+                <td style="border: none; font-weight: bold; text-decoration: underline;">Catatan :</td>
+                <td style="border: none;"></td>
+                <td style="border: none;"></td>
+            </tr>
+            <tr>
+                <td style="border: none;">Saldo Rekening Per akhir bulan</td>
+                <td style="border: none;">:</td>
+                <td style="border: none; font-weight: bold;">Rp
+                    {{ number_format($summary['final_bank'] ?? 0, 2, ',', '.') }}
+                </td>
+            </tr>
+            <tr style="font-style: italic; color: #4b5563;">
+                <td style="border: none; padding-left: 20px;">- Bank Riau Kepri Syariah</td>
+                <td style="border: none;">:</td>
+                <td style="border: none;">Rp
+                    {{ number_format($summary['final_bank_brk'] ?? 0, 2, ',', '.') }}
+                </td>
+            </tr>
+            <tr style="font-style: italic; color: #4b5563;">
+                <td style="border: none; padding-left: 20px;">- Bank Syariah Indonesia</td>
+                <td style="border: none;">:</td>
+                <td style="border: none;">Rp
+                    {{ number_format($summary['final_bank_bsi'] ?? 0, 2, ',', '.') }}
+                </td>
+            </tr>
+        </table>
+    </div>
 
     <table style="width: 100%; border: none; margin-top: 50px;">
         <tr>

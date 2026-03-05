@@ -26,6 +26,18 @@
                         <option value="PENGELUARAN">PENGELUARAN</option>
                     </select>
                 </div>
+                <div class="filter-item">
+                    <label>Klasifikasi</label>
+                    <select id="lraLevel" class="filter-date-input" style="width: 160px;">
+                        <option value="" selected disabled>-- Pilih Klasifikasi --</option>
+                        <option value="1">Akun</option>
+                        <option value="2">Kelompok</option>
+                        <option value="3">Jenis</option>
+                        <option value="4">Objek</option>
+                        <option value="5">Rincian Objek</option>
+                        <option value="6">Sub Rincian Objek</option>
+                    </select>
+                </div>
                 <button class="btn-filter" onclick="loadLaporan('ANGGARAN')">
                     <i class="ph ph-magnifying-glass"></i>
                     <span>Tampilkan</span>
@@ -46,29 +58,8 @@
     </div>
 
     <div id="lraTableContainer">
-        <!-- Tables will be injected here dynamically by renderAnggaran -->
-        <div class="laporan-section">
-            <div class="table-responsive">
-                <table class="report-table">
-                    <thead>
-                        <tr>
-                            <th class="text-center" style="width: 150px; vertical-align: middle;">Kode Rekening</th>
-                            <th class="text-center" style="vertical-align: middle;">Uraian</th>
-                            <th class="text-center" style="text-align:right; vertical-align: middle;">Target Anggaran
-                            </th>
-                            <th class="text-center" style="text-align:center">Realisasi</th>
-                            <th class="text-center" style="text-align:right; vertical-align: middle;">Selisih</th>
-                            <th class="text-center" style="text-align:center; vertical-align: middle;">%</th>
-                            <th class="text-center" style="width: 120px; vertical-align: middle;">Progres</th>
-                        </tr>
-                    </thead>
-                    <tbody id="laporanAnggaranBody">
-                        <tr>
-                            <td colspan="9" class="text-center py-4 text-slate-400">Memuat data...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="text-center py-5 text-slate-400" style="background:#f8fafc; border-radius:8px; border:2px dashed #e2e8f0; margin-top:20px;">
+            Silakan pilih Klasifikasi terlebih dahulu untuk menampilkan rincian realisasi.
         </div>
     </div>
 </div>

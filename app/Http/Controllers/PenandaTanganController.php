@@ -9,7 +9,7 @@ class PenandaTanganController extends Controller
 {
     public function index()
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_PENANDA_TANGAN_VIEW') || auth()->user()->isAdmin(), 403);
 
         return view('dashboard.pages.penanda_tangan');
     }
@@ -18,7 +18,7 @@ class PenandaTanganController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_PENANDA_TANGAN_CRUD') || auth()->user()->isAdmin(), 403);
 
         $validated = $request->validate([
             'jabatan' => 'required|string|max:100',
@@ -34,7 +34,7 @@ class PenandaTanganController extends Controller
 
     public function update(Request $request, PenandaTangan $penandaTangan)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_PENANDA_TANGAN_CRUD') || auth()->user()->isAdmin(), 403);
 
         $validated = $request->validate([
             'jabatan' => 'required|string|max:100',
@@ -50,7 +50,7 @@ class PenandaTanganController extends Controller
 
     public function destroy(PenandaTangan $penandaTangan)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('MASTER_PENANDA_TANGAN_CRUD') || auth()->user()->isAdmin(), 403);
 
         $penandaTangan->delete();
 

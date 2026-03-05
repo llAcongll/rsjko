@@ -14,7 +14,7 @@ class AnggaranRekeningController extends Controller
     {
         $rekening = KodeRekening::findOrFail($request->kode_rekening_id);
         $permission = ($rekening->category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_CRUD' : 'KODE_REKENING_PENDAPATAN_CRUD';
-        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->hasPermission('KODE_REKENING_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->isAdmin(), 403);
         $data = $request->validate([
             'kode_rekening_id' => 'required|exists:kode_rekening,id',
             'tahun' => 'required|integer|min:2000|max:2100',
@@ -66,7 +66,7 @@ class AnggaranRekeningController extends Controller
     {
         $rekening = KodeRekening::findOrFail($rekening_id);
         $permission = ($rekening->category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_VIEW' : 'KODE_REKENING_PENDAPATAN_VIEW';
-        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->hasPermission('KODE_REKENING_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->isAdmin(), 403);
         $anggaran = AnggaranRekening::with('rincian')
             ->where('kode_rekening_id', $rekening_id)
             ->where('tahun', $tahun)

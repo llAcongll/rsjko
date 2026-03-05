@@ -19,11 +19,13 @@ class RekeningKoran extends Model
         'keterangan',
         'cd',
         'jumlah',
+        'is_saldo_awal',
     ];
 
     protected $casts = [
         'tanggal' => 'date:Y-m-d',
         'tahun' => 'integer',
         'jumlah' => 'decimal:2',
+        'is_saldo_awal' => 'boolean',
     ];
 }

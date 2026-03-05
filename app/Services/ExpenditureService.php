@@ -122,21 +122,11 @@ class ExpenditureService
                 $this->checkDisbursementLimit($data['fund_disbursement_id'], $data['gross_value']);
             }
 
+            // no_bukti comes from user input via $data
+            $data['no_bukti_urut'] = 0;
+            $data['number_locked_at'] = now();
+
             $expenditure = Expenditure::create($data);
-
-            // Generate and lock global proof number in one go
-            $bukti = $this->numberingService->generateNoBukti(
-                $expenditure->spending_type,
-                $expenditure->spending_date,
-                $expenditure->nomor_dalam_siklus,
-                $expenditure->siklus_up
-            );
-
-            $expenditure->update([
-                'no_bukti' => $bukti['no_bukti'],
-                'no_bukti_urut' => $bukti['no_bukti_urut'],
-                'number_locked_at' => now()
-            ]);
 
             // Record to ledger as credit for all types (including LS)
             $this->ledgerService->recordEntry(

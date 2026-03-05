@@ -25,7 +25,7 @@ class PendapatanUmumController extends Controller
     ========================= */
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_VIEW') || auth()->user()->hasPermission('PENDAPATAN_UMUM') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_VIEW') || auth()->user()->isAdmin(), 403);
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
 
@@ -95,7 +95,7 @@ class PendapatanUmumController extends Controller
     ========================= */
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE') || auth()->user()->hasPermission('PENDAPATAN_UMUM') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD') || auth()->user()->isAdmin(), 403);
         $data = $request->validate([
             'revenue_master_id' => 'required|exists:revenue_masters,id',
             'tanggal' => 'required|date',
@@ -148,7 +148,7 @@ class PendapatanUmumController extends Controller
     ========================= */
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE') || auth()->user()->hasPermission('PENDAPATAN_UMUM') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD') || auth()->user()->isAdmin(), 403);
         $pendapatan = PendapatanUmum::findOrFail($id);
 
         $master = \App\Models\RevenueMaster::find($pendapatan->revenue_master_id);
@@ -211,7 +211,7 @@ class PendapatanUmumController extends Controller
     ========================= */
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_DELETE') || auth()->user()->hasPermission('PENDAPATAN_UMUM') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD') || auth()->user()->isAdmin(), 403);
         $pendapatan = PendapatanUmum::findOrFail($id);
 
         $master = \App\Models\RevenueMaster::find($pendapatan->revenue_master_id);
@@ -241,7 +241,7 @@ class PendapatanUmumController extends Controller
     ========================= */
     public function downloadTemplate()
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD') || auth()->user()->isAdmin(), 403);
         $headers = [
             'Content-type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename=template_pendapatan_umum.csv',
@@ -275,7 +275,7 @@ class PendapatanUmumController extends Controller
 
     public function import(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD') || auth()->user()->isAdmin(), 403);
         $request->validate(['file' => 'required|mimes:csv,txt']);
 
         $file = $request->file('file');
@@ -348,7 +348,7 @@ class PendapatanUmumController extends Controller
 
     public function bulkDelete(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_DELETE'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD') || auth()->user()->isAdmin(), 403);
         $request->validate([
             'tanggal' => 'nullable|date',
             'revenue_master_id' => 'nullable|exists:revenue_masters,id'

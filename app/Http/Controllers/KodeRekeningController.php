@@ -28,7 +28,7 @@ class KodeRekeningController extends Controller
     {
         $category = $request->get('category', 'PENDAPATAN');
         $permission = ($category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_VIEW' : 'KODE_REKENING_PENDAPATAN_VIEW';
-        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->hasPermission('KODE_REKENING_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->isAdmin(), 403);
 
         if ($request->expectsJson()) {
             return $this->service->buildTree($category);
@@ -48,7 +48,7 @@ class KodeRekeningController extends Controller
     {
         $category = $request->get('category');
         $permission = ($category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_CRUD' : 'KODE_REKENING_PENDAPATAN_CRUD';
-        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->hasPermission('KODE_REKENING_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->isAdmin(), 403);
 
         $data = $request->validate([
             'kode' => ['required', 'string', 'max:50'],
@@ -90,7 +90,7 @@ class KodeRekeningController extends Controller
     {
         $rekening = KodeRekening::findOrFail($id);
         $permission = ($rekening->category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_CRUD' : 'KODE_REKENING_PENDAPATAN_CRUD';
-        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->hasPermission('KODE_REKENING_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->isAdmin(), 403);
 
         $data = $request->validate([
             'kode' => ['required', 'string', 'max:50'],
@@ -129,7 +129,7 @@ class KodeRekeningController extends Controller
     {
         $rekening = KodeRekening::findOrFail($id);
         $permission = ($rekening->category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_CRUD' : 'KODE_REKENING_PENDAPATAN_CRUD';
-        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->hasPermission('KODE_REKENING_CRUD'), 403);
+        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->isAdmin(), 403);
 
         try {
             // 1. Cek apakah masih memiliki sub-rekening (anak)
@@ -186,7 +186,7 @@ class KodeRekeningController extends Controller
     {
         $category = $request->get('category', 'PENDAPATAN');
         $permission = ($category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_VIEW' : 'KODE_REKENING_PENDAPATAN_VIEW';
-        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->hasPermission('KODE_REKENING_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->isAdmin(), 403);
 
         return $this->service->buildTree($category, $tahun);
     }

@@ -586,7 +586,7 @@ class ReportService
     /**
      * Get Anggaran Data (LRA)
      */
-    public function getAnggaranData($category, $start, $end, $tahun)
+    public function getAnggaranData($category, $start, $end, $tahun, $requestedLevel = 10)
     {
         $startOfYear = $tahun . '-01-01';
         $prevEnd = Carbon::parse($start)->subDay()->toDateString();
@@ -603,7 +603,7 @@ class ReportService
         $roots = $query->get();
         $report = [];
         foreach ($roots as $root) {
-            $this->processLraNode($root, $tahun, $start, $end, $startOfYear, $prevEnd, $report);
+            $this->processLraNode($root, $tahun, $start, $end, $startOfYear, $prevEnd, $report, $requestedLevel);
         }
 
         $totalTarget = 0;
@@ -677,7 +677,7 @@ class ReportService
         return $res;
     }
 
-    private function processLraNode($node, $tahun, $start, $end, $startOfYear, $prevEnd, &$flatList)
+    private function processLraNode($node, $tahun, $start, $end, $startOfYear, $prevEnd, &$flatList, $requestedLevel = 10)
     {
         $target = 0;
         $realLalu = 0;
@@ -700,7 +700,7 @@ class ReportService
             }
         } else {
             foreach ($node->children as $child) {
-                $res = $this->processLraNode($child, $tahun, $start, $end, $startOfYear, $prevEnd, $childItems);
+                $res = $this->processLraNode($child, $tahun, $start, $end, $startOfYear, $prevEnd, $childItems, $requestedLevel);
                 $target += $res['target'];
                 $realLalu += $res['realisasi_lalu'];
                 $realKini += $res['realisasi_kini'];
@@ -710,9 +710,11 @@ class ReportService
 
         $item = ['id' => $node->id, 'kode' => $node->kode, 'nama' => $node->nama, 'level' => $node->level, 'tipe' => $node->tipe, 'category' => $node->category, 'target' => $target, 'realisasi_lalu' => $realLalu, 'realisasi_kini' => $realKini, 'realisasi_total' => $realTotal, 'selisih' => $target - $realTotal, 'persen' => $target > 0 ? round(($realTotal / $target) * 100, 2) : 0];
 
-        $flatList[] = $item;
-        foreach ($childItems as $ci)
-            $flatList[] = $ci;
+        if ($node->level <= $requestedLevel) {
+            $flatList[] = $item;
+            foreach ($childItems as $ci)
+                $flatList[] = $ci;
+        }
         return $item;
     }
 
@@ -880,8 +882,19 @@ class ReportService
 
         $currentBankRunning = $openingBank;
 
-        // Types excluded from Saldo Dana: LS (pass-through) and DEPOSIT_MANUAL (bank only)
-        $excludeFromSaldoDana = ['LS_IN', 'LS_RECEIPT', 'ACTIVITY_LS', 'DEPOSIT_LS', 'BELANJA_LS', 'DEPOSIT_MANUAL'];
+        // Types excluded from Saldo Dana (Tunai): Bank transactions that don't pass through physical cash.
+        $excludeFromSaldoDana = [
+            'LS_IN',
+            'LS_RECEIPT',
+            'ACTIVITY_LS',
+            'DEPOSIT_LS',
+            'BELANJA_LS',
+            'DEPOSIT_MANUAL',
+            'TRANSFER_PENERIMAAN',
+            'SISA_KAS',
+            'PENYESUAIAN_SP2D',
+            'PENYESUAIAN_REALISASI'
+        ];
         $openingSaldoDana = 0;
         if ($month) {
             $beforeEntries = \App\Models\TreasurerCash::where('date', '<', \Carbon\Carbon::create($year, $month, 1)->toDateString())
@@ -930,11 +943,13 @@ class ReportService
 
             if ($item->debit > 0) {
                 // Determine if it goes to Pengajuan or Transfer column
-                if (str_starts_with($item->type, 'AJU_')) {
+                if (str_starts_with($item->type, 'AJU_') || $item->type === 'PENYESUAIAN_SP2D') {
                     $item->sp2d_penerimaan = (float) $item->debit;
                 } elseif (in_array($item->type, ['TERIMA_UP', 'GU', 'UP', 'LS_RECEIPT', 'LS_IN', 'DEPOSIT_LS', 'ACTIVITY_LS'])) {
                     // Legacy types or LS — all SP2D-related inflows
                     $item->sp2d_penerimaan = (float) $item->debit;
+                } elseif (in_array($item->type, ['TRANSFER_PENERIMAAN', 'SISA_KAS'])) {
+                    $item->transfer_penerimaan = (float) $item->debit;
                 } else {
                     $item->transfer_penerimaan = (float) $item->debit;
                 }
@@ -968,6 +983,27 @@ class ReportService
         $finalBank = $data->last() ? $data->last()->saldo_bank : $openingBank;
         $finalBku = $finalSaldoDana + $finalBank;
 
+        // Get bank-specific balances
+        $bankLedgerService = app(\App\Services\BankLedgerService::class);
+        $finalBankBrk = $bankLedgerService->getCurrentBalance('BRK');
+        $finalBankBsi = $bankLedgerService->getCurrentBalance('BSI');
+
+        // Calculate Cumulative (YTD) totals
+        $endDate = $month ? \Carbon\Carbon::create($year, $month, 1)->endOfMonth()->toDateString() : \Carbon\Carbon::create($year, 12, 31)->toDateString();
+
+        $sp2dTypes = ['TERIMA_UP', 'GU', 'UP', 'LS_RECEIPT', 'LS_IN', 'DEPOSIT_LS', 'ACTIVITY_LS', 'PENYESUAIAN_SP2D'];
+        $ytdSp2d = \App\Models\TreasurerCash::whereYear('date', $year)
+            ->where('date', '<=', $endDate)
+            ->where(function ($q) use ($sp2dTypes) {
+                $q->whereIn('type', $sp2dTypes)
+                    ->orWhere('type', 'like', 'AJU_%');
+            })
+            ->sum('debit');
+
+        $ytdExpenditures = \App\Models\TreasurerCash::whereYear('date', $year)
+            ->where('date', '<=', $endDate)
+            ->sum('credit');
+
         return [
             'data' => $data,
             'opening_balance' => $openingSaldoDana + $openingBank,
@@ -977,7 +1013,11 @@ class ReportService
                 'total_debit_transfer' => (float) $data->sum('transfer_penerimaan'),
                 'total_debit_sp2d' => (float) $data->sum('sp2d_penerimaan'),
                 'total_credit_realisasi' => (float) $data->sum('realisasi'),
+                'ytd_receipts' => (float) $ytdSp2d,
+                'ytd_expenditures' => (float) $ytdExpenditures,
                 'final_bank' => $finalBank,
+                'final_bank_brk' => $finalBankBrk,
+                'final_bank_bsi' => $finalBankBsi,
                 'final_tunai' => $finalSaldoDana,
                 'final_balance' => $finalBku
             ],

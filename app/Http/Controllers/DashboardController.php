@@ -19,64 +19,72 @@ class DashboardController extends BaseController
 
             'dashboard' => view('dashboard.pages.dashboard'),
 
-            'users' => (Auth::user()->isAdmin() || Auth::user()->hasPermission('USER_VIEW'))
+            'users' => (auth()->user()->isAdmin() || auth()->user()->hasPermission('USER_VIEW'))
             ? view('dashboard.pages.users', [
                 'users' => User::orderBy(request('sort_by', 'username'), request('sort_dir', 'asc'))->get()
             ])
             : abort(403),
 
             'pendapatan' => match ($param) {
-                    'UMUM' => (Auth::user()->hasPermission('PENDAPATAN_UMUM_VIEW') || Auth::user()->hasPermission('PENDAPATAN_UMUM')) ? view('dashboard.pages.pendapatan.umum') : abort(403),
-                    'BPJS' => (Auth::user()->hasPermission('PENDAPATAN_BPJS_VIEW') || Auth::user()->hasPermission('PENDAPATAN_BPJS')) ? view('dashboard.pages.pendapatan.bpjs') : abort(403),
-                    'JAMINAN' => (Auth::user()->hasPermission('PENDAPATAN_JAMINAN_VIEW') || Auth::user()->hasPermission('PENDAPATAN_JAMINAN')) ? view('dashboard.pages.pendapatan.jaminan') : abort(403),
-                    'KERJASAMA' => (Auth::user()->hasPermission('PENDAPATAN_KERJA_VIEW') || Auth::user()->hasPermission('PENDAPATAN_KERJA')) ? view('dashboard.pages.pendapatan.kerjasama') : abort(403),
-                    'LAIN' => (Auth::user()->hasPermission('PENDAPATAN_LAIN_VIEW') || Auth::user()->hasPermission('PENDAPATAN_LAIN')) ? view('dashboard.pages.pendapatan.lainlain') : abort(403),
-                    'ANGGARAN' => Auth::user()->hasPermission('KODE_REKENING_VIEW') ? view('dashboard.pages.pendapatan.anggaran') : abort(403),
+                    'UMUM' => (auth()->user()->hasPermission('PENDAPATAN_UMUM_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pendapatan.umum') : abort(403),
+                    'BPJS' => (auth()->user()->hasPermission('PENDAPATAN_BPJS_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pendapatan.bpjs') : abort(403),
+                    'JAMINAN' => (auth()->user()->hasPermission('PENDAPATAN_JAMINAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pendapatan.jaminan') : abort(403),
+                    'KERJASAMA' => (auth()->user()->hasPermission('PENDAPATAN_KERJA_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pendapatan.kerjasama') : abort(403),
+                    'LAIN' => (auth()->user()->hasPermission('PENDAPATAN_LAIN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pendapatan.lainlain') : abort(403),
+                    'ANGGARAN' => (auth()->user()->hasPermission('KODE_REKENING_PENDAPATAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pendapatan.anggaran') : abort(403),
                     default => abort(404),
                 },
 
             'laporan' => match ($param) {
-                    'PENDAPATAN', 'REKON', 'PIUTANG', 'MOU', 'ANGGARAN', 'PENGELUARAN', 'DPA' => Auth::user()->hasPermission('LAPORAN_VIEW') ? view("dashboard.pages.laporan." . strtolower($param)) : abort(403),
-                    default => Auth::user()->hasPermission('LAPORAN_VIEW') ? view('dashboard.pages.laporan.pendapatan') : abort(403),
+                    'PENDAPATAN', 'REKON', 'PIUTANG', 'MOU', 'ANGGARAN', 'PENGELUARAN', 'DPA' => (auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin()) ? view("dashboard.pages.laporan." . strtolower($param)) : abort(403),
+                    default => (auth()->user()->hasPermission('LAPORAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.laporan.pendapatan') : abort(403),
                 },
-            'rekening' => Auth::user()->hasPermission('REKENING_VIEW') ? view('dashboard.pages.rekening') : abort(403),
+            'rekening' => (auth()->user()->hasPermission('REKENING_PENDAPATAN_VIEW') || auth()->user()->hasPermission('REKENING_PENGELUARAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.rekening') : abort(403),
 
-            'ruangan' => Auth::user()->hasPermission('MASTER_RUANGAN_VIEW') || Auth::user()->hasPermission('MASTER_VIEW') ? view('dashboard.pages.ruangan') : abort(403),
-            'perusahaan' => Auth::user()->hasPermission('MASTER_PERUSAHAAN_VIEW') || Auth::user()->hasPermission('MASTER_VIEW') ? view('dashboard.pages.perusahaan') : abort(403),
-            'mou' => Auth::user()->hasPermission('MASTER_MOU_VIEW') || Auth::user()->hasPermission('MASTER_VIEW') ? view('dashboard.pages.mou') : abort(403),
-            'penanda_tangan' => Auth::user()->hasPermission('MASTER_VIEW') ? view('dashboard.pages.penanda_tangan') : abort(403),
-            'piutang' => Auth::user()->hasPermission('PIUTANG_VIEW') ? view('dashboard.pages.piutang') : abort(403),
-            'penyesuaian' => Auth::user()->hasPermission('PENYESUAIAN_VIEW') ? view('dashboard.pages.penyesuaian') : abort(403),
+            'ruangan' => (auth()->user()->hasPermission('MASTER_RUANGAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.ruangan') : abort(403),
+            'perusahaan' => (auth()->user()->hasPermission('MASTER_PERUSAHAAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.perusahaan') : abort(403),
+            'mou' => (auth()->user()->hasPermission('MASTER_MOU_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.mou') : abort(403),
+            'penanda_tangan' => (auth()->user()->hasPermission('MASTER_PENANDA_TANGAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.penanda_tangan') : abort(403),
+            'piutang' => (auth()->user()->hasPermission('PIUTANG_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.piutang') : abort(403),
+            'penyesuaian' => (auth()->user()->hasPermission('PENYESUAIAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.penyesuaian') : abort(403),
 
             'master' => match ($param) {
-                    'kode-rekening' => Auth::user()->hasPermission('KODE_REKENING_VIEW') ? (
+                    'kode-rekening' => (
+                        (request('category') === 'PENGELUARAN' && auth()->user()->hasPermission('KODE_REKENING_PENGELUARAN_VIEW')) ||
+                        (request('category') !== 'PENGELUARAN' && auth()->user()->hasPermission('KODE_REKENING_PENDAPATAN_VIEW')) ||
+                        auth()->user()->isAdmin()
+                    ) ? (
                         request('category') === 'PENGELUARAN'
                         ? view('dashboard.master.kode-rekening.expenditure')
                         : view('dashboard.master.kode-rekening.index')
                     ) : abort(403),
-                    'kode-rekening-anggaran' => Auth::user()->hasPermission('KODE_REKENING_VIEW') ? (
+                    'kode-rekening-anggaran' => (
+                        (request('category') === 'PENGELUARAN' && auth()->user()->hasPermission('KODE_REKENING_PENGELUARAN_VIEW')) ||
+                        (request('category') !== 'PENGELUARAN' && auth()->user()->hasPermission('KODE_REKENING_PENDAPATAN_VIEW')) ||
+                        auth()->user()->isAdmin()
+                    ) ? (
                         request('category') === 'PENGELUARAN'
                         ? view('dashboard.pages.pengeluaran.anggaran')
                         : view('dashboard.pages.pendapatan.anggaran')
                     ) : abort(403),
-                    'logs' => (Auth::user()->isAdmin() || Auth::user()->hasPermission('ACTIVITY_LOG_VIEW')) ? view('dashboard.pages.master.logs') : abort(403),
+                    'logs' => (auth()->user()->isAdmin() || auth()->user()->hasPermission('ACTIVITY_LOG_VIEW')) ? view('dashboard.pages.master.logs') : abort(403),
                     default => abort(404),
                 },
 
             'pengeluaran' => match ($param) {
-                    'PEGAWAI', 'BARANG_JASA', 'MODAL' => Auth::user()->hasPermission('PENGELUARAN_VIEW') || Auth::user()->isAdmin() ? view('dashboard.pages.pengeluaran.index', ['param' => $param]) : abort(403),
-                    'ANGGARAN' => (Auth::user()->hasPermission('KODE_REKENING_PENGELUARAN_VIEW') || Auth::user()->hasPermission('KODE_REKENING_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.anggaran') : abort(403),
-                    'disbursement' => (Auth::user()->hasPermission('PENGELUARAN_SPP_VIEW') || Auth::user()->hasPermission('PENGELUARAN_SPM_VIEW') || Auth::user()->hasPermission('PENGELUARAN_SP2D_VIEW') || Auth::user()->hasPermission('PENGELUARAN_CAIR_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.disbursement') : abort(403),
-                    'saldo' => (Auth::user()->hasPermission('PENGELUARAN_SALDO_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.saldo') : abort(403),
-                    'ledger' => (Auth::user()->hasPermission('PENGELUARAN_BKU_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.ledger') : abort(403),
-                    'rekening-koran' => (Auth::user()->hasPermission('PENGELUARAN_RK_VIEW') || Auth::user()->isAdmin()) ? view('dashboard.pages.pengeluaran.rekening-koran') : abort(403),
+                    'PEGAWAI', 'BARANG_JASA', 'MODAL' => (auth()->user()->hasPermission('BELANJA_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengeluaran.index', ['param' => $param]) : abort(403),
+                    'ANGGARAN' => (auth()->user()->hasPermission('KODE_REKENING_PENGELUARAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengeluaran.anggaran') : abort(403),
+                    'disbursement' => (auth()->user()->hasPermission('SPP_VIEW') || auth()->user()->hasPermission('SPM_VIEW') || auth()->user()->hasPermission('SP2D_VIEW') || auth()->user()->hasPermission('PENCAIRAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengeluaran.disbursement') : abort(403),
+                    'saldo' => (auth()->user()->hasPermission('SALDO_DANA_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengeluaran.saldo') : abort(403),
+                    'ledger' => (auth()->user()->hasPermission('BKU_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengeluaran.ledger') : abort(403),
+                    'rekening-koran' => (auth()->user()->hasPermission('REKENING_PENGELUARAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengeluaran.rekening-koran') : abort(403),
                     default => abort(404),
                 },
 
             'pengesahan' => match ($param) {
-                    'SP3BP', 'sp3bp' => Auth::user()->hasPermission('PENGESAHAN_VIEW') ? view('dashboard.pages.pengesahan.sp3bp') : abort(403),
-                    'SPTJB', 'sptjb' => Auth::user()->hasPermission('PENGESAHAN_VIEW') ? view('dashboard.pages.pengesahan.sptjb') : abort(403),
-                    'LRKB', 'lrkb' => Auth::user()->hasPermission('PENGESAHAN_VIEW') ? view('dashboard.pages.pengesahan.lrkb') : abort(403),
+                    'SP3BP', 'sp3bp' => (auth()->user()->hasPermission('PENGESAHAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengesahan.sp3bp') : abort(403),
+                    'SPTJB', 'sptjb' => (auth()->user()->hasPermission('PENGESAHAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengesahan.sptjb') : abort(403),
+                    'LRKB', 'lrkb' => (auth()->user()->hasPermission('PENGESAHAN_VIEW') || auth()->user()->isAdmin()) ? view('dashboard.pages.pengesahan.lrkb') : abort(403),
                     default => abort(404),
                 },
 

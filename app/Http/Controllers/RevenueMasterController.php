@@ -24,11 +24,11 @@ class RevenueMasterController extends Controller
         // Authorization based on category
         $user = auth()->user();
         $permMap = [
-            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_VIEW') || $user->hasPermission('PENDAPATAN_UMUM'),
-            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_VIEW') || $user->hasPermission('PENDAPATAN_BPJS'),
-            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_VIEW') || $user->hasPermission('PENDAPATAN_JAMINAN'),
-            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_VIEW') || $user->hasPermission('PENDAPATAN_LAIN'),
-            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_VIEW') || $user->hasPermission('PENDAPATAN_KERJA'),
+            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_VIEW'),
+            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_VIEW'),
+            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_VIEW'),
+            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_VIEW'),
+            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_VIEW'),
         ];
 
         if ($category && isset($permMap[$category])) {
@@ -116,11 +116,11 @@ class RevenueMasterController extends Controller
 
         $user = auth()->user();
         $permMap = [
-            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_CREATE') || $user->hasPermission('PENDAPATAN_UMUM'),
-            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_CREATE') || $user->hasPermission('PENDAPATAN_BPJS'),
-            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_CREATE') || $user->hasPermission('PENDAPATAN_JAMINAN'),
-            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_CREATE') || $user->hasPermission('PENDAPATAN_LAIN'),
-            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_CREATE') || $user->hasPermission('PENDAPATAN_KERJA'),
+            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_CRUD'),
+            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_CRUD'),
+            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_CRUD'),
+            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_CRUD'),
+            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_CRUD'),
         ];
 
         abort_unless($permMap[$data['kategori']] || $user->hasPermission('MASTER_CREATE'), 403);
@@ -149,11 +149,11 @@ class RevenueMasterController extends Controller
 
         $user = auth()->user();
         $permMap = [
-            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_CREATE') || $user->hasPermission('PENDAPATAN_UMUM'),
-            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_CREATE') || $user->hasPermission('PENDAPATAN_BPJS'),
-            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_CREATE') || $user->hasPermission('PENDAPATAN_JAMINAN'),
-            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_CREATE') || $user->hasPermission('PENDAPATAN_LAIN'),
-            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_CREATE') || $user->hasPermission('PENDAPATAN_KERJA'),
+            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_CRUD'),
+            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_CRUD'),
+            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_CRUD'),
+            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_CRUD'),
+            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_CRUD'),
         ];
 
         abort_unless($permMap[$master->kategori] || $user->hasPermission('MASTER_CREATE'), 403);
@@ -196,11 +196,11 @@ class RevenueMasterController extends Controller
 
         $user = auth()->user();
         $permMap = [
-            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_DELETE') || $user->hasPermission('PENDAPATAN_UMUM'),
-            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_DELETE') || $user->hasPermission('PENDAPATAN_BPJS'),
-            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_DELETE') || $user->hasPermission('PENDAPATAN_JAMINAN'),
-            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_DELETE') || $user->hasPermission('PENDAPATAN_LAIN'),
-            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_DELETE') || $user->hasPermission('PENDAPATAN_KERJA'),
+            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_CRUD'),
+            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_CRUD'),
+            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_CRUD'),
+            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_CRUD'),
+            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_CRUD'),
         ];
 
         abort_unless($permMap[$master->kategori] || $user->hasPermission('MASTER_DELETE'), 403);
@@ -247,11 +247,11 @@ class RevenueMasterController extends Controller
 
         $user = auth()->user();
         $permMap = [
-            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_POST') || $user->hasPermission('PENDAPATAN_UMUM'),
-            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_POST') || $user->hasPermission('PENDAPATAN_BPJS'),
-            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_POST') || $user->hasPermission('PENDAPATAN_JAMINAN'),
-            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_POST') || $user->hasPermission('PENDAPATAN_LAIN'),
-            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_POST') || $user->hasPermission('PENDAPATAN_KERJA'),
+            'UMUM' => $user->hasPermission('PENDAPATAN_UMUM_POST'),
+            'BPJS' => $user->hasPermission('PENDAPATAN_BPJS_POST'),
+            'JAMINAN' => $user->hasPermission('PENDAPATAN_JAMINAN_POST'),
+            'LAIN' => $user->hasPermission('PENDAPATAN_LAIN_POST'),
+            'KERJASAMA' => $user->hasPermission('PENDAPATAN_KERJA_POST'),
         ];
 
         abort_unless($permMap[$master->kategori] || $user->hasPermission('PENGESAHAN_POST'), 403);

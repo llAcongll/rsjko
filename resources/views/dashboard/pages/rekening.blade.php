@@ -54,12 +54,18 @@
         </button>
       </div>
 
-      @if(auth()->user()->hasPermission('REKENING_CRUD'))
-        <button class="btn-tambah-data" onclick="openRekeningForm()">
-          <i class="ph-bold ph-plus"></i>
-          <span>Tambah</span>
-        </button>
-      @endif
+      <div style="display: flex; gap: 8px;">
+        @if(auth()->user()->hasPermission('REKENING_CRUD'))
+          <button class="btn-tambah-data btn-secondary" onclick="openRekeningSaldoAwalModal()">
+            <i class="ph-bold ph-wallet"></i>
+            <span>Set Saldo Awal</span>
+          </button>
+          <button class="btn-tambah-data" onclick="openRekeningForm()">
+            <i class="ph-bold ph-plus"></i>
+            <span>Tambah</span>
+          </button>
+        @endif
+      </div>
     </div>
   </div>
 
@@ -133,6 +139,11 @@
 
   {{-- TABLE BOX --}}
   <div class="dashboard-box">
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
+      <div id="rekeningSaldoAwalDisplay"
+        style="font-size:13px; color:#0369a1; font-weight:700; padding: 6px 16px; background: #e0f2fe; border-radius: 8px; border: 1px solid #bae6fd;">
+        Saldo Awal Tahun: Rp 0</div>
+    </div>
     <div class="table-container">
       <table class="users-table rekening-table" id="rekeningTable">
         <thead>
@@ -248,5 +259,57 @@
         </button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Modal Saldo Awal Pendapatan -->
+<div id="modalRekeningSaldoAwal" class="confirm-overlay">
+  <div class="confirm-box" style="max-width: 440px; padding: 30px;">
+    <h3 style="margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;">
+      <i class="ph ph-wallet" style="font-size: 24px; color: #0369a1;"></i>
+      <span style="font-size: 20px; font-weight: 800; color: #1e293b;">Set Saldo Awal Tahun</span>
+    </h3>
+
+    <div class="alert alert-info"
+      style="margin-bottom: 1.5rem; font-size: 0.9rem; background: #f0f9ff; border-left: 4px solid #0369a1; padding: 12px; color: #0c4a6e; border-radius: 8px;">
+      <i class="ph-fill ph-info"></i> Saldo awal hanya perlu di set 1x di awal tahun. Nilai ini akan diakumulasikan ke
+      perhitungan mutasi.
+    </div>
+
+    <form id="formRekeningSaldoAwal" onsubmit="submitRekeningSaldoAwal(event)">
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label style="font-weight: 700; color: #475569; margin-bottom: 8px; display: block; font-size: 13px;">Pilih
+          Bank</label>
+        <select id="rekeningSaldoAwalBank" name="bank" class="form-input" required style="height: 42px;">
+          <option value="">Pilih Bank...</option>
+          <option value="Bank Riau Kepri Syariah">Bank Riau Kepri Syariah</option>
+          <option value="Bank Syariah Indonesia">Bank Syariah Indonesia</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label style="font-weight: 700; color: #475569; margin-bottom: 8px; display: block; font-size: 13px;">Nominal
+          Saldo Awal</label>
+        <div style="position: relative;">
+          <span style="position: absolute; left: 12px; top: 11px; color: #64748b; font-weight: 500;">Rp</span>
+          <input type="text" id="rekeningSaldoAwalDisplayInput" class="form-input"
+            style="padding-left: 35px; font-weight: 700; height: 42px;" required placeholder="0">
+          <input type="hidden" id="rekeningSaldoAwalValue" name="jumlah" required>
+        </div>
+      </div>
+
+      <div class="confirm-actions" style="margin-top: 30px;">
+        <button type="button" class="btn-secondary" onclick="closeRekeningSaldoAwalModal()">
+          <i class="ph ph-x"></i> Batal
+        </button>
+        <button type="button" id="btnHapusRekeningSaldoAwal" class="btn-danger" style="display: none;"
+          onclick="deleteRekeningSaldoAwal()">
+          <i class="ph ph-trash"></i> Hapus
+        </button>
+        <button type="submit" class="btn-primary">
+          <i class="ph ph-floppy-disk"></i> Simpan Saldo
+        </button>
+      </div>
+    </form>
   </div>
 </div>

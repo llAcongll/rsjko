@@ -12,6 +12,14 @@ let pengeluaranType = '';
 let pengeluaranSortBy = 'spending_date';
 let pengeluaranSortDir = 'desc';
 
+// Searchable select state
+let rekeningOptions = [];
+let rekeningDropdownIndex = -1;
+
+// No. Bukti validation state
+let noBuktiCheckTimer = null;
+let noBuktiIsValid = true;
+
 /* =========================
    ROUTING / APP.JS INTEGRATION
 ========================= */
@@ -23,6 +31,8 @@ window.initPengeluaran = function (kategori) {
     pengeluaranKeyword = '';
 
     bindCurrencyInputs();
+    bindNoBuktiValidation();
+    bindRekeningSearchable();
 
     // Bind Search Input Logic
     const searchInput = document.getElementById('searchPengeluaran');
@@ -74,6 +84,189 @@ async function loadAvailableGuCycles() {
 // Update summary cards if needed
 
 /* =========================
+   NO. BUKTI VALIDATION
+========================= */
+function bindNoBuktiValidation() {
+    const input = document.getElementById('pengeluaranNoBukti');
+    if (!input) return;
+
+    input.oninput = function () {
+        if (noBuktiCheckTimer) clearTimeout(noBuktiCheckTimer);
+        const val = this.value.trim();
+        if (!val) {
+            hideNoBuktiStatus();
+            noBuktiIsValid = true;
+            return;
+        }
+
+        noBuktiCheckTimer = setTimeout(() => {
+            checkNoBuktiAvailability(val);
+        }, 500);
+    };
+}
+
+async function checkNoBuktiAvailability(noBukti) {
+    const statusEl = document.getElementById('noBuktiStatus');
+    const msgEl = document.getElementById('noBuktiMessage');
+    const input = document.getElementById('pengeluaranNoBukti');
+
+    if (!statusEl || !msgEl) return;
+
+    // Show loading
+    statusEl.style.display = 'inline';
+    statusEl.innerHTML = '<i class="ph ph-spinner-gap" style="animation: spin 1s linear infinite; color: #94a3b8;"></i>';
+    msgEl.style.display = 'none';
+
+    try {
+        let url = `/dashboard/expenditures/check-no-bukti?no_bukti=${encodeURIComponent(noBukti)}`;
+        if (isEditPengeluaran && editPengeluaranId) {
+            url += `&exclude_id=${editPengeluaranId}`;
+        }
+        const res = await fetch(url, { headers: { Accept: 'application/json' } });
+        const data = await res.json();
+
+        if (data.available) {
+            statusEl.innerHTML = '<i class="ph ph-check-circle" style="color: #22c55e;"></i>';
+            msgEl.style.display = 'block';
+            msgEl.textContent = 'Nomor bukti tersedia';
+            msgEl.style.color = '#22c55e';
+            input.style.borderColor = '#22c55e';
+            noBuktiIsValid = true;
+        } else {
+            statusEl.innerHTML = '<i class="ph ph-x-circle" style="color: #ef4444;"></i>';
+            msgEl.style.display = 'block';
+            msgEl.textContent = 'Nomor bukti sudah digunakan pada kegiatan lain';
+            msgEl.style.color = '#ef4444';
+            input.style.borderColor = '#ef4444';
+            noBuktiIsValid = false;
+        }
+    } catch (err) {
+        console.error('Gagal cek no bukti:', err);
+        hideNoBuktiStatus();
+        noBuktiIsValid = true; // Allow submission, server will re-validate
+    }
+}
+
+function hideNoBuktiStatus() {
+    const statusEl = document.getElementById('noBuktiStatus');
+    const msgEl = document.getElementById('noBuktiMessage');
+    const input = document.getElementById('pengeluaranNoBukti');
+    if (statusEl) statusEl.style.display = 'none';
+    if (msgEl) msgEl.style.display = 'none';
+    if (input) input.style.borderColor = '';
+}
+
+/* =========================
+   SEARCHABLE SELECT (KODE REKENING)
+========================= */
+function bindRekeningSearchable() {
+    const searchInput = document.getElementById('pengeluaranRekeningSearch');
+    const dropdown = document.getElementById('pengeluaranRekeningDropdown');
+    const hiddenInput = document.getElementById('pengeluaranRekening');
+    if (!searchInput || !dropdown || !hiddenInput) return;
+
+    searchInput.onfocus = function () {
+        if (this.readOnly) return;
+        renderRekeningDropdown(this.value);
+        dropdown.style.display = 'block';
+    };
+
+    searchInput.oninput = function () {
+        if (this.readOnly) return;
+        rekeningDropdownIndex = -1;
+        renderRekeningDropdown(this.value);
+        dropdown.style.display = 'block';
+        // Clear selection if user is typing
+        hiddenInput.value = '';
+    };
+
+    searchInput.onkeydown = function (e) {
+        const items = dropdown.querySelectorAll('.rek-option');
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            rekeningDropdownIndex = Math.min(rekeningDropdownIndex + 1, items.length - 1);
+            highlightRekeningOption(items);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            rekeningDropdownIndex = Math.max(rekeningDropdownIndex - 1, 0);
+            highlightRekeningOption(items);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (rekeningDropdownIndex >= 0 && items[rekeningDropdownIndex]) {
+                items[rekeningDropdownIndex].click();
+            }
+        } else if (e.key === 'Escape') {
+            dropdown.style.display = 'none';
+        }
+    };
+
+    // Close dropdown on click outside
+    document.addEventListener('click', function (e) {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+}
+
+function renderRekeningDropdown(keyword = '') {
+    const dropdown = document.getElementById('pengeluaranRekeningDropdown');
+    if (!dropdown) return;
+
+    const kw = keyword.toLowerCase().trim();
+    const filtered = kw
+        ? rekeningOptions.filter(opt => opt.label.toLowerCase().includes(kw))
+        : rekeningOptions;
+
+    if (filtered.length === 0) {
+        dropdown.innerHTML = '<div style="padding: 12px 16px; color: #94a3b8; font-size: 13px; text-align: center;">Tidak ada rekening ditemukan</div>';
+        return;
+    }
+
+    dropdown.innerHTML = filtered.map((opt, i) => `
+        <div class="rek-option" data-value="${opt.value}" data-index="${i}"
+            style="padding: 10px 16px; cursor: pointer; font-size: 13px; line-height: 1.4;
+                border-bottom: 1px solid #f1f5f9; transition: background 0.15s;"
+            onmouseenter="this.style.background='#f0f4ff'"
+            onmouseleave="this.style.background='${rekeningDropdownIndex === i ? '#eef2ff' : '#fff'}'"
+            onclick="selectRekeningOption('${opt.value}', '${escapeAttr(opt.label)}')">
+            <div style="font-weight: 600; color: #1e293b;">${highlightMatch(opt.kode, kw)}</div>
+            <div style="color: #64748b; font-size: 12px; margin-top: 2px;">${highlightMatch(opt.nama, kw)}</div>
+        </div>
+    `).join('');
+}
+
+function highlightMatch(text, kw) {
+    if (!kw) return escapeHtml(text);
+    const escaped = escapeHtml(text);
+    const regex = new RegExp(`(${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return escaped.replace(regex, '<mark style="background:#fef08a; padding:0 1px; border-radius:2px;">$1</mark>');
+}
+
+function escapeAttr(str) {
+    return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+function highlightRekeningOption(items) {
+    items.forEach((item, i) => {
+        item.style.background = i === rekeningDropdownIndex ? '#eef2ff' : '#fff';
+    });
+    if (items[rekeningDropdownIndex]) {
+        items[rekeningDropdownIndex].scrollIntoView({ block: 'nearest' });
+    }
+}
+
+window.selectRekeningOption = function (value, label) {
+    const searchInput = document.getElementById('pengeluaranRekeningSearch');
+    const hiddenInput = document.getElementById('pengeluaranRekening');
+    const dropdown = document.getElementById('pengeluaranRekeningDropdown');
+
+    if (searchInput) searchInput.value = label;
+    if (hiddenInput) hiddenInput.value = value;
+    if (dropdown) dropdown.style.display = 'none';
+    rekeningDropdownIndex = -1;
+};
+
+/* =========================
    MODAL CONTROL
  ========================= */
 window.openPengeluaranForm = function (kategori, id = null) {
@@ -119,6 +312,8 @@ window.openPengeluaranForm = function (kategori, id = null) {
 
     loadRekeningPengeluaran(kategori);
     bindCurrencyInputs();
+    bindNoBuktiValidation();
+    bindRekeningSearchable();
 };
 
 function bindCurrencyInputs() {
@@ -183,6 +378,18 @@ function resetPengeluaranForm() {
     if (metodeSelect) {
         Array.from(metodeSelect.options).forEach(opt => opt.disabled = false);
     }
+
+    // Reset No. Bukti
+    const noBuktiInput = document.getElementById('pengeluaranNoBukti');
+    if (noBuktiInput) noBuktiInput.value = '';
+    hideNoBuktiStatus();
+    noBuktiIsValid = true;
+
+    // Reset Searchable Select
+    const rekeningSearch = document.getElementById('pengeluaranRekeningSearch');
+    if (rekeningSearch) rekeningSearch.value = '';
+    const rekeningHidden = document.getElementById('pengeluaranRekening');
+    if (rekeningHidden) rekeningHidden.value = '';
 }
 
 window.calculateTotalDibayarkan = function () {
@@ -363,6 +570,10 @@ function loadEditData(id) {
                 document.getElementById('pengeluaranTanggal').value = `${year}-${month}-${day}`;
             }
 
+            // No. Bukti
+            const noBuktiInput = document.getElementById('pengeluaranNoBukti');
+            if (noBuktiInput) noBuktiInput.value = data.no_bukti || '';
+
             document.getElementById('pengeluaranUraian').value = data.description;
             document.getElementById('pengeluaranVendor').value = data.vendor || '';
 
@@ -385,20 +596,17 @@ function loadEditData(id) {
                 cycleSection.style.display = 'none';
             }
 
-            // Pilih rekening
+            // Pilih rekening via searchable select
             let attempts = 0;
             const check = setInterval(() => {
-                const select = document.getElementById('pengeluaranRekening');
-                if (!select) {
-                    clearInterval(check);
-                    return;
-                }
-
-                if (select.options.length > 1) {
-                    select.value = data.kode_rekening_id;
+                if (rekeningOptions.length > 0) {
+                    const opt = rekeningOptions.find(o => o.value == data.kode_rekening_id);
+                    if (opt) {
+                        document.getElementById('pengeluaranRekening').value = opt.value;
+                        document.getElementById('pengeluaranRekeningSearch').value = opt.label;
+                    }
                     clearInterval(check);
                 }
-
                 attempts++;
                 if (attempts > 50) clearInterval(check);
             }, 100);
@@ -410,10 +618,11 @@ function loadEditData(id) {
 }
 
 async function loadRekeningPengeluaran(kategori) {
-    const select = document.getElementById('pengeluaranRekening');
+    const hiddenInput = document.getElementById('pengeluaranRekening');
+    const searchInput = document.getElementById('pengeluaranRekeningSearch');
 
     // Selalu reload jika kategori berbeda atau belum dimuat
-    if (select.getAttribute('data-loaded-for') === kategori) return;
+    if (hiddenInput && hiddenInput.getAttribute('data-loaded-for') === kategori && rekeningOptions.length > 0) return;
 
     try {
         const res = await fetch('/dashboard/master/kode-rekening?category=PENGELUARAN', {
@@ -421,15 +630,18 @@ async function loadRekeningPengeluaran(kategori) {
         });
         const tree = await res.json();
 
-        select.innerHTML = '<option value="">-- Pilih Rekening --</option>';
+        rekeningOptions = [];
 
         function flatten(nodes) {
             nodes.forEach(node => {
                 if (node.tipe === 'detail') {
-                    // Filter berdasarkan sumber_data yang cocok dengan kategori pengeluaran
-                    // Jika kode tersebut di-map ke kategori yang sedang dibuka (atau jika user ingin semua pengeluaran tampil, hapus if ini)
                     if (node.sumber_data === kategori) {
-                        select.insertAdjacentHTML('beforeend', `<option value="${node.id}">${node.kode} — ${node.nama}</option>`);
+                        rekeningOptions.push({
+                            value: node.id,
+                            kode: node.kode,
+                            nama: node.nama,
+                            label: `${node.kode} — ${node.nama}`
+                        });
                     }
                 }
                 if (node.children && node.children.length > 0) {
@@ -439,14 +651,20 @@ async function loadRekeningPengeluaran(kategori) {
         }
 
         flatten(tree);
-        select.setAttribute('data-loaded-for', kategori);
+
+        if (hiddenInput) hiddenInput.setAttribute('data-loaded-for', kategori);
 
         // Jika tidak ada yang cocok dengan mapping, tampilkan semua detail pengeluaran sebagai fallback
-        if (select.options.length <= 1) {
+        if (rekeningOptions.length === 0) {
             function flattenAll(nodes) {
                 nodes.forEach(node => {
                     if (node.tipe === 'detail') {
-                        select.insertAdjacentHTML('beforeend', `<option value="${node.id}">${node.kode} — ${node.nama}</option>`);
+                        rekeningOptions.push({
+                            value: node.id,
+                            kode: node.kode,
+                            nama: node.nama,
+                            label: `${node.kode} — ${node.nama}`
+                        });
                     }
                     if (node.children && node.children.length > 0) {
                         flattenAll(node.children);
@@ -454,7 +672,7 @@ async function loadRekeningPengeluaran(kategori) {
                 });
             }
             flattenAll(tree);
-            select.setAttribute('data-loaded-for', 'ALL');
+            if (hiddenInput) hiddenInput.setAttribute('data-loaded-for', 'ALL');
         }
 
     } catch (err) {
@@ -467,6 +685,13 @@ async function loadRekeningPengeluaran(kategori) {
 ========================= */
 window.submitPengeluaran = async function (event) {
     event.preventDefault();
+
+    // Check No. Bukti validity before submit
+    if (!noBuktiIsValid) {
+        toast('Nomor bukti sudah digunakan pada kegiatan lain. Gunakan nomor lain.', 'error');
+        return;
+    }
+
     const form = document.getElementById('formPengeluaran');
     const btn = document.getElementById('btnSimpanPengeluaran');
 
@@ -478,7 +703,6 @@ window.submitPengeluaran = async function (event) {
     const url = id ? `/dashboard/expenditures/${id}` : '/dashboard/expenditures';
 
     // Map frontend fields (if different) to API fields
-    // Old fields: nominal -> gross_value, potongan_pajak -> tax, tanggal -> spending_date, uraian -> description, metode_pembayaran -> spending_type
     const apiData = {
         spending_date: formData.get('tanggal'),
         kode_rekening_id: formData.get('kode_rekening_id'),
@@ -489,6 +713,7 @@ window.submitPengeluaran = async function (event) {
         siklus_up: formData.get('siklus_up'),
         vendor: formData.get('vendor') || '',
         fund_disbursement_id: formData.get('fund_disbursement_id') || null,
+        no_bukti: formData.get('no_bukti') || '',
     };
 
     if (id) apiData['_method'] = 'PUT';

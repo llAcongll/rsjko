@@ -420,6 +420,31 @@ window.initDisbursement = function () {
         if (subEl) subEl.textContent = 'Daftar kegiatan yang telah dicairkan';
         if (addBtn) addBtn.style.display = 'none';
         disbursementStatusFilter = 'CAIR';
+    } else if (disbursementPageMode === 'REPORT_SPP') {
+        if (titleEl) titleEl.innerHTML = '<i class="ph ph-file-text"></i> Laporan SPP (Semua SPP)';
+        if (subEl) subEl.textContent = 'Daftar seluruh SPP yang pernah diajukan';
+        if (addBtn) addBtn.style.display = 'none';
+        disbursementStatusFilter = 'SPP,SPM,CAIR';
+    } else if (disbursementPageMode === 'REPORT_SPM') {
+        if (titleEl) titleEl.innerHTML = '<i class="ph ph-seal-check"></i> Laporan SPM (Semua SPM)';
+        if (subEl) subEl.textContent = 'Daftar seluruh SPM yang pernah diterbitkan';
+        if (addBtn) addBtn.style.display = 'none';
+        disbursementStatusFilter = 'SPM,CAIR';
+    } else if (disbursementPageMode === 'REPORT_SP2D') {
+        if (titleEl) titleEl.innerHTML = '<i class="ph ph-check-circle"></i> Laporan SP2D (Semua SP2D)';
+        if (subEl) subEl.textContent = 'Daftar seluruh SP2D yang pernah dicairkan';
+        if (addBtn) addBtn.style.display = 'none';
+        disbursementStatusFilter = 'CAIR';
+    }
+
+    // Toggle report view class for simplified table
+    const containerEl = document.getElementById('disbursementMainList');
+    if (containerEl) {
+        if (disbursementPageMode.startsWith('REPORT_')) {
+            containerEl.classList.add('is-report-view');
+        } else {
+            containerEl.classList.remove('is-report-view');
+        }
     }
 
     // Set active filter button
@@ -456,97 +481,30 @@ window.loadDisbursements = function () {
             const data = res.data || [];
             tbody.innerHTML = '';
 
+            const isReport = disbursementPageMode.startsWith('REPORT_');
+
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" class="text-center">Belum ada data.</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="${isReport ? 5 : 10}" class="text-center">Belum ada data.</td></tr>`;
                 return;
             }
 
             data.forEach((item, index) => {
-                const docNumbers = [];
-                if (item.spp_no) docNumbers.push(`<div style="color: #b45309; font-weight: 600; font-size: 0.75rem;"><i class="ph ph-file-text"></i> SPP: ${item.spp_no}</div>`);
-                if (item.spm_no) docNumbers.push(`<div style="color: #047857; font-weight: 600; font-size: 0.75rem;"><i class="ph ph-seal-check"></i> SPM: ${item.spm_no}</div>`);
-                if (item.sp2d_no) docNumbers.push(`<div style="color: #1d4ed8; font-weight: 800; font-size: 0.8rem; margin-top: 2px; border-top: 1px solid #e2e8f0; padding-top: 2px;"><i class="ph ph-check-circle"></i> SP2D: ${item.sp2d_no}</div>`);
-                const docNoHtml = docNumbers.length > 0 ? docNumbers.join('') : '<span style="color:#94a3b8">Belum ada</span>';
-
-                // Build action buttons based on current status AND page mode
-                let actionHtml = '';
-                const canSppCreate = window.hasPermission('PENGELUARAN_SPP_CREATE') || window.isAdmin;
-                const canSppDelete = window.hasPermission('PENGELUARAN_SPP_DELETE') || window.isAdmin;
-                const canSpmCreate = window.hasPermission('PENGELUARAN_SPM_CREATE') || window.isAdmin;
-                const canSpmDelete = window.hasPermission('PENGELUARAN_SPM_DELETE') || window.isAdmin;
-                const canSp2dCreate = window.hasPermission('PENGELUARAN_SP2D_CREATE') || window.isAdmin;
-                const canSp2dDelete = window.hasPermission('PENGELUARAN_SP2D_DELETE') || window.isAdmin;
-                const canCairView = window.hasPermission('PENGELUARAN_CAIR_VIEW') || window.isAdmin;
-                const canCairCreate = window.hasPermission('PENGELUARAN_CAIR_CREATE') || window.isAdmin;
-
-                if (disbursementPageMode === 'SPP') {
-                    if (item.status === 'DRAFT' || item.status === 'SPP') {
-                        if (canSppCreate) actionHtml += `<button class="btn-aksi" title="Edit SPP" onclick="editDisbursement(${item.id})" style="color:#2563eb;"><i class="ph ph-pencil-simple"></i></button>`;
-                        if (canSppDelete) actionHtml += `<button class="btn-aksi delete" title="Hapus SPP" onclick="hapusDisbursement(${item.id})"><i class="ph ph-trash"></i></button>`;
+                let docNoHtml = '';
+                if (isReport) {
+                    if (disbursementPageMode === 'REPORT_SPP') {
+                        docNoHtml = `<div style="color: #b45309; font-weight: 700;">${item.spp_no || '-'}</div>`;
+                    } else if (disbursementPageMode === 'REPORT_SPM') {
+                        docNoHtml = `<div style="color: #047857; font-weight: 700;">${item.spm_no || '-'}</div>`;
+                    } else if (disbursementPageMode === 'REPORT_SP2D') {
+                        docNoHtml = `<div style="color: #1d4ed8; font-weight: 800;">${item.sp2d_no || '-'}</div>`;
                     }
-                } else if (disbursementPageMode === 'SPM') {
-                    if (item.status === 'SPP') {
-                        if (canSpmCreate) actionHtml += `<button class="btn-aksi" title="Proses ke SPM" onclick="advanceStatus(${item.id}, 'SPM')" style="color:#047857;"><i class="ph ph-seal-check"></i> <span style='font-size:0.7rem'>Ke SPM</span></button>`;
-                    }
-                    if (item.status === 'SPM') {
-                        if (canSpmDelete) actionHtml += `<button class="btn-aksi" title="Batalkan SPM" onclick="revertStatus(${item.id}, 'SPP')" style="color:#dc2626;"><i class="ph ph-arrow-counter-clockwise"></i> <span style='font-size:0.7rem'>Batal</span></button>`;
-                    }
-                } else if (disbursementPageMode === 'SP2D') {
-                    if (item.status === 'SPM') {
-                        if (canSp2dCreate) actionHtml += `<button class="btn-aksi" title="Cairkan (Assign SP2D)" onclick="advanceStatus(${item.id}, 'CAIR')" style="color:#1d4ed8;"><i class="ph ph-check-circle"></i> <span style='font-size:0.7rem'>Assign SP2D</span></button>`;
-                    }
-                    if (item.status === 'CAIR') {
-                        actionHtml += `<span style="font-size:0.7rem; color:#64748b">Selesai (Lihat di Pencairan)</span>`;
-                    }
-                } else if (disbursementPageMode === 'PENCAIRAN') {
-                    // Horizontal Action Group
-                    if (item.status === 'CAIR') {
-                        actionHtml += `<div style="display: flex; gap: 6px; justify-content: center; align-items: center;">`;
-
-                        // Detail Belanja (View or Manage)
-                        if (canCairView || canCairCreate) {
-                            actionHtml += `
-                                <button class="btn-aksi" title="Detail Belanja" onclick="openBelanjaItems(${item.id})" 
-                                    style="width: auto; height: 32px; padding: 0 12px; border-radius: 8px; background: #ecfdf5; color: #059669; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1px solid #10b981;">
-                                    <i class="ph ph-shopping-cart" style="font-size: 14px;"></i> <span>Belanja</span>
-                                </button>
-                            `;
-                        }
-
-                        // Always allow view detail of record if they can view pencairan listed here
-                        actionHtml += `
-                            <button class="btn-aksi" title="Lihat Detail" onclick="viewDisbursement(${item.id})" 
-                                style="width: 32px; height: 32px; background: #eff6ff; color: #2563eb; border: 1px solid #3b82f6;">
-                                <i class="ph ph-eye"></i>
-                            </button>
-                        `;
-
-                        // Edit record info
-                        if (canCairCreate) {
-                            actionHtml += `
-                                <button class="btn-aksi" title="Edit Data" onclick="editDisbursement(${item.id})" 
-                                    style="width: 32px; height: 32px; background: #fffbeb; color: #d97706; border: 1px solid #f59e0b;">
-                                    <i class="ph ph-pencil-simple"></i>
-                                </button>
-                            `;
-                        }
-
-                        // Revert SP2D
-                        if (canSp2dDelete) {
-                            actionHtml += `
-                                <button class="btn-aksi" title="Batalkan SP2D" onclick="revertStatus(${item.id}, 'SPM')" 
-                                    style="width: auto; height: 32px; padding: 0 12px; border-radius: 8px; background: #fef2f2; color: #dc2626; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1px solid #ef4444;">
-                                    <i class="ph ph-arrow-counter-clockwise" style="font-size: 14px;"></i> <span>Batal</span>
-                                </button>
-                            `;
-                        }
-
-                        actionHtml += `</div>`;
-                    }
+                } else {
+                    const docNumbers = [];
+                    if (item.spp_no) docNumbers.push(`<div style="color: #b45309; font-weight: 600; font-size: 0.75rem;"><i class="ph ph-file-text"></i> SPP: ${item.spp_no}</div>`);
+                    if (item.spm_no) docNumbers.push(`<div style="color: #047857; font-weight: 600; font-size: 0.75rem;"><i class="ph ph-seal-check"></i> SPM: ${item.spm_no}</div>`);
+                    if (item.sp2d_no) docNumbers.push(`<div style="color: #1d4ed8; font-weight: 800; font-size: 0.8rem; margin-top: 2px; border-top: 1px solid #e2e8f0; padding-top: 2px;"><i class="ph ph-check-circle"></i> SP2D: ${item.sp2d_no}</div>`);
+                    docNoHtml = docNumbers.length > 0 ? docNumbers.join('') : '<span style="color:#94a3b8">Belum ada</span>';
                 }
-
-                // Status badge with step indicator
-                const statusBadge = getStatusBadge(item.status);
 
                 // Kegiatan info
                 let kegiatanHtml = '-';
@@ -557,20 +515,102 @@ window.loadDisbursements = function () {
                     kegiatanHtml += `<div style="font-size:0.7rem; color:#64748b;">${item.kode_rekening.kode} - ${item.kode_rekening.nama}</div>`;
                 }
 
-                tbody.insertAdjacentHTML('beforeend', `
-                    <tr>
-                        <td class="text-center">${index + 1}</td>
-                        <td class="text-center font-mono">${item.paket_number}</td>
-                        <td class="text-center"><span class="badge-mini">${item.type}</span></td>
-                        <td class="text-left font-mono">${docNoHtml}</td>
-                        <td class="text-center font-mono" style="font-size:0.8rem">${item.siklus_number}</td>
-                        <td class="text-center">${formatTanggal(item.sp2d_date)}</td>
-                        <td>${kegiatanHtml}</td>
-                        <td class="text-right font-mono">${formatRupiahTable(item.value)}</td>
-                        <td class="text-center">${statusBadge}</td>
-                        <td class="text-center" style="white-space:nowrap;">${actionHtml}</td>
-                    </tr>
-                `);
+                if (isReport) {
+                    tbody.insertAdjacentHTML('beforeend', `
+                        <tr>
+                            <td class="text-center">${index + 1}</td>
+                            <td class="text-center">${formatTanggal(item.sp2d_date)}</td>
+                            <td class="text-left font-mono">${docNoHtml}</td>
+                            <td>${kegiatanHtml}</td>
+                            <td class="text-right font-mono">${formatRupiahTable(item.value)}</td>
+                        </tr>
+                    `);
+                } else {
+                    // Build action buttons based on current status AND page mode
+                    let actionHtml = '';
+                    const canSppCreate = window.hasPermission('PENGELUARAN_SPP_CREATE') || window.isAdmin;
+                    const canSppDelete = window.hasPermission('PENGELUARAN_SPP_DELETE') || window.isAdmin;
+                    const canSpmCreate = window.hasPermission('PENGELUARAN_SPM_CREATE') || window.isAdmin;
+                    const canSpmDelete = window.hasPermission('PENGELUARAN_SPM_DELETE') || window.isAdmin;
+                    const canSp2dCreate = window.hasPermission('PENGELUARAN_SP2D_CREATE') || window.isAdmin;
+                    const canSp2dDelete = window.hasPermission('PENGELUARAN_SP2D_DELETE') || window.isAdmin;
+                    const canCairView = window.hasPermission('PENGELUARAN_CAIR_VIEW') || window.isAdmin;
+                    const canCairCreate = window.hasPermission('PENGELUARAN_CAIR_CREATE') || window.isAdmin;
+
+                    if (disbursementPageMode === 'SPP') {
+                        if (item.status === 'DRAFT' || item.status === 'SPP') {
+                            if (canSppCreate) actionHtml += `<button class="btn-aksi" title="Edit SPP" onclick="editDisbursement(${item.id})" style="color:#2563eb;"><i class="ph ph-pencil-simple"></i></button>`;
+                            if (canSppDelete) actionHtml += `<button class="btn-aksi delete" title="Hapus SPP" onclick="hapusDisbursement(${item.id})"><i class="ph ph-trash"></i></button>`;
+                        }
+                    } else if (disbursementPageMode === 'SPM') {
+                        if (item.status === 'SPP') {
+                            if (canSpmCreate) actionHtml += `<button class="btn-aksi" title="Proses ke SPM" onclick="advanceStatus(${item.id}, 'SPM')" style="color:#047857;"><i class="ph ph-seal-check"></i> <span style='font-size:0.7rem'>Ke SPM</span></button>`;
+                        }
+                        if (item.status === 'SPM') {
+                            if (canSpmDelete) actionHtml += `<button class="btn-aksi" title="Batalkan SPM" onclick="revertStatus(${item.id}, 'SPP')" style="color:#dc2626;"><i class="ph ph-arrow-counter-clockwise"></i> <span style='font-size:0.7rem'>Batal</span></button>`;
+                        }
+                    } else if (disbursementPageMode === 'SP2D') {
+                        if (item.status === 'SPM') {
+                            if (canSp2dCreate) actionHtml += `<button class="btn-aksi" title="Cairkan (Assign SP2D)" onclick="advanceStatus(${item.id}, 'CAIR')" style="color:#1d4ed8;"><i class="ph ph-check-circle"></i> <span style='font-size:0.7rem'>Assign SP2D</span></button>`;
+                        }
+                        if (item.status === 'CAIR') {
+                            actionHtml += `<span style="font-size:0.7rem; color:#64748b">Selesai (Lihat di Pencairan)</span>`;
+                        }
+                    } else if (disbursementPageMode === 'PENCAIRAN') {
+                        if (item.status === 'CAIR') {
+                            actionHtml += `<div style="display: flex; gap: 6px; justify-content: center; align-items: center;">`;
+                            if (canCairView || canCairCreate) {
+                                actionHtml += `
+                                    <button class="btn-aksi" title="Detail Belanja" onclick="openBelanjaItems(${item.id})" 
+                                        style="width: auto; height: 32px; padding: 0 12px; border-radius: 8px; background: #ecfdf5; color: #059669; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1px solid #10b981;">
+                                        <i class="ph ph-shopping-cart" style="font-size: 14px;"></i> <span>Belanja</span>
+                                    </button>
+                                `;
+                            }
+                            actionHtml += `
+                                <button class="btn-aksi" title="Lihat Detail" onclick="viewDisbursement(${item.id})" 
+                                    style="width: 32px; height: 32px; background: #eff6ff; color: #2563eb; border: 1px solid #3b82f6;">
+                                    <i class="ph ph-eye"></i>
+                                </button>
+                            `;
+                            if (canCairCreate) {
+                                actionHtml += `
+                                    <button class="btn-aksi" title="Edit Data" onclick="editDisbursement(${item.id})" 
+                                        style="width: 32px; height: 32px; background: #fffbeb; color: #d97706; border: 1px solid #f59e0b;">
+                                        <i class="ph ph-pencil-simple"></i>
+                                    </button>
+                                `;
+                            }
+                            if (canSp2dDelete) {
+                                actionHtml += `
+                                    <button class="btn-aksi" title="Batalkan SP2D" onclick="revertStatus(${item.id}, 'SPM')" 
+                                        style="width: auto; height: 32px; padding: 0 12px; border-radius: 8px; background: #fef2f2; color: #dc2626; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1px solid #ef4444;">
+                                        <i class="ph ph-arrow-counter-clockwise" style="font-size: 14px;"></i> <span>Batal</span>
+                                    </button>
+                                `;
+                            }
+                            actionHtml += `</div>`;
+                        }
+                    }
+
+                    // Status badge with step indicator
+                    const statusBadge = getStatusBadge(item.status);
+
+                    tbody.insertAdjacentHTML('beforeend', `
+                        <tr>
+                            <td class="text-center">${index + 1}</td>
+                            <td class="text-center font-mono">${item.paket_number}</td>
+                            <td class="text-center"><span class="badge-mini">${item.type}</span></td>
+                            <td class="text-left font-mono">${docNoHtml}</td>
+                            <td class="text-center font-mono" style="font-size:0.8rem">${item.siklus_number}</td>
+                            <td class="text-center">${formatTanggal(item.sp2d_date)}</td>
+                            <td>${kegiatanHtml}</td>
+                            <td class="text-right font-mono">${formatRupiahTable(item.value)}</td>
+                            <td class="text-center">${statusBadge}</td>
+                            <td class="text-center" style="white-space:nowrap;">${actionHtml}</td>
+                        </tr>
+                    `);
+                }
             });
             updateSortIconsDisbursement();
         });
@@ -844,6 +884,7 @@ window.openDisbursementForm = function (item = null) {
         document.getElementById('disbursementUraian').value = item.uraian || '';
         document.getElementById('disbursementValue').value = item.value;
         document.getElementById('disbursementDescription').value = item.description || '';
+        document.getElementById('disbursementBank').value = item.bank || 'BRK';
 
         // Store pending selections for async loaders
         window._pendingRekeningId = item.kode_rekening_id || '';
@@ -875,13 +916,7 @@ window.openDisbursementForm = function (item = null) {
     loadDisbursementRekening();
 
     // Trigger type change to load saldo for default type (UP) and ensure it loads
-    const typeEl = document.getElementById('disbursementType');
-    if (typeEl) {
-        // use setTimeout so it happens after modal rendering completes
-        setTimeout(() => {
-            typeEl.dispatchEvent(new Event('change', { bubbles: true }));
-        }, 50);
-    }
+    bindDisbursementRekeningSearchable();
 
     // Load SPJs for GU
     fetch('/dashboard/spj?limit=100', { headers: { 'Accept': 'application/json' } })
@@ -902,14 +937,18 @@ window.openDisbursementForm = function (item = null) {
 };
 
 async function loadDisbursementRekening() {
-    const select = document.getElementById('disbursementRekening');
-    if (!select) return;
+    const hiddenInput = document.getElementById('disbursementRekening');
+    const searchInput = document.getElementById('disbursementRekeningSearch');
+    if (!hiddenInput || !searchInput) return;
 
-    // Use existing options if already loaded to prevent flickering/selection loss
-    if (select.options.length > 1) {
+    if (disbursementRekeningOptions.length > 0) {
         if (window._pendingRekeningId) {
-            select.value = window._pendingRekeningId;
-            select.dispatchEvent(new Event('change'));
+            const opt = disbursementRekeningOptions.find(o => o.value == window._pendingRekeningId);
+            if (opt) {
+                hiddenInput.value = opt.value;
+                searchInput.value = opt.label;
+                hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
             delete window._pendingRekeningId;
         }
         return;
@@ -921,16 +960,17 @@ async function loadDisbursementRekening() {
         });
         const tree = await res.json();
 
-        // Re-check before wiping to be super safe
-        select.innerHTML = '<option value="">-- Pilih Kegiatan --</option>';
+        disbursementRekeningOptions = [];
 
         function flatten(nodes) {
             nodes.forEach(node => {
                 if (node.tipe === 'detail') {
-                    const opt = document.createElement('option');
-                    opt.value = node.id;
-                    opt.textContent = `${node.kode} — ${node.nama}`;
-                    select.appendChild(opt);
+                    disbursementRekeningOptions.push({
+                        value: node.id,
+                        kode: node.kode,
+                        nama: node.nama,
+                        label: `${node.kode} — ${node.nama}`
+                    });
                 }
                 if (node.children && node.children.length > 0) {
                     flatten(node.children);
@@ -940,13 +980,130 @@ async function loadDisbursementRekening() {
         flatten(tree);
 
         if (window._pendingRekeningId) {
-            select.value = window._pendingRekeningId;
-            select.dispatchEvent(new Event('change'));
+            const opt = disbursementRekeningOptions.find(o => o.value == window._pendingRekeningId);
+            if (opt) {
+                hiddenInput.value = opt.value;
+                searchInput.value = opt.label;
+                hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
             delete window._pendingRekeningId;
         }
     } catch (err) {
         console.error('Gagal memuat kode rekening:', err);
     }
+}
+
+function bindDisbursementRekeningSearchable() {
+    const searchInput = document.getElementById('disbursementRekeningSearch');
+    const dropdown = document.getElementById('disbursementRekeningDropdown');
+    const hiddenInput = document.getElementById('disbursementRekening');
+    if (!searchInput || !dropdown || !hiddenInput) return;
+
+    searchInput.onfocus = function () {
+        renderDisbursementRekeningDropdown(this.value);
+        dropdown.style.display = 'block';
+    };
+
+    searchInput.oninput = function () {
+        disbursementRekeningDropdownIndex = -1;
+        renderDisbursementRekeningDropdown(this.value);
+        dropdown.style.display = 'block';
+        hiddenInput.value = '';
+        hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    searchInput.onkeydown = function (e) {
+        const items = dropdown.querySelectorAll('.rek-option');
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            disbursementRekeningDropdownIndex = Math.min(disbursementRekeningDropdownIndex + 1, items.length - 1);
+            highlightDisbursementRekeningOption(items);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            disbursementRekeningDropdownIndex = Math.max(disbursementRekeningDropdownIndex - 1, 0);
+            highlightDisbursementRekeningOption(items);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (disbursementRekeningDropdownIndex >= 0 && items[disbursementRekeningDropdownIndex]) {
+                items[disbursementRekeningDropdownIndex].click();
+            }
+        } else if (e.key === 'Escape') {
+            dropdown.style.display = 'none';
+        }
+    };
+
+    document.addEventListener('click', function (e) {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+}
+
+function renderDisbursementRekeningDropdown(keyword = '') {
+    const dropdown = document.getElementById('disbursementRekeningDropdown');
+    if (!dropdown) return;
+
+    const kw = keyword.toLowerCase().trim();
+    const filtered = kw
+        ? disbursementRekeningOptions.filter(opt => opt.label.toLowerCase().includes(kw))
+        : disbursementRekeningOptions;
+
+    if (filtered.length === 0) {
+        dropdown.innerHTML = '<div style="padding: 12px 16px; color: #94a3b8; font-size: 13px; text-align: center;">Tidak ada kegiatan ditemukan</div>';
+        return;
+    }
+
+    dropdown.innerHTML = filtered.map((opt, i) => `
+        <div class="rek-option" data-value="${opt.value}" data-index="${i}"
+            style="padding: 10px 16px; cursor: pointer; font-size: 13px; line-height: 1.4;
+                border-bottom: 1px solid #f1f5f9; transition: background 0.15s;"
+            onmouseenter="this.style.background='#f0f4ff'"
+            onmouseleave="this.style.background='${disbursementRekeningDropdownIndex === i ? '#eef2ff' : '#fff'}'"
+            onclick="selectDisbursementRekeningOption('${opt.value}', '${escapeAttr(opt.label)}')">
+            <div style="font-weight: 600; color: #1e293b;">${highlightMatch(opt.kode, kw)}</div>
+            <div style="color: #64748b; font-size: 12px; margin-top: 2px;">${highlightMatch(opt.nama, kw)}</div>
+        </div>
+    `).join('');
+}
+
+function highlightDisbursementRekeningOption(items) {
+    items.forEach((item, i) => {
+        item.style.background = i === disbursementRekeningDropdownIndex ? '#eef2ff' : '#fff';
+    });
+    if (items[disbursementRekeningDropdownIndex]) {
+        items[disbursementRekeningDropdownIndex].scrollIntoView({ block: 'nearest' });
+    }
+}
+
+window.selectDisbursementRekeningOption = function (value, label) {
+    const searchInput = document.getElementById('disbursementRekeningSearch');
+    const hiddenInput = document.getElementById('disbursementRekening');
+    const dropdown = document.getElementById('disbursementRekeningDropdown');
+
+    if (searchInput) searchInput.value = label;
+    if (hiddenInput) {
+        hiddenInput.value = value;
+        hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (dropdown) dropdown.style.display = 'none';
+    disbursementRekeningDropdownIndex = -1;
+};
+
+function highlightMatch(text, kw) {
+    if (!kw) return escapeHtml(text || '');
+    const escaped = escapeHtml(text || '');
+    const regex = new RegExp(`(${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return escaped.replace(regex, '<mark style="background:#fef08a; padding:0 1px; border-radius:2px;">$1</mark>');
+}
+
+function escapeAttr(str) {
+    return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
 }
 
 // Fetch sisa saldo when kode_rekening changes
@@ -983,6 +1140,9 @@ document.addEventListener('change', function (e) {
                 sisaEl.style.color = data.sisa > 0 ? '#059669' : '#dc2626';
 
                 window.currentSisaAnggaran = parseFloat(data.sisa) || 0;
+
+                // Update Uraian Suggestions based on selected Rekening
+                updateUraianSuggestions();
             })
             .catch(err => {
                 console.error('Gagal memuat sisa anggaran:', err);
@@ -991,6 +1151,28 @@ document.addEventListener('change', function (e) {
             });
     }
 });
+
+function updateUraianSuggestions() {
+    const hiddenRek = document.getElementById('disbursementRekening');
+    const searchRek = document.getElementById('disbursementRekeningSearch');
+    const datalist = document.getElementById('disbursementUraianList');
+    if (!hiddenRek || !datalist) return;
+
+    datalist.innerHTML = '';
+
+    // 1. Suggest Current Rekening Name
+    if (searchRek && searchRek.value) {
+        // Strip the code prefix if present
+        const parts = searchRek.value.split(' — ');
+        const name = parts.length > 1 ? parts[1] : searchRek.value;
+        const opt = document.createElement('option');
+        opt.value = name;
+        datalist.appendChild(opt);
+    }
+
+    // 2. Add some common prefixes or common phrases if needed
+    // For now, the Rekening name is the most useful suggestion.
+}
 
 function updateSaldoKasInfo() {
     const type = document.getElementById('disbursementType')?.value;
@@ -1245,25 +1427,8 @@ window.loadLedger = function (page = 1) {
             tbody.innerHTML = '';
 
             if (!res.data || res.data.length === 0) {
-                // If there's an opening balance but no transactions it is also technically 'no data'
+                // No data case handled by empty rows
             }
-
-            // Always render Opening Balance
-            tbody.insertAdjacentHTML('beforeend', `
-                    <tr style="background:#f8fafc; font-weight:600;">
-                        <td class="text-center">-</td>
-                        <td class="text-center">-</td>
-                        <td class="text-center">-</td>
-                        <td style="font-weight:bold;">SALDO AWAL</td>
-                        <td class="text-center">-</td>
-                        <td class="text-right">-</td>
-                        <td class="text-right">-</td>
-                        <td class="text-right">-</td>
-                        <td class="text-right">${formatRupiahTable(res.opening_balance - res.opening_bank)}</td>
-                        <td class="text-right">${formatRupiahTable(res.opening_bank)}</td>
-                        <td class="text-right font-bold">${formatRupiahTable(res.opening_balance)}</td>
-                    </tr>
-            `);
 
             res.data.forEach((item, index) => {
                 const sp2dVal = item.sp2d_penerimaan > 0 ? formatRupiahTable(item.sp2d_penerimaan) : '-';
@@ -1368,6 +1533,12 @@ window.printLedger = function () {
    BELANJA ITEMS (ACTIVITIES)
 ========================= */
 window.currentBelanjaDisbursement = null;
+let belanjaSortBy = 'spending_date';
+let belanjaSortDir = 'desc';
+
+// Searchable select state for SPP form
+let disbursementRekeningOptions = [];
+let disbursementRekeningDropdownIndex = -1;
 
 window.openBelanjaItems = function (id) {
     const mainList = document.getElementById('disbursementMainList');
@@ -1413,9 +1584,10 @@ window.loadBelanjaItems = function (id) {
             });
 
             document.getElementById('belanjaTotalValue').textContent = formatNumeric(total);
+            updateSortIconsBelanjaItems();
 
             // Fetch Expenditures linked to this disbursement
-            fetch(`/dashboard/expenditures?fund_disbursement_id=${id}&limit=100`)
+            fetch(`/dashboard/expenditures?fund_disbursement_id=${id}&limit=100&sort_by=${belanjaSortBy}&sort_dir=${belanjaSortDir}`)
                 .then(r => r.json())
                 .then(rData => {
                     const expenditures = rData.data || [];
@@ -1468,6 +1640,35 @@ window.loadBelanjaItems = function (id) {
         });
 };
 
+window.sortBelanjaItems = function (col) {
+    if (belanjaSortBy === col) {
+        belanjaSortDir = belanjaSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        belanjaSortBy = col;
+        belanjaSortDir = 'asc';
+    }
+    if (window.currentBelanjaDisbursement) {
+        loadBelanjaItems(window.currentBelanjaDisbursement.id);
+    }
+};
+
+function updateSortIconsBelanjaItems() {
+    const table = document.querySelector('#sectionBelanjaItems table');
+    if (!table) return;
+
+    table.querySelectorAll('th.sortable i').forEach(i => {
+        i.className = 'ph ph-caret-up-down text-slate-400';
+    });
+
+    const activeHeader = table.querySelector(`th.sortable[data-sort="${belanjaSortBy}"]`);
+    if (activeHeader) {
+        const i = activeHeader.querySelector('i');
+        if (i) {
+            i.className = belanjaSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+        }
+    }
+}
+
 window.addNewBelanjaItem = function () {
     if (!window.currentBelanjaDisbursement) return;
     const d = window.currentBelanjaDisbursement;
@@ -1482,6 +1683,14 @@ window.addNewBelanjaItem = function () {
 
         // Preset values from disbursement
         document.getElementById('pengeluaranTanggal').value = d.sp2d_date ? d.sp2d_date.substring(0, 10) : '';
+
+        // Clear No. Bukti for new entry
+        const noBuktiInput = document.getElementById('pengeluaranNoBukti');
+        if (noBuktiInput) noBuktiInput.value = '';
+
+        // Re-bind validation and searchable select
+        if (typeof bindNoBuktiValidation === 'function') bindNoBuktiValidation();
+        if (typeof bindRekeningSearchable === 'function') bindRekeningSearchable();
 
         // Handle Payment Method restriction
         const metodeSelect = document.getElementById('pengeluaranMetode');
@@ -1510,6 +1719,71 @@ window.addNewBelanjaItem = function () {
 
         const hiddenId = document.getElementById('pengeluaranFundDisbursementId');
         if (hiddenId) hiddenId.value = d.id;
+
+        // Auto-fill and lock Rekening, Uraian, and Nominal for LS method
+        if (d.type === 'LS') {
+            const rekHidden = document.getElementById('pengeluaranRekening');
+            const rekSearch = document.getElementById('pengeluaranRekeningSearch');
+            const uraianInput = document.getElementById('pengeluaranUraian');
+            const nominalDisp = document.getElementById('pengeluaranNominalDisplay');
+            const nominalHidden = document.getElementById('pengeluaranNominalValue');
+
+            if (rekHidden && rekSearch && d.kode_rekening_id) {
+                rekHidden.value = d.kode_rekening_id;
+                if (d.kode_rekening) {
+                    rekSearch.value = `${d.kode_rekening.kode} — ${d.kode_rekening.nama}`;
+                } else {
+                    const opt = (rekeningOptions || []).find(o => o.value == d.kode_rekening_id);
+                    if (opt) rekSearch.value = opt.label;
+                    else rekSearch.value = 'Memuat kode rekening...';
+                }
+                rekSearch.readOnly = true;
+                rekSearch.style.background = '#f8fafc';
+                rekSearch.style.cursor = 'not-allowed';
+            }
+
+            if (uraianInput) {
+                uraianInput.value = d.uraian || '';
+                uraianInput.readOnly = true;
+                uraianInput.style.background = '#f8fafc';
+                uraianInput.style.cursor = 'not-allowed';
+            }
+
+            if (nominalDisp && nominalHidden) {
+                const val = parseFloat(d.value) || 0;
+                nominalHidden.value = val;
+                nominalDisp.value = formatRibuan(val);
+                nominalDisp.readOnly = true;
+                nominalDisp.style.background = '#f8fafc';
+                nominalDisp.style.cursor = 'not-allowed';
+
+                // Trigger calculation for Netto
+                if (typeof window.calculateTotalDibayarkan === 'function') {
+                    window.calculateTotalDibayarkan();
+                }
+            }
+        } else {
+            // Unlock fields if not LS
+            const rekSearch = document.getElementById('pengeluaranRekeningSearch');
+            const uraianInput = document.getElementById('pengeluaranUraian');
+            const nominalDisp = document.getElementById('pengeluaranNominalDisplay');
+
+            if (rekSearch) {
+                rekSearch.readOnly = false;
+                rekSearch.style.background = '';
+                rekSearch.style.cursor = '';
+            }
+            if (uraianInput) {
+                uraianInput.readOnly = false;
+                uraianInput.style.background = '';
+                uraianInput.style.cursor = '';
+            }
+            if (nominalDisp) {
+                nominalDisp.readOnly = false;
+                nominalDisp.style.background = '';
+                nominalDisp.style.cursor = '';
+            }
+        }
 
         // Ensure calculation logic is bound
         if (typeof bindCurrencyInputs === 'function') {

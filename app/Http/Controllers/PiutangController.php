@@ -97,7 +97,7 @@ class PiutangController extends Controller
     ========================= */
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PIUTANG_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('PIUTANG_CRUD') || auth()->user()->isAdmin(), 403);
 
         $data = $request->validate([
             'tanggal' => 'required|date',
@@ -125,7 +125,7 @@ class PiutangController extends Controller
     ========================= */
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PIUTANG_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('PIUTANG_CRUD') || auth()->user()->isAdmin(), 403);
 
         $piutang = Piutang::findOrFail($id);
 
@@ -161,7 +161,7 @@ class PiutangController extends Controller
     ========================= */
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PIUTANG_DELETE'), 403);
+        abort_unless(auth()->user()->hasPermission('PIUTANG_CRUD') || auth()->user()->isAdmin(), 403);
         Piutang::findOrFail($id)->delete();
         return response()->json(['success' => true]);
     }

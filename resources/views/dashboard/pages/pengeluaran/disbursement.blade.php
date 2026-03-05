@@ -34,8 +34,18 @@
                 }
             </style>
             <div class="table-container">
+                <style>
+                    /* Styles for Report View */
+                    #disbursementMainList.is-report-view #tableDisbursementHeadDefault {
+                        display: none;
+                    }
+
+                    #disbursementMainList:not(.is-report-view) #tableDisbursementHeadReport {
+                        display: none;
+                    }
+                </style>
                 <table id="tableDisbursement">
-                    <thead>
+                    <thead id="tableDisbursementHeadDefault">
                         <tr>
                             <th width="40" class="text-center">No</th>
                             <th width="80" class="text-center sortable" data-sort="paket_number"
@@ -71,6 +81,27 @@
                                 Status <i class="ph ph-caret-up-down text-slate-400"></i>
                             </th>
                             <th width="200" class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <thead id="tableDisbursementHeadReport">
+                        <tr>
+                            <th width="50" class="text-center">No</th>
+                            <th width="120" class="text-center sortable" data-sort="sp2d_date"
+                                onclick="sortDisbursement('sp2d_date')" style="cursor: pointer;">
+                                Tanggal <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th width="250" class="text-left sortable" data-sort="sp2d_no"
+                                onclick="sortDisbursement('sp2d_no')" style="cursor: pointer;">
+                                No. Dokumen <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th class="sortable" data-sort="uraian" onclick="sortDisbursement('uraian')"
+                                style="cursor: pointer;">
+                                Kegiatan <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
+                            <th width="200" class="text-right sortable" data-sort="value"
+                                onclick="sortDisbursement('value')" style="cursor: pointer;">
+                                Nilai (Rp) <i class="ph ph-caret-up-down text-slate-400"></i>
+                            </th>
                         </tr>
                     </thead>
                     <tbody id="tableDisbursementBody">
@@ -145,10 +176,22 @@
                 <thead>
                     <tr>
                         <th class="text-center" width="60">No</th>
-                        <th style="white-space:nowrap" width="140">Tanggal</th>
-                        <th style="white-space:nowrap" width="260">No. Bukti</th>
-                        <th>Uraian Kegiatan</th>
-                        <th class="text-right" width="180">Nilai (Rp)</th>
+                        <th class="sortable" style="white-space:nowrap; cursor: pointer;" width="140"
+                            data-sort="spending_date" onclick="sortBelanjaItems('spending_date')">
+                            Tanggal <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th class="sortable" style="white-space:nowrap; cursor: pointer;" width="260"
+                            data-sort="no_bukti" onclick="sortBelanjaItems('no_bukti')">
+                            No. Bukti <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th class="sortable" style="cursor: pointer;" data-sort="description"
+                            onclick="sortBelanjaItems('description')">
+                            Uraian Kegiatan <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
+                        <th class="text-right sortable" style="cursor: pointer;" width="180" data-sort="gross_value"
+                            onclick="sortBelanjaItems('gross_value')">
+                            Nilai (Rp) <i class="ph ph-caret-up-down text-slate-400"></i>
+                        </th>
                         <th class="text-center" width="140">Aksi</th>
                     </tr>
                 </thead>
@@ -190,6 +233,13 @@
                     <label>Tanggal Pengajuan</label>
                     <input type="date" name="sp2d_date" class="form-input" id="disbursementDate" required>
                 </div>
+                <div class="form-group">
+                    <label>Rekening Bank</label>
+                    <select name="bank" id="disbursementBank" class="form-input" required>
+                        <option value="BRK">Bank Riau Kepri Syariah</option>
+                        <option value="BSI">Bank Syariah Indonesia</option>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group" id="siklusGroup" style="display:none;">
@@ -227,9 +277,15 @@
             {{-- KEGIATAN / KODE REKENING --}}
             <div class="form-group" id="rekeningGroup">
                 <label><i class="ph ph-list-numbers" style="color:#2563eb"></i> Kegiatan / Kode Rekening</label>
-                <select name="kode_rekening_id" id="disbursementRekening" class="form-input">
-                    <option value="">-- Pilih Kegiatan --</option>
-                </select>
+                <div id="disbursementRekeningSearchableSelect" style="position: relative;">
+                    <input type="text" id="disbursementRekeningSearch" class="form-input"
+                        placeholder="Ketik untuk mencari kode atau nama kegiatan..." autocomplete="off">
+                    <input type="hidden" name="kode_rekening_id" id="disbursementRekening">
+                    <div id="disbursementRekeningDropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000;
+                        background: #fff; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;
+                        max-height: 220px; overflow-y: auto; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+                    </div>
+                </div>
             </div>
 
             {{-- SISA SALDO INFO --}}
@@ -261,7 +317,8 @@
             <div class="form-group">
                 <label>Uraian Kegiatan</label>
                 <input type="text" name="uraian" id="disbursementUraian" class="form-input"
-                    placeholder="Uraian kegiatan yang akan dibayarkan...">
+                    placeholder="Uraian kegiatan yang akan dibayarkan..." list="disbursementUraianList">
+                <datalist id="disbursementUraianList"></datalist>
             </div>
 
             <div class="form-group">

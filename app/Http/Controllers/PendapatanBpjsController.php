@@ -27,7 +27,7 @@ class PendapatanBpjsController extends Controller
     ========================= */
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_VIEW') || auth()->user()->hasPermission('PENDAPATAN_BPJS') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_VIEW') || auth()->user()->isAdmin(), 403);
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
         $tahunAnggaran = session('tahun_anggaran') ?? now()->year;
@@ -138,7 +138,7 @@ class PendapatanBpjsController extends Controller
     ========================= */
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE') || auth()->user()->hasPermission('PENDAPATAN_BPJS') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD') || auth()->user()->isAdmin(), 403);
         $data = $request->validate([
             'tanggal' => 'required|date',
             'jenis_bpjs' => 'required|in:REGULAR,EVAKUASI,OBAT',
@@ -197,7 +197,7 @@ class PendapatanBpjsController extends Controller
     ========================= */
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE') || auth()->user()->hasPermission('PENDAPATAN_BPJS') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD') || auth()->user()->isAdmin(), 403);
         $pendapatan = PendapatanBpjs::findOrFail($id);
 
         if ($pendapatan->revenueMaster && $pendapatan->revenueMaster->is_posted) {
@@ -270,7 +270,7 @@ class PendapatanBpjsController extends Controller
     ========================= */
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_DELETE') || auth()->user()->hasPermission('PENDAPATAN_BPJS') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD') || auth()->user()->isAdmin(), 403);
         $pendapatan = PendapatanBpjs::findOrFail($id);
 
         if ($pendapatan->revenueMaster && $pendapatan->revenueMaster->is_posted) {
@@ -301,7 +301,7 @@ class PendapatanBpjsController extends Controller
     ========================= */
     public function downloadTemplate()
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD') || auth()->user()->isAdmin(), 403);
         $headers = [
             'Content-type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename=template_pendapatan_bpjs.csv',
@@ -338,7 +338,7 @@ class PendapatanBpjsController extends Controller
 
     public function import(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD') || auth()->user()->isAdmin(), 403);
         $request->validate([
             'file' => 'required|mimes:csv,txt',
             'revenue_master_id' => 'required|exists:revenue_masters,id'
@@ -421,7 +421,7 @@ class PendapatanBpjsController extends Controller
 
     public function bulkDelete(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_DELETE'), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD') || auth()->user()->isAdmin(), 403);
         $request->validate([
             'revenue_master_id' => 'required|exists:revenue_masters,id'
         ]);

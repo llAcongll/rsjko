@@ -19,7 +19,7 @@ class ExpenditureController extends Controller
     public function index(Request $request)
     {
         // Permission check (using same names as before or mapping)
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_VIEW') || auth()->user()->isAdmin(), 403);
 
         $kategori = $request->get('kategori'); // PEGAWAI, BARANG_JASA, MODAL
         $type = $request->get('spending_type'); // UP, LS
@@ -68,7 +68,7 @@ class ExpenditureController extends Controller
         $sortBy = $request->get('sort_by', 'spending_date');
         $sortDir = $request->get('sort_dir', 'desc');
 
-        $allowedSortColumns = ['spending_date', 'spending_type', 'description', 'gross_value', 'id'];
+        $allowedSortColumns = ['spending_date', 'spending_type', 'description', 'gross_value', 'id', 'no_bukti'];
         if (!in_array($sortBy, $allowedSortColumns)) {
             $sortBy = 'spending_date';
         }
@@ -92,7 +92,7 @@ class ExpenditureController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->isAdmin(), 403);
 
         $data = $request->validate([
             'spending_date' => 'required|date',
@@ -104,9 +104,19 @@ class ExpenditureController extends Controller
             'siklus_up' => 'nullable|integer',
             'vendor' => 'nullable|string|max:255',
             'fund_disbursement_id' => 'nullable|exists:fund_disbursements,id',
+            'no_bukti' => 'required|string|max:255',
         ]);
 
         try {
+            // No. Bukti uniqueness check
+            $exists = Expenditure::where('no_bukti', $data['no_bukti'])->exists();
+            if ($exists) {
+                return response()->json([
+                    'message' => 'Nomor bukti sudah digunakan pada kegiatan lain.',
+                    'errors' => ['no_bukti' => ['Nomor bukti sudah digunakan pada kegiatan lain.']]
+                ], 422);
+            }
+
             // Budget Check
             $budgetCheck = $this->service->checkBudget($data['kode_rekening_id'], $data['spending_date'], $data['gross_value']);
             if (!$budgetCheck['isValid']) {
@@ -128,14 +138,14 @@ class ExpenditureController extends Controller
 
     public function show($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_VIEW') || auth()->user()->isAdmin(), 403);
         $expenditure = Expenditure::with('kodeRekening')->findOrFail($id);
         return response()->json($expenditure);
     }
 
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_EDIT') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->isAdmin(), 403);
 
         $data = $request->validate([
             'spending_date' => 'required|date',
@@ -147,9 +157,21 @@ class ExpenditureController extends Controller
             'siklus_up' => 'nullable|integer',
             'vendor' => 'nullable|string|max:255',
             'fund_disbursement_id' => 'nullable|exists:fund_disbursements,id',
+            'no_bukti' => 'required|string|max:255',
         ]);
 
         try {
+            // No. Bukti uniqueness check (exclude current record)
+            $exists = Expenditure::where('no_bukti', $data['no_bukti'])
+                ->where('id', '!=', $id)
+                ->exists();
+            if ($exists) {
+                return response()->json([
+                    'message' => 'Nomor bukti sudah digunakan pada kegiatan lain.',
+                    'errors' => ['no_bukti' => ['Nomor bukti sudah digunakan pada kegiatan lain.']]
+                ], 422);
+            }
+
             $budgetCheck = $this->service->checkBudget($data['kode_rekening_id'], $data['spending_date'], $data['gross_value'], $id);
             if (!$budgetCheck['isValid']) {
                 return response()->json([
@@ -168,9 +190,26 @@ class ExpenditureController extends Controller
         }
     }
 
+    public function checkNoBukti(Request $request)
+    {
+        $noBukti = $request->get('no_bukti', '');
+        $excludeId = $request->get('exclude_id');
+
+        if (empty($noBukti)) {
+            return response()->json(['available' => true]);
+        }
+
+        $query = Expenditure::where('no_bukti', $noBukti);
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        return response()->json(['available' => !$query->exists()]);
+    }
+
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_DELETE'), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->isAdmin(), 403);
         try {
             $this->service->delete($id);
             return response()->json(['status' => 'ok']);
