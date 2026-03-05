@@ -8,7 +8,7 @@
             </div>
 
             <div class="dashboard-header-right" style="display: flex; gap: 8px;">
-                @if(auth()->user()->hasPermission('PENDAPATAN_KERJA_CREATE') || auth()->user()->hasPermission('PENDAPATAN_KERJA_POST'))
+                @if(auth()->user()->hasPermission('PENDAPATAN_KERJA_CREATE') || auth()->user()->hasPermission('PENDAPATAN_KERJA_CRUD') || auth()->user()->hasPermission('PENDAPATAN_KERJA_POST'))
                     <button class="btn-toolbar btn-toolbar-info" onclick="bulkPostMasterKerjasama()"
                         style="height: 44px; padding: 0 16px;">
                         <i class="ph ph-check-square-offset"></i>
@@ -205,22 +205,22 @@
             <div class="dashboard-header-right">
                 <div style="display: flex; gap: 8px; justify-content: flex-end;">
                     <div class="toolbar-group" style="display: flex; gap: 8px;">
-                        @if(auth()->user()->hasPermission('PENDAPATAN_KERJA_CREATE'))
+                        @if(auth()->user()->hasPermission('PENDAPATAN_KERJA_CREATE') || auth()->user()->hasPermission('PENDAPATAN_KERJA_CRUD'))
                             <a href="/dashboard/pendapatan/kerjasama/template" class="btn-toolbar btn-toolbar-outline"
                                 title="Download Template CSV"><i class="ph ph-download-simple"></i><span>Template</span></a>
                         @endif
-                        @if(auth()->user()->hasPermission('PENDAPATAN_KERJA_CREATE'))
+                        @if(auth()->user()->hasPermission('PENDAPATAN_KERJA_CREATE') || auth()->user()->hasPermission('PENDAPATAN_KERJA_CRUD'))
                             <button class="btn-toolbar btn-toolbar-outline" id="btnImportKerjasama"
                                 title="Import Data dari CSV"><i class="ph ph-file-arrow-up"></i><span>Import</span></button>
                         @endif
-                        @if(auth()->user()->hasPermission('PENDAPATAN_KERJA_DELETE'))
+                        @if(auth()->user()->hasPermission('PENDAPATAN_KERJA_DELETE') || auth()->user()->hasPermission('PENDAPATAN_KERJA_CRUD'))
                             <button class="btn-toolbar btn-toolbar-outline btn-bulk-delete" id="btnBulkDeleteKerjasama"
                                 title="Hapus massal rincian" style="color: #ef4444; border-color: #fca5a5;">
                                 <i class="ph ph-trash"></i><span>Hapus Massal</span>
                             </button>
                         @endif
                     </div>
-                    @if(auth()->user()->hasPermission('PENDAPATAN_KERJA_CREATE'))
+                    @if(auth()->user()->hasPermission('PENDAPATAN_KERJA_CREATE') || auth()->user()->hasPermission('PENDAPATAN_KERJA_CRUD'))
                         <button class="btn-tambah-data" id="btnTambahPendapatanKerjasama"
                             style="background:#059669; height: 44px;" onclick="openPendapatanKerjasamaModal()">
                             <i class="ph-bold ph-plus"></i>

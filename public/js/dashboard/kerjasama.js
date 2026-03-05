@@ -102,7 +102,9 @@
                         ? '<span class="badge badge-success" style="display:inline-flex; align-items:center; gap:4px; white-space:nowrap;"><i class="ph-bold ph-check-circle"></i> Diposting</span>'
                         : '<span class="badge badge-warning">Draft</span>';
 
-                    const canCRUD = window.hasPermission('PENDAPATAN_KERJA_CRUD');
+                    const canEdit = window.hasPermission('PENDAPATAN_KERJA_CREATE') || window.hasPermission('PENDAPATAN_KERJA_CRUD') || window.isAdmin;
+                    const canDelete = window.hasPermission('PENDAPATAN_KERJA_DELETE') || window.hasPermission('PENDAPATAN_KERJA_CRUD') || window.isAdmin;
+                    const canPost = window.hasPermission('PENDAPATAN_KERJA_POST') || window.isAdmin;
                     const isSelected = selectedMasterIds.includes(item.id);
 
                     tbody.insertAdjacentHTML('beforeend', `
@@ -130,19 +132,23 @@
                                 <button class="btn-aksi detail" onclick="openDetailKerjasama(${item.id}, '${escapeHtml(info)}', ${item.is_posted})" title="Buka Rincian">
                                     <i class="ph ph-list-numbers"></i>
                                 </button>
-                                ${canCRUD ? `
-                                    ${!item.is_posted ? `
+                                ${(canEdit || canDelete || canPost) ? `
+                                    ${(!item.is_posted && canEdit) ? `
                                         <button class="btn-aksi edit" onclick="editMasterKerjasama(${item.id})" title="Edit Kelompok">
                                             <i class="ph ph-pencil-simple"></i>
                                         </button>
+                                    ` : ''}
+                                    ${(!item.is_posted && canDelete) ? `
                                         <button class="btn-aksi delete" onclick="deleteMasterKerjasama(${item.id})" title="Hapus Kelompok">
                                             <i class="ph ph-trash"></i>
                                         </button>
                                     ` : ''}
-                                    <button class="btn-aksi ${item.is_posted ? 'warning' : 'success'}" onclick="togglePostMasterKerjasama(${item.id}, ${item.is_posted})" 
-                                        title="${item.is_posted ? 'Batalkan Posting' : 'Posting Kelompok'}">
-                                        <i class="ph ${item.is_posted ? 'ph-x-circle' : 'ph-check-circle'}"></i>
-                                    </button>
+                                    ${canPost ? `
+                                        <button class="btn-aksi ${item.is_posted ? 'warning' : 'success'}" onclick="togglePostMasterKerjasama(${item.id}, ${item.is_posted})" 
+                                            title="${item.is_posted ? 'Batalkan Posting' : 'Posting Kelompok'}">
+                                            <i class="ph ${item.is_posted ? 'ph-x-circle' : 'ph-check-circle'}"></i>
+                                        </button>
+                                    ` : ''}
                                 ` : ''}
                             </div>
                         </td>
@@ -615,7 +621,8 @@
                     return;
                 }
 
-                const canCRUD = window.hasPermission('PENDAPATAN_KERJA_CRUD') && !activeMasterPosted;
+                const canEditDetail = (window.hasPermission('PENDAPATAN_KERJA_CREATE') || window.hasPermission('PENDAPATAN_KERJA_CRUD') || window.isAdmin) && !activeMasterPosted;
+                const canDeleteDetail = (window.hasPermission('PENDAPATAN_KERJA_DELETE') || window.hasPermission('PENDAPATAN_KERJA_CRUD') || window.isAdmin) && !activeMasterPosted;
 
                 tbody.innerHTML = '';
                 data.forEach((item, index) => {
@@ -651,10 +658,12 @@
                                 <button class="btn-aksi detail" onclick="detailPendapatanKerjasama(${item.id})" title="View">
                                     <i class="ph ph-eye"></i>
                                 </button>
-                                ${canCRUD ? `
+                                ${canEditDetail ? `
                                     <button class="btn-aksi edit" onclick="editPendapatanKerjasama(${item.id})" title="Edit">
                                         <i class="ph ph-pencil-simple"></i>
                                     </button>
+                                ` : ''}
+                                ${canDeleteDetail ? `
                                     <button class="btn-aksi delete" onclick="hapusPendapatanKerjasama(${item.id})" title="Hapus">
                                         <i class="ph ph-trash"></i>
                                     </button>

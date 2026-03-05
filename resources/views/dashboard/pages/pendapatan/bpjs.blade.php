@@ -8,7 +8,7 @@
             </div>
 
             <div class="dashboard-header-right" style="display: flex; gap: 8px;">
-                @if(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE') || auth()->user()->hasPermission('PENDAPATAN_BPJS_POST'))
+                @if(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE') || auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD') || auth()->user()->hasPermission('PENDAPATAN_BPJS_POST'))
                     <button class="btn-toolbar btn-toolbar-info" onclick="bulkPostMasterBpjs()"
                         style="height: 44px; padding: 0 16px;">
                         <i class="ph ph-check-square-offset"></i>
@@ -218,22 +218,22 @@
 
                 <div style="display: flex; gap: 8px; justify-content: flex-end;">
                     <div class="toolbar-group" style="display: flex; gap: 8px;">
-                        @if(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE'))
+                        @if(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE') || auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD'))
                             <a href="/dashboard/pendapatan/bpjs/template" class="btn-toolbar btn-toolbar-outline"
                                 title="Download Template CSV"><i class="ph ph-download-simple"></i><span>Template</span></a>
                         @endif
-                        @if(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE'))
+                        @if(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE') || auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD'))
                             <button class="btn-toolbar btn-toolbar-outline" id="btnImportBpjs"
                                 title="Import Data dari CSV"><i class="ph ph-file-arrow-up"></i><span>Import</span></button>
                         @endif
-                        @if(auth()->user()->hasPermission('PENDAPATAN_BPJS_DELETE'))
+                        @if(auth()->user()->hasPermission('PENDAPATAN_BPJS_DELETE') || auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD'))
                             <button class="btn-toolbar btn-toolbar-outline btn-bulk-delete" id="btnBulkDeleteBpjs"
                                 title="Hapus Massal Rincian Pasien" style="color: #ef4444; border-color: #fca5a5;">
                                 <i class="ph ph-trash"></i><span>Hapus Massal</span>
                             </button>
                         @endif
                     </div>
-                    @if(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE'))
+                    @if(auth()->user()->hasPermission('PENDAPATAN_BPJS_CREATE') || auth()->user()->hasPermission('PENDAPATAN_BPJS_CRUD'))
                         <button class="btn-tambah-data" id="btnTambahPendapatanBpjs"
                             style="background:#059669; height: 44px;" onclick="openPendapatanBpjsModal()">
                             <i class="ph-bold ph-plus"></i>

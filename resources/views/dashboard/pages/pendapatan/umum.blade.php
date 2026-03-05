@@ -8,7 +8,7 @@
       </div>
 
       <div class="dashboard-header-right" style="display: flex; gap: 8px;">
-        @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE') || auth()->user()->hasPermission('PENDAPATAN_UMUM_POST'))
+        @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE') || auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD') || auth()->user()->hasPermission('PENDAPATAN_UMUM_POST'))
           <button class="btn-toolbar btn-toolbar-info" onclick="bulkPostMasterUmum()"
             style="height: 44px; padding: 0 16px;">
             <i class="ph ph-check-square-offset"></i>
@@ -201,22 +201,22 @@
       </div>
       <div class="dashboard-header-right" style="display: flex; gap: 8px;">
         <div class="toolbar-group" style="display: flex; gap: 8px;">
-          @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE'))
+          @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE') || auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD'))
             <a href="/dashboard/pendapatan/umum/template" class="btn-toolbar btn-toolbar-outline"
               title="Download Template CSV"><i class="ph ph-download-simple"></i><span>Template</span></a>
           @endif
-          @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE'))
+          @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE') || auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD'))
             <button class="btn-toolbar btn-toolbar-outline" id="btnImportUmum" title="Import Data dari CSV"><i
                 class="ph ph-file-arrow-up"></i><span>Import</span></button>
           @endif
-          @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_DELETE'))
+          @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_DELETE') || auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD'))
             <button class="btn-toolbar btn-toolbar-outline btn-bulk-delete" id="btnBulkDeleteUmum"
               title="Hapus Massal Rincian Pasien" style="color: #ef4444; border-color: #fca5a5;">
               <i class="ph ph-trash"></i><span>Hapus Massal</span>
             </button>
           @endif
         </div>
-        @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE'))
+        @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE') || auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD'))
           <button class="btn-tambah-data" id="btnTambahPendapatanUmum" style="background:#059669; height: 44px;">
             <i class="ph-bold ph-plus"></i>
             <span>Tambah Pasien</span>

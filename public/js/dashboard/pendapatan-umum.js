@@ -95,8 +95,8 @@
           return;
         }
 
-        const canEdit = window.hasPermission('PENDAPATAN_UMUM_CREATE');
-        const canDelete = window.hasPermission('PENDAPATAN_UMUM_DELETE');
+        const canEdit = window.hasPermission('PENDAPATAN_UMUM_CREATE') || window.hasPermission('PENDAPATAN_UMUM_CRUD');
+        const canDelete = window.hasPermission('PENDAPATAN_UMUM_DELETE') || window.hasPermission('PENDAPATAN_UMUM_CRUD');
         const canPost = window.hasPermission('PENDAPATAN_UMUM_POST');
         tbody.innerHTML = '';
 
@@ -577,7 +577,9 @@
           return;
         }
 
-        const canCRUD = window.hasPermission('PENDAPATAN_UMUM_CRUD');
+        const canCreateDetail = window.hasPermission('PENDAPATAN_UMUM_CREATE') || window.hasPermission('PENDAPATAN_UMUM_CRUD') || window.isAdmin;
+        const canDeleteDetail = window.hasPermission('PENDAPATAN_UMUM_DELETE') || window.hasPermission('PENDAPATAN_UMUM_CRUD') || window.isAdmin;
+
         tbody.innerHTML = '';
 
         data.forEach((item, index) => {
@@ -594,10 +596,10 @@
               <div class="flex justify-center gap-2">
                 <button class="btn-aksi detail" onclick="detailPendapatanUmum(${item.id})"><i class="ph ph-eye"></i></button>
                 ${!activeMasterPosted ? `
-                  ${window.hasPermission('PENDAPATAN_UMUM_CREATE') ? `
+                  ${canCreateDetail ? `
                     <button class="btn-aksi edit" onclick="editPendapatanUmum(${item.id})" title="Edit"><i class="ph ph-pencil-simple"></i></button>
                   ` : ''}
-                  ${window.hasPermission('PENDAPATAN_UMUM_DELETE') ? `
+                  ${canDeleteDetail ? `
                     <button class="btn-aksi delete" onclick="hapusPendapatanUmum(${item.id})" title="Hapus"><i class="ph ph-trash"></i></button>
                   ` : ''}
                 ` : ''}
