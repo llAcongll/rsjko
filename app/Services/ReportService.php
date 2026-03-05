@@ -626,7 +626,8 @@ class ReportService
 
         $report = [];
         foreach ($roots as $root) {
-            $this->processLraNode($root, $tahun, $start, $end, $startOfYear, $prevEnd, $report, $requestedLevel);
+            $levelShift = $root->level - 1;
+            $this->processLraNode($root, $tahun, $start, $end, $startOfYear, $prevEnd, $report, $requestedLevel, $levelShift);
         }
 
         $totalTarget = 0;
@@ -700,7 +701,7 @@ class ReportService
         return $res;
     }
 
-    private function processLraNode($node, $tahun, $start, $end, $startOfYear, $prevEnd, &$flatList, $requestedLevel = 10)
+    private function processLraNode($node, $tahun, $start, $end, $startOfYear, $prevEnd, &$flatList, $requestedLevel = 10, $levelShift = 0)
     {
         $target = 0;
         $realLalu = 0;
@@ -723,7 +724,7 @@ class ReportService
             }
         } else {
             foreach ($node->children as $child) {
-                $res = $this->processLraNode($child, $tahun, $start, $end, $startOfYear, $prevEnd, $childItems, $requestedLevel);
+                $res = $this->processLraNode($child, $tahun, $start, $end, $startOfYear, $prevEnd, $childItems, $requestedLevel, $levelShift);
                 $target += $res['target'];
                 $realLalu += $res['realisasi_lalu'];
                 $realKini += $res['realisasi_kini'];
@@ -731,9 +732,10 @@ class ReportService
             }
         }
 
-        $item = ['id' => $node->id, 'kode' => $node->kode, 'nama' => $node->nama, 'level' => $node->level, 'tipe' => $node->tipe, 'category' => $node->category, 'target' => $target, 'realisasi_lalu' => $realLalu, 'realisasi_kini' => $realKini, 'realisasi_total' => $realTotal, 'selisih' => $target - $realTotal, 'persen' => $target > 0 ? round(($realTotal / $target) * 100, 2) : 0];
+        $effectiveLevel = max(1, $node->level - $levelShift);
+        $item = ['id' => $node->id, 'kode' => $node->kode, 'nama' => $node->nama, 'level' => $effectiveLevel, 'tipe' => $node->tipe, 'category' => $node->category, 'target' => $target, 'realisasi_lalu' => $realLalu, 'realisasi_kini' => $realKini, 'realisasi_total' => $realTotal, 'selisih' => $target - $realTotal, 'persen' => $target > 0 ? round(($realTotal / $target) * 100, 2) : 0];
 
-        if ($node->level <= $requestedLevel) {
+        if ($effectiveLevel <= $requestedLevel) {
             $flatList[] = $item;
             foreach ($childItems as $ci)
                 $flatList[] = $ci;
