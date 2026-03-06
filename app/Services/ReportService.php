@@ -201,28 +201,41 @@ class ReportService
                 $query = $this->getActiveRevenueQuery('pendapatan_kerjasama');
                 break;
             case 'PKL':
-                $query = $this->getActiveRevenueQuery('pendapatan_lain')->where(fn($q) => $q->where('transaksi', 'like', '%PKL%')->orWhere('transaksi', 'like', '%Praktek Kerja Lapangan%'));
+                $query = $this->getActiveRevenueQuery('pendapatan_lain')->whereIn('ruangan_id', function ($q) {
+                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Praktek Kerja Lapangan%');
+                });
                 break;
             case 'MAGANG':
-                $query = $this->getActiveRevenueQuery('pendapatan_lain')->where('transaksi', 'like', '%Magang%');
+                $query = $this->getActiveRevenueQuery('pendapatan_lain')->whereIn('ruangan_id', function ($q) {
+                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Magang%');
+                });
                 break;
             case 'PENELITIAN':
-                $query = $this->getActiveRevenueQuery('pendapatan_lain')->where('transaksi', 'like', '%Penelitian%');
+                $query = $this->getActiveRevenueQuery('pendapatan_lain')->whereIn('ruangan_id', function ($q) {
+                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Penelitian%');
+                });
                 break;
             case 'PERMINTAAN_DATA':
-                $query = $this->getActiveRevenueQuery('pendapatan_lain')->where('transaksi', 'like', '%Permintaan Data%');
+                $query = $this->getActiveRevenueQuery('pendapatan_lain')->whereIn('ruangan_id', function ($q) {
+                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Permintaan Data%')->orWhere('nama', 'like', '%Pengambilan Data%');
+                });
                 break;
             case 'STUDY_BANDING':
-                $query = $this->getActiveRevenueQuery('pendapatan_lain')->where('transaksi', 'like', '%Study Banding%');
+                $query = $this->getActiveRevenueQuery('pendapatan_lain')->whereIn('ruangan_id', function ($q) {
+                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Studi Banding%');
+                });
                 break;
             case 'LAIN_LAIN':
                 $query = $this->getActiveRevenueQuery('pendapatan_lain')
-                    ->where('transaksi', 'NOT LIKE', '%PKL%')
-                    ->where('transaksi', 'NOT LIKE', '%Praktek Kerja Lapangan%')
-                    ->where('transaksi', 'NOT LIKE', '%Magang%')
-                    ->where('transaksi', 'NOT LIKE', '%Penelitian%')
-                    ->where('transaksi', 'NOT LIKE', '%Permintaan Data%')
-                    ->where('transaksi', 'NOT LIKE', '%Study Banding%');
+                    ->whereNotIn('ruangan_id', function ($q) {
+                        $q->select('id')->from('ruangans')
+                            ->where('nama', 'like', '%Praktek Kerja Lapangan%')
+                            ->orWhere('nama', 'like', '%Magang%')
+                            ->orWhere('nama', 'like', '%Penelitian%')
+                            ->orWhere('nama', 'like', '%Permintaan Data%')
+                            ->orWhere('nama', 'like', '%Pengambilan Data%')
+                            ->orWhere('nama', 'like', '%Studi Banding%');
+                    });
                 break;
         }
 
@@ -757,17 +770,39 @@ class ReportService
             case 'KERJASAMA':
                 return $this->getActiveRevenueQuery('pendapatan_kerjasama')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
             case 'PKL':
-                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where(fn($q) => $q->where('transaksi', 'like', '%PKL%')->orWhere('transaksi', 'like', '%Praktek Kerja Lapangan%'))->sum('total');
+                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->whereIn('ruangan_id', function ($q) {
+                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Praktek Kerja Lapangan%');
+                })->sum('total');
             case 'MAGANG':
-                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Magang%')->sum('total');
+                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->whereIn('ruangan_id', function ($q) {
+                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Magang%');
+                })->sum('total');
             case 'PENELITIAN':
-                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Penelitian%')->sum('total');
+                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->whereIn('ruangan_id', function ($q) {
+                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Penelitian%');
+                })->sum('total');
             case 'PERMINTAAN_DATA':
-                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Permintaan Data%')->sum('total');
+                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->whereIn('ruangan_id', function ($q) {
+                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Permintaan Data%')->orWhere('nama', 'like', '%Pengambilan Data%');
+                })->sum('total');
             case 'STUDY_BANDING':
-                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Study Banding%')->sum('total');
+                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->whereIn('ruangan_id', function ($q) {
+                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Studi Banding%');
+                })->sum('total');
             case 'LAIN_LAIN':
-                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'NOT LIKE', '%PKL%')->where('transaksi', 'NOT LIKE', '%Praktek Kerja Lapangan%')->where('transaksi', 'NOT LIKE', '%Magang%')->where('transaksi', 'NOT LIKE', '%Penelitian%')->where('transaksi', 'NOT LIKE', '%Permintaan Data%')->where('transaksi', 'NOT LIKE', '%Study Banding%')->sum('total');
+                return $this->getActiveRevenueQuery('pendapatan_lain')
+                    ->where('tahun', $tahun)
+                    ->whereBetween('tanggal', [$startDate, $endDate])
+                    ->whereNotIn('ruangan_id', function ($q) {
+                        $q->select('id')->from('ruangans')
+                            ->where('nama', 'like', '%Praktek Kerja Lapangan%')
+                            ->orWhere('nama', 'like', '%Magang%')
+                            ->orWhere('nama', 'like', '%Penelitian%')
+                            ->orWhere('nama', 'like', '%Permintaan Data%')
+                            ->orWhere('nama', 'like', '%Pengambilan Data%')
+                            ->orWhere('nama', 'like', '%Studi Banding%');
+                    })
+                    ->sum('total');
             case 'PEGAWAI':
             case 'BARANG_JASA':
             case 'MODAL':
