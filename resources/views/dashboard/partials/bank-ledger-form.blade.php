@@ -5,6 +5,15 @@
         <form id="formBankLedger" onsubmit="submitBankLedger(event)" autocomplete="off">
             <input type="hidden" id="bankLedgerId">
             <div class="form-group">
+                <label>Bank / Rekening</label>
+                <select name="bank" id="bankLedgerDepositBank" class="form-input" required>
+                    <option value="" disabled selected>-- Pilih Bank --</option>
+                    <option value="BRK">Bank Riau Kepri Syariah</option>
+                    <option value="BSI">Bank Syariah Indonesia</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label>Tanggal Setor</label>
                 <input type="date" name="date" id="bankLedgerDate" class="form-input" required>
             </div>

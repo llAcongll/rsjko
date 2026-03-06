@@ -17,16 +17,16 @@
     </div>
 
     <div class="dashboard-box">
-        <table class="laporan-table" id="lrkbTable">
+        <div class="table-container"><table class="laporan-table universal-table" id="lrkbTable">
             <thead>
                 <tr>
-                    <th class="text-center" style="width: 50px;">No</th>
-                    <th class="text-center" style="width: 120px;">Triwulan</th>
-                    <th class="text-center" style="width: 120px;">Bulan</th>
-                    <th class="text-center" style="width: 100px;">Tahun</th>
-                    <th class="text-center" style="width: 150px;">Status</th>
-                    <th class="text-center" style="width: 180px;">Tgl Rekon</th>
-                    <th class="text-center">Aksi</th>
+                    <th class="text-center checkbox-col">No</th>
+                    <th class="text-center">Triwulan</th>
+                    <th class="text-center">Bulan</th>
+                    <th class="text-center">Tahun</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Tgl Rekon</th>
+                    <th class="text-center action-col">Aksi</th>
                 </tr>
             </thead>
             <tbody id="lrkbBody">
@@ -34,7 +34,7 @@
                     <td colspan="7" class="text-center">Memuat data...</td>
                 </tr>
             </tbody>
-        </table>
+        </table></div>
     </div>
 </div>
 

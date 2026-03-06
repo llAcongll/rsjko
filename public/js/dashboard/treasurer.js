@@ -18,9 +18,9 @@ window.loadSpj = function (search = '') {
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center">Belum ada data SPJ.</td></tr>';
                 return;
             }
-            tbody.innerHTML = '';
+            let html = '';
             data.forEach((item, index) => {
-                tbody.insertAdjacentHTML('beforeend', `
+                html += `
                     <tr>
                         <td class="text-center">${index + 1}</td>
                         <td>${item.spj_number}</td>
@@ -33,8 +33,9 @@ window.loadSpj = function (search = '') {
                             <button class="btn-aksi delete" onclick="hapusSpj(${item.id})"><i class="ph ph-trash"></i></button>
                         </td>
                     </tr>
-                `);
+                `;
             });
+            tbody.innerHTML = html;
         });
 };
 
@@ -64,9 +65,9 @@ function loadUnlinkedExpenditures() {
                 container.innerHTML = '<p class="text-slate-500 text-center">Tidak ada belanja UP yang perlu di-SPJ-kan.</p>';
                 return;
             }
-            container.innerHTML = '';
+            let html = '';
             data.forEach(item => {
-                container.insertAdjacentHTML('beforeend', `
+                html += `
                     <div style="display:flex; align-items:center; gap:10px; padding:8px; border-bottom:1px solid #f1f5f9;">
                         <input type="checkbox" name="expenditure_ids[]" value="${item.id}" id="exp_${item.id}">
                         <label for="exp_${item.id}" style="flex:1; cursor:pointer;">
@@ -74,8 +75,9 @@ function loadUnlinkedExpenditures() {
                             <br><small class="text-slate-400">${formatTanggal(item.spending_date)} | ${item.kode_rekening.nama}</small>
                         </label>
                     </div>
-                `);
+                `;
             });
+            container.innerHTML = html;
         });
 }
 
@@ -240,6 +242,12 @@ function loadSaldoTable() {
                 return;
             }
 
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Belum ada data saldo.</td></tr>';
+                return;
+            }
+
+            let html = '';
             data.forEach((item, index) => {
                 const statusHtml = '<span style="font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:4px; background:#dcfce7; color:#166534;">CAIR</span>';
                 const siklusLabel = item.siklus_up && item.type === 'GU' ? `GU-${item.siklus_up}` : '-';
@@ -247,7 +255,7 @@ function loadSaldoTable() {
                 const canDelete = window.hasPermission('SALDO_DANA_CRUD');
                 const deleteBtn = canDelete ? `<button class="btn-aksi delete" title="Hapus" onclick="hapusSaldo(${item.id})"><i class="ph ph-trash"></i></button>` : '';
 
-                tbody.insertAdjacentHTML('beforeend', `
+                html += `
                     <tr>
                         <td class="text-center">${index + 1}</td>
                         <td class="text-center"><span class="badge-mini">${item.type}</span></td>
@@ -260,8 +268,9 @@ function loadSaldoTable() {
                             ${deleteBtn}
                         </td>
                     </tr>
-                `);
+                `;
             });
+            tbody.innerHTML = html;
         });
 }
 
@@ -459,8 +468,6 @@ window.loadDisbursements = function () {
         .then(res => res.json())
         .then(res => {
             const data = res.data || [];
-            tbody.innerHTML = '';
-
             const isReport = disbursementPageMode.startsWith('REPORT_');
 
             if (data.length === 0) {
@@ -468,6 +475,7 @@ window.loadDisbursements = function () {
                 return;
             }
 
+            let html = '';
             data.forEach((item, index) => {
                 let docNoHtml = '';
                 if (isReport) {
@@ -496,7 +504,7 @@ window.loadDisbursements = function () {
                 }
 
                 if (isReport) {
-                    tbody.insertAdjacentHTML('beforeend', `
+                    html += `
                         <tr>
                             <td class="text-center">${index + 1}</td>
                             <td class="text-center">${formatTanggal(item.sp2d_date)}</td>
@@ -504,7 +512,7 @@ window.loadDisbursements = function () {
                             <td>${kegiatanHtml}</td>
                             <td class="text-right font-mono">${formatRupiahTable(item.value)}</td>
                         </tr>
-                    `);
+                    `;
                 } else {
                     // Build action buttons based on current status AND page mode
                     let actionHtml = '';
@@ -576,7 +584,7 @@ window.loadDisbursements = function () {
                     // Status badge with step indicator
                     const statusBadge = getStatusBadge(item.status);
 
-                    tbody.insertAdjacentHTML('beforeend', `
+                    html += `
                         <tr>
                             <td class="text-center">${index + 1}</td>
                             <td class="text-center font-mono">${item.paket_number}</td>
@@ -589,9 +597,10 @@ window.loadDisbursements = function () {
                             <td class="text-center">${statusBadge}</td>
                             <td class="text-center" style="white-space:nowrap;">${actionHtml}</td>
                         </tr>
-                    `);
+                    `;
                 }
             });
+            tbody.innerHTML = html;
             updateSortIconsDisbursement();
         });
 };
@@ -824,6 +833,7 @@ window.viewDisbursement = function (id) {
 
     content.innerHTML = '<div style="text-align:center; padding:20px;"><i class="ph ph-spinner animate-spin text-2xl"></i></div>';
     modal.classList.add('show');
+    modal.style.zIndex = '100005';
 
     fetch(`/dashboard/disbursements?id=${id}`, { headers: { Accept: 'application/json' } })
         .then(res => res.json())
@@ -1609,19 +1619,19 @@ window.loadBelanjaItems = function (id) {
                 .then(rData => {
                     const expenditures = rData.data || [];
                     const tbody = document.getElementById('belanjaItemsTableBody');
-                    tbody.innerHTML = '';
+                    if (!tbody) return;
 
                     let usedSum = 0;
+                    let html = '';
 
                     if (expenditures.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding: 20px; color: #94a3b8;">Belum ada rincian kegiatan.</td></tr>';
+                        html = '<tr><td colspan="6" class="text-center" style="padding: 20px; color: #94a3b8;">Belum ada rincian kegiatan.</td></tr>';
                     } else {
+                        const canCairCreate = window.hasPermission('PENCAIRAN_CRUD') || window.hasPermission('SPP_CRUD');
                         expenditures.forEach((ex, idx) => {
                             usedSum += parseFloat(ex.gross_value) || 0;
-                            const rekLabel = ex.kode_rekening ? `[${ex.kode_rekening.kode}] ${ex.kode_rekening.nama}` : '-';
-                            const canCairCreate = window.hasPermission('PENCAIRAN_CRUD') || window.hasPermission('SPP_CRUD');
 
-                            tbody.insertAdjacentHTML('beforeend', `
+                            html += `
                                 <tr>
                                     <td class="text-center" style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${idx + 1}</td>
                                     <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; white-space: nowrap;">${formatTanggal(ex.spending_date)}</td>
@@ -1647,10 +1657,11 @@ window.loadBelanjaItems = function (id) {
                                         </div>
                                     </td>
                                 </tr>
-                            `);
+                            `;
                         });
                     }
 
+                    tbody.innerHTML = html;
                     document.getElementById('belanjaUsedValue').textContent = formatNumeric(usedSum);
                     document.getElementById('belanjaRemainingValue').textContent = formatNumeric(total - usedSum);
                 });
@@ -1690,16 +1701,38 @@ window.addNewBelanjaItem = function () {
     if (!window.currentBelanjaDisbursement) return;
     const d = window.currentBelanjaDisbursement;
 
-    // Open existing pengeluaran modal
-    if (typeof openPengeluaranForm === 'function') {
-        loadRekeningPengeluaran('ALL');
+    // 1. Hide loader if active
+    if (typeof window.hideLoader === 'function') window.hideLoader();
+    else {
+        const loader = document.getElementById('globalLoader');
+        if (loader) {
+            loader.classList.remove('show');
+            loader.style.display = 'none';
+        }
+    }
 
-        const modal = document.getElementById('pengeluaranModal');
+    // 2. Open modal immediately for instant feedback
+    const modal = document.getElementById('pengeluaranModal');
+    if (modal) {
         modal.classList.add('show');
-        resetPengeluaranForm();
+        modal.style.zIndex = '100005'; // Above details
+    }
+
+    if (typeof window.resetPengeluaranForm === 'function') window.resetPengeluaranForm();
+
+    // 2. Defer heavy data loading and processing
+    setTimeout(async () => {
+        if (typeof window.loadRekeningPengeluaran === 'function') {
+            await window.loadRekeningPengeluaran('ALL');
+        }
+
+        // Reset global edit state from pengeluaran.js so POST is used
+        window.isEditPengeluaran = false;
+        window.editPengeluaranId = null;
 
         // Preset values from disbursement
-        document.getElementById('pengeluaranTanggal').value = d.sp2d_date ? d.sp2d_date.substring(0, 10) : '';
+        const tglInput = document.getElementById('pengeluaranTanggal');
+        if (tglInput) tglInput.value = d.sp2d_date ? d.sp2d_date.substring(0, 10) : '';
 
         // Clear No. Bukti for new entry
         const noBuktiInput = document.getElementById('pengeluaranNoBukti');
@@ -1711,27 +1744,30 @@ window.addNewBelanjaItem = function () {
 
         // Handle Payment Method restriction
         const metodeSelect = document.getElementById('pengeluaranMetode');
-        metodeSelect.value = d.type;
+        if (metodeSelect) {
+            metodeSelect.value = d.type;
 
-        Array.from(metodeSelect.options).forEach(opt => {
-            if (d.type === 'UP') {
-                opt.disabled = (opt.value !== 'UP');
-            } else if (d.type === 'GU') {
-                opt.disabled = (opt.value === 'LS');
-            } else if (d.type === 'LS') {
-                opt.disabled = (opt.value !== 'LS');
-            } else {
-                opt.disabled = false;
-            }
-        });
+            Array.from(metodeSelect.options).forEach(opt => {
+                if (d.type === 'UP') {
+                    opt.disabled = (opt.value !== 'UP');
+                } else if (d.type === 'GU') {
+                    opt.disabled = (opt.value === 'LS');
+                } else if (d.type === 'LS') {
+                    opt.disabled = (opt.value !== 'LS');
+                } else {
+                    opt.disabled = false;
+                }
+            });
+        }
 
-        document.getElementById('pengeluaranVendor').value = d.recipient_party || '';
+        const vendorEl = document.getElementById('pengeluaranVendor');
+        if (vendorEl) vendorEl.value = d.recipient_party || '';
 
         if (d.type === 'GU' && d.siklus_up) {
-            document.getElementById('guCycleSection').style.display = 'block';
-            // We might need to populate and select the cycle
+            const guSection = document.getElementById('guCycleSection');
+            if (guSection) guSection.style.display = 'block';
             const siklusSelect = document.getElementById('pengeluaranSiklus');
-            siklusSelect.innerHTML = `<option value="${d.siklus_up}" selected>Batch GU-${d.siklus_up}</option>`;
+            if (siklusSelect) siklusSelect.innerHTML = `<option value="${d.siklus_up}" selected>Batch GU-${d.siklus_up}</option>`;
         }
 
         const hiddenId = document.getElementById('pengeluaranFundDisbursementId');
@@ -1774,7 +1810,6 @@ window.addNewBelanjaItem = function () {
                 nominalDisp.style.background = '#f8fafc';
                 nominalDisp.style.cursor = 'not-allowed';
 
-                // Trigger calculation for Netto
                 if (typeof window.calculateTotalDibayarkan === 'function') {
                     window.calculateTotalDibayarkan();
                 }
@@ -1802,11 +1837,8 @@ window.addNewBelanjaItem = function () {
             }
         }
 
-        // Ensure calculation logic is bound
-        if (typeof bindCurrencyInputs === 'function') {
-            bindCurrencyInputs();
-        }
-    }
+        if (typeof bindCurrencyInputs === 'function') bindCurrencyInputs();
+    }, 50);
 };
 
 window.deleteBelanjaItem = function (id) {

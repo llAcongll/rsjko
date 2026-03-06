@@ -1,13 +1,12 @@
-<div class="dashboard">
-
+<div class="page-container">
     {{-- HEADER --}}
-    <div class="dashboard-header">
-        <div class="dashboard-header-left">
+    <div class="page-header">
+        <div class="page-header-left">
             <h2><i class="ph ph-file-text"></i> Piutang Usaha</h2>
             <p>Kelola data piutang dan tagihan perusahaan/asuransi</p>
         </div>
 
-        <div class="dashboard-header-right">
+        <div class="page-header-right">
             @if(auth()->user()->hasPermission('PIUTANG_CREATE'))
                 <button class="btn-tambah-data" id="btnTambahPiutang">
                     <i class="ph-bold ph-plus"></i>
@@ -18,29 +17,8 @@
     </div>
 
     {{-- SUMMARY CARDS --}}
-    <style>
-        /* Tighten page layout */
-        .dashboard {
-            gap: 16px !important;
-        }
-
-        .piutang-summary-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 24px;
-        }
-
-        .piutang-summary-container .dashboard-cards {
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            width: 100%;
-            max-width: 850px;
-            /* Three cards centered */
-            gap: 16px;
-        }
-    </style>
-
-    <div class="piutang-summary-container">
-        <div class="dashboard-cards">
+    <div class="pendapatan-summary-container">
+        <div class="dashboard-cards" style="grid-template-columns: repeat(3, 1fr); max-width: 850px; width: 100%;">
             <div class="dash-card blue">
                 <div class="dash-card-icon">
                     <i class="ph ph-file-text"></i>
@@ -48,7 +26,6 @@
                 <div class="dash-card-content">
                     <span class="label">Total Piutang Berjalan</span>
                     <h3 id="summaryTotalPiutang">Rp 0</h3>
-                    <small>Akumulasi tagihan</small>
                 </div>
             </div>
 
@@ -59,7 +36,6 @@
                 <div class="dash-card-content">
                     <span class="label">Potongan Tagihan</span>
                     <h3 id="summaryTotalPotongan">Rp 0</h3>
-                    <small>Potongan piutang</small>
                 </div>
             </div>
 
@@ -70,7 +46,6 @@
                 <div class="dash-card-content">
                     <span class="label">Administrasi Bank</span>
                     <h3 id="summaryTotalAdm">Rp 0</h3>
-                    <small>Biaya admin bank</small>
                 </div>
             </div>
         </div>
@@ -78,69 +53,30 @@
 
     {{-- MAIN CONTENT --}}
     <div class="dashboard-box">
-        <div class="box-header">
-            <div class="flex items-center gap-4" style="width: 100%;">
-                <div class="search-wrapper flex-1">
-                    <div class="input-group" style="position: relative;">
-                        <i class="ph ph-magnifying-glass"
-                            style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px;"></i>
-                        <input type="text" id="searchPiutang" placeholder="Cari perusahaan, bulan, keterangan..."
-                            style="width: 100%; height: 48px; padding-left: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
-                    </div>
-                </div>
+        <div class="table-toolbar">
+            <div class="table-search-wrapper">
+                <i class="ph ph-magnifying-glass"></i>
+                <input type="text" id="searchPiutang" class="table-search"
+                    placeholder="Cari perusahaan, bulan, keterangan...">
             </div>
         </div>
 
         <div class="table-container">
-            <style>
-                #piutangTable th,
-                #piutangTable td {
-                    font-size: 11px !important;
-                    white-space: nowrap !important;
-                }
-            </style>
-            <style>
-                th.sortable i {
-                    margin-left: 4px;
-                    font-size: 14px;
-                    vertical-align: middle;
-                    transition: color 0.2s;
-                }
-
-                th.sortable:hover i {
-                    color: #64748b !important;
-                }
-            </style>
-            <table id="piutangTable">
+            <table id="piutangTable" class="table universal-table">
                 <thead>
                     <tr>
-                        <th class="text-center" style="width: 50px;">No</th>
-                        <th class="text-center sortable" style="width: 110px; cursor: pointer;" data-sort="tanggal"
-                            onclick="sortPiutang('tanggal')">
-                            Tanggal <i class="ph ph-caret-up-down text-slate-400"></i>
-                        </th>
-                        <th class="text-center sortable" style="cursor: pointer;" data-sort="perusahaan_id"
-                            onclick="sortPiutang('perusahaan_id')">
-                            Perusahaan / Debitur <i class="ph ph-caret-up-down text-slate-400"></i>
-                        </th>
-                        <th class="text-center sortable" style="cursor: pointer;" data-sort="bulan_pelayanan"
-                            onclick="sortPiutang('bulan_pelayanan')">
-                            Bulan Pelayanan <i class="ph ph-caret-up-down text-slate-400"></i>
-                        </th>
-                        <th class="text-center sortable" style="cursor: pointer;" data-sort="jumlah_piutang"
-                            onclick="sortPiutang('jumlah_piutang')">
-                            Jumlah Tagihan <i class="ph ph-caret-up-down text-slate-400"></i>
-                        </th>
-                        <th class="text-center sortable" style="cursor: pointer;" data-sort="status"
-                            onclick="sortPiutang('status')">
-                            Status <i class="ph ph-caret-up-down text-slate-400"></i>
-                        </th>
-                        <th class="text-center" style="width: 100px;">Aksi</th>
+                        <th class="text-center checkbox-col">No</th>
+                        <th class="text-center sortable">Tanggal</th>
+                        <th class="text-center sortable">Perusahaan / Debitur</th>
+                        <th class="text-center sortable">Bulan Pelayanan</th>
+                        <th class="text-right sortable">Jumlah Tagihan</th>
+                        <th class="text-center sortable">Status</th>
+                        <th class="action-col">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="piutangBody">
                     <tr>
-                        <td colspan="7" class="text-center" style="padding: 40px; color: #94a3b8;">
+                        <td colspan="7" class="text-center">
                             <i class="ph ph-tray" style="font-size: 32px; margin-bottom: 8px;"></i>
                             <p>Memuat data piutang...</p>
                         </td>
@@ -149,7 +85,7 @@
             </table>
         </div>
 
-        <div class="flex justify-between items-center mt-2">
+        <div class="flex justify-between items-center mt-4">
             <p id="paginationInfoPiutang" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0 dari 0 data
             </p>
 

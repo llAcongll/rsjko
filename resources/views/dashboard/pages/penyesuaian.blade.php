@@ -1,45 +1,24 @@
-<div class="dashboard">
-
+<div class="page-container">
     {{-- HEADER --}}
-    <div class="dashboard-header">
-        <div class="dashboard-header-left">
+    <div class="page-header">
+        <div class="page-header-left">
             <h2><i class="ph ph-hand-coins"></i> Pelunasan & Potongan</h2>
             <p>Kelola uang masuk, potongan tagihan, dan administrasi bank</p>
         </div>
 
-        <div class="dashboard-header-right">
+        <div class="page-header-right">
             @if(auth()->user()->hasPermission('PENYESUAIAN_CRUD'))
                 <button class="btn-tambah-data" id="btnTambahPenyesuaian">
                     <i class="ph-bold ph-plus"></i>
-                    <span>Tambah Penyesuaian</span>
+                    <span>Penyesuaian</span>
                 </button>
             @endif
         </div>
     </div>
 
     {{-- SUMMARY CARDS --}}
-    <style>
-        /* Tighten page layout */
-        .dashboard {
-            gap: 16px !important;
-        }
-
-        .penyesuaian-summary-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 24px;
-        }
-
-        .penyesuaian-summary-container .dashboard-cards {
-            grid-template-columns: repeat(3, 1fr);
-            width: 100%;
-            max-width: 900px;
-            gap: 16px;
-        }
-    </style>
-
-    <div class="penyesuaian-summary-container">
-        <div class="dashboard-cards">
+    <div class="pendapatan-summary-container">
+        <div class="dashboard-cards" style="grid-template-columns: repeat(3, 1fr); max-width: 900px; width: 100%;">
             <div class="dash-card green">
                 <div class="dash-card-icon">
                     <i class="ph ph-coins"></i>
@@ -47,7 +26,6 @@
                 <div class="dash-card-content">
                     <span class="label">Total Pelunasan Tunai</span>
                     <h3 id="summaryTotalPelunasanPenyesuaian">Rp 0</h3>
-                    <small>Uang tunai masuk</small>
                 </div>
             </div>
 
@@ -58,7 +36,6 @@
                 <div class="dash-card-content">
                     <span class="label">Total Potongan</span>
                     <h3 id="summaryTotalPotonganPenyesuaian">Rp 0</h3>
-                    <small>Potongan piutang</small>
                 </div>
             </div>
 
@@ -69,7 +46,6 @@
                 <div class="dash-card-content">
                     <span class="label">Total Biaya Admin</span>
                     <h3 id="summaryTotalAdmPenyesuaian">Rp 0</h3>
-                    <small>Administrasi bank</small>
                 </div>
             </div>
         </div>
@@ -77,69 +53,40 @@
 
     {{-- MAIN CONTENT --}}
     <div class="dashboard-box">
-        <div class="box-header">
-            <div class="flex items-center gap-4" style="width: 100%;">
-                <div class="search-wrapper flex-1">
-                    <div class="input-group" style="position: relative;">
-                        <i class="ph ph-magnifying-glass"
-                            style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px;"></i>
-                        <input type="text" id="searchPenyesuaian" placeholder="Cari keterangan atau perusahaan..."
-                            style="width: 100%; height: 48px; padding-left: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
-                    </div>
-                </div>
+        <div class="table-toolbar">
+            <div class="table-search-wrapper">
+                <i class="ph ph-magnifying-glass"></i>
+                <input type="text" id="searchPenyesuaian" class="table-search"
+                    placeholder="Cari keterangan atau perusahaan...">
+            </div>
 
-                <div class="toolbar-actions">
-                    <select id="filterKategoriPenyesuaian" class="form-input" style="width: 150px; margin-bottom: 0;">
-                        <option value="">Semua Kategori</option>
-                        <option value="BPJS">BPJS</option>
-                        <option value="JAMINAN">JAMINAN</option>
-                    </select>
-                </div>
+            <div class="filter-wrapper">
+                <select id="filterKategoriPenyesuaian" class="form-input"
+                    style="width: 180px; margin-bottom: 0; height: 48px; border-radius: 12px;">
+                    <option value="">Semua Kategori</option>
+                    <option value="BPJS">BPJS</option>
+                    <option value="JAMINAN">JAMINAN</option>
+                </select>
             </div>
         </div>
 
         <div class="table-container">
-            <style>
-                #penyesuaianTable th,
-                #penyesuaianTable td {
-                    font-size: 11px !important;
-                    white-space: nowrap !important;
-                }
-            </style>
-            <table id="penyesuaianTable">
+            <table id="penyesuaianTable" class="table universal-table">
                 <thead>
                     <tr>
-                        <th class="text-center" style="width: 50px;">No</th>
-                        <th class="text-center sortable" data-sort="tanggal" onclick="sortPenyesuaian('tanggal')"
-                            style="width: 110px; cursor: pointer;">
-                            Tanggal <i class="ph ph-caret-up-down text-slate-400"></i>
-                        </th>
-                        <th class="text-center sortable" data-sort="keterangan" onclick="sortPenyesuaian('keterangan')"
-                            style="cursor: pointer;">
-                            Keterangan <i class="ph ph-caret-up-down text-slate-400"></i>
-                        </th>
-                        <th class="text-center sortable" data-sort="tahun_piutang"
-                            onclick="sortPenyesuaian('tahun_piutang')" style="width: 80px; cursor: pointer;">
-                            Tahun <i class="ph ph-caret-up-down text-slate-400"></i>
-                        </th>
-                        <th class="text-center sortable" data-sort="pelunasan" onclick="sortPenyesuaian('pelunasan')"
-                            style="cursor: pointer;">
-                            Pelunasan <i class="ph ph-caret-up-down text-slate-400"></i>
-                        </th>
-                        <th class="text-center sortable" data-sort="potongan" onclick="sortPenyesuaian('potongan')"
-                            style="cursor: pointer;">
-                            Potongan <i class="ph ph-caret-up-down text-slate-400"></i>
-                        </th>
-                        <th class="text-center sortable" data-sort="administrasi_bank"
-                            onclick="sortPenyesuaian('administrasi_bank')" style="cursor: pointer;">
-                            Adm Bank <i class="ph ph-caret-up-down text-slate-400"></i>
-                        </th>
-                        <th class="text-center" style="width: 100px;">Aksi</th>
+                        <th class="text-center checkbox-col">No</th>
+                        <th class="text-center sortable">Tanggal</th>
+                        <th class="text-center sortable">Keterangan</th>
+                        <th class="text-center sortable">Tahun</th>
+                        <th class="text-right sortable">Pelunasan</th>
+                        <th class="text-right sortable">Potongan</th>
+                        <th class="text-right sortable">Adm Bank</th>
+                        <th class="action-col">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="penyesuaianBody">
                     <tr>
-                        <td colspan="8" class="text-center" style="padding: 40px; color: #94a3b8;">
+                        <td colspan="8" class="text-center">
                             <i class="ph ph-tray" style="font-size: 32px; margin-bottom: 8px;"></i>
                             <p>Memuat data...</p>
                         </td>
@@ -148,10 +95,9 @@
             </table>
         </div>
 
-        <div class="flex justify-between items-center mt-2">
+        <div class="flex justify-between items-center mt-4">
             <p id="paginationInfoPenyesuaian" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0 dari 0
-                data
-            </p>
+                data</p>
 
             <div class="flex items-center gap-2">
                 <button id="prevPagePenyesuaian" class="btn-aksi" disabled><i class="ph ph-caret-left"></i></button>
@@ -161,5 +107,4 @@
             </div>
         </div>
     </div>
-
 </div>

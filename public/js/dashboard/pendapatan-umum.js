@@ -98,15 +98,14 @@
         const canEdit = window.hasPermission('PENDAPATAN_UMUM_CREATE') || window.hasPermission('PENDAPATAN_UMUM_CRUD');
         const canDelete = window.hasPermission('PENDAPATAN_UMUM_DELETE') || window.hasPermission('PENDAPATAN_UMUM_CRUD');
         const canPost = window.hasPermission('PENDAPATAN_UMUM_POST');
-        tbody.innerHTML = '';
-
+        let html = '';
         data.forEach((item, index) => {
           const info = `${formatTanggal(item.tanggal)} - ${item.keterangan || 'Pendapatan Umum'}`;
           let isChecked = false;
           if (selectionAcrossMode === 'DRAFT' && !item.is_posted) isChecked = true;
           if (selectionAcrossMode === 'POSTED' && item.is_posted) isChecked = true;
 
-          tbody.insertAdjacentHTML('beforeend', `
+          html += `
           <tr>
             <td class="text-center">
               <input type="checkbox" class="master-checkbox" value="${item.id}" data-posted="${item.is_posted}" onchange="updateSelectionUIUmum()" ${isChecked ? 'checked' : ''} />
@@ -146,8 +145,9 @@
               </div>
             </td>
           </tr>
-        `);
+        `;
         });
+        tbody.innerHTML = html;
         // Update Header Checkbox and Selection UI
         if (document.getElementById('checkAllMasterUmum')) {
           document.getElementById('checkAllMasterUmum').checked = !!selectionAcrossMode;
@@ -580,10 +580,10 @@
         const canCreateDetail = window.hasPermission('PENDAPATAN_UMUM_CREATE') || window.hasPermission('PENDAPATAN_UMUM_CRUD') || window.isAdmin;
         const canDeleteDetail = window.hasPermission('PENDAPATAN_UMUM_DELETE') || window.hasPermission('PENDAPATAN_UMUM_CRUD') || window.isAdmin;
 
-        tbody.innerHTML = '';
+        let html = '';
 
         data.forEach((item, index) => {
-          tbody.insertAdjacentHTML('beforeend', `
+          html += `
           <tr>
             <td class="text-center">${res.from + index}</td>
             <td class="text-center">${formatTanggal(item.tanggal)}</td>
@@ -606,8 +606,9 @@
               </div>
             </td>
           </tr>
-        `);
+        `;
         });
+        tbody.innerHTML = html;
       })
       .catch(err => {
         tbody.innerHTML = `<tr><td colspan="8" class="text-center text-red-500">${err.message}</td></tr>`;

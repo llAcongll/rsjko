@@ -312,9 +312,65 @@ body {
 .main {
   flex: 1;
   margin-left: 65px;
-  padding: 32px;
-  min-height: 100vh;
   transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-x: hidden;
+  background: var(--main-bg);
+  min-height: 100vh;
+}
+
+#mainContent {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  min-height: calc(100vh - 64px);
+  margin: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* =====================
+   PAGE DESIGN SYSTEM (STANDARD)
+   Used across all modules
+ ===================== */
+.page-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+
+.page-header-left h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.025em;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-header-left p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.page-header-right {
+  display: flex;
+  gap: 12px;
+}
+
+/* =====================
+   SIDEBAR AUTO-HIDE LOGICS
+ ===================== */
+.dashboard,
+.laporan {
+  width: 100%;
 }
 
 /* =====================
@@ -381,13 +437,7 @@ body {
   }
 }
 
-#mainContent {
-  background: #fff;
-  border-radius: 16px;
-  padding: 32px;
-  min-height: calc(100vh - 64px);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-}
+
 
 /* =========================
    TOAST NOTIFICATION (GLOBAL)
@@ -444,31 +494,188 @@ body {
 }
 
 /* =========================
-   PROFESSIONAL TABLES
-   Standard styles for all modules
+   ROBUST UNIVERSAL TABLE ENGINE
+   Stable UI/UX Architecture
 ========================= */
-.table-container {
+.table-container,
+.table-responsive {
   width: 100%;
+  max-width: 100%;
+  display: block;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin-top: 16px;
-  border-radius: 12px;
-  background: #fff;
+  border-radius: 14px;
+  background: #ffffff;
+  position: relative;
+  max-height: 70vh;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
 }
 
-table {
+.table,
+.universal-table {
   width: 100%;
-  border-collapse: collapse;
+  min-width: 100%;
+  table-layout: auto;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 14px;
 }
 
-table thead th {
+.universal-table thead tr {
+  height: 44px;
+}
+
+.universal-table .universal-table .universal-table thead th {
+  position: sticky;
+  top: 0;
   background: #f8fafc;
-  color: #475569;
+  color: #334155;
   font-weight: 600;
+  font-size: 14px;
   text-align: left;
-  padding: 12px 16px;
-  border-bottom: 2px solid #f1f5f9;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  z-index: 20;
+  transition: background 0.2s;
   white-space: nowrap;
+}
+
+.universal-table tbody td {
+  padding: 12px 14px;
+  color: #1e293b;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+}
+
+/* Fixed Action Column (Stable Right Side) */
+.universal-table th:last-child,
+.universal-table td:last-child {
+  position: sticky;
+  right: 0;
+  background: #ffffff !important;
+  z-index: 10;
+  border-left: 1px solid #f1f5f9;
+  min-width: 140px;
+  text-align: center;
+}
+
+.universal-table .universal-table .universal-table thead th:last-child {
+  z-index: 25;
+  /* Higher than regular headers */
+}
+
+.universal-table tbody tr:hover td {
+  background: #f8fafc;
+}
+
+.universal-table tbody tr:hover td:last-child {
+  background: #f1f5f9 !important;
+}
+
+/* Sorting Indicators */
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sort-icon {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  opacity: 0.6;
+  transition: all 0.2s;
+}
+
+.sortable.asc .sort-icon,
+.sortable.desc .sort-icon {
+  opacity: 1;
+  color: var(--accent-blue);
+}
+
+/* Column Standard widths */
+.checkbox-col {
+  width: 40px !important;
+  text-align: center !important;
+}
+
+.action-col {
+  width: 140px !important;
+  text-align: center !important;
+}
+
+/* Alignment utilities */
+.text-right {
+  text-align: right !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-left {
+  text-align: left !important;
+}
+
+/* Table Toolbar & Search */
+.table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.table-search-wrapper {
+  position: relative;
+  width: 320px;
+}
+
+.table-search-wrapper i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 18px;
+}
+
+.table-search {
+  width: 100%;
+  padding: 10px 14px 10px 42px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  background: #ffffff;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.table-search:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  /* Removed fixed width to prevent jumping in flexible wrappers */
+}
+
+/* Allow text wrapping for better stability in content columns */
+.universal-table td {
+  white-space: normal;
+  word-break: break-word;
+  max-width: 400px;
+  /* Prevent single columns from taking too much space */
+}
+
+/* Keep headers and specific columns nowrap */
+.universal-table .universal-table .universal-table thead th,
+.universal-table .no-wrap {
+  white-space: nowrap;
+}
+
+/* Fix for fixed columns to stay solid */
+.universal-table td:last-child {
+  background: #ffffff;
 }
 
 table tbody tr {
@@ -1013,64 +1220,47 @@ table tbody td {
    MODAL OVERLAY (GLOBAL)
 ========================= */
 .confirm-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-
-  display: flex;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 100000 !important;
+  display: none;
   align-items: center;
   justify-content: center;
-
   background: rgba(15, 23, 42, 0.55);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .25s ease;
 }
 
-.confirm-overlay[style*="opacity: 1"],
+#globalLoader {
+  z-index: 9000 !important;
+  /* Always below modals */
+  background: rgba(15, 23, 42, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
 .confirm-overlay.show {
-  opacity: 1;
-  pointer-events: auto;
+  display: flex !important;
 }
 
 /* =========================
    MODAL BOX (GLOBAL)
 ========================= */
 .confirm-box {
-  background: #ffffff;
-  border-radius: 22px;
-
-  width: 100%;
-  max-width: 440px;
-  max-height: 90vh;
-  padding: 32px;
+  background: #fff;
+  border-radius: 12px;
+  max-width: 850px;
+  width: 90%;
+  padding: 30px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  opacity: 1;
+  transform: none;
+  visibility: visible;
   position: relative;
+  max-height: 90vh;
   overflow-y: auto;
-
-  box-shadow:
-    0 30px 60px rgba(0, 0, 0, .28),
-    0 12px 24px rgba(0, 0, 0, .18);
-
-  transform: translateY(20px) scale(.96);
-  opacity: 0;
-
-  transition:
-    transform .3s cubic-bezier(.22, 1, .36, 1),
-    opacity .25s ease;
 }
 
 /* Detail Box can be wider */
 .confirm-box.detail-box {
   max-width: 600px;
-}
-
-.confirm-overlay[style*="opacity: 1"] .confirm-box,
-.confirm-overlay.show .confirm-box {
-  transform: translateY(0) scale(1);
-  opacity: 1;
 }
 
 /* =========================
@@ -1260,7 +1450,7 @@ table tbody td {
   /* jarak antar row */
 }
 
-.users-table thead th {
+.users-table .universal-table .universal-table thead th {
   text-align: left;
   font-size: 14px;
   font-weight: 700;

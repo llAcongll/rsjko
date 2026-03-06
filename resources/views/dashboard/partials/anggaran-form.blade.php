@@ -26,21 +26,21 @@
 
       <div
         style="max-height: 350px; overflow-y: auto; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff;">
-        <table id="rincianTable">
+        <div class="table-container"><table class="table universal-table" id="rincianTable">
           <thead>
             <tr>
               <th>Uraian Komponen</th>
-              <th style="width: 80px; text-align: center;">Vol</th>
-              <th style="width: 100px;">Satuan</th>
-              <th style="width: 150px; text-align: right;">Tarif Satuan</th>
-              <th style="width: 150px; text-align: right;">Subtotal</th>
-              <th style="width: 50px;"></th>
+              <th>Vol</th>
+              <th>Satuan</th>
+              <th>Tarif Satuan</th>
+              <th>Subtotal</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="rincianBody">
             <!-- Rincian rows will be added here -->
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
 

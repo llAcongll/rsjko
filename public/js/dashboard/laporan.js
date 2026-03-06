@@ -171,10 +171,11 @@ function renderPendapatan(data) {
             'LAIN': { label: 'Lain-lain', icon: 'ph-dots-three-circle', color: 'slate' }
         };
 
+        let html = '';
         Object.keys(types).forEach(key => {
             const item = data.summary[key] || { total: 0, count: 0 };
             const conf = types[key];
-            cardContainer.insertAdjacentHTML('beforeend', `
+            html += `
                 <div class="laporan-card highlight-${conf.color}">
                     <div class="card-icon"><i class="ph ${conf.icon}"></i></div>
                     <div class="card-info">
@@ -183,8 +184,9 @@ function renderPendapatan(data) {
                         <p>${item.count} Transaksi</p>
                     </div>
                 </div>
-            `);
+            `;
         });
+        cardContainer.innerHTML = html;
     }
 
     // List of keys in order
@@ -204,7 +206,10 @@ function renderPendapatan(data) {
     const jasaTableBody = document.getElementById('laporanJasaDetailedBody');
     if (jasaTableBody) {
         jasaTableBody.innerHTML = '';
-        let totalRs = 0, totalPelayanan = 0, totalJasaAll = 0;
+        let html = '';
+        let totalRs = 0;
+        let totalPelayanan = 0;
+        let totalJasaAll = 0;
 
         categoryKeys.forEach(key => {
             const item = data.breakdown[key];
@@ -215,7 +220,7 @@ function renderPendapatan(data) {
             totalPelayanan += row.PELAYANAN;
             totalJasaAll += row.TOTAL;
 
-            jasaTableBody.insertAdjacentHTML('beforeend', `
+            html += `
                 <tr>
                     <td class="text-center"><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:12px;">${item.kode}</code></td>
                     <td>${item.nama}</td>
@@ -223,24 +228,28 @@ function renderPendapatan(data) {
                     <td style="text-align:right">${formatRupiahTable(row.PELAYANAN)}</td>
                     <td style="text-align:right; font-weight:700;">${formatRupiahTable(row.TOTAL)}</td>
                 </tr>
-            `);
+            `;
         });
 
-        jasaTableBody.insertAdjacentHTML('beforeend', `
+        html += `
             <tr style="background:#f8fafc; font-weight:800;">
                 <td colspan="2" style="text-align:center">TOTAL KESELURUHAN</td>
                 <td style="text-align:right">${formatRupiahTable(totalRs)}</td>
                 <td style="text-align:right">${formatRupiahTable(totalPelayanan)}</td>
                 <td style="text-align:right">${formatRupiahTable(totalJasaAll)}</td>
             </tr>
-        `);
+        `;
+        jasaTableBody.innerHTML = html;
     }
 
     // 2. Render Payment Method Table
     const payTableBody = document.getElementById('laporanPaymentDetailedBody');
     if (payTableBody) {
         payTableBody.innerHTML = '';
-        let totalTunai = 0, totalNon = 0, totalAll = 0;
+        let html = '';
+        let totalTunai = 0;
+        let totalNon = 0;
+        let totalAll = 0;
 
         categoryKeys.forEach(key => {
             const item = data.breakdown[key];
@@ -251,7 +260,7 @@ function renderPendapatan(data) {
             totalNon += row.NON_TUNAI;
             totalAll += row.TOTAL;
 
-            payTableBody.insertAdjacentHTML('beforeend', `
+            html += `
                 <tr>
                     <td class="text-center"><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:12px;">${item.kode}</code></td>
                     <td>${item.nama}</td>
@@ -259,24 +268,28 @@ function renderPendapatan(data) {
                     <td style="text-align:right">${formatRupiahTable(row.NON_TUNAI)}</td>
                     <td style="text-align:right; font-weight:700;">${formatRupiahTable(row.TOTAL)}</td>
                 </tr>
-            `);
+            `;
         });
 
-        payTableBody.insertAdjacentHTML('beforeend', `
+        html += `
             <tr style="background:#f8fafc; font-weight:800;">
                 <td colspan="2" style="text-align:center">TOTAL KESELURUHAN</td>
                 <td style="text-align:right">${formatRupiahTable(totalTunai)}</td>
                 <td style="text-align:right">${formatRupiahTable(totalNon)}</td>
                 <td style="text-align:right">${formatRupiahTable(totalAll)}</td>
             </tr>
-        `);
+        `;
+        payTableBody.innerHTML = html;
     }
 
     // 3. Render Bank Reception Table
     const bankTableBody = document.getElementById('laporanBankDetailedBody');
     if (bankTableBody) {
         bankTableBody.innerHTML = '';
-        let totalBRK = 0, totalBSI = 0, totalAllBank = 0;
+        let html = '';
+        let totalBRK = 0;
+        let totalBSI = 0;
+        let totalAllBank = 0;
 
         categoryKeys.forEach(key => {
             const item = data.breakdown[key];
@@ -287,7 +300,7 @@ function renderPendapatan(data) {
             totalBSI += row.BSI;
             totalAllBank += row.TOTAL;
 
-            bankTableBody.insertAdjacentHTML('beforeend', `
+            html += `
                 <tr>
                     <td class="text-center"><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:12px;">${item.kode}</code></td>
                     <td>${item.nama}</td>
@@ -295,17 +308,18 @@ function renderPendapatan(data) {
                     <td style="text-align:right">${formatRupiahTable(row.BSI)}</td>
                     <td style="text-align:right; font-weight:700;">${formatRupiahTable(row.TOTAL)}</td>
                 </tr>
-            `);
+            `;
         });
 
-        bankTableBody.insertAdjacentHTML('beforeend', `
+        html += `
             <tr style="background:#f8fafc; font-weight:800;">
                 <td colspan="2" style="text-align:center">TOTAL PENERIMAAN BANK</td>
                 <td style="text-align:right">${formatRupiahTable(totalBRK)}</td>
                 <td style="text-align:right">${formatRupiahTable(totalBSI)}</td>
                 <td style="text-align:right">${formatRupiahTable(totalAllBank)}</td>
             </tr>
-        `);
+        `;
+        bankTableBody.innerHTML = html;
     }
 
     // 4. Room Stats (Top 10)
@@ -317,15 +331,17 @@ function renderPendapatan(data) {
             roomBody.innerHTML = '<div class="text-center py-4 text-slate-400">Tidak ada data ruangan</div>';
         } else {
             const maxVal = Math.max(...roomEntries.map(e => e[1]), 1);
+            let html = '';
             roomEntries.forEach(([room, total]) => {
                 const percent = (total / maxVal) * 100;
-                roomBody.insertAdjacentHTML('beforeend', `
+                html += `
                     <div class="room-item">
                         <div class="room-info"><span>${room}</span><strong>${formatRupiah(total)}</strong></div>
                         <div class="room-bar-bg"><div class="room-bar-fill" style="width: ${percent}%"></div></div>
                     </div>
-                `);
+                `;
             });
+            roomBody.innerHTML = html;
         }
     }
 
@@ -338,15 +354,17 @@ function renderPendapatan(data) {
             patientBody.innerHTML = '<div class="text-center py-4 text-slate-400">Tidak ada data pasien</div>';
         } else {
             const maxValP = Math.max(...patientEntries.map(e => e[1]), 1);
+            let html = '';
             patientEntries.forEach(([room, count]) => {
                 const percent = (count / maxValP) * 100;
-                patientBody.insertAdjacentHTML('beforeend', `
+                html += `
                     <div class="room-item">
                         <div class="room-info"><span>${room}</span><strong>${count} Pasien</strong></div>
                         <div class="room-bar-bg"><div class="room-bar-fill" style="width: ${percent}%; background: linear-gradient(90deg, #10b981, #34d399);"></div></div>
                     </div>
-                `);
+                `;
             });
+            patientBody.innerHTML = html;
         }
     }
 }
@@ -373,6 +391,7 @@ function renderRekon(data) {
         if (sumDiff) sumDiff.innerText = 'Rp 0';
         return;
     }
+    let html = '';
     data.forEach(item => {
         totalBank += Number(item.bank);
         totalPend += Number(item.pendapatan);
@@ -389,7 +408,7 @@ function renderRekon(data) {
 
         const selisihColor = item.selisih === 0 ? '#64748b' : (item.selisih > 0 ? '#16a34a' : '#ef4444');
 
-        body.insertAdjacentHTML('beforeend', `
+        html += `
             <tr>
                 <td class="text-center" style="font-weight:600;">${item.tanggal}</td>
                 <td style="text-align:right">${formatRupiahTable(item.bank)}</td>
@@ -398,8 +417,9 @@ function renderRekon(data) {
                 <td style="text-align:left; color:#64748b; font-size:13px; white-space: normal; line-height: 1.6; min-width: 250px; padding: 10px;">${item.keterangan}</td>
                 <td style="text-align:center"><span class="badge ${statusClass}">${statusText}</span></td>
             </tr>
-        `);
+        `;
     });
+    body.innerHTML = html;
 
     if (sumBank) sumBank.innerText = formatRupiah(totalBank);
     if (sumPend) sumPend.innerText = formatRupiah(totalPend);
@@ -422,8 +442,9 @@ function renderPiutang(data) {
     const body = document.getElementById('laporanPiutangBody');
     if (!body) return;
     body.innerHTML = '';
+    let html = '';
     data.data.forEach(item => {
-        body.insertAdjacentHTML('beforeend', `
+        html += `
             <tr>
                 <td><strong>${item.nama_perusahaan}</strong></td>
                 <td style="text-align:right">${formatRupiahTable(item.sa_piutang)}</td>
@@ -439,16 +460,18 @@ function renderPiutang(data) {
                 <td style="text-align:right; font-weight:700; color:#ef4444">${formatRupiahTable(item.sisa_sa)}</td>
                 <td style="text-align:right; font-weight:700; background:#f1f5f9;">${formatRupiahTable(item.saldo_akhir)}</td>
             </tr>
-        `);
+        `;
     });
+    body.innerHTML = html;
 }
 
 function renderMou(data) {
     const body = document.getElementById('laporanMouBody');
     if (!body) return;
     body.innerHTML = '';
+    let html = '';
     data.forEach((item, index) => {
-        body.insertAdjacentHTML('beforeend', `
+        html += `
             <tr>
                 <td style="text-align:center">${index + 1}</td>
                 <td><strong>${item.nama_mou}</strong></td>
@@ -460,8 +483,9 @@ function renderMou(data) {
                 <td style="text-align:right; color:#ef4444">${formatRupiahTable(item.adm_bank)}</td>
                 <td style="text-align:right; font-weight:700; color:#16a34a">${formatRupiahTable(item.total)}</td>
             </tr>
-        `);
+        `;
     });
+    body.innerHTML = html;
 }
 
 function renderAnggaran(data) {
@@ -758,6 +782,7 @@ function renderPengeluaran(data) {
             return;
         }
 
+        let html = '';
         let gTotal = 0;
         let gUp = 0;
         let gGu = 0;
@@ -774,7 +799,7 @@ function renderPengeluaran(data) {
             gGu += gu;
             gLs += ls;
 
-            body.insertAdjacentHTML('beforeend', `
+            html += `
                 <tr>
                     <td class="text-center"><code class="bg-slate-100 px-2 py-1 rounded">${item.kode}</code></td>
                     <td>${item.nama}</td>
@@ -783,10 +808,10 @@ function renderPengeluaran(data) {
                     <td class="">${formatRupiahTable(ls)}</td>
                     <td class="font-bold">${formatRupiahTable(total)}</td>
                 </tr>
-            `);
+            `;
         });
 
-        body.insertAdjacentHTML('beforeend', `
+        html += `
             <tr class="bg-slate-50 font-extrabold">
                 <td colspan="2" class="text-center">TOTAL KESELURUHAN</td>
                 <td class="">${formatRupiahTable(gUp)}</td>
@@ -794,7 +819,8 @@ function renderPengeluaran(data) {
                 <td class="">${formatRupiahTable(gLs)}</td>
                 <td class="">${formatRupiahTable(gTotal)}</td>
             </tr>
-        `);
+        `;
+        body.innerHTML = html;
     }
 }
 

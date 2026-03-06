@@ -90,21 +90,22 @@
 
     <!-- RECONCILIATION SECTION -->
     <div class="laporan-section rekon-section">
-        <div class="table-responsive">
-            <table class="report-table" id="laporanRekonTable">
+        <div class="table-container">
+            <table class="report-table universal-table" id="laporanRekonTable">
                 <thead>
                     <tr>
-                        <th class="text-center" style="width: 100px;">Bulan</th>
-                        <th class="text-center" style="text-align:right; width: 140px;">Bank (Kredit)</th>
-                        <th class="text-center" style="text-align:right; width: 140px;">Modul Netto</th>
-                        <th class="text-center" style="text-align:right; width: 140px;">Selisih Harian</th>
-                        <th class="text-left" style="text-align:left; min-width: 250px;">Deskripsi Penyebab Selisih</th>
-                        <th style="text-align:center; width: 120px;">Status</th>
+                        <th class="text-center sortable">Bulan</th>
+                        <th class="text-center sortable">Bank (Kredit)</th>
+                        <th class="text-center sortable">Modul Netto</th>
+                        <th class="text-center sortable">Selisih Harian</th>
+                        <th class="text-left sortable">Deskripsi Penyebab
+                            Selisih</th>
+                        <th class="text-center sortable">Status</th>
                     </tr>
                 </thead>
                 <tbody id="laporanRekonBody">
                     <tr>
-                        <td colspan="6" style="text-align:center">⏳ Memuat data rekon...</td>
+                        <td colspan="6">⏳ Memuat data rekon...</td>
                     </tr>
                 </tbody>
             </table>

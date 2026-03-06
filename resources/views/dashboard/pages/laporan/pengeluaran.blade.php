@@ -67,15 +67,15 @@
             <h3>Rincian Pengeluaran Per Kode Rekening</h3>
         </div>
         <div class="table-responsive">
-            <table class="report-table">
+            <div class="table-container"><table class="report-table universal-table">
                 <thead>
                     <tr>
-                        <th class="text-center" style="width: 150px;">Sub Kode Rekening</th>
+                        <th class="text-center">Sub Kode Rekening</th>
                         <th class="text-center">Nama Rekening</th>
-                        <th class="text-center" style="text-align:right">Uang Persediaan</th>
-                        <th class="text-center" style="text-align:right">Ganti Uang</th>
-                        <th class="text-center" style="text-align:right">Langsung</th>
-                        <th class="text-center" style="text-align:right">Total Pengeluaran</th>
+                        <th class="text-center">Uang Persediaan</th>
+                        <th class="text-center">Ganti Uang</th>
+                        <th class="text-center">Langsung</th>
+                        <th class="text-center">Total Pengeluaran</th>
                     </tr>
                 </thead>
                 <tbody id="laporanPengeluaranBody">
@@ -83,7 +83,7 @@
                         <td colspan="6" class="text-center">Klik Tampilkan untuk memuat data.</td>
                     </tr>
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 </div>

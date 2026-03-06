@@ -6,8 +6,8 @@ let pengeluaranPage = 1;
 let pengeluaranPerPage = 10;
 let pengeluaranKeyword = '';
 let currentKategori = '';
-let isEditPengeluaran = false;
-let editPengeluaranId = null;
+window.isEditPengeluaran = false;
+window.editPengeluaranId = null;
 let pengeluaranType = '';
 let pengeluaranSortBy = 'spending_date';
 let pengeluaranSortDir = 'desc';
@@ -73,7 +73,7 @@ async function loadAvailableGuCycles() {
         });
 
         // Auto select the last one if it's a new entry
-        if (!isEditPengeluaran && data.length > 0) {
+        if (!window.isEditPengeluaran && data.length > 0) {
             select.value = data[data.length - 1].siklus_up;
         }
     } catch (err) {
@@ -119,8 +119,8 @@ async function checkNoBuktiAvailability(noBukti) {
 
     try {
         let url = `/dashboard/expenditures/check-no-bukti?no_bukti=${encodeURIComponent(noBukti)}`;
-        if (isEditPengeluaran && editPengeluaranId) {
-            url += `&exclude_id=${editPengeluaranId}`;
+        if (window.isEditPengeluaran && window.editPengeluaranId) {
+            url += `&exclude_id=${window.editPengeluaranId}`;
         }
         const res = await fetch(url, { headers: { Accept: 'application/json' } });
         const data = await res.json();
@@ -201,11 +201,17 @@ function bindRekeningSearchable() {
     };
 
     // Close dropdown on click outside
-    document.addEventListener('click', function (e) {
-        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
-            dropdown.style.display = 'none';
-        }
-    });
+    if (!window._rekeningClickBound) {
+        document.addEventListener('click', function (e) {
+            // Re-fetch elements inside listener to ensure we have the current ones
+            const sInp = document.getElementById('pengeluaranRekeningSearch');
+            const dDown = document.getElementById('pengeluaranRekeningDropdown');
+            if (sInp && dDown && !sInp.contains(e.target) && !dDown.contains(e.target)) {
+                dDown.style.display = 'none';
+            }
+        });
+        window._rekeningClickBound = true;
+    }
 }
 
 function renderRekeningDropdown(keyword = '') {
@@ -214,8 +220,8 @@ function renderRekeningDropdown(keyword = '') {
 
     const kw = keyword.toLowerCase().trim();
     const filtered = kw
-        ? rekeningOptions.filter(opt => opt.label.toLowerCase().includes(kw))
-        : rekeningOptions;
+        ? rekeningOptions.filter(opt => opt.label.toLowerCase().includes(kw)).slice(0, 30)
+        : rekeningOptions.slice(0, 30);
 
     if (filtered.length === 0) {
         dropdown.innerHTML = '<div style="padding: 12px 16px; color: #94a3b8; font-size: 13px; text-align: center;">Tidak ada rekening ditemukan</div>';
@@ -273,9 +279,20 @@ window.openPengeluaranForm = function (kategori, id = null) {
     const modal = document.getElementById('pengeluaranModal');
     if (!modal) return;
 
-    modal.classList.add('show');
-    resetPengeluaranForm();
+    // Hide loader if active
+    if (typeof window.hideLoader === 'function') window.hideLoader();
+    else {
+        const loader = document.getElementById('globalLoader');
+        if (loader) {
+            loader.classList.remove('show');
+            loader.style.display = 'none';
+        }
+    }
 
+    modal.classList.add('show');
+    modal.style.zIndex = '100005';
+
+    resetPengeluaranForm();
     document.getElementById('pengeluaranKategori').value = kategori;
 
     const titleEl = document.getElementById('pengeluaranModalTitle');
@@ -284,8 +301,8 @@ window.openPengeluaranForm = function (kategori, id = null) {
     const sp2dEl = document.getElementById('pengeluaranNoSP2D');
 
     if (id) {
-        isEditPengeluaran = true;
-        editPengeluaranId = id;
+        window.isEditPengeluaran = true;
+        window.editPengeluaranId = id;
         titleEl.innerText = 'Edit Pengeluaran';
         // Keep read-only to prevent manual override during edit
         [sppEl, spmEl, sp2dEl].forEach(el => {
@@ -297,8 +314,8 @@ window.openPengeluaranForm = function (kategori, id = null) {
         });
         loadEditData(id);
     } else {
-        isEditPengeluaran = false;
-        editPengeluaranId = null;
+        window.isEditPengeluaran = false;
+        window.editPengeluaranId = null;
         titleEl.innerText = 'Tambah Pengeluaran';
         [sppEl, spmEl, sp2dEl].forEach(el => {
             if (el) {
@@ -310,10 +327,13 @@ window.openPengeluaranForm = function (kategori, id = null) {
         document.getElementById('pengeluaranTanggal').value = window.getTodayLocal();
     }
 
-    loadRekeningPengeluaran(kategori);
-    bindCurrencyInputs();
-    bindNoBuktiValidation();
-    bindRekeningSearchable();
+    // Defer heavy work to allow modal to render immediately
+    setTimeout(() => {
+        loadRekeningPengeluaran(kategori);
+        bindCurrencyInputs();
+        bindNoBuktiValidation();
+        bindRekeningSearchable();
+    }, 50);
 };
 
 function bindCurrencyInputs() {
@@ -323,6 +343,7 @@ function bindCurrencyInputs() {
     const pajHidden = document.getElementById('pengeluaranPotonganPajakValue');
 
     if (!nomDisp || !pajDisp) return;
+    if (nomDisp._currencyBound) return;
 
     const setup = (disp, hidden) => {
         if (!disp || !hidden) return;
@@ -347,6 +368,7 @@ function bindCurrencyInputs() {
 
     setup(nomDisp, nomHidden);
     setup(pajDisp, pajHidden);
+    nomDisp._currencyBound = true;
 }
 
 window.closePengeluaranModal = function () {
@@ -467,10 +489,10 @@ function loadPengeluaran(page = 1) {
                 return;
             }
 
-            tbody.innerHTML = '';
+            let html = '';
             let no = res.from || 1;
             data.forEach(item => {
-                tbody.insertAdjacentHTML('beforeend', `
+                html += `
                 <tr>
                     <td class="text-center">${no++}</td>
                     <td class="text-center">${formatTanggal(item.spending_date)}</td>
@@ -502,9 +524,26 @@ function loadPengeluaran(page = 1) {
                             </div>
                         </div>
                     </td>
+                    <td class="text-center">
+                        <div style="display: flex; gap: 4px; justify-content: center;">
+                            <button class="btn-aksi" title="Preview" onclick="openPengeluaranDetail(${item.id})" 
+                                style="background: #eff6ff; color: #2563eb; width: 28px; height: 28px; border: 1px solid #3b82f6;">
+                                <i class="ph ph-eye"></i>
+                            </button>
+                            <button class="btn-aksi" title="Edit" onclick="openPengeluaranForm('${currentKategori}', ${item.id})" 
+                                style="background: #fffbeb; color: #d97706; width: 28px; height: 28px; border: 1px solid #f59e0b;">
+                                <i class="ph ph-pencil-simple"></i>
+                            </button>
+                            <button class="btn-aksi delete" title="Hapus" onclick="hapusPengeluaran(${item.id})" 
+                                style="width: 28px; height: 28px; background: #fef2f2; color: #ef4444; border: 1px solid #ef4444;">
+                                <i class="ph ph-trash"></i>
+                            </button>
+                        </div>
+                    </td>
                 </tr>
-            `);
+            `;
             });
+            tbody.innerHTML = html;
 
             renderPaginationPengeluaran(res);
             updateSortIconsPengeluaran();
@@ -611,17 +650,21 @@ async function loadRekeningPengeluaran(kategori) {
     if (hiddenInput && hiddenInput.getAttribute('data-loaded-for') === kategori && rekeningOptions.length > 0) return;
 
     try {
-        const res = await fetch('/dashboard/master/kode-rekening?category=PENGELUARAN', {
-            headers: { 'Accept': 'application/json' }
-        });
-        const tree = await res.json();
+        const tree = await (window._kodeRekeningTreeCache
+            ? Promise.resolve(window._kodeRekeningTreeCache)
+            : fetch('/dashboard/master/kode-rekening?category=PENGELUARAN', { headers: { 'Accept': 'application/json' } })
+                .then(res => res.json())
+                .then(data => { window._kodeRekeningTreeCache = data; return data; }));
+
+        // Yield execution to keep UI responsive before processing tree
+        await new Promise(r => setTimeout(r, 0));
 
         rekeningOptions = [];
 
         function flatten(nodes) {
             nodes.forEach(node => {
                 if (node.tipe === 'detail') {
-                    if (node.sumber_data === kategori) {
+                    if (kategori === 'ALL' || node.sumber_data === kategori) {
                         rekeningOptions.push({
                             value: node.id,
                             kode: node.kode,
@@ -638,9 +681,12 @@ async function loadRekeningPengeluaran(kategori) {
 
         flatten(tree);
 
-        if (hiddenInput) hiddenInput.setAttribute('data-loaded-for', kategori);
+        if (hiddenInput) {
+            hiddenInput.setAttribute('data-loaded-for', kategori);
+            hiddenInput.setAttribute('data-loaded-at', Date.now());
+        }
 
-        // Jika tidak ada yang cocok dengan mapping, tampilkan semua detail pengeluaran sebagai fallback
+        // Fallsback to all if category-specific yields none
         if (rekeningOptions.length === 0) {
             function flattenAll(nodes) {
                 nodes.forEach(node => {
@@ -801,6 +847,7 @@ window.openPengeluaranDetail = function (id) {
 
     content.innerHTML = '<div class="col-span-2 text-center py-4"><i class="ph ph-spinner animate-spin text-2xl"></i></div>';
     modal.classList.add('show');
+    modal.style.zIndex = '100005';
 
     fetch(`/dashboard/expenditures/${id}`, { headers: { Accept: 'application/json' } })
         .then(res => res.json())
@@ -882,3 +929,9 @@ function updateSortIconsPengeluaran() {
         }
     }
 }
+// Export local functions to window so other scripts (like treasurer.js) can call them
+window.resetPengeluaranForm = resetPengeluaranForm;
+window.loadRekeningPengeluaran = loadRekeningPengeluaran;
+window.bindNoBuktiValidation = bindNoBuktiValidation;
+window.bindRekeningSearchable = bindRekeningSearchable;
+window.loadEditData = loadEditData;

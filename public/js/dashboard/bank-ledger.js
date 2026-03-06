@@ -10,6 +10,7 @@
     };
 
     let currentSaldoAwalAmount = 0;
+    let cachedLedgerData = [];
 
     window.initBankLedger = function () {
         const now = new Date();
@@ -76,8 +77,8 @@
         const form = document.getElementById('formBankLedgerSaldoAwal');
         if (form) form.reset();
 
-        document.getElementById('bankLedgerSaldoAwalValue').value = currentSaldoAwalAmount;
-        document.getElementById('bankLedgerSaldoAwalDisplayInput').value = currentSaldoAwalAmount > 0 ? formatRibuan(currentSaldoAwalAmount) : '';
+        document.getElementById('bankLedgerSaldoAwalValue').value = 0;
+        document.getElementById('bankLedgerSaldoAwalDisplayInput').value = '';
 
         // Bind currency logic for this specific input
         const display = document.getElementById('bankLedgerSaldoAwalDisplayInput');
@@ -91,9 +92,43 @@
             };
         }
 
-        const btnHapus = document.getElementById('btnHapusBankLedgerSaldoAwal');
-        if (btnHapus) {
-            btnHapus.style.display = currentSaldoAwalAmount > 0 ? 'inline-flex' : 'none';
+        const bankSelect = document.getElementById('bankLedgerSaldoAwalBank');
+        const mainFilterBank = document.getElementById('bankLedgerBank');
+
+        if (bankSelect) {
+            if (mainFilterBank && mainFilterBank.value && mainFilterBank.value !== 'Semua Bank') {
+                bankSelect.value = mainFilterBank.value;
+            } else {
+                bankSelect.value = '';
+            }
+
+            bankSelect.onchange = function () {
+                const bankVal = this.value;
+                if (!bankVal) return;
+                fetch(`/dashboard/bank-account-ledger/saldo-awal?bank=${encodeURIComponent(bankVal)}`, {
+                    headers: { 'Accept': 'application/json' }
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        const amt = parseFloat(data.amount) || 0;
+                        document.getElementById('bankLedgerSaldoAwalValue').value = amt;
+                        if (display) {
+                            display.value = amt > 0 ? formatRibuan(amt) : '';
+                        }
+                        const btnHapus = document.getElementById('btnHapusBankLedgerSaldoAwal');
+                        if (btnHapus) {
+                            btnHapus.style.display = amt > 0 ? 'inline-flex' : 'none';
+                        }
+                    })
+                    .catch(err => console.error(err));
+            };
+
+            if (bankSelect.value) {
+                bankSelect.dispatchEvent(new Event('change'));
+            } else {
+                const btnHapus = document.getElementById('btnHapusBankLedgerSaldoAwal');
+                if (btnHapus) btnHapus.style.display = 'none';
+            }
         }
 
         const modal = document.getElementById('modalBankLedgerSaldoAwal');
@@ -108,12 +143,20 @@
     window.deleteBankLedgerSaldoAwal = function () {
         if (!confirm('Yakin ingin menghapus saldo awal tahun?')) return;
 
+        const bankVal = document.getElementById('bankLedgerSaldoAwalBank').value;
+        if (!bankVal) {
+            toast('Pilih bank terlebih dahulu', 'error');
+            return;
+        }
+
         fetch('/dashboard/bank-account-ledger/saldo-awal', {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Content-Type': 'application/json',
                 'Accept': 'application/json'
-            }
+            },
+            body: JSON.stringify({ bank: bankVal })
         })
             .then(async res => {
                 const json = await res.json();
@@ -137,7 +180,7 @@
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ amount: data.amount })
+            body: JSON.stringify({ amount: data.amount, bank: data.bank })
         })
             .then(async res => {
                 const json = await res.json();
@@ -203,13 +246,17 @@
             .catch(err => toast(err.message, 'error'));
     };
 
-    window.editAdjustment = function (item) {
+    window.editAdjustment = function (id) {
+        const item = cachedLedgerData.find(i => i.id === id);
+        if (!item) return;
+
         window.openAdjustmentModal();
         document.getElementById('adjustmentId').value = item.id;
         document.getElementById('adjustmentModalTitle').innerHTML = '<i class="ph ph-pencil-simple"></i> Edit Penyesuaian Saldo';
         document.getElementById('adjustmentDate').value = item.date.split(' ')[0];
         document.getElementById('adjustmentDirection').value = item.debit > 0 ? 'DEBIT' : 'CREDIT';
         document.getElementById('adjustmentDescription').value = item.description;
+        document.getElementById('adjustmentBank').value = item.bank || '';
         const amount = item.debit > 0 ? item.debit : item.credit;
         document.getElementById('adjustmentAmountValue').value = amount;
         document.getElementById('adjustmentAmountDisplay').value = Number(amount).toLocaleString('id-ID');
@@ -262,12 +309,16 @@
             .catch(err => toast(err.message, 'error'));
     };
 
-    window.editDeposit = function (item) {
+    window.editDeposit = function (id) {
+        const item = cachedLedgerData.find(i => i.id === id);
+        if (!item) return;
+
         window.openDepositModal();
         document.getElementById('bankLedgerId').value = item.id;
         document.getElementById('bankLedgerModalTitle').innerHTML = '<i class="ph ph-pencil-simple"></i> Edit Setoran Manual';
         document.getElementById('bankLedgerDate').value = item.date.split(' ')[0];
         document.getElementById('bankLedgerDescription').value = item.description;
+        document.getElementById('bankLedgerDepositBank').value = item.bank || '';
         document.getElementById('bankLedgerAmountValue').value = item.debit;
         document.getElementById('bankLedgerAmountDisplay').value = Number(item.debit).toLocaleString('id-ID');
     };
@@ -291,6 +342,30 @@
             .catch(err => toast(err.message, 'error'));
     };
 
+    window.viewDetailFromLedger = function (id) {
+        const item = cachedLedgerData.find(i => i.id === id);
+        if (!item || !item.ref_table || !item.ref_id) {
+            toast('Detail transaksi tidak tersedia untuk item ini.', 'info');
+            return;
+        }
+
+        if (item.ref_table === 'fund_disbursements') {
+            if (typeof window.viewDisbursement === 'function') {
+                window.viewDisbursement(item.ref_id);
+            } else {
+                toast('Modul Pencairan tidak ditemukan.', 'error');
+            }
+        } else if (item.ref_table === 'expenditures') {
+            if (typeof window.openPengeluaranDetail === 'function') {
+                window.openPengeluaranDetail(item.ref_id);
+            } else {
+                toast('Modul Pengeluaran tidak ditemukan.', 'error');
+            }
+        } else {
+            toast('Detail untuk tipe ' + item.ref_table + ' belum didukung.', 'info');
+        }
+    };
+
     window.loadBankLedger = function () {
         const mEl = document.getElementById('bankLedgerMonth');
         const yEl = document.getElementById('bankLedgerYear');
@@ -298,45 +373,48 @@
 
         const month = mEl.value;
         const year = yEl.value;
+        const bankEl = document.getElementById('bankLedgerBank');
+        const bank = bankEl ? bankEl.value : '';
         const tbody = document.getElementById('tableBankLedgerBody');
         if (!tbody) return;
 
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center">Memuat data...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center"><i class="ph ph-spinner animate-spin"></i> Memuat data...</td></tr>';
 
-        fetch(`/dashboard/bank-account-ledger?month=${month}&year=${year}`, { headers: { 'Accept': 'application/json' } })
+        fetch(`/dashboard/bank-account-ledger?month=${month}&year=${year}&bank=${encodeURIComponent(bank)}`, { headers: { 'Accept': 'application/json' } })
             .then(res => res.json())
             .then(res => {
+                cachedLedgerData = res.data || [];
                 const balEl = document.getElementById('bankLedgerCurrentBalance');
                 if (balEl) balEl.textContent = fmt(res.current_balance);
 
-                if (res.data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="text-center">Belum ada mutasi rekening koran.</td></tr>';
-                    document.getElementById('bankLedgerSaldoAwalDisplay').textContent = `Saldo Awal Tahun: Rp 0`;
+                let saldoAwalDisplay = res.saldo_awal || 0;
+                currentSaldoAwalAmount = saldoAwalDisplay;
+
+                if (cachedLedgerData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="text-center">Belum ada mutasi rekening koran.</td></tr>';
+                    const saldoDisplayEl = document.getElementById('bankLedgerSaldoAwalDisplay');
+                    if (saldoDisplayEl) saldoDisplayEl.textContent = `Saldo Awal Tahun: ${fmt(saldoAwalDisplay)}`;
                     return;
                 }
 
-                tbody.innerHTML = '';
+                let html = '';
                 let indexDisplay = 1;
-                let saldoAwalDisplay = 0;
 
-                res.data.forEach((item, index) => {
+                cachedLedgerData.forEach((item) => {
                     if (item.type === 'SALDO_AWAL') {
-                        saldoAwalDisplay = item.debit;
-                        currentSaldoAwalAmount = item.debit;
-                        return; // Skip rendering
+                        return; // Skip rendering in table body
                     }
 
                     const badgeClass = item.credit > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700';
 
-                    let actionHtml = '-';
+                    let actionHtml = '';
 
                     if (item.type === 'DEPOSIT_MANUAL' || item.type === 'PENYESUAIAN') {
-                        const itemJson = JSON.stringify(item).replace(/"/g, '&quot;');
                         const editFn = item.type === 'PENYESUAIAN' ? 'editAdjustment' : 'editDeposit';
                         const deleteFn = item.type === 'PENYESUAIAN' ? 'deleteAdjustment' : 'deleteDeposit';
                         actionHtml = `
                             <div class="flex justify-center gap-2">
-                                <button class="btn-aksi edit" title="Edit" onclick="${editFn}(${itemJson})">
+                                <button class="btn-aksi edit" title="Edit" onclick="${editFn}(${item.id})">
                                     <i class="ph ph-pencil-simple"></i>
                                 </button>
                                 <button class="btn-aksi delete" title="Hapus" onclick="${deleteFn}(${item.id})">
@@ -344,9 +422,19 @@
                                 </button>
                             </div>
                         `;
+                    } else if (item.ref_table && item.ref_id) {
+                        actionHtml = `
+                            <div class="flex justify-center gap-2">
+                                <button class="btn-aksi detail" title="Lihat Detail" onclick="viewDetailFromLedger(${item.id})">
+                                    <i class="ph ph-eye"></i>
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        actionHtml = '<span class="text-slate-400">-</span>';
                     }
 
-                    tbody.insertAdjacentHTML('beforeend', `
+                    html += `
                     <tr>
                         <td class="text-center">${indexDisplay++}</td>
                         <td class="text-center">${fmtTgl(item.date)}</td>
@@ -356,23 +444,31 @@
                             </span>
                         </td>
                         <td>${item.description || '-'}</td>
+                        <td class="text-center">${item.bank || '-'}</td>
                         <td class="text-right text-green-700 font-medium">${item.debit > 0 ? fmt(item.debit) : '-'}</td>
                         <td class="text-right text-red-700 font-medium">${item.credit > 0 ? fmt(item.credit) : '-'}</td>
                         <td class="text-right font-bold" style="color: #0f172a;">${fmt(item.balance)}</td>
                         <td class="text-center">${actionHtml}</td>
                     </tr>
-                `);
+                `;
                 });
+                tbody.innerHTML = html;
+
+                const btnSetSaldo = document.getElementById('btnSetSaldoAwal');
+                if (btnSetSaldo) {
+                    btnSetSaldo.style.display = (month == 1) ? 'inline-flex' : 'none';
+                }
 
                 const saldoDisplayEl = document.getElementById('bankLedgerSaldoAwalDisplay');
                 if (saldoDisplayEl) {
-                    saldoDisplayEl.textContent = `Saldo Awal Tahun: ${fmt(saldoAwalDisplay)}`;
+                    const label = (month == 1) ? 'Saldo Awal Tahun' : 'Saldo Awal Bulan';
+                    saldoDisplayEl.textContent = `${label}: ${fmt(saldoAwalDisplay)}`;
                 }
             })
 
             .catch(err => {
                 console.error(err);
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-red-500">Gagal memuat data</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-red-500">Gagal memuat data</td></tr>';
             });
     };
 })();

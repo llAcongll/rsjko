@@ -29,14 +29,64 @@ class BankAccountLedgerController extends Controller
         if ($month) {
             $query->whereMonth('date', $month);
         }
+        if ($request->filled('bank') && $request->bank !== 'Semua Bank') {
+            $query->where('bank', $request->bank);
+        }
 
         $data = $query->orderBy('date', 'asc')->orderBy('id', 'asc')->get();
 
-        $currentBalance = $this->service->getCurrentBalance();
+        $bank = $request->get('bank');
+        $saldoAwal = 0;
+
+        if ($month == 1) {
+            // JANUARI: Ambil dari entri SALDO_AWAL tahun ini
+            if ($bank && $bank !== 'Semua Bank') {
+                $entry = BankAccountLedger::where('type', 'SALDO_AWAL')
+                    ->whereYear('date', $year)
+                    ->where('bank', $bank)
+                    ->first();
+                $saldoAwal = $entry ? (float) $entry->debit : 0;
+            } else {
+                $saldoAwal = BankAccountLedger::where('type', 'SALDO_AWAL')
+                    ->whereYear('date', $year)
+                    ->sum('debit');
+            }
+        } else {
+            // FEBRUARI - DESEMBER: Ambil dari SALDO AKHIR bulan sebelumnya
+            // Cari entri terakhir tepat sebelum bulan ini di tahun yang sama atau tahun sebelumnya
+            $prevDate = Carbon::create($year, $month, 1)->subMonth();
+
+            $querySaldo = BankAccountLedger::where('date', '<=', $prevDate->endOfMonth()->toDateString())
+                ->orderBy('date', 'desc')
+                ->orderBy('id', 'desc');
+
+            if ($bank && $bank !== 'Semua Bank') {
+                $entry = $querySaldo->where('bank', $bank)->first();
+                $saldoAwal = $entry ? (float) $entry->balance : 0;
+            } else {
+                // Untuk "Semua Bank", jumlahkan saldo terakhir dari setiap bank
+                $banks = BankAccountLedger::distinct()->pluck('bank');
+                foreach ($banks as $b) {
+                    $lastEntry = BankAccountLedger::where('bank', $b)
+                        ->where('date', '<=', $prevDate->endOfMonth()->toDateString())
+                        ->orderBy('date', 'desc')
+                        ->orderBy('id', 'desc')
+                        ->first();
+                    $saldoAwal += $lastEntry ? (float) $lastEntry->balance : 0;
+                }
+            }
+        }
+
+        if ($bank && $bank !== 'Semua Bank') {
+            $currentBalance = $this->service->getCurrentBalance($bank);
+        } else {
+            $currentBalance = $this->service->getTotalBalance();
+        }
 
         return response()->json([
             'data' => $data,
-            'current_balance' => $currentBalance
+            'current_balance' => $currentBalance,
+            'saldo_awal' => $saldoAwal
         ]);
     }
 
@@ -47,7 +97,8 @@ class BankAccountLedgerController extends Controller
         $request->validate([
             'date' => 'required|date',
             'amount' => 'required|numeric|min:1',
-            'description' => 'required|string|max:255'
+            'description' => 'required|string|max:255',
+            'bank' => 'required|string'
         ]);
 
         $bankEntry = $this->service->recordEntry(
@@ -57,7 +108,9 @@ class BankAccountLedgerController extends Controller
             'manual', // arbitrary table name for bank ledger's own grouping if needed
             time(),   // arbitrary ref id for bank ledger's own grouping
             'DEBIT',
-            $request->description
+            $request->description,
+            null,
+            $request->bank
         );
 
         // Also record in BKU (Treasurer Cash) as Transfer Penerimaan
@@ -80,18 +133,24 @@ class BankAccountLedgerController extends Controller
         abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_CREATE') || auth()->user()->isAdmin(), 403);
 
         $request->validate([
-            'amount' => 'required|numeric|min:0'
+            'amount' => 'required|numeric|min:0',
+            'bank' => 'required|string'
         ]);
 
         $tahun = date('Y'); // Or get from session if applicable in this context
 
         // Record or Update SALDO_AWAL
+        // Use a constant ref_id (e.g., '1') instead of time() to ensure updates instead of new insertions
         $this->service->recordEntry(
             $tahun . '-01-01',
             'SALDO_AWAL',
             $request->amount,
+            'manual',
+            '1',
             'DEBIT',
-            'Saldo Awal Tahun ' . $tahun
+            'Saldo Awal Tahun ' . $tahun . ' (' . $request->bank . ')',
+            null,
+            $request->bank
         );
 
         // Sync to BKU as SISA_KAS
@@ -108,12 +167,34 @@ class BankAccountLedgerController extends Controller
         return response()->json(['message' => 'Saldo awal berhasil diset']);
     }
 
+    public function getSaldoAwal(Request $request)
+    {
+        $bank = $request->query('bank');
+        $tahun = date('Y');
+        $entry = BankAccountLedger::where('type', 'SALDO_AWAL')
+            ->whereYear('date', $tahun)
+            ->where('bank', $bank)
+            ->first();
+
+        return response()->json(['amount' => $entry ? $entry->debit : 0]);
+    }
+
     public function deleteSaldoAwal(Request $request)
     {
         abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_DELETE') || auth()->user()->isAdmin(), 403);
+        $request->validate([
+            'bank' => 'required|string'
+        ]);
 
-        $this->service->removeEntry('bank_account_ledgers', 0, 'SALDO_AWAL');
-        $this->cashLedgerService->removeEntry('bank_account_ledgers', 0, 'SISA_KAS');
+        // Cari ksemua entry saldo awal berdasarkan bank untuk membersihkan duplikasi jika ada
+        $entries = BankAccountLedger::where('type', 'SALDO_AWAL')
+            ->where('bank', $request->bank)
+            ->get();
+
+        foreach ($entries as $entry) {
+            $this->service->removeEntry($entry->ref_table, $entry->ref_id, 'SALDO_AWAL');
+            $this->cashLedgerService->removeEntry('bank_account_ledgers', $entry->id, 'SISA_KAS');
+        }
 
         return response()->json(['message' => 'Saldo awal berhasil dihapus']);
     }
@@ -125,7 +206,8 @@ class BankAccountLedgerController extends Controller
         $request->validate([
             'date' => 'required|date',
             'amount' => 'required|numeric|min:1',
-            'description' => 'required|string|max:255'
+            'description' => 'required|string|max:255',
+            'bank' => 'required|string'
         ]);
 
         $entry = BankAccountLedger::findOrFail($id);
@@ -141,7 +223,9 @@ class BankAccountLedgerController extends Controller
             $entry->ref_table,
             $entry->ref_id,
             'DEBIT',
-            $request->description
+            $request->description,
+            null,
+            $request->bank
         );
 
         // Update Cash Ledger
@@ -184,7 +268,8 @@ class BankAccountLedgerController extends Controller
             'date' => 'required|date',
             'amount' => 'required|numeric|min:1',
             'direction' => 'required|in:DEBIT,CREDIT',
-            'description' => 'required|string|max:255'
+            'description' => 'required|string|max:255',
+            'bank' => 'required|string'
         ]);
 
         $bankEntry = $this->service->recordEntry(
@@ -194,7 +279,9 @@ class BankAccountLedgerController extends Controller
             'manual_adj',
             time(),
             $request->direction,
-            $request->description
+            $request->description,
+            null,
+            $request->bank
         );
 
         // Sync to BKU: Double entry (SP2D + REALISASI) to keep balance but record transaction
@@ -229,7 +316,8 @@ class BankAccountLedgerController extends Controller
             'date' => 'required|date',
             'amount' => 'required|numeric|min:1',
             'direction' => 'required|in:DEBIT,CREDIT',
-            'description' => 'required|string|max:255'
+            'description' => 'required|string|max:255',
+            'bank' => 'required|string'
         ]);
 
         $entry = BankAccountLedger::findOrFail($id);
@@ -244,7 +332,9 @@ class BankAccountLedgerController extends Controller
             $entry->ref_table,
             $entry->ref_id,
             $request->direction,
-            $request->description
+            $request->description,
+            null,
+            $request->bank
         );
 
         // Sync to BKU

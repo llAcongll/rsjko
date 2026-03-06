@@ -388,6 +388,7 @@ Route::middleware(['auth', 'role:ADMIN,USER'])->group(function () {
 
     Route::get('dashboard/bank-account-ledger', [BankAccountLedgerController::class, 'index']);
     Route::post('dashboard/bank-account-ledger/deposit', [BankAccountLedgerController::class, 'deposit']);
+    Route::get('dashboard/bank-account-ledger/saldo-awal', [BankAccountLedgerController::class, 'getSaldoAwal']);
     Route::post('dashboard/bank-account-ledger/saldo-awal', [BankAccountLedgerController::class, 'setSaldoAwal']);
     Route::delete('dashboard/bank-account-ledger/saldo-awal', [BankAccountLedgerController::class, 'deleteSaldoAwal']);
     Route::post('dashboard/bank-account-ledger/adjustment', [BankAccountLedgerController::class, 'adjustment']);

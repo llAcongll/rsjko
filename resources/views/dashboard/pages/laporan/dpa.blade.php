@@ -32,25 +32,29 @@
     </div>
 
     <style>
-        .report-table td {
+        .report-table.universal-table td {
             white-space: normal !important;
             vertical-align: top;
+        }
+
+        .report-table.universal-table th {
+            white-space: nowrap !important;
         }
     </style>
     <div class="laporan-section">
         <div class="section-header">
             <h3>Rincian Komponen Anggaran</h3>
         </div>
-        <div class="table-responsive">
-            <table class="report-table">
+        <div class="table-container">
+            <table class="report-table universal-table" id="tableDPA">
                 <thead>
                     <tr>
-                        <th class="text-center" style="width: 150px;">Kode Rekening</th>
-                        <th class="text-center">Uraian Rekening / Komponen</th>
-                        <th class="text-center" style="width: 80px;">Volume</th>
-                        <th class="text-center" style="width: 100px;">Satuan</th>
-                        <th class="text-center" style="width: 150px;">Tarif Satuan</th>
-                        <th class="text-center" style="width: 180px;">Total</th>
+                        <th class="text-center sortable">Kode Rekening</th>
+                        <th class="text-center sortable">Uraian Rekening / Komponen</th>
+                        <th class="text-center sortable">Volume</th>
+                        <th class="text-center sortable">Satuan</th>
+                        <th class="text-center sortable">Tarif Satuan</th>
+                        <th class="text-center sortable">Total</th>
                     </tr>
                 </thead>
                 <tbody id="laporanDPABody">

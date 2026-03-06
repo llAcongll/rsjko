@@ -56,13 +56,13 @@
 </head>
 
 <body>
-    <table style="width: 100%; border: none; margin-bottom: 0;">
+    <div class="table-container"><table class="table universal-table">
         <tr>
-            <td style="width: 120px; border: none; vertical-align: top;">
+            <td>
                 <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w400"
                     style="height: 100px; width: auto; object-fit: contain;">
             </td>
-            <td style="border: none; text-align: center; vertical-align: top; padding-right: 120px;">
+            <td>
                 <div style="font-size: 14pt; line-height: 1.2;">PEMERINTAH PROVINSI KEPULAUAN RIAU</div>
                 <div style="font-size: 13pt; font-weight: bold; line-height: 1.2;">RUMAH SAKIT JIWA DAN KETERGANTUNGAN
                     OBAT</div>
@@ -73,7 +73,7 @@
                 </div>
             </td>
         </tr>
-    </table>
+    </table></div>
     <div class="line"></div>
 
     <div style="text-align: center; margin-top: 10px; margin-bottom: 20px;">
@@ -82,10 +82,10 @@
         <div style="font-size: 10pt; margin-top: 5px;">Nomor: {{ $spj->spj_number }}</div>
     </div>
 
-    <table class="header-info" style="width: 100%; margin-bottom: 20px;">
+    <div class="table-container"><table class="header-info universal-table">
         <tr>
-            <td style="width: 150px;">Tanggal SPJ</td>
-            <td style="width: 10px;">:</td>
+            <td>Tanggal SPJ</td>
+            <td>:</td>
             <td>{{ \Carbon\Carbon::parse($spj->spj_date)->translatedFormat('d F Y') }}</td>
         </tr>
         <tr>
@@ -98,16 +98,16 @@
             <td>:</td>
             <td><span style="font-weight: bold;">{{ $spj->status }}</span></td>
         </tr>
-    </table>
+    </table></div>
 
-    <table class="table">
+    <div class="table-container"><table class="table universal-table">
         <thead>
             <tr>
-                <th style="width: 5%;">No</th>
-                <th style="width: 15%;">Tanggal</th>
-                <th style="width: 20%;">Kode Rekening</th>
-                <th style="width: 35%;">Uraian / Keterangan</th>
-                <th style="width: 25%;">Nominal (Bruto)</th>
+                <th class="checkbox-col">No</th>
+                <th>Tanggal</th>
+                <th>Kode Rekening</th>
+                <th>Uraian / Keterangan</th>
+                <th>Nominal (Bruto)</th>
             </tr>
         </thead>
         <tbody>
@@ -133,26 +133,26 @@
             @endforeach
         </tbody>
         <tfoot>
-            <tr class="font-bold" style="background-color: #f1f5f9;">
+            <tr class="font-bold">
                 <td colspan="4" class="text-center">TOTAL PERTANGGUNGJAWABAN</td>
                 <td class="text-right">Rp {{ number_format($total, 2, ',', '.') }}</td>
             </tr>
         </tfoot>
-    </table>
+    </table></div>
 
     <div style="margin-top: 30px;">
         <p>Demikian Surat Pertanggungjawaban ini dibuat dengan sebenarnya untuk dapat dipergunakan sebagaimana mestinya.
         </p>
     </div>
 
-    <table style="width: 100%; border: none; margin-top: 50px;">
+    <div class="table-container"><table class="table universal-table">
         <tr>
-            <td style="width: 50%; border: none; text-align: center;">
+            <td>
                 <p style="margin-bottom: 60px;">Mengetahui,<br>Pejabat Pelaksana Teknis Kegiatan</p>
                 <p style="margin: 0;">( ............................................... )</p>
                 <p style="margin: 0;">NIP. ...............................................</p>
             </td>
-            <td style="width: 50%; border: none; text-align: center;">
+            <td>
                 <p style="margin-bottom: 60px;">Tanjung Uban,
                     {{ \Carbon\Carbon::parse($spj->spj_date)->translatedFormat('d F Y') }}<br>Bendahara Pengeluaran</p>
                 <p style="margin: 0; font-weight: bold; text-decoration: underline;">{{ $spj->bendahara->name }}</p>
@@ -160,7 +160,7 @@
                     {{ $spj->bendahara->nip ?? '...............................................' }}</p>
             </td>
         </tr>
-    </table>
+    </table></div>
 </body>
 
 </html>

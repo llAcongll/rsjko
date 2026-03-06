@@ -117,32 +117,32 @@
    TABLE CONFIG
 ========================= */
 .table-container {
-  width: 100% !important;
+  width: 100%;
   background: transparent;
   margin-top: 10px;
   position: relative;
-  overflow: visible;
-  /* Removing scroll as requested */
+  overflow-x: auto;
+  /* Changed from visible to prevent layout breakage */
+  -webkit-overflow-scrolling: touch;
 }
 
 .rekening-table {
-  width: 100% !important;
+  width: 100%;
   border-collapse: separate;
-  border-spacing: 0 12px;
+  border-spacing: 0;
   margin: 0;
-  table-layout: auto !important;
-  /* Changed from fixed to auto for better responsiveness */
+  table-layout: auto;
 }
 
-.rekening-table thead th {
+.rekening-table .universal-table .universal-table .universal-table .universal-table .universal-table thead th {
   background: #f8fafc;
   padding: 16px;
   font-size: 11px;
   font-weight: 700;
   color: #475569;
   text-transform: uppercase;
-  white-space: nowrap;
-  box-shadow: inset 0 -1px 0 #e5e7eb;
+  white-space: normal;
+  box-shadow: inset 0 -1px 0 #e2e8f0;
 }
 
 .rekening-table tbody td {
@@ -151,52 +151,46 @@
   color: #1e293b;
   border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
-  white-space: nowrap;
+  white-space: normal;
+  /* Allow wrapping to prevent pushing UI right */
+  word-break: break-word;
 }
 
 /* Column Widths (Nth-Child) */
-.rekening-table th:nth-child(1),
-.rekening-table td:nth-child(1) {
-  width: 60px;
+.rekening-table th{
+  width: auto;
   text-align: center;
 }
 
-.rekening-table th:nth-child(2),
-.rekening-table td:nth-child(2) {
-  width: 110px;
-}
-
-.rekening-table th:nth-child(3),
-.rekening-table td:nth-child(3) {
-  width: 150px;
-}
-
-.rekening-table th:nth-child(4),
-.rekening-table td:nth-child(4) {
+.rekening-table th{
   width: auto;
-  min-width: 200px;
+}
+
+.rekening-table th{
+  width: auto;
+}
+
+.rekening-table th{
+  width: auto;
+  min-width: auto;
 }
 
 /* Keterangan (Flexible) */
-.rekening-table th:nth-child(5),
-.rekening-table td:nth-child(5) {
-  width: 60px;
+.rekening-table th{
+  width: auto;
   text-align: center;
 }
 
-.rekening-table th:nth-child(6),
-.rekening-table td:nth-child(6) {
-  width: 160px;
+.rekening-table th{
+  width: auto;
 }
 
-.rekening-table th:nth-child(7),
-.rekening-table td:nth-child(7) {
-  width: 160px;
+.rekening-table th{
+  width: auto;
 }
 
-.rekening-table th:nth-child(8),
-.rekening-table td:nth-child(8) {
-  width: 120px;
+.rekening-table th{
+  width: auto;
   text-align: center;
 }
 
@@ -211,7 +205,7 @@
 .rekening-table td.ellipsis {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .rekening-table .ellipsis-content {
@@ -230,6 +224,6 @@
    SUMMARY GROWTH COLORS
 ========================= */
 .growth-up {
-  color: #16a34a !important;
+  color: #16a34a;
   font-weight: 600;
 }

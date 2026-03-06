@@ -25,7 +25,7 @@
 /* =========================
    HEADER (STICKY)
 ========================= */
-.users-table.ruangan-table thead th {
+.users-table.ruangan-table .universal-table .universal-table .universal-table .universal-table .universal-table thead th {
   position: sticky;
   top: 0;
   z-index: 5;
@@ -52,16 +52,14 @@
 ========================= */
 
 /* No */
-.users-table.ruangan-table th:nth-child(1),
-.users-table.ruangan-table td:nth-child(1) {
-  width: 60px;
+.users-table.ruangan-table th{
+  width: auto;
   text-align: center;
 }
 
 /* Kode */
-.users-table.ruangan-table th:nth-child(2),
-.users-table.ruangan-table td:nth-child(2) {
-  width: 120px;
+.users-table.ruangan-table th{
+  width: auto;
   text-align: center;
   font-weight: 600;
 }
@@ -75,15 +73,14 @@
   text-align: left;
   padding-left: 20px;
 
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 /* Aksi */
-.users-table.ruangan-table th:nth-child(4),
-.users-table.ruangan-table td:nth-child(4) {
-  width: 160px;
+.users-table.ruangan-table th{
+  width: auto;
   text-align: center;
 }
 
@@ -97,8 +94,8 @@
   gap: 8px;
 }
 
-.users-table.ruangan-table td:nth-child(4) .btn-action {
-  width: 36px;
+.users-table.ruangan-table td{
+  width: auto;
   height: 36px;
   padding: 0;
 }

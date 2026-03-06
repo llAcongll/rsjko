@@ -95,7 +95,7 @@
                     return;
                 }
 
-                tbody.innerHTML = '';
+                let html = '';
                 data.forEach((item, index) => {
                     const info = `${formatTanggal(item.tanggal)} ${item.no_bukti ? `(${item.no_bukti})` : ''} - ${item.keterangan || ''}`;
                     const isPosted = !!item.is_posted;
@@ -108,7 +108,7 @@
                     const canPost = window.hasPermission('PENDAPATAN_BPJS_POST') || window.isAdmin;
                     const isSelected = selectedMasterIds.includes(item.id);
 
-                    tbody.insertAdjacentHTML('beforeend', `
+                    html += `
                     <tr class="${selectedMasterId === item.id ? 'bg-blue-50' : ''}">
                         <td class="text-center">
                             <input type="checkbox" class="master-checkbox" data-id="${item.id}" data-posted="${isPosted}" 
@@ -154,8 +154,9 @@
                             </div>
                         </td>
                     </tr>
-                `);
+                `;
                 });
+                tbody.innerHTML = html;
             })
             .catch(err => {
                 console.error('loadMasterBpjs error:', err);
@@ -653,13 +654,13 @@
                 const canEditDetail = (window.hasPermission('PENDAPATAN_BPJS_CREATE') || window.hasPermission('PENDAPATAN_BPJS_CRUD') || window.isAdmin) && !activeMasterPosted;
                 const canDeleteDetail = (window.hasPermission('PENDAPATAN_BPJS_DELETE') || window.hasPermission('PENDAPATAN_BPJS_CRUD') || window.isAdmin) && !activeMasterPosted;
 
-                tbody.innerHTML = '';
+                let html = '';
                 data.forEach((item, index) => {
                     const noSepCol = (currentBpjsTab === 'REGULAR')
                         ? `<td class="text-center font-mono text-xs">${item.no_sep || '-'}</td>`
                         : '';
 
-                    tbody.insertAdjacentHTML('beforeend', `
+                    html += `
                     <tr>
                         <td class="text-center">${res.from + index}</td>
                         <td class="text-center">${formatTanggal(item.tanggal)}</td>
@@ -703,8 +704,9 @@
                             </div>
                         </td>
                     </tr>
-                `);
+                `;
                 });
+                tbody.innerHTML = html;
             })
             .catch(err => {
                 tbody.innerHTML = `<tr><td colspan="7" class="text-center text-red-500">${err.message}</td></tr>`;

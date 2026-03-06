@@ -5,6 +5,15 @@
         <form id="formAdjustment" onsubmit="submitAdjustment(event)" autocomplete="off">
             <input type="hidden" id="adjustmentId">
             <div class="form-group">
+                <label>Bank / Rekening</label>
+                <select name="bank" id="adjustmentBank" class="form-input" required>
+                    <option value="" disabled selected>-- Pilih Bank --</option>
+                    <option value="BRK">Bank Riau Kepri Syariah</option>
+                    <option value="BSI">Bank Syariah Indonesia</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label>Tanggal Penyesuaian</label>
                 <input type="date" name="date" id="adjustmentDate" class="form-input" required>
             </div>

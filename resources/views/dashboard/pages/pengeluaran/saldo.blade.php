@@ -22,17 +22,17 @@
     {{-- TABLE --}}
     <div class="dashboard-box">
         <div class="table-container">
-            <table id="tableSaldo">
+            <table class="table universal-table" id="tableSaldo">
                 <thead>
                     <tr>
-                        <th width="40" class="text-center">No</th>
+                        <th width="40" class="text-center checkbox-col">No</th>
                         <th width="80" class="text-center">Tipe</th>
                         <th width="80" class="text-center">Siklus</th>
                         <th width="120" class="text-center">Tanggal</th>
                         <th>Uraian</th>
                         <th class="text-right">Nilai (Rp)</th>
                         <th width="100" class="text-center">Status</th>
-                        <th width="80" class="text-center">Aksi</th>
+                        <th width="80" class="text-center action-col">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="tableSaldoBody">

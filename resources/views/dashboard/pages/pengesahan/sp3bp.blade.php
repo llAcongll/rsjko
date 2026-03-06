@@ -17,15 +17,15 @@
     </div>
 
     <div class="dashboard-box">
-        <table class="laporan-table" id="sp3bpTable">
+        <div class="table-container"><table class="laporan-table universal-table" id="sp3bpTable">
             <thead>
                 <tr>
-                    <th class="text-center" style="width: 50px;">No</th>
-                    <th class="text-center" style="width: 150px;">Periode</th>
-                    <th class="text-center" style="width: 100px;">Tahun</th>
-                    <th class="text-center" style="width: 150px;">Status</th>
-                    <th class="text-center" style="width: 200px;">Tgl Pengesahan</th>
-                    <th class="text-center">Aksi</th>
+                    <th class="text-center checkbox-col">No</th>
+                    <th class="text-center">Periode</th>
+                    <th class="text-center">Tahun</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Tgl Pengesahan</th>
+                    <th class="text-center action-col">Aksi</th>
                 </tr>
             </thead>
             <tbody id="sp3bpBody">
@@ -33,7 +33,7 @@
                     <td colspan="6" class="text-center">Memuat data...</td>
                 </tr>
             </tbody>
-        </table>
+        </table></div>
     </div>
 </div>
 

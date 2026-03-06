@@ -1,17 +1,12 @@
-<div class="dashboard">
-
+<div class="page-container">
   {{-- HEADER --}}
-  <div class="dashboard-header">
-    <div class="dashboard-header-left">
-      <h2 style="display: flex; align-items: center; gap: 10px;">
-        <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w200"
-          style="height: 36px; width: auto; object-fit: contain;" alt="Logo Prov Kepri">
-        Manajemen Users
-      </h2>
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2><i class="ph ph-users-three"></i> Manajemen Users</h2>
       <p>Kelola akses pengguna dan administrator sistem</p>
     </div>
 
-    <div class="dashboard-header-right">
+    <div class="page-header-right">
       <button class="btn-tambah-data" onclick="openUserForm()">
         <i class="ph-bold ph-plus"></i>
         <span>Tambah User</span>
@@ -21,27 +16,21 @@
 
   {{-- TABLE BOX --}}
   <div class="dashboard-box">
-    <div class="table-container">
-      <table class="users-table">
-        <colgroup>
-          <col style="width:60px">
-          <col>
-          <col style="width:140px">
-          <col style="width:160px">
-        </colgroup>
+    <div class="table-toolbar">
+      <div class="table-search-wrapper">
+        <i class="ph ph-magnifying-glass"></i>
+        <input type="text" id="searchUsers" class="table-search" placeholder="Cari user..." data-table="tableUsers">
+      </div>
+    </div>
 
+    <div class="table-container">
+      <table id="tableUsers" class="table universal-table">
         <thead>
           <tr>
-            <th class="text-center" style="width: 60px;">No</th>
-            <th class="text-center sortable" data-sort="username" onclick="sortUsers('username')"
-              style="cursor: pointer;">
-              Username <i class="ph ph-caret-up-down text-slate-400"></i>
-            </th>
-            <th class="text-center sortable" data-sort="role" onclick="sortUsers('role')"
-              style="width: 140px; cursor: pointer;">
-              Role <i class="ph ph-caret-up-down text-slate-400"></i>
-            </th>
-            <th class="text-center" style="width: 160px;">Aksi</th>
+            <th class="text-center checkbox-col">No</th>
+            <th class="text-center sortable">Username</th>
+            <th class="text-center sortable">Role</th>
+            <th class="action-col">Aksi</th>
           </tr>
         </thead>
 
@@ -50,8 +39,8 @@
             <tr>
               <td class="text-center">{{ $loop->iteration }}</td>
               <td>{{ $u->username }}</td>
-              <td>
-                <span class="badge-role {{ $u->role === 'ADMIN' ? 'badge-admin' : 'badge-user' }}">
+              <td class="text-center">
+                <span class="badge {{ $u->role === 'ADMIN' ? 'badge-primary' : 'badge-info' }}">
                   {{ $u->role }}
                 </span>
               </td>
@@ -74,5 +63,4 @@
       </table>
     </div>
   </div>
-
 </div>

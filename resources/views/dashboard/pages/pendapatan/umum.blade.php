@@ -1,34 +1,33 @@
-<div class="dashboard">
+<div class="page-container">
   <div id="masterListSectionUmum">
     {{-- HEADER --}}
-    <div class="dashboard-header">
-      <div class="dashboard-header-left">
+    <div class="page-header">
+      <div class="page-header-left">
         <h2><i class="ph ph-folder-open"></i> Kelompok Pendapatan Umum</h2>
         <p>Kelola data pendapatan umum berdasar kelompok/tanggal</p>
       </div>
 
-      <div class="dashboard-header-right" style="display: flex; gap: 8px;">
+      <div class="page-header-right">
         @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE') || auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD') || auth()->user()->hasPermission('PENDAPATAN_UMUM_POST'))
-          <button class="btn-toolbar btn-toolbar-info" onclick="bulkPostMasterUmum()"
-            style="height: 44px; padding: 0 16px;">
+          <button class="btn-toolbar btn-toolbar-info" onclick="bulkPostMasterUmum()">
             <i class="ph ph-check-square-offset"></i>
             <span>Posting Masal</span>
           </button>
           <button class="btn-toolbar btn-toolbar-outline" onclick="bulkUnpostMasterUmum()"
-            style="height: 44px; padding: 0 16px; border-color: #f59e0b; color: #d97706;">
+            style="border-color: #f59e0b; color: #d97706;">
             <i class="ph ph-arrow-counter-clockwise"></i>
             <span>Batal Posting Masal</span>
           </button>
           @if(auth()->user()->hasPermission('REVENUE_SYNC'))
             <button class="btn-toolbar btn-toolbar-outline" onclick="syncOldData()"
-              style="height: 44px; padding: 0 16px; border-color: #3b82f6; color: #2563eb;">
+              style="border-color: #3b82f6; color: #2563eb;">
               <i class="ph ph-arrows-counter-clockwise"></i>
-              <span>Sinkronisasi Data Lama</span>
+              <span>Sinkronisasi</span>
             </button>
           @endif
           <button class="btn-tambah-data" onclick="openMasterFormUmum()">
             <i class="ph-bold ph-plus"></i>
-            <span>Buat Kelompok Baru</span>
+            <span>Kelompok Baru</span>
           </button>
         @endif
       </div>
@@ -51,17 +50,6 @@
         width: 100%;
         max-width: 850px;
         gap: 16px;
-      }
-
-      th.sortable i {
-        margin-left: 4px;
-        font-size: 14px;
-        vertical-align: middle;
-        transition: color 0.2s;
-      }
-
-      th.sortable:hover i {
-        color: #64748b !important;
       }
     </style>
     <div class="pendapatan-summary-container">
@@ -92,78 +80,41 @@
 
     {{-- MAIN CONTENT (MASTER) --}}
     <div class="dashboard-box">
-      <div class="box-header">
-        <div class="flex items-center gap-3" style="width: 100%;">
-          <div class="search-wrapper flex-1">
-            <div class="input-group" style="position: relative;">
-              <i class="ph ph-magnifying-glass"
-                style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px;"></i>
-              <input type="text" id="searchMasterUmum" placeholder="Cari tanggal, no bukti, atau keterangan..."
-                style="width: 100%; height: 48px; padding-left: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
-            </div>
-          </div>
-          <div class="filter-wrapper">
-            <select id="filterStatusMasterUmum"
-              style="height: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px; padding: 0 16px; background: #fff; color: #475569; font-weight: 600; cursor: pointer; outline: none; transition: all 0.2s;">
-              <option value="">Semua Status</option>
-              <option value="DRAFT">📑 Draft</option>
-              <option value="POSTED">✅ Diposting</option>
-            </select>
-          </div>
+      <div class="table-toolbar">
+        <div class="table-search-wrapper">
+          <i class="ph ph-magnifying-glass"></i>
+          <input type="text" id="searchMasterUmum" class="table-search" placeholder="Cari di daftar kelompok..."
+            data-table="masterTableUmum">
+        </div>
+        <div class="filter-wrapper">
+          <select id="filterStatusMasterUmum"
+            style="height: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px; padding: 0 16px; background: #fff; color: #475569; font-weight: 600; cursor: pointer; outline: none; transition: all 0.2s;">
+            <option value="">Semua Status</option>
+            <option value="DRAFT">📑 Draft</option>
+            <option value="POSTED">✅ Diposting</option>
+          </select>
         </div>
       </div>
 
       <div id="selectionBannerUmum"
         style="display:none; background: #eff6ff; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #bfdbfe; text-align: center; font-size: 13px; color: #1e40af;">
         Semua <span id="countCurrentPageUmum">-</span> kelompok di halaman ini telah terpilih.
-        <a href="javascript:void(0)" onclick="selectAllPagesAcrossUmum('DRAFT')" id="linkSelectAllDraftUmum"
-          style="font-weight: 700; color: #2563eb; text-decoration: underline; display:none;">Pilih semua <span
-            id="countTotalDraftUmum">-</span> kelompok Pendapatan Umum (Draft) yang ada</a>
-        <a href="javascript:void(0)" onclick="selectAllPagesAcrossUmum('POSTED')" id="linkSelectAllPostedUmum"
-          style="font-weight: 700; color: #2563eb; text-decoration: underline; display:none;">Pilih semua <span
-            id="countTotalPostedUmum">-</span> kelompok Pendapatan Umum (Posted) yang ada</a>
-      </div>
-      <div id="selectionAllBannerUmum"
-        style="display:none; background: #ecfdf5; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #a7f3d0; text-align: center; font-size: 13px; color: #065f46;">
-        Semua <span id="countTotalDraftSelectedUmum">-</span> kelompok <span id="labelSelectionAllUmum">Pendapatan
-          Umum</span>
-        telah terpilih lintas halaman.
-        <a href="javascript:void(0)" onclick="clearSelectionAcrossUmum()"
-          style="font-weight: 700; color: #059669; text-decoration: underline;">Batalkan pilihan</a>
       </div>
 
       <div class="table-container">
-        <table id="masterTable">
+        <table id="masterTableUmum" class="universal-table">
           <thead>
             <tr>
-              <th class="text-center" style="width: 60px;">
+              <th class="checkbox-col">
                 <input type="checkbox" id="checkAllMasterUmum" onclick="toggleAllMasterUmum(this)" />
               </th>
-              <th class="text-center sortable" data-sort="tanggal" onclick="sortMasterUmum('tanggal')"
-                style="width: 140px; cursor: pointer;">
-                Tanggal PDPT/RK <i class="ph ph-caret-up-down text-slate-400"></i>
-              </th>
-              <th class="text-center sortable" data-sort="keterangan" onclick="sortMasterUmum('keterangan')"
-                style="cursor: pointer;">
-                Keterangan / No. Bukti <i class="ph ph-caret-up-down text-slate-400"></i>
-              </th>
-              <th class="text-right sortable" data-sort="total_rs" onclick="sortMasterUmum('total_rs')"
-                style="width: 180px; cursor: pointer;">
-                Jasa RS <i class="ph ph-caret-up-down text-slate-400"></i>
-              </th>
-              <th class="text-right sortable" data-sort="total_pelayanan" onclick="sortMasterUmum('total_pelayanan')"
-                style="width: 180px; cursor: pointer;">
-                Jasa Pelayanan <i class="ph ph-caret-up-down text-slate-400"></i>
-              </th>
-              <th class="text-right sortable" data-sort="total_all" onclick="sortMasterUmum('total_all')"
-                style="width: 180px; cursor: pointer;">
-                Total (Rp) <i class="ph ph-caret-up-down text-slate-400"></i>
-              </th>
-              <th class="text-center sortable" data-sort="is_posted" onclick="sortMasterUmum('is_posted')"
-                style="width: 120px; cursor: pointer;">
-                Status <i class="ph ph-caret-up-down text-slate-400"></i>
-              </th>
-              <th class="text-center" style="width: 180px;">Aksi</th>
+              <th class="text-center sortable">Tanggal PDPT/RK</th>
+              <th class="text-center sortable">Keterangan / No. Bukti</th>
+              <th class="text-right sortable">Jasa RS</th>
+              <th class="text-right sortable">Jasa Pelayanan</th>
+              <th class="text-right sortable">Total (Rp)</th>
+              <th class="text-center sortable">Status</th>
+              <th class="action-col">Aksi</th>
             </tr>
           </thead>
           <tbody id="masterTableBodyUmum">
@@ -253,45 +204,26 @@
       </div>
     </div>
 
-    <div class="dashboard-box" style="padding: 0; overflow: hidden;">
-      <div class="box-header" style="padding: 16px; border-bottom: 1px solid #f1f5f9;">
-        <div class="input-group" style="position: relative;">
-          <i class="ph ph-magnifying-glass"
-            style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px;"></i>
-          <input type="text" id="searchPendapatanUmum" placeholder="Cari nama pasien, ruangan..."
-            style="width: 100%; height: 48px; padding-left: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
+    <div class="dashboard-box" style="padding: 0;">
+      <div class="table-toolbar" style="padding: 16px; margin-bottom: 0; border-bottom: 1px solid #f1f5f9;">
+        <div class="table-search-wrapper" style="width: 100%;">
+          <i class="ph ph-magnifying-glass"></i>
+          <input type="text" id="searchPendapatanUmum" class="table-search" placeholder="Cari nama pasien, ruangan..."
+            data-table="pendapatanUmumTable">
         </div>
       </div>
-      <div class="table-container" style="margin-top: 0; border-radius: 0; border: none;">
-        <table id="pendapatanUmumTable">
+      <div class="table-container" style="margin-top: 0; border-radius: 0; border: none; max-height: 60vh;">
+        <table id="pendapatanUmumTable" class="universal-table">
           <thead>
             <tr>
-              <th class="text-center" style="width: 50px;">No</th>
-              <th class="text-center sortable" data-sort="tanggal" onclick="sortUmum('tanggal')"
-                style="width: 110px; cursor: pointer;">
-                Tanggal <i class="ph ph-caret-up-down text-slate-400"></i>
-              </th>
-              <th class="text-center sortable" data-sort="nama_pasien" onclick="sortUmum('nama_pasien')"
-                style="cursor: pointer;">
-                Nama Pasien <i class="ph ph-caret-up-down text-slate-400"></i>
-              </th>
-              <th class="text-center sortable" data-sort="ruangan" onclick="sortUmum('ruangan')"
-                style="cursor: pointer;">
-                Ruangan <i class="ph ph-caret-up-down text-slate-400"></i>
-              </th>
-              <th class="text-right sortable" data-sort="rs_tindakan" onclick="sortUmum('rs_tindakan')"
-                style="width: 140px; cursor: pointer;">
-                Jasa RS <i class="ph ph-caret-up-down text-slate-400"></i>
-              </th>
-              <th class="text-right sortable" data-sort="pelayanan_tindakan" onclick="sortUmum('pelayanan_tindakan')"
-                style="width: 140px; cursor: pointer;">
-                Jasa Pelayanan <i class="ph ph-caret-up-down text-slate-400"></i>
-              </th>
-              <th class="text-right sortable" data-sort="total" onclick="sortUmum('total')"
-                style="width: 140px; cursor: pointer;">
-                Total (Rp) <i class="ph ph-caret-up-down text-slate-400"></i>
-              </th>
-              <th class="text-center" style="width: 120px;">Aksi</th>
+              <th class="text-center checkbox-col">No</th>
+              <th class="text-center sortable">Tanggal</th>
+              <th class="text-center sortable">Nama Pasien</th>
+              <th class="text-center sortable">Ruangan</th>
+              <th class="text-right sortable">Jasa RS</th>
+              <th class="text-right sortable">Jasa Pelayanan</th>
+              <th class="text-right sortable">Total (Rp)</th>
+              <th class="action-col">Aksi</th>
             </tr>
           </thead>
           <tbody id="pendapatanUmumBody">
@@ -317,54 +249,5 @@
   @include('dashboard.partials.pendapatan-umum-form')
   @include('dashboard.partials.pendapatan-umum-detail')
 
-  {{-- MODAL MASTER FORM --}}
-  <div id="modalMasterFormUmum" class="confirm-overlay">
-    <div class="confirm-box" style="max-width: 500px;">
-      <h3 id="masterFormTitleUmum"><i class="ph ph-folder-plus"></i> Tambah Kelompok Pendapatan</h3>
-      <form id="formMasterUmum" autocomplete="off">
-        <input type="hidden" id="masterIdUmum">
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label>Tanggal Pendapatan</label>
-          <input type="date" id="masterTanggalUmum" required class="form-input">
-        </div>
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label>Tanggal Rekening Koran (Opsional)</label>
-          <input type="date" id="masterTanggalRkUmum" class="form-input">
-        </div>
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label>No. Bukti (Opsional)</label>
-          <input type="text" id="masterNoBuktiUmum" class="form-input" placeholder="Masukkan nomor bukti jika ada">
-        </div>
-        <div class="form-group" style="margin-bottom: 20px;">
-          <label>Keterangan / Uraian</label>
-          <textarea id="masterKeteranganUmum" class="form-input" rows="3"
-            placeholder="Contoh: Pendapatan Umum Shift Pagi"></textarea>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn-secondary" onclick="closeMasterModalUmum()">Batal</button>
-          <button type="submit" class="btn-primary" id="btnSimpanMasterUmum">Simpan</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
-  {{-- MODAL IMPORT --}}
-  <div id="modalImportUmum" class="confirm-overlay">
-    <div class="confirm-box" style="max-width: 450px;">
-      <h3><i class="ph ph-file-arrow-up"></i> Import Data Pasien Umum</h3>
-      <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Data akan dimasukkan ke dalam kelompok yang
-        sedang
-        aktif.</p>
-      <form id="formImportUmum" enctype="multipart/form-data">
-        <div class="form-group" style="margin-bottom: 20px;">
-          <label>File CSV</label>
-          <input type="file" name="file" accept=".csv" required class="form-input" style="padding-top: 10px;">
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn-secondary" onclick="closeModal('modalImportUmum')">Batal</button>
-          <button type="submit" class="btn-primary">Mulai Import</button>
-        </div>
-      </form>
-    </div>
-  </div>
 </div>

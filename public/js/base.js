@@ -18,6 +18,25 @@ window.toast = function (message = '', type = 'info') {
 };
 
 // =========================
+// GLOBAL LOADER HELPERS
+// =========================
+window.showLoader = function () {
+  const el = document.getElementById('globalLoader');
+  if (el) {
+    el.classList.add('show');
+    el.style.display = 'flex';
+  }
+};
+
+window.hideLoader = function () {
+  const el = document.getElementById('globalLoader');
+  if (el) {
+    el.classList.remove('show');
+    el.style.display = 'none';
+  }
+};
+
+// =========================
 // SHARED UTILS
 // =========================
 window.formatRibuan = function (num) {

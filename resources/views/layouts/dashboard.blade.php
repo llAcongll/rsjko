@@ -549,7 +549,7 @@
   <div id="toast" class="toast"></div>
 
   <!-- GLOBAL LOADER OVERLAY -->
-  <div id="globalLoader" class="confirm-overlay" style="z-index: 9999; flex-direction: column;">
+  <div id="globalLoader" class="confirm-overlay" style="z-index: 9000; flex-direction: column;">
     <i class="ph ph-spinner animate-spin" style="font-size: 40px; color: #fff;"></i>
     <span
       style="margin-top: 12px; color: #fff; font-size: 14px; font-weight: 600; letter-spacing: 0.5px;">Memproses...</span>
@@ -609,8 +609,35 @@
   {{-- MODAL PENGELUARAN --}}
   @include('dashboard.partials.pengeluaran-form')
   @include('dashboard.partials.pengeluaran-detail')
+  @include('dashboard.partials.disbursement-detail')
+  @include('dashboard.partials.pencairan-form')
+  @include('dashboard.partials.spj-form')
   @include('dashboard.partials.sp3bp-modal')
   @include('dashboard.partials.lrkb-modal')
+
+  {{-- MODAL REKENING EXTRA --}}
+  @include('dashboard.partials.rekening-extra-modals')
+
+  {{-- MODAL IMPORT & BULK DELETE --}}
+  @include('dashboard.partials.pendapatan-umum-import')
+  @include('dashboard.partials.pendapatan-umum-bulk-delete')
+  @include('dashboard.partials.pendapatan-bpjs-import')
+  @include('dashboard.partials.pendapatan-bpjs-bulk-delete')
+  @include('dashboard.partials.pendapatan-jaminan-import')
+  @include('dashboard.partials.pendapatan-jaminan-bulk-delete')
+  @include('dashboard.partials.pendapatan-kerjasama-import')
+  @include('dashboard.partials.pendapatan-kerjasama-bulk-delete')
+  @include('dashboard.partials.pendapatan-lain-import')
+  @include('dashboard.partials.pendapatan-lain-bulk-delete')
+
+  {{-- MODAL PENDAPATAN MASTER --}}
+  @include('dashboard.partials.pendapatan-master-modals')
+
+  {{-- SYSTEM & LOG MODALS --}}
+  @include('dashboard.partials.log-modals')
+  @include('dashboard.partials.rekening-pengeluaran-extra-modals')
+  @include('dashboard.partials.adjustment-form')
+  @include('dashboard.partials.bank-ledger-form')
 
   {{-- JS --}}
   <script src="{{ asset('js/base.js') }}?v={{ filemtime(public_path('js/base.js')) }}"></script>
@@ -653,6 +680,8 @@
     src="{{ asset('js/dashboard/treasurer.js') }}?v={{ filemtime(public_path('js/dashboard/treasurer.js')) }}"></script>
   <script
     src="{{ asset('js/dashboard/bank-ledger.js') }}?v={{ filemtime(public_path('js/dashboard/bank-ledger.js')) }}"></script>
+  <script
+    src="{{ asset('js/dashboard/universal-table.js') }}?v={{ filemtime(public_path('js/dashboard/universal-table.js')) }}"></script>
   <script src="{{ asset('js/dashboard/logs.js') }}?v={{ filemtime(public_path('js/dashboard/logs.js')) }}"></script>
 
   <!-- Modal Konfirmasi Universal (UI Berbasis Aksi) -->

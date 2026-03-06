@@ -37,24 +37,24 @@
             <h3>Pendapatan Per MOU / Instansi</h3>
         </div>
         <div class="table-responsive">
-            <table class="report-table">
+            <div class="table-container"><table class="report-table universal-table">
                 <thead>
                     <tr>
-                        <th class="text-center" style="width: 50px; text-align: center;">No</th>
+                        <th class="text-center checkbox-col">No</th>
                         <th class="text-center">Nama MOU / Instansi</th>
-                        <th class="text-center" style="text-align:center">Trans</th>
-                        <th class="text-center" style="text-align:right">Jasa RS</th>
-                        <th class="text-center" style="text-align:right">Jasa Pelayanan</th>
-                        <th class="text-center" style="text-align:right">Gross Total</th>
-                        <th class="text-center" style="text-align:right">Potongan</th>
-                        <th class="text-center" style="text-align:right">Adm Bank</th>
-                        <th class="text-center" style="text-align:right">Total Netto</th>
+                        <th class="text-center">Trans</th>
+                        <th class="text-center">Jasa RS</th>
+                        <th class="text-center">Jasa Pelayanan</th>
+                        <th class="text-center">Gross Total</th>
+                        <th class="text-center">Potongan</th>
+                        <th class="text-center">Adm Bank</th>
+                        <th class="text-center">Total Netto</th>
                     </tr>
                 </thead>
                 <tbody id="laporanMouBody">
                     <!-- Dynamic -->
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 </div>

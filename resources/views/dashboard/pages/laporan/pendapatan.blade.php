@@ -45,20 +45,20 @@
                 <h3><i class="ph ph-stethoscope"></i> Metode Jasa (Jasa Rumah Sakit & Jasa Pelayanan)</h3>
             </div>
             <div class="table-responsive">
-                <table class="report-table">
+                <div class="table-container"><table class="report-table universal-table">
                     <thead>
                         <tr>
-                            <th class="text-center" style="width: 200px;">Sub Kode Rekening</th>
+                            <th class="text-center">Sub Kode Rekening</th>
                             <th class="text-center">Nama Akun</th>
-                            <th class="text-center" style="text-align:right">Jasa Rumah Sakit</th>
-                            <th class="text-center" style="text-align:right">Jasa Pelayanan</th>
-                            <th class="text-center" style="text-align:right">Total</th>
+                            <th class="text-center">Jasa Rumah Sakit</th>
+                            <th class="text-center">Jasa Pelayanan</th>
+                            <th class="text-center">Total</th>
                         </tr>
                     </thead>
                     <tbody id="laporanJasaDetailedBody">
                         <!-- Dynamic -->
                     </tbody>
-                </table>
+                </table></div>
             </div>
         </div>
 
@@ -68,20 +68,20 @@
                 <h3><i class="ph ph-credit-card"></i> Metode Pembayaran (Tunai & Non-Tunai)</h3>
             </div>
             <div class="table-responsive">
-                <table class="report-table">
+                <div class="table-container"><table class="report-table universal-table">
                     <thead>
                         <tr>
-                            <th class="text-center" style="width: 200px;">Sub Kode Rekening</th>
+                            <th class="text-center">Sub Kode Rekening</th>
                             <th class="text-center">Nama Akun</th>
-                            <th class="text-center" style="text-align:right">Tunai</th>
-                            <th class="text-center" style="text-align:right">Non-Tunai</th>
-                            <th class="text-center" style="text-align:right">Total</th>
+                            <th class="text-center">Tunai</th>
+                            <th class="text-center">Non-Tunai</th>
+                            <th class="text-center">Total</th>
                         </tr>
                     </thead>
                     <tbody id="laporanPaymentDetailedBody">
                         <!-- Dynamic -->
                     </tbody>
-                </table>
+                </table></div>
             </div>
         </div>
 
@@ -91,20 +91,20 @@
                 <h3><i class="ph ph-bank"></i> Penerimaan Per Bank</h3>
             </div>
             <div class="table-responsive">
-                <table class="report-table">
+                <div class="table-container"><table class="report-table universal-table">
                     <thead>
                         <tr>
-                            <th class="text-center" style="width: 200px;">Sub Kode Rekening</th>
+                            <th class="text-center">Sub Kode Rekening</th>
                             <th class="text-center">Nama Akun</th>
-                            <th class="text-center" style="text-align:right">BRK (Tunai + Transfer)</th>
-                            <th class="text-center" style="text-align:right">BSI (Transfer)</th>
-                            <th class="text-center" style="text-align:right">Total</th>
+                            <th class="text-center">BRK (Tunai + Transfer)</th>
+                            <th class="text-center">BSI (Transfer)</th>
+                            <th class="text-center">Total</th>
                         </tr>
                     </thead>
                     <tbody id="laporanBankDetailedBody">
                         <!-- Dynamic -->
                     </tbody>
-                </table>
+                </table></div>
             </div>
         </div>
 

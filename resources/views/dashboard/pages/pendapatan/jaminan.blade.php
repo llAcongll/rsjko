@@ -1,34 +1,33 @@
-<div class="dashboard">
+<div class="page-container">
     <div id="masterListSectionJaminan">
         {{-- HEADER --}}
-        <div class="dashboard-header">
-            <div class="dashboard-header-left">
+        <div class="page-header">
+            <div class="page-header-left">
                 <h2><i class="ph ph-folder-open"></i> Kelompok Pendapatan Jaminan</h2>
                 <p>Kelola data pendapatan Jaminan/Asuransi berdasar kelompok</p>
             </div>
 
-            <div class="dashboard-header-right" style="display: flex; gap: 8px;">
+            <div class="page-header-right">
                 @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CREATE') || auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CRUD') || auth()->user()->hasPermission('PENDAPATAN_JAMINAN_POST'))
-                    <button class="btn-toolbar btn-toolbar-info" onclick="bulkPostMasterJaminan()"
-                        style="height: 44px; padding: 0 16px;">
+                    <button class="btn-toolbar btn-toolbar-info" onclick="bulkPostMasterJaminan()">
                         <i class="ph ph-check-square-offset"></i>
                         <span>Posting Masal</span>
                     </button>
                     <button class="btn-toolbar btn-toolbar-outline" onclick="bulkUnpostMasterJaminan()"
-                        style="height: 44px; padding: 0 16px; border-color: #f59e0b; color: #d97706;">
+                        style="border-color: #f59e0b; color: #d97706;">
                         <i class="ph ph-arrow-counter-clockwise"></i>
                         <span>Batal Posting Masal</span>
                     </button>
                     @if(auth()->user()->hasPermission('REVENUE_SYNC'))
                         <button class="btn-toolbar btn-toolbar-outline" onclick="syncOldData()"
-                            style="height: 44px; padding: 0 16px; border-color: #3b82f6; color: #2563eb;">
+                            style="border-color: #3b82f6; color: #2563eb;">
                             <i class="ph ph-arrows-counter-clockwise"></i>
-                            <span>Sinkronisasi Data Lama</span>
+                            <span>Sinkronisasi</span>
                         </button>
                     @endif
                     <button class="btn-tambah-data" onclick="openMasterFormJaminan()">
                         <i class="ph-bold ph-plus"></i>
-                        <span>Buat Kelompok Baru</span>
+                        <span>Kelompok Baru</span>
                     </button>
                 @endif
             </div>
@@ -51,17 +50,6 @@
                 width: 100%;
                 max-width: 850px;
                 gap: 16px;
-            }
-
-            th.sortable i {
-                margin-left: 4px;
-                font-size: 14px;
-                vertical-align: middle;
-                transition: color 0.2s;
-            }
-
-            th.sortable:hover i {
-                color: #64748b !important;
             }
         </style>
         <div class="pendapatan-summary-container">
@@ -92,25 +80,21 @@
 
         {{-- MAIN CONTENT (MASTER) --}}
         <div class="dashboard-box">
-            <div class="box-header">
-                <div class="flex items-center gap-3" style="width: 100%;">
-                    <div class="search-wrapper flex-1">
-                        <div class="input-group" style="position: relative;">
-                            <i class="ph ph-magnifying-glass"
-                                style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px;"></i>
-                            <input type="text" id="searchMasterJaminan"
-                                placeholder="Cari tanggal, no bukti, atau keterangan..."
-                                style="width: 100%; height: 48px; padding-left: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
-                        </div>
-                    </div>
-                    <div class="filter-wrapper">
-                        <select id="filterStatusMasterJaminan"
-                            style="height: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px; padding: 0 16px; background: #fff; color: #475569; font-weight: 600; cursor: pointer; outline: none; transition: all 0.2s;">
+            <div class="table-toolbar">
+                <div class="flex items-center gap-4">
+                    <div class="form-group-inline">
+                        <select id="filterStatusMasterJaminan" class="form-input"
+                            style="height:48px; width:220px; border-radius:12px;">
                             <option value="">Semua Status</option>
                             <option value="DRAFT">📑 Draft</option>
                             <option value="POSTED">✅ Diposting</option>
                         </select>
                     </div>
+                </div>
+                <div class="table-search-wrapper">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" id="searchMasterJaminan" class="table-search"
+                        placeholder="Cari tanggal, no bukti, atau keterangan..." data-table="masterTable">
                 </div>
             </div>
 
@@ -129,38 +113,20 @@
             </div>
 
             <div class="table-container">
-                <table id="masterTable">
+                <table class="table universal-table" id="masterTable">
                     <thead>
                         <tr>
-                            <th class="text-center" style="width: 60px;">
+                            <th class="checkbox-col">
                                 <input type="checkbox" id="checkAllMasterJaminan"
                                     onclick="toggleAllMasterJaminan(this)" />
                             </th>
-                            <th class="text-center sortable" data-sort="tanggal" onclick="sortMasterJaminan('tanggal')"
-                                style="width: 140px; cursor: pointer;">
-                                Tanggal PDPT/RK <i class="ph ph-caret-up-down text-slate-400"></i>
-                            </th>
-                            <th class="text-center sortable" data-sort="keterangan"
-                                onclick="sortMasterJaminan('keterangan')" style="cursor: pointer;">
-                                Keterangan / No. Bukti <i class="ph ph-caret-up-down text-slate-400"></i>
-                            </th>
-                            <th class="text-right sortable" data-sort="total_rs" onclick="sortMasterJaminan('total_rs')"
-                                style="width: 180px; cursor: pointer;">
-                                Jasa RS <i class="ph ph-caret-up-down text-slate-400"></i>
-                            </th>
-                            <th class="text-right sortable" data-sort="total_pelayanan"
-                                onclick="sortMasterJaminan('total_pelayanan')" style="width: 180px; cursor: pointer;">
-                                Jasa Pelayanan <i class="ph ph-caret-up-down text-slate-400"></i>
-                            </th>
-                            <th class="text-right sortable" data-sort="total_all"
-                                onclick="sortMasterJaminan('total_all')" style="width: 180px; cursor: pointer;">
-                                Total (Rp) <i class="ph ph-caret-up-down text-slate-400"></i>
-                            </th>
-                            <th class="text-center sortable" data-sort="is_posted"
-                                onclick="sortMasterJaminan('is_posted')" style="width: 120px; cursor: pointer;">
-                                Status <i class="ph ph-caret-up-down text-slate-400"></i>
-                            </th>
-                            <th class="text-center" style="width: 180px;">Aksi</th>
+                            <th class="text-center sortable">Tanggal PDPT/RK</th>
+                            <th class="text-center sortable">Keterangan / No. Bukti</th>
+                            <th class="text-right sortable">Jasa RS</th>
+                            <th class="text-right sortable">Jasa Pelayanan</th>
+                            <th class="text-right sortable">Total (Rp)</th>
+                            <th class="text-center sortable">Status</th>
+                            <th class="action-col">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="masterTableBodyJaminan">
@@ -258,13 +224,12 @@
         </div>
 
         <div class="dashboard-box" style="padding: 0; overflow: hidden;">
-            <div class="box-header" style="padding: 16px; border-bottom: 1px solid #f1f5f9;">
-                <div class="input-group" style="position: relative;">
-                    <i class="ph ph-magnifying-glass"
-                        style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px;"></i>
-                    <input type="text" id="searchPendapatanJaminan"
+            <div class="table-toolbar" style="padding: 16px; border-bottom: 1px solid #f1f5f9;">
+                <div class="table-search-wrapper" style="max-width: 100%;">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" id="searchPendapatanJaminan" class="table-search"
                         placeholder="Cari nama pasien, perusahaan Mitra, ruangan..."
-                        style="width: 100%; height: 48px; padding-left: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">
+                        data-table="pendapatanJaminanTable">
                 </div>
             </div>
             <div class="table-container" style="margin-top: 0; border-radius: 0; border: none;">
@@ -337,39 +302,26 @@
                         color: #059669;
                     }
                 </style>
-                <table id="pendapatanJaminanTable">
-                    <thead>
-                        <tr>
-                            <th class="text-center" style="width: 50px;">No</th>
-                            <th class="text-center sortable" data-sort="tanggal" onclick="sortJaminan('tanggal')"
-                                style="width: 110px; cursor: pointer;">
-                                Tanggal <i class="ph ph-caret-up-down text-slate-400"></i>
-                            </th>
-                            <th class="text-center sortable" data-sort="nama_pasien"
-                                onclick="sortJaminan('nama_pasien')" style="cursor: pointer;">
-                                Nama Pasien <i class="ph ph-caret-up-down text-slate-400"></i>
-                            </th>
-                            <th class="text-center sortable" data-sort="perusahaan" onclick="sortJaminan('perusahaan')"
-                                style="cursor: pointer;">
-                                Perusahaan <i class="ph ph-caret-up-down text-slate-400"></i>
-                            </th>
-                            <th class="text-center sortable" data-sort="ruangan" onclick="sortJaminan('ruangan')"
-                                style="cursor: pointer;">
-                                Ruangan <i class="ph ph-caret-up-down text-slate-400"></i>
-                            </th>
-                            <th class="text-right sortable" data-sort="total" onclick="sortJaminan('total')"
-                                style="width: 200px; cursor: pointer;">
-                                RS / Pelayanan / Total <i class="ph ph-caret-up-down text-slate-400"></i>
-                            </th>
-                            <th class="text-center" style="width: 120px;">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pendapatanJaminanBody">
-                        <tr>
-                            <td colspan="7" class="text-center">Memuat rincian...</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-container">
+                    <table id="pendapatanJaminanTable" class="table universal-table">
+                        <thead>
+                            <tr>
+                                <th class="text-center checkbox-col">No</th>
+                                <th class="text-center sortable">Tanggal</th>
+                                <th class="text-center sortable">Nama Pasien</th>
+                                <th class="text-center sortable">Perusahaan</th>
+                                <th class="text-center sortable">Ruangan</th>
+                                <th class="text-right sortable">RS / Pelayanan / Total</th>
+                                <th class="action-col">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendapatanJaminanBody">
+                            <tr>
+                                <td colspan="7" class="text-center">Memuat rincian...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div class="flex justify-between items-center" style="padding: 16px;">
                 <p id="paginationInfoJaminan" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0 dari 0
@@ -385,40 +337,4 @@
         </div>
     </div>
 
-    {{-- MODAL MASTER FORM --}}
-    <div id="modalMasterFormJaminan" class="confirm-overlay">
-        <div class="confirm-box" style="max-width: 500px;">
-            <h3 id="masterFormTitleJaminan"><i class="ph ph-folder-plus"></i> Tambah Kelompok Jaminan</h3>
-            <form id="formMasterJaminan" autocomplete="off">
-                <input type="hidden" id="masterIdJaminan">
-                <div class="form-group" style="margin-bottom: 16px;">
-                    <label>Tanggal Pendapatan</label>
-                    <input type="date" id="masterTanggalJaminan" required class="form-input">
-                </div>
-                <div class="form-group" style="margin-bottom: 16px;">
-                    <label>Tanggal Rekening Koran (Opsional)</label>
-                    <input type="date" id="masterTanggalRkJaminan" class="form-input">
-                </div>
-                <div class="form-group" style="margin-bottom: 16px;">
-                    <label>No. Bukti (Opsional)</label>
-                    <input type="text" id="masterNoBuktiJaminan" class="form-input"
-                        placeholder="Masukkan nomor bukti jika ada">
-                </div>
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label>Keterangan / Uraian</label>
-                    <textarea id="masterKeteranganJaminan" class="form-input" rows="3"
-                        placeholder="Contoh: Pendapatan Jaminan Bulan Januari"></textarea>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeMasterModalJaminan()">Batal</button>
-                    <button type="submit" class="btn-primary" id="btnSimpanMasterJaminan">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- MODALS DETAIL --}}
-    @include('dashboard.partials.pendapatan-jaminan-form')
-    @include('dashboard.partials.pendapatan-jaminan-import')
-    @include('dashboard.partials.pendapatan-jaminan-detail')
 </div>

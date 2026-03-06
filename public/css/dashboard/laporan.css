@@ -1,5 +1,4 @@
 .laporan {
-    padding: 20px;
     animation: fadeIn 0.3s ease;
 }
 
@@ -178,7 +177,7 @@
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .report-table td {
@@ -186,7 +185,7 @@
     border-bottom: 1px solid #f1f5f9;
     color: #334155;
     font-size: 11px;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .text-bold {
@@ -376,7 +375,7 @@
 /* Progress Table */
 .col-progress {
     width: 120px;
-    vertical-align: middle !important;
+    vertical-align: middle;
 }
 
 .progress-track {
@@ -422,7 +421,7 @@
 
 .btn-action-circle:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .btn-action-circle.generate:hover {

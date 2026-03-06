@@ -146,4 +146,14 @@ class BankLedgerService
             ->first();
         return $latest ? (float) $latest->balance : 0;
     }
+
+    public function getTotalBalance()
+    {
+        $banks = BankAccountLedger::distinct()->pluck('bank');
+        $sum = 0;
+        foreach ($banks as $bank) {
+            $sum += $this->getCurrentBalance($bank);
+        }
+        return $sum;
+    }
 }

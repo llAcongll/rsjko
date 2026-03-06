@@ -73,22 +73,22 @@
             <h3>Rincian Piutang Per Perusahaan</h3>
         </div>
         <div class="table-responsive">
-            <table class="report-table">
+            <div class="table-container"><table class="report-table universal-table">
                 <thead>
-                    <tr style="background: #f8fafc;">
-                        <th rowspan="2" class="text-center" style="vertical-align: middle;">Perusahaan</th>
-                        <th colspan="4" class="text-center" style="border-bottom: 1px solid #e2e8f0;">Saldo Awal (Tahun
+                    <tr>
+                        <th rowspan="2" class="text-center">Perusahaan</th>
+                        <th colspan="4" class="text-center">Saldo Awal (Tahun
                             Lalu)</th>
-                        <th colspan="4" class="text-center" style="border-bottom: 1px solid #e2e8f0;">Tahun Berjalan
+                        <th colspan="4" class="text-center">Tahun Berjalan
                         </th>
-                        <th rowspan="2" class="text-center" style="vertical-align: middle;">Pelunasan Total</th>
-                        <th rowspan="2" class="text-center" style="vertical-align: middle;">Potongan Total</th>
-                        <th rowspan="2" class="text-center" style="vertical-align: middle; color:#ef4444"
+                        <th rowspan="2" class="text-center">Pelunasan Total</th>
+                        <th rowspan="2" class="text-center">Potongan Total</th>
+                        <th rowspan="2" class="text-center"
                             id="headerSisaTahun">Sisa {{ session('tahun_anggaran', date('Y')) - 1 }}</th>
-                        <th rowspan="2" class="text-center" style="vertical-align: middle; background: #f1f5f9;">Saldo
+                        <th rowspan="2" class="text-center">Saldo
                             Akhir</th>
                     </tr>
-                    <tr style="background: #f8fafc;">
+                    <tr>
                         <th class="text-center">Piutang</th>
                         <th class="text-center">Lunas</th>
                         <th class="text-center">Pot</th>
@@ -102,7 +102,7 @@
                 <tbody id="laporanPiutangBody">
                     <!-- Dynamic -->
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 </div>
