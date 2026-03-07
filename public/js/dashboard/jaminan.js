@@ -3,6 +3,7 @@
     let masterPerPage = 10;
     let masterKeyword = '';
     let masterStatus = ''; // Added
+    let masterMonth = ''; // Added
     let masterSortBy = 'tanggal'; // Added
     let masterSortDir = 'desc'; // Added
     let selectedMasterId = null;
@@ -66,6 +67,7 @@
             per_page: masterPerPage,
             search: masterKeyword,
             status: masterStatus, // Added
+            month: masterMonth, // Added
             sort_by: masterSortBy, // Added
             sort_dir: masterSortDir, // Added
             kategori: 'JAMINAN',
@@ -109,25 +111,25 @@
 
                     tbody.insertAdjacentHTML('beforeend', `
                     <tr class="${selectedMasterId === item.id ? 'bg-blue-50' : ''}">
-                        <td class="text-center">
+                        <td class="text-center checkbox-col">
                             <input type="checkbox" class="master-checkbox" data-id="${item.id}" data-posted="${isPosted}" 
                                 ${isSelected ? 'checked' : ''} onchange="handleMasterCheckboxChangeJaminan(this, ${item.id}, ${isPosted})">
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" data-label="Tanggal PDPT/RK">
                             <div class="flex flex-col">
                                 <span class="font-bold text-slate-700">${formatTanggal(item.tanggal)}</span>
                                 ${item.tanggal_rk ? `<span class="text-xs text-slate-400">RK: ${formatTanggal(item.tanggal_rk)}</span>` : ''}
                             </div>
                         </td>
-                        <td>
+                        <td data-label="Keterangan / No. Bukti">
                             <div class="font-medium text-slate-700">${escapeHtml(item.keterangan || '-')}</div>
                             <div class="text-xs text-slate-400">${escapeHtml(item.no_bukti || '-')}</div>
                         </td>
-                        <td class="text-right font-mono text-blue-600">${formatRupiahTable(item.total_rs)}</td>
-                        <td class="text-right font-mono text-purple-600">${formatRupiahTable(item.total_pelayanan)}</td>
-                        <td class="text-right font-bold font-mono text-emerald-600">${formatRupiahTable(item.total_all)}</td>
-                        <td class="text-center">${statusBadge}</td>
-                        <td class="text-center">
+                        <td class="text-right font-mono text-blue-600" data-label="Total Jasa RS">${formatRupiahTable(item.total_rs)}</td>
+                        <td class="text-right font-mono text-purple-600" data-label="Total Jasa Pelayanan">${formatRupiahTable(item.total_pelayanan)}</td>
+                        <td class="text-right font-bold font-mono text-emerald-600" data-label="Total Pendapatan">${formatRupiahTable(item.total_all)}</td>
+                        <td class="text-center" data-label="Status">${statusBadge}</td>
+                        <td class="text-center" data-label="Aksi">
                             <div class="flex justify-center gap-2">
                                 <button class="btn-aksi detail" onclick="openDetailJaminan(${item.id}, '${escapeHtml(info)}', ${item.is_posted})" title="Buka Rincian">
                                     <i class="ph ph-list-numbers"></i>
@@ -645,16 +647,16 @@
                 data.forEach((item, index) => {
                     tbody.insertAdjacentHTML('beforeend', `
                     <tr>
-                        <td class="text-center">${res.from + index}</td>
-                        <td class="text-center">${formatTanggal(item.tanggal)}</td>
-                        <td>
+                        <td class="text-center" data-label="No">${res.from + index}</td>
+                        <td class="text-center" data-label="Tanggal">${formatTanggal(item.tanggal)}</td>
+                        <td data-label="Nama Pasien">
                             <div class="font-medium">${escapeHtml(item.nama_pasien ?? '-')}</div>
                         </td>
-                        <td>
+                        <td data-label="Sumber/Perusahaan">
                             <div class="text-sm">${item.perusahaan?.nama ?? (item.transaksi || '-')}</div>
                         </td>
-                        <td><span class="badge badge-info">${item.ruangan?.nama ?? '-'}</span></td>
-                        <td class="text-right">
+                        <td data-label="Ruangan"><span class="badge badge-info">${item.ruangan?.nama ?? '-'}</span></td>
+                        <td class="text-right" data-label="RS / Pelayanan / Total">
                             <div class="nominal-group">
                                 <div class="nom-row">
                                     <div class="nom-val val-rs">${formatRupiahTable((parseFloat(item.rs_tindakan) || 0) + (parseFloat(item.rs_obat) || 0))}</div>
@@ -670,7 +672,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" data-label="Aksi">
                             <div class="flex justify-center gap-1">
                                 <button class="btn-aksi detail" onclick="detailPendapatanJaminan(${item.id})" title="View">
                                     <i class="ph ph-eye"></i>
@@ -1085,37 +1087,71 @@
 
         loadMasterJaminan(1);
 
-        const searchMasterJaminan = document.getElementById('searchMasterJaminan');
-        if (searchMasterJaminan) {
-            let timer;
-            searchMasterJaminan.oninput = (e) => {
-                clearTimeout(timer);
-                timer = setTimeout(() => {
-                    masterKeyword = e.target.value.trim();
+        // Search Master (Top & Bottom Sync)
+        const searchMasterJaminanInputs = [
+            document.getElementById('searchMasterJaminan'),
+            document.getElementById('searchMasterJaminanBottom')
+        ];
+        searchMasterJaminanInputs.forEach(input => {
+            if (input) {
+                let timer;
+                input.oninput = (e) => {
+                    const val = e.target.value.trim();
+                    masterKeyword = val;
+                    searchMasterJaminanInputs.forEach(other => { if (other && other !== e.target) other.value = val; });
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { loadMasterJaminan(1); }, 400);
+                };
+            }
+        });
+
+        // Filter Status Master (Top & Bottom Sync)
+        const filterStatusMasterJaminanSelects = [
+            document.getElementById('filterStatusMasterJaminan'),
+            document.getElementById('filterStatusMasterJaminanBottom')
+        ];
+        filterStatusMasterJaminanSelects.forEach(sel => {
+            if (sel) {
+                sel.onchange = (e) => {
+                    masterStatus = e.target.value;
+                    filterStatusMasterJaminanSelects.forEach(other => { if (other && other !== e.target) other.value = e.target.value; });
                     loadMasterJaminan(1);
-                }, 400);
-            };
-        }
+                };
+            }
+        });
 
-        const filterStatusMasterJaminan = document.getElementById('filterStatusMasterJaminan');
-        if (filterStatusMasterJaminan) {
-            filterStatusMasterJaminan.onchange = (e) => {
-                masterStatus = e.target.value;
-                loadMasterJaminan(1);
-            };
-        }
+        // Filter Month Master (Top & Bottom Sync)
+        const filterMonthMasterJaminanInputs = [
+            document.getElementById('filterMonthMasterJaminan'),
+            document.getElementById('filterMonthMasterJaminanBottom')
+        ];
+        filterMonthMasterJaminanInputs.forEach(input => {
+            if (input) {
+                input.onchange = (e) => {
+                    masterMonth = e.target.value;
+                    filterMonthMasterJaminanInputs.forEach(other => { if (other && other !== e.target) other.value = e.target.value; });
+                    loadMasterJaminan(1);
+                };
+            }
+        });
 
-        const searchJaminan = document.getElementById('searchPendapatanJaminan');
-        if (searchJaminan) {
-            let timer;
-            searchJaminan.oninput = (e) => {
-                clearTimeout(timer);
-                timer = setTimeout(() => {
-                    jaminanKeyword = e.target.value.trim();
-                    loadPendapatanJaminan(1);
-                }, 400);
-            };
-        }
+        // Search Jaminan Records (Top & Bottom Sync)
+        const searchJaminanInputs = [
+            document.getElementById('searchPendapatanJaminan'),
+            document.getElementById('searchPendapatanJaminanBottom')
+        ];
+        searchJaminanInputs.forEach(input => {
+            if (input) {
+                let timer;
+                input.oninput = (e) => {
+                    const val = e.target.value.trim();
+                    jaminanKeyword = val;
+                    searchJaminanInputs.forEach(other => { if (other && other !== e.target) other.value = val; });
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { loadPendapatanJaminan(1); }, 400);
+                };
+            }
+        });
 
         document.querySelectorAll('.nominal-display-jaminan').forEach(input => {
             input.addEventListener('input', () => {

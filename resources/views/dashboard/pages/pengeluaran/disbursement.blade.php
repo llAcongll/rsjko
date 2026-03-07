@@ -21,39 +21,49 @@
 
     <div class="dashboard-box">
 
-        <div class="table-container">
-            <style>
-                /* Styles for Report View */
-                #disbursementMainList.is-report-view #tableDisbursementHeadDefault {
-                    display: none;
-                }
+        <style>
+            /* Styles for Report View */
+            #disbursementMainList.is-report-view #tableDisbursementHeadDefault {
+                display: none;
+            }
 
-                #disbursementMainList:not(.is-report-view) #tableDisbursementHeadReport {
-                    display: none;
-                }
-            </style>
-            <div class="table-container"><table id="tableDisbursement" class="table universal-table">
+            #disbursementMainList:not(.is-report-view) #tableDisbursementHeadReport {
+                display: none;
+            }
+        </style>
+        <div class="table-container">
+            <table id="tableDisbursement" class="table universal-table table-mobile-cards">
                 <thead id="tableDisbursementHeadDefault">
                     <tr>
                         <th width="60" class="text-center checkbox-col">No</th>
-                        <th width="80" class="text-center sortable">Paket</th>
-                        <th width="100" class="text-center sortable">Tipe</th>
-                        <th width="220" class="text-left sortable">No. Dokumen</th>
-                        <th width="100" class="text-center sortable">Siklus</th>
-                        <th width="120" class="text-center sortable">Tanggal</th>
-                        <th class="sortable">Kegiatan</th>
-                        <th class="text-right sortable">Nilai (Rp)</th>
-                        <th width="120" class="text-center sortable">Status</th>
+                        <th width="80" class="text-center sortable" onclick="sortDisbursement('paket_number')"
+                            data-sort="paket_number">Paket <i class="ph ph-caret-up-down"></i></th>
+                        <th width="100" class="text-center sortable" onclick="sortDisbursement('type')"
+                            data-sort="type">Tipe <i class="ph ph-caret-up-down"></i></th>
+                        <th width="220" class="text-left">No. Dokumen</th>
+                        <th width="100" class="text-center sortable" onclick="sortDisbursement('siklus_number')"
+                            data-sort="siklus_number">Siklus <i class="ph ph-caret-up-down"></i></th>
+                        <th width="120" class="text-center sortable" onclick="sortDisbursement('sp2d_date')"
+                            data-sort="sp2d_date">Tanggal <i class="ph ph-caret-up-down"></i></th>
+                        <th class="sortable" onclick="sortDisbursement('uraian')" data-sort="uraian">Kegiatan <i
+                                class="ph ph-caret-up-down"></i></th>
+                        <th class="text-right sortable" onclick="sortDisbursement('value')" data-sort="value">Nilai (Rp)
+                            <i class="ph ph-caret-up-down"></i></th>
+                        <th width="120" class="text-center sortable" onclick="sortDisbursement('status')"
+                            data-sort="status">Status <i class="ph ph-caret-up-down"></i></th>
                         <th class="action-col">Aksi</th>
                     </tr>
                 </thead>
                 <thead id="tableDisbursementHeadReport">
                     <tr>
                         <th width="60" class="text-center checkbox-col">No</th>
-                        <th width="120" class="text-center sortable">Tanggal</th>
-                        <th width="250" class="text-left sortable">No. Dokumen</th>
-                        <th class="sortable">Kegiatan</th>
-                        <th width="200" class="text-right sortable">Nilai (Rp)</th>
+                        <th width="120" class="text-center sortable" onclick="sortDisbursement('sp2d_date')"
+                            data-sort="sp2d_date">Tanggal <i class="ph ph-caret-up-down"></i></th>
+                        <th width="250" class="text-left">No. Dokumen</th>
+                        <th class="sortable" onclick="sortDisbursement('uraian')" data-sort="uraian">Kegiatan <i
+                                class="ph ph-caret-up-down"></i></th>
+                        <th width="200" class="text-right sortable" onclick="sortDisbursement('value')"
+                            data-sort="value">Nilai (Rp) <i class="ph ph-caret-up-down"></i></th>
                     </tr>
                 </thead>
                 <tbody id="tableDisbursementBody">
@@ -61,7 +71,7 @@
                         <td colspan="10" class="text-center">Memuat data...</td>
                     </tr>
                 </tbody>
-            </table></div>
+            </table>
         </div>
     </div>
 </div>
@@ -69,7 +79,7 @@
 
 {{-- SECTION DETAIL BELANJA (FULL WIDTH) --}}
 <div id="sectionBelanjaItems" style="display: none; animation: fadeIn 0.3s ease-out;">
-    <div class="page-header" style="margin-bottom: 24px;">
+    <div class="page-header">
         <div class="page-header-left">
             <button onclick="closeBelanjaItemsModal()"
                 style="display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 10px; cursor: pointer; color: #64748b; font-weight: 600; margin-bottom: 12px; transition: all 0.2s;">
@@ -89,10 +99,9 @@
         </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px;">
-        <div
-            style="background: #fff; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-            <div
+    <div class="grid-responsive grid-3 mb-4">
+        <div class="dash-card">
+            <div class="label"
                 style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">
                 Total Dana Cair (SP2D)</div>
             <div style="font-size: 24px; font-weight: 800; color: #1e40af;">
@@ -100,9 +109,8 @@
                     id="belanjaTotalValue">0,00</span>
             </div>
         </div>
-        <div
-            style="background: #fff; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-            <div
+        <div class="dash-card">
+            <div class="label"
                 style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">
                 Total Realisasi (Belanja)</div>
             <div style="font-size: 24px; font-weight: 800; color: #dc2626;">
@@ -110,9 +118,8 @@
                     id="belanjaUsedValue">0,00</span>
             </div>
         </div>
-        <div
-            style="background: #fff; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-            <div
+        <div class="dash-card">
+            <div class="label"
                 style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">
                 Sisa (Belum Direalisasikan)</div>
             <div style="font-size: 24px; font-weight: 800; color: #059669;">
@@ -128,10 +135,14 @@
                 <thead>
                     <tr>
                         <th class="text-center checkbox-col" width="60">No</th>
-                        <th class="text-center sortable" width="140">Tanggal</th>
-                        <th class="text-center sortable" width="260">No. Bukti</th>
-                        <th class="sortable">Uraian Kegiatan</th>
-                        <th class="text-right sortable" width="180">Nilai (Rp)</th>
+                        <th class="text-center sortable" width="140" onclick="sortBelanjaItems('spending_date')"
+                            data-sort="spending_date">Tanggal <i class="ph ph-caret-up-down"></i></th>
+                        <th class="text-center sortable" width="260" onclick="sortBelanjaItems('no_bukti')"
+                            data-sort="no_bukti">No. Bukti <i class="ph ph-caret-up-down"></i></th>
+                        <th class="sortable" onclick="sortBelanjaItems('description')" data-sort="description">Uraian
+                            Kegiatan <i class="ph ph-caret-up-down"></i></th>
+                        <th class="text-right sortable" width="180" onclick="sortBelanjaItems('gross_value')"
+                            data-sort="gross_value">Nilai (Rp) <i class="ph ph-caret-up-down"></i></th>
                         <th class="action-col">Aksi</th>
                     </tr>
                 </thead>

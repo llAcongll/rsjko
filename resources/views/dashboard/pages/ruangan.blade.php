@@ -23,7 +23,7 @@
       </div>
     </div>
     <div class="table-container">
-      <table id="ruanganTable" class="table universal-table">
+      <table id="ruanganTable" class="table universal-table table-mobile-cards">
         <thead>
           <tr>
             <th class="text-center checkbox-col">No</th>

@@ -34,46 +34,26 @@
         </div>
 
         {{-- SUMMARY CARDS (MASTER) --}}
-        <style>
-            .dashboard {
-                gap: 16px !important;
-            }
-
-            .pendapatan-summary-container {
-                display: flex;
-                justify-content: center;
-                margin-bottom: 0px;
-            }
-
-            .pendapatan-summary-container .dashboard-cards {
-                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-                width: 100%;
-                max-width: 850px;
-                gap: 16px;
-            }
-        </style>
-        <div class="pendapatan-summary-container">
-            <div class="dashboard-cards">
-                <div class="dash-card blue">
-                    <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Jasa Rumah Sakit</span>
-                        <h3 id="masterSummaryRsJaminan">Rp 0</h3>
-                    </div>
+        <div class="grid-responsive grid-3 mb-4" style="max-width: 850px; margin-inline: auto;">
+            <div class="dash-card blue">
+                <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Jasa Rumah Sakit</span>
+                    <h3 id="masterSummaryRsJaminan">Rp 0</h3>
                 </div>
-                <div class="dash-card purple">
-                    <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Jasa Pelayanan</span>
-                        <h3 id="masterSummaryPelayananJaminan">Rp 0</h3>
-                    </div>
+            </div>
+            <div class="dash-card purple">
+                <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Jasa Pelayanan</span>
+                    <h3 id="masterSummaryPelayananJaminan">Rp 0</h3>
                 </div>
-                <div class="dash-card green">
-                    <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Total Jaminan</span>
-                        <h3 id="masterSummaryTotalJaminan" style="color: #16a34a;">Rp 0</h3>
-                    </div>
+            </div>
+            <div class="dash-card green">
+                <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Total Jaminan</span>
+                    <h3 id="masterSummaryTotalJaminan" style="color: #16a34a;">Rp 0</h3>
                 </div>
             </div>
         </div>
@@ -81,20 +61,20 @@
         {{-- MAIN CONTENT (MASTER) --}}
         <div class="dashboard-box">
             <div class="table-toolbar">
-                <div class="flex items-center gap-4">
-                    <div class="form-group-inline">
-                        <select id="filterStatusMasterJaminan" class="form-input"
-                            style="height:48px; width:220px; border-radius:12px;">
-                            <option value="">Semua Status</option>
-                            <option value="DRAFT">📑 Draft</option>
-                            <option value="POSTED">✅ Diposting</option>
-                        </select>
-                    </div>
-                </div>
                 <div class="table-search-wrapper">
                     <i class="ph ph-magnifying-glass"></i>
                     <input type="text" id="searchMasterJaminan" class="table-search"
                         placeholder="Cari tanggal, no bukti, atau keterangan..." data-table="masterTable">
+                </div>
+                <div class="filter-wrapper">
+                    <select id="filterStatusMasterJaminan" class="filter-select" style="width:220px;">
+                        <option value="">Semua Status</option>
+                        <option value="DRAFT">📑 Draft</option>
+                        <option value="POSTED">✅ Diposting</option>
+                    </select>
+                </div>
+                <div class="filter-wrapper">
+                    <input type="month" id="filterMonthMasterJaminan" class="filter-select" style="max-width: 160px;">
                 </div>
             </div>
 
@@ -113,19 +93,25 @@
             </div>
 
             <div class="table-container">
-                <table class="table universal-table" id="masterTable">
+                <table class="table universal-table table-mobile-cards" id="masterTable">
                     <thead>
                         <tr>
                             <th class="checkbox-col">
                                 <input type="checkbox" id="checkAllMasterJaminan"
                                     onclick="toggleAllMasterJaminan(this)" />
                             </th>
-                            <th class="text-center sortable">Tanggal PDPT/RK</th>
-                            <th class="text-center sortable">Keterangan / No. Bukti</th>
-                            <th class="text-right sortable">Jasa RS</th>
-                            <th class="text-right sortable">Jasa Pelayanan</th>
-                            <th class="text-right sortable">Total (Rp)</th>
-                            <th class="text-center sortable">Status</th>
+                            <th class="text-center sortable" onclick="sortMasterJaminan('tanggal')" data-sort="tanggal">
+                                Tanggal PDPT/RK <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-center sortable" onclick="sortMasterJaminan('keterangan')"
+                                data-sort="keterangan">Keterangan / No. Bukti <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-right sortable" onclick="sortMasterJaminan('total_rs')"
+                                data-sort="total_rs">Jasa RS <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-right sortable" onclick="sortMasterJaminan('total_pelayanan')"
+                                data-sort="total_pelayanan">Jasa Pelayanan <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-right sortable" onclick="sortMasterJaminan('total_all')"
+                                data-sort="total_all">Total (Rp) <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-center sortable" onclick="sortMasterJaminan('is_posted')"
+                                data-sort="is_posted">Status <i class="ph ph-caret-up-down"></i></th>
                             <th class="action-col">Aksi</th>
                         </tr>
                     </thead>
@@ -197,35 +183,33 @@
         </div>
 
         {{-- SUMMARY CARDS (DETAIL) --}}
-        <div class="pendapatan-summary-container">
-            <div class="dashboard-cards">
-                <div class="dash-card blue">
-                    <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Jasa Rumah Sakit</span>
-                        <h3 id="detailSummaryRsJaminan">Rp 0</h3>
-                    </div>
+        <div class="grid-responsive grid-3 mb-4" style="max-width: 850px; margin-inline: auto;">
+            <div class="dash-card blue">
+                <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Jasa Rumah Sakit</span>
+                    <h3 id="detailSummaryRsJaminan">Rp 0</h3>
                 </div>
-                <div class="dash-card purple">
-                    <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Jasa Pelayanan</span>
-                        <h3 id="detailSummaryPelayananJaminan">Rp 0</h3>
-                    </div>
+            </div>
+            <div class="dash-card purple">
+                <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Jasa Pelayanan</span>
+                    <h3 id="detailSummaryPelayananJaminan">Rp 0</h3>
                 </div>
-                <div class="dash-card green">
-                    <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Total Jaminan</span>
-                        <h3 id="detailSummaryTotalJaminan" style="color: #16a34a;">Rp 0</h3>
-                    </div>
+            </div>
+            <div class="dash-card green">
+                <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Total Jaminan</span>
+                    <h3 id="detailSummaryTotalJaminan" style="color: #16a34a;">Rp 0</h3>
                 </div>
             </div>
         </div>
 
         <div class="dashboard-box" style="padding: 0; overflow: hidden;">
             <div class="table-toolbar" style="padding: 16px; border-bottom: 1px solid #f1f5f9;">
-                <div class="table-search-wrapper" style="max-width: 100%;">
+                <div class="table-search-wrapper" style="flex: 1;">
                     <i class="ph ph-magnifying-glass"></i>
                     <input type="text" id="searchPendapatanJaminan" class="table-search"
                         placeholder="Cari nama pasien, perusahaan Mitra, ruangan..."
@@ -302,26 +286,29 @@
                         color: #059669;
                     }
                 </style>
-                <div class="table-container">
-                    <table id="pendapatanJaminanTable" class="table universal-table">
-                        <thead>
-                            <tr>
-                                <th class="text-center checkbox-col">No</th>
-                                <th class="text-center sortable">Tanggal</th>
-                                <th class="text-center sortable">Nama Pasien</th>
-                                <th class="text-center sortable">Perusahaan</th>
-                                <th class="text-center sortable">Ruangan</th>
-                                <th class="text-right sortable">RS / Pelayanan / Total</th>
-                                <th class="action-col">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pendapatanJaminanBody">
-                            <tr>
-                                <td colspan="7" class="text-center">Memuat rincian...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <table id="pendapatanJaminanTable" class="table universal-table table-mobile-cards">
+                    <thead>
+                        <tr>
+                            <th class="text-center checkbox-col">No</th>
+                            <th class="text-center sortable" onclick="sortJaminan('tanggal')" data-sort="tanggal">
+                                Tanggal <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-center sortable" onclick="sortJaminan('nama_pasien')"
+                                data-sort="nama_pasien">Nama Pasien <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-center sortable" onclick="sortJaminan('perusahaan_id')"
+                                data-sort="perusahaan_id">Perusahaan <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-center sortable" onclick="sortJaminan('ruangan_id')" data-sort="ruangan_id">
+                                Ruangan <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-right sortable" onclick="sortJaminan('total')" data-sort="total">RS /
+                                Pelayanan / Total <i class="ph ph-caret-up-down"></i></th>
+                            <th class="action-col">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendapatanJaminanBody">
+                        <tr>
+                            <td colspan="7" class="text-center">Memuat rincian...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <div class="flex justify-between items-center" style="padding: 16px;">
                 <p id="paginationInfoJaminan" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0 dari 0

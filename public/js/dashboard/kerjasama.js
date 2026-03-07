@@ -3,6 +3,7 @@
     let masterPerPage = 10;
     let masterKeyword = '';
     let masterStatus = ''; // Added
+    let masterMonth = ''; // Added
     let masterSortBy = 'tanggal'; // Added
     let masterSortDir = 'desc'; // Added
     let selectedMasterId = null;
@@ -66,6 +67,7 @@
             per_page: masterPerPage,
             search: masterKeyword,
             status: masterStatus, // Added
+            month: masterMonth, // Added
             sort_by: masterSortBy, // Added
             sort_dir: masterSortDir, // Added
             kategori: 'KERJASAMA',
@@ -1038,31 +1040,71 @@
 
         loadMasterKerjasama(1);
 
-        const searchMasterKerjasama = document.getElementById('searchMasterKerjasama');
-        if (searchMasterKerjasama) {
-            let timer;
-            searchMasterKerjasama.oninput = (e) => {
-                clearTimeout(timer);
-                timer = setTimeout(() => { masterKeyword = e.target.value.trim(); loadMasterKerjasama(1); }, 400);
-            };
-        }
+        // Search Master (Top & Bottom Sync)
+        const searchMasterKerjasamaInputs = [
+            document.getElementById('searchMasterKerjasama'),
+            document.getElementById('searchMasterKerjasamaBottom')
+        ];
+        searchMasterKerjasamaInputs.forEach(input => {
+            if (input) {
+                let timer;
+                input.oninput = (e) => {
+                    const val = e.target.value.trim();
+                    masterKeyword = val;
+                    searchMasterKerjasamaInputs.forEach(other => { if (other && other !== e.target) other.value = val; });
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { loadMasterKerjasama(1); }, 400);
+                };
+            }
+        });
 
-        const filterStatusMasterKerjasama = document.getElementById('filterStatusMasterKerjasama');
-        if (filterStatusMasterKerjasama) {
-            filterStatusMasterKerjasama.onchange = (e) => {
-                masterStatus = e.target.value;
-                loadMasterKerjasama(1);
-            };
-        }
+        // Filter Status Master (Top & Bottom Sync)
+        const filterStatusMasterKerjasamaSelects = [
+            document.getElementById('filterStatusMasterKerjasama'),
+            document.getElementById('filterStatusMasterKerjasamaBottom')
+        ];
+        filterStatusMasterKerjasamaSelects.forEach(sel => {
+            if (sel) {
+                sel.onchange = (e) => {
+                    masterStatus = e.target.value;
+                    filterStatusMasterKerjasamaSelects.forEach(other => { if (other && other !== e.target) other.value = e.target.value; });
+                    loadMasterKerjasama(1);
+                };
+            }
+        });
 
-        const searchKerjasama = document.getElementById('searchPendapatanKerjasama');
-        if (searchKerjasama) {
-            let timer;
-            searchKerjasama.oninput = (e) => {
-                clearTimeout(timer);
-                timer = setTimeout(() => { kerjasamaKeyword = e.target.value.trim(); loadPendapatanKerjasama(1); }, 400);
-            };
-        }
+        // Filter Month Master (Top & Bottom Sync)
+        const filterMonthMasterKerjasamaInputs = [
+            document.getElementById('filterMonthMasterKerjasama'),
+            document.getElementById('filterMonthMasterKerjasamaBottom')
+        ];
+        filterMonthMasterKerjasamaInputs.forEach(input => {
+            if (input) {
+                input.onchange = (e) => {
+                    masterMonth = e.target.value;
+                    filterMonthMasterKerjasamaInputs.forEach(other => { if (other && other !== e.target) other.value = e.target.value; });
+                    loadMasterKerjasama(1);
+                };
+            }
+        });
+
+        // Search Detail (Top & Bottom Sync)
+        const searchKerjasamaInputs = [
+            document.getElementById('searchPendapatanKerjasama'),
+            document.getElementById('searchPendapatanKerjasamaBottom')
+        ];
+        searchKerjasamaInputs.forEach(input => {
+            if (input) {
+                let timer;
+                input.oninput = (e) => {
+                    const val = e.target.value.trim();
+                    kerjasamaKeyword = val;
+                    searchKerjasamaInputs.forEach(other => { if (other && other !== e.target) other.value = val; });
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { loadPendapatanKerjasama(1); }, 400);
+                };
+            }
+        });
 
         document.querySelectorAll('.nominal-display-kerjasama').forEach(input => {
             input.addEventListener('input', () => {

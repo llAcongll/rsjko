@@ -11,6 +11,8 @@
 
     let currentSaldoAwalAmount = 0;
     let cachedLedgerData = [];
+    let bankLedgerSortBy = 'date';
+    let bankLedgerSortDir = 'desc';
 
     window.initBankLedger = function () {
         const now = new Date();
@@ -380,7 +382,7 @@
 
         tbody.innerHTML = '<tr><td colspan="9" class="text-center"><i class="ph ph-spinner animate-spin"></i> Memuat data...</td></tr>';
 
-        fetch(`/dashboard/bank-account-ledger?month=${month}&year=${year}&bank=${encodeURIComponent(bank)}`, { headers: { 'Accept': 'application/json' } })
+        fetch(`/dashboard/bank-account-ledger?month=${month}&year=${year}&bank=${encodeURIComponent(bank)}&sort_by=${bankLedgerSortBy}&sort_dir=${bankLedgerSortDir}`, { headers: { 'Accept': 'application/json' } })
             .then(res => res.json())
             .then(res => {
                 cachedLedgerData = res.data || [];
@@ -453,6 +455,7 @@
                 `;
                 });
                 tbody.innerHTML = html;
+                updateSortIconsBankLedger();
 
                 const btnSetSaldo = document.getElementById('btnSetSaldoAwal');
                 if (btnSetSaldo) {
@@ -471,4 +474,27 @@
                 tbody.innerHTML = '<tr><td colspan="9" class="text-center text-red-500">Gagal memuat data</td></tr>';
             });
     };
+
+    window.sortBankLedger = function (col) {
+        if (bankLedgerSortBy === col) {
+            bankLedgerSortDir = bankLedgerSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            bankLedgerSortBy = col;
+            bankLedgerSortDir = 'asc';
+        }
+        loadBankLedger();
+    };
+
+    function updateSortIconsBankLedger() {
+        document.querySelectorAll('#tableBankLedger th.sortable i').forEach(i => {
+            i.className = 'ph ph-caret-up-down text-slate-400';
+        });
+        const activeHeader = document.querySelector(`#tableBankLedger th.sortable[data-sort="${bankLedgerSortBy}"]`);
+        if (activeHeader) {
+            const i = activeHeader.querySelector('i');
+            if (i) {
+                i.className = bankLedgerSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+            }
+        }
+    }
 })();

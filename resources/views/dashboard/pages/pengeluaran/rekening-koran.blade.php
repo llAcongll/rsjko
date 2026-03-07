@@ -84,12 +84,18 @@
                 <thead>
                     <tr>
                         <th width="40" class="text-center checkbox-col">No</th>
-                        <th width="140" class="text-center sortable">Tanggal</th>
-                        <th width="120" class="text-center sortable">Jenis Mutasi</th>
-                        <th class="sortable">Uraian / Keterangan</th>
-                        <th width="120" class="text-center sortable">Bank</th>
-                        <th width="160" class="text-right sortable">Debit (Masuk)</th>
-                        <th width="160" class="text-right sortable">Kredit (Keluar)</th>
+                        <th width="140" class="text-center sortable" onclick="sortBankLedger('date')" data-sort="date">
+                            Tanggal <i class="ph ph-caret-up-down"></i></th>
+                        <th width="120" class="text-center sortable" onclick="sortBankLedger('type')" data-sort="type">
+                            Jenis Mutasi <i class="ph ph-caret-up-down"></i></th>
+                        <th class="sortable" onclick="sortBankLedger('description')" data-sort="description">Uraian /
+                            Keterangan <i class="ph ph-caret-up-down"></i></th>
+                        <th width="120" class="text-center sortable" onclick="sortBankLedger('bank')" data-sort="bank">
+                            Bank <i class="ph ph-caret-up-down"></i></th>
+                        <th width="160" class="text-right sortable" onclick="sortBankLedger('debit')" data-sort="debit">
+                            Debit (Masuk) <i class="ph ph-caret-up-down"></i></th>
+                        <th width="160" class="text-right sortable" onclick="sortBankLedger('credit')"
+                            data-sort="credit">Kredit (Keluar) <i class="ph ph-caret-up-down"></i></th>
                         <th width="180" class="text-right">Saldo</th>
                         <th width="100" class="text-center action-col">Aksi</th>
                     </tr>

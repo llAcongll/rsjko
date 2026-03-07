@@ -1,16 +1,19 @@
 /* =========================
    SPJ LOGIC
    ========================= */
+let spjSortBy = 'spj_date';
+let spjSortDir = 'desc';
+let spjKeyword = '';
 
 window.initSpj = function () {
     loadSpj();
 };
 
-window.loadSpj = function (search = '') {
+window.loadSpj = function () {
     const tbody = document.getElementById('tableSpjBody');
     if (!tbody) return;
 
-    fetch(`/dashboard/spj?search=${search}`, { headers: { 'Accept': 'application/json' } })
+    fetch(`/dashboard/spj?search=${spjKeyword}&sort_by=${spjSortBy}&sort_dir=${spjSortDir}`, { headers: { 'Accept': 'application/json' } })
         .then(res => res.json())
         .then(res => {
             const data = res.data || [];
@@ -36,8 +39,35 @@ window.loadSpj = function (search = '') {
                 `;
             });
             tbody.innerHTML = html;
+            updateSortIconsSpj();
         });
+}
+
+window.sortSpj = function (col) {
+    if (spjSortBy === col) {
+        spjSortDir = spjSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        spjSortBy = col;
+        spjSortDir = 'asc';
+    }
+    loadSpj();
 };
+
+function updateSortIconsSpj() {
+    const table = document.getElementById('tableSpj');
+    if (!table) return;
+
+    table.querySelectorAll('th.sortable i').forEach(i => {
+        i.className = 'ph ph-caret-up-down text-slate-400';
+    });
+    const activeHeader = table.querySelector(`th.sortable[data-sort="${spjSortBy}"]`);
+    if (activeHeader) {
+        const i = activeHeader.querySelector('i');
+        if (i) {
+            i.className = spjSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+        }
+    }
+}
 
 function getStatusClass(status) {
     if (status === 'VALID' || status === 'CAIR') return 'bg-green-100 text-green-700';
@@ -127,8 +157,8 @@ window.closeSpjModal = () => document.getElementById('spjFormModal').classList.r
 
 window.handleSearchSpj = function (e) {
     if (e.key === 'Enter') {
-        const search = e.target.value;
-        loadSpj(search);
+        spjKeyword = e.target.value;
+        loadSpj();
     }
 };
 
@@ -171,6 +201,8 @@ function executeHapusSpj(id) {
 /* =========================
    SALDO DANA LOGIC
    ========================= */
+let saldoSortBy = 'sp2d_date';
+let saldoSortDir = 'desc';
 
 window.initSaldoDana = function () {
     loadSaldoSummary();
@@ -231,7 +263,7 @@ function loadSaldoTable() {
     const tbody = document.getElementById('tableSaldoBody');
     if (!tbody) return;
 
-    fetch('/dashboard/disbursements?limit=100&status=CAIR&is_saldo=1', { headers: { 'Accept': 'application/json' } })
+    fetch(`/dashboard/disbursements?limit=100&status=CAIR&is_saldo=1&sort_by=${saldoSortBy}&sort_dir=${saldoSortDir}`, { headers: { 'Accept': 'application/json' } })
         .then(res => res.json())
         .then(res => {
             const data = res.data || [];
@@ -271,7 +303,34 @@ function loadSaldoTable() {
                 `;
             });
             tbody.innerHTML = html;
+            updateSortIconsSaldoDana();
         });
+}
+
+window.sortSaldoDana = function (col) {
+    if (saldoSortBy === col) {
+        saldoSortDir = saldoSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        saldoSortBy = col;
+        saldoSortDir = 'asc';
+    }
+    loadSaldoTable();
+};
+
+function updateSortIconsSaldoDana() {
+    const table = document.getElementById('tableSaldo');
+    if (!table) return;
+
+    table.querySelectorAll('th.sortable i').forEach(i => {
+        i.className = 'ph ph-caret-up-down text-slate-400';
+    });
+    const activeHeader = table.querySelector(`th.sortable[data-sort="${saldoSortBy}"]`);
+    if (activeHeader) {
+        const i = activeHeader.querySelector('i');
+        if (i) {
+            i.className = saldoSortDir === 'asc' ? 'ph ph-caret-up text-blue-600' : 'ph ph-caret-down text-blue-600';
+        }
+    }
 }
 
 window.openSaldoForm = function () {
@@ -506,11 +565,11 @@ window.loadDisbursements = function () {
                 if (isReport) {
                     html += `
                         <tr>
-                            <td class="text-center">${index + 1}</td>
-                            <td class="text-center">${formatTanggal(item.sp2d_date)}</td>
-                            <td class="text-left font-mono">${docNoHtml}</td>
-                            <td>${kegiatanHtml}</td>
-                            <td class="text-right font-mono">${formatRupiahTable(item.value)}</td>
+                            <td class="text-center" data-label="No">${index + 1}</td>
+                            <td class="text-center" data-label="Tanggal">${formatTanggal(item.sp2d_date)}</td>
+                            <td class="text-left font-mono" data-label="No. Dokumen">${docNoHtml}</td>
+                            <td data-label="Kegiatan">${kegiatanHtml}</td>
+                            <td class="text-right font-mono" data-label="Nilai">${formatRupiahTable(item.value)}</td>
                         </tr>
                     `;
                 } else {
@@ -586,16 +645,16 @@ window.loadDisbursements = function () {
 
                     html += `
                         <tr>
-                            <td class="text-center">${index + 1}</td>
-                            <td class="text-center font-mono">${item.paket_number}</td>
-                            <td class="text-center"><span class="badge-mini">${item.type}</span></td>
-                            <td class="text-left font-mono">${docNoHtml}</td>
-                            <td class="text-center font-mono" style="font-size:0.8rem">${item.siklus_number}</td>
-                            <td class="text-center">${formatTanggal(item.sp2d_date)}</td>
-                            <td>${kegiatanHtml}</td>
-                            <td class="text-right font-mono">${formatRupiahTable(item.value)}</td>
-                            <td class="text-center">${statusBadge}</td>
-                            <td class="text-center" style="white-space:nowrap;">${actionHtml}</td>
+                            <td class="text-center" data-label="No">${index + 1}</td>
+                            <td class="text-center font-mono" data-label="Paket">${item.paket_number}</td>
+                            <td class="text-center" data-label="Tipe"><span class="badge-mini">${item.type}</span></td>
+                            <td class="text-left font-mono" data-label="No. Dokumen">${docNoHtml}</td>
+                            <td class="text-center font-mono" style="font-size:0.8rem" data-label="Siklus">${item.siklus_number}</td>
+                            <td class="text-center" data-label="Tanggal">${formatTanggal(item.sp2d_date)}</td>
+                            <td data-label="Kegiatan">${kegiatanHtml}</td>
+                            <td class="text-right font-mono" data-label="Nilai">${formatRupiahTable(item.value)}</td>
+                            <td class="text-center" data-label="Status">${statusBadge}</td>
+                            <td class="text-center" style="white-space:nowrap;" data-label="Aksi">${actionHtml}</td>
                         </tr>
                     `;
                 }
@@ -1633,12 +1692,12 @@ window.loadBelanjaItems = function (id) {
 
                             html += `
                                 <tr>
-                                    <td class="text-center" style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${idx + 1}</td>
-                                    <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; white-space: nowrap;">${formatTanggal(ex.spending_date)}</td>
-                                    <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; font-family: monospace; font-size: 11px; font-weight: 700; color: #6366f1; white-space: nowrap;">${ex.no_bukti || '-'}</td>
-                                    <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${ex.description || '-'}</td>
-                                    <td class="text-right font-mono" style="padding: 10px; border-bottom: 1px solid #f1f5f9; font-weight: 600;">${formatRupiahTable(ex.gross_value)}</td>
-                                    <td class="text-center" style="padding: 10px; border-bottom: 1px solid #f1f5f9; white-space: nowrap;">
+                                    <td class="text-center" style="padding: 10px; border-bottom: 1px solid #f1f5f9;" data-label="No">${idx + 1}</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; white-space: nowrap;" data-label="Tanggal">${formatTanggal(ex.spending_date)}</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; font-family: monospace; font-size: 11px; font-weight: 700; color: #6366f1; white-space: nowrap;" data-label="No. Bukti">${ex.no_bukti || '-'}</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;" data-label="Uraian">${ex.description || '-'}</td>
+                                    <td class="text-right font-mono" style="padding: 10px; border-bottom: 1px solid #f1f5f9; font-weight: 600;" data-label="Nilai">${formatRupiahTable(ex.gross_value)}</td>
+                                    <td class="text-center" style="padding: 10px; border-bottom: 1px solid #f1f5f9; white-space: nowrap;" data-label="Aksi">
                                         <div style="display: flex; gap: 4px; justify-content: center;">
                                             <button class="btn-aksi" title="Preview" onclick="openPengeluaranDetail(${ex.id})" 
                                                 style="background: #eff6ff; color: #2563eb; width: 28px; height: 28px; border: 1px solid #3b82f6;">

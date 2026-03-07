@@ -262,9 +262,9 @@ function renderPerusahaanPage() {
         const escapedNama = r.nama.replace(/'/g, "\\'");
         tbody.innerHTML += `
       <tr>
-        <td class="text-center">${start + i + 1}</td>
-        <td>${r.kode}</td>
-        <td>${r.nama}</td>
+        <td class="text-center" data-label="No">${start + i + 1}</td>
+        <td data-label="Kode">${r.kode}</td>
+        <td data-label="Nama">${r.nama}</td>
         <td>
           <div class="flex justify-center gap-2">
             ${canCRUD ? `

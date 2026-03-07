@@ -27,7 +27,7 @@
         </div>
 
         <div class="table-container">
-            <table id="perusahaanTable" class="table universal-table">
+            <table id="perusahaanTable" class="table universal-table table-mobile-cards">
                 <thead>
                     <tr>
                         <th class="text-center checkbox-col">No</th>

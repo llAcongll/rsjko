@@ -242,12 +242,12 @@ function renderPtPage() {
     pageData.forEach((d, i) => {
         tbody.innerHTML += `
       <tr>
-        <td class="text-center">${start + i + 1}</td>
-        <td>${d.jabatan}</td>
-        <td class="text-center">${d.pangkat || '-'}</td>
-        <td>${d.nama}</td>
-        <td class="text-center">${d.nip || '-'}</td>
-        <td>
+        <td class="text-center" data-label="No">${start + i + 1}</td>
+        <td data-label="Jabatan">${d.jabatan}</td>
+        <td class="text-center" data-label="Pangkat/Gol">${d.pangkat || '-'}</td>
+        <td data-label="Nama">${d.nama}</td>
+        <td class="text-center" data-label="NIP">${d.nip || '-'}</td>
+        <td data-label="Aksi">
           <div class="flex justify-center gap-2">
             ${canCRUD ? `
               <button class="btn-aksi edit" 

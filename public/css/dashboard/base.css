@@ -1,5 +1,6 @@
 * {
   box-sizing: border-box;
+  transition: all 0.15s ease;
 }
 
 :root {
@@ -11,6 +12,11 @@
   --main-bg: #f8fafc;
   --accent-blue: #3b82f6;
   --transition-speed: 0.3s;
+
+  /* Breakpoints */
+  --bp-mobile: 640px;
+  --bp-tablet: 768px;
+  --bp-desktop: 1024px;
 }
 
 body {
@@ -339,8 +345,17 @@ body {
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
   margin-bottom: 24px;
+}
+
+@media (max-width: 640px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .page-header-left h2 {
@@ -500,8 +515,6 @@ body {
 .table-container,
 .table-responsive {
   width: 100%;
-  max-width: 100%;
-  display: block;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   margin-top: 16px;
@@ -511,6 +524,11 @@ body {
   max-height: 70vh;
   overflow-y: auto;
   border: 1px solid #e2e8f0;
+}
+
+.table-container table,
+.universal-table {
+  min-width: 600px;
 }
 
 .table,
@@ -527,7 +545,7 @@ body {
   height: 44px;
 }
 
-.universal-table .universal-table .universal-table thead th {
+.universal-table thead th {
   position: sticky;
   top: 0;
   background: #f8fafc;
@@ -595,6 +613,71 @@ body {
   color: var(--accent-blue);
 }
 
+/* =========================
+   MOBILE CARD VIEW PATTERN
+   ========================= */
+@media (max-width: 640px) {
+  .table-mobile-cards {
+    display: block;
+    border: none;
+    background: transparent;
+  }
+
+  .table-mobile-cards thead {
+    display: none;
+  }
+
+  .table-mobile-cards tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .table-mobile-cards tr {
+    display: block;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+
+  .table-mobile-cards td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    text-align: right !important;
+    font-size: 13px;
+    background: transparent !important;
+  }
+
+  .table-mobile-cards td:last-child {
+    border-bottom: none;
+    justify-content: center;
+    padding-top: 15px;
+    border-left: none;
+    min-width: 0;
+    position: static;
+  }
+
+  .table-mobile-cards td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    font-size: 10px;
+    text-align: left;
+    margin-right: 15px;
+    flex: 1;
+  }
+
+  .table-mobile-cards .checkbox-col {
+    display: none;
+  }
+}
+
 /* Column Standard widths */
 .checkbox-col {
   width: 40px !important;
@@ -619,13 +702,63 @@ body {
   text-align: left !important;
 }
 
+/* =========================
+   TAB SYSTEM
+========================= */
+.tab-group {
+  display: flex;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  width: max-content;
+}
+
+.tab-item {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  color: #64748b;
+}
+
+.tab-item:hover {
+  background: rgba(255, 255, 255, 0.5);
+  color: #1e293b;
+}
+
+.tab-item.active {
+  background: #fff !important;
+  color: #2563eb !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+@media (max-width: 640px) {
+  .tab-group {
+    width: 100%;
+    overflow-x: auto;
+  }
+}
+
 /* Table Toolbar & Search */
 .table-toolbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
   margin-bottom: 16px;
-  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .table-search-wrapper {
@@ -656,8 +789,32 @@ body {
 .table-search:focus {
   border-color: var(--accent-blue);
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-  /* Removed fixed width to prevent jumping in flexible wrappers */
 }
+
+.filter-wrapper {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-select {
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  font-size: 14px;
+  padding: 0 16px;
+  background: #fff;
+  color: #475569;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.filter-select:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
 
 /* Allow text wrapping for better stability in content columns */
 .universal-table td {
@@ -788,16 +945,64 @@ table tbody td {
 /* =========================
    UTILITY CLASSES (TAILWIND-LIKE)
 ========================= */
-.flex {
-  display: flex;
-}
-
-.flex-col {
-  flex-direction: column;
-}
-
 .items-center {
   align-items: center;
+}
+
+/* =========================
+   GRID SYSTEM (RESPONSIVE)
+========================= */
+.grid-responsive {
+  display: grid;
+  gap: 16px;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 640px) {
+
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   PAGE CONTAINER & TYPOGRAPHY
+========================= */
+.container-page {
+  max-width: 1200px;
+  margin: auto;
+  padding: 16px;
+}
+
+@media (max-width: 640px) {
+  .container-page {
+    padding: 12px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
 }
 
 .items-start {

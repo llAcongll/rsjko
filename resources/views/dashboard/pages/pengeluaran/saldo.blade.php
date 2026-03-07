@@ -26,12 +26,18 @@
                 <thead>
                     <tr>
                         <th width="40" class="text-center checkbox-col">No</th>
-                        <th width="80" class="text-center">Tipe</th>
-                        <th width="80" class="text-center">Siklus</th>
-                        <th width="120" class="text-center">Tanggal</th>
-                        <th>Uraian</th>
-                        <th class="text-right">Nilai (Rp)</th>
-                        <th width="100" class="text-center">Status</th>
+                        <th width="80" class="text-center sortable" onclick="sortSaldoDana('type')" data-sort="type">
+                            Tipe <i class="ph ph-caret-up-down"></i></th>
+                        <th width="80" class="text-center sortable" onclick="sortSaldoDana('siklus_up')"
+                            data-sort="siklus_up">Siklus <i class="ph ph-caret-up-down"></i></th>
+                        <th width="120" class="text-center sortable" onclick="sortSaldoDana('sp2d_date')"
+                            data-sort="sp2d_date">Tanggal <i class="ph ph-caret-up-down"></i></th>
+                        <th class="sortable" onclick="sortSaldoDana('description')" data-sort="description">Uraian <i
+                                class="ph ph-caret-up-down"></i></th>
+                        <th class="text-right sortable" onclick="sortSaldoDana('value')" data-sort="value">Nilai (Rp) <i
+                                class="ph ph-caret-up-down"></i></th>
+                        <th width="100" class="text-center sortable" onclick="sortSaldoDana('status')"
+                            data-sort="status">Status <i class="ph ph-caret-up-down"></i></th>
                         <th width="80" class="text-center action-col">Aksi</th>
                     </tr>
                 </thead>

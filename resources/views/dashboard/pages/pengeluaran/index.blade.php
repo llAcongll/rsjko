@@ -226,86 +226,91 @@
             </div>
         </div>
 
-        <div class="table-container">
-
-
+        <style>
             #tablePengeluaran th,
             #tablePengeluaran td {
-            font-size: 11px !important;
-            white-space: nowrap !important;
+                font-size: 11px !important;
+                white-space: nowrap !important;
             }
 
             .nominal-group {
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-            gap: 4px;
-            width: 100%;
-            min-width: 220px;
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 4px;
+                width: 100%;
+                min-width: 220px;
             }
 
             .nom-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                width: 100%;
             }
 
             .nom-label {
-            font-size: 8px;
-            font-weight: 700;
-            padding: 2px 0;
-            border-radius: 3px;
-            text-transform: uppercase;
-            width: 45px;
-            text-align: center;
-            flex-shrink: 0;
+                font-size: 8px;
+                font-weight: 700;
+                padding: 2px 0;
+                border-radius: 3px;
+                text-transform: uppercase;
+                width: 45px;
+                text-align: center;
+                flex-shrink: 0;
             }
 
             .nom-val {
-            font-family: 'JetBrains Mono', monospace;
-            flex-grow: 1;
+                font-family: 'JetBrains Mono', monospace;
+                flex-grow: 1;
             }
 
             .label-bruto {
-            background: #f1f5f9;
-            color: #475569;
+                background: #f1f5f9;
+                color: #475569;
             }
 
             .label-pajak {
-            background: #fef2f2;
-            color: #dc2626;
+                background: #fef2f2;
+                color: #dc2626;
             }
 
             .label-netto {
-            background: #ecfdf5;
-            color: #059669;
+                background: #ecfdf5;
+                color: #059669;
             }
 
             .val-bruto {
-            font-weight: 600;
-            color: #1e293b;
+                font-weight: 600;
+                color: #1e293b;
             }
 
             .val-pajak {
-            font-weight: 600;
-            color: #ef4444;
+                font-weight: 600;
+                color: #ef4444;
             }
 
             .val-netto {
-            font-weight: 800;
-            color: #059669;
-            font-size: 12px;
+                font-weight: 800;
+                color: #059669;
+                font-size: 12px;
             }
-            </style>
-            <div class="table-container"><table id="tablePengeluaran" class="universal-table">
+        </style>
+
+        <div class="table-container">
+            <table id="tablePengeluaran" class="universal-table">
                 <thead>
                     <tr>
                         <th width="60" class="text-center checkbox-col">No</th>
-                        <th width="120" class="text-center sortable">Tanggal</th>
-                        <th width="280" class="text-center sortable">Administrasi</th>
-                        <th class="text-center sortable">Uraian</th>
-                        <th width="240" class="text-right sortable">Rincian Nominal (Bruto/Pajak/Netto)</th>
+                        <th width="120" class="text-center sortable" onclick="sortPengeluaran('spending_date')"
+                            data-sort="spending_date">Tanggal <i class="ph ph-caret-up-down"></i></th>
+                        <th width="280" class="text-center sortable" onclick="sortPengeluaran('no_bukti')"
+                            data-sort="no_bukti">Administrasi <i class="ph ph-caret-up-down"></i></th>
+                        <th class="text-center sortable" onclick="sortPengeluaran('description')"
+                            data-sort="description">Uraian <i class="ph ph-caret-up-down"></i></th>
+                        <th width="240" class="text-right sortable" onclick="sortPengeluaran('gross_value')"
+                            data-sort="gross_value">Rincian Nominal (Bruto/Pajak/Netto) <i
+                                class="ph ph-caret-up-down"></i></th>
                         <th class="action-col">Aksi</th>
                     </tr>
                 </thead>
@@ -314,9 +319,8 @@
                         <td colspan="6" class="text-center">Memuat data...</td>
                     </tr>
                 </tbody>
-            </table></div>
+            </table>
         </div>
-
         <div class="flex justify-between items-center mt-4">
             <p id="paginationInfoPengeluaran" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0
                 dari 0

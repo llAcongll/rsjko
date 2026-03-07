@@ -3,6 +3,7 @@
     let masterPerPage = 10;
     let masterKeyword = '';
     let masterStatus = ''; // Added
+    let masterMonth = ''; // Added
     let masterSortBy = 'tanggal'; // Added
     let masterSortDir = 'desc'; // Added
     let selectedMasterId = null;
@@ -67,6 +68,7 @@
             per_page: masterPerPage,
             search: masterKeyword,
             status: masterStatus, // Added
+            month: masterMonth, // Added
             sort_by: masterSortBy, // Added
             sort_dir: masterSortDir, // Added
             kategori: 'BPJS',
@@ -110,25 +112,25 @@
 
                     html += `
                     <tr class="${selectedMasterId === item.id ? 'bg-blue-50' : ''}">
-                        <td class="text-center">
+                        <td class="text-center checkbox-col">
                             <input type="checkbox" class="master-checkbox" data-id="${item.id}" data-posted="${isPosted}" 
                                 ${isSelected ? 'checked' : ''} onchange="handleMasterCheckboxChangeBpjs(this, ${item.id}, ${isPosted})">
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" data-label="Tanggal PDPT/RK">
                             <div class="flex flex-col">
                                 <span class="font-bold text-slate-700">${formatTanggal(item.tanggal)}</span>
                                 ${item.tanggal_rk ? `<span class="text-xs text-slate-400">RK: ${formatTanggal(item.tanggal_rk)}</span>` : ''}
                             </div>
                         </td>
-                        <td>
+                        <td data-label="Keterangan / No. Bukti">
                             <div class="font-medium text-slate-700">${escapeHtml(item.keterangan || '-')}</div>
                             <div class="text-xs text-slate-400">${escapeHtml(item.no_bukti || '-')}</div>
                         </td>
-                        <td class="text-right font-mono text-blue-600">${formatRupiahTable(item.total_rs)}</td>
-                        <td class="text-right font-mono text-purple-600">${formatRupiahTable(item.total_pelayanan)}</td>
-                        <td class="text-right font-bold font-mono text-emerald-600">${formatRupiahTable(item.total_all)}</td>
-                        <td class="text-center">${statusBadge}</td>
-                        <td class="text-center">
+                        <td class="text-right font-mono text-blue-600" data-label="Total Jasa RS">${formatRupiahTable(item.total_rs)}</td>
+                        <td class="text-right font-mono text-purple-600" data-label="Total Jasa Pelayanan">${formatRupiahTable(item.total_pelayanan)}</td>
+                        <td class="text-right font-bold font-mono text-emerald-600" data-label="Total Pendapatan">${formatRupiahTable(item.total_all)}</td>
+                        <td class="text-center" data-label="Status">${statusBadge}</td>
+                        <td class="text-center" data-label="Aksi">
                             <div class="flex justify-center gap-2">
                                 <button class="btn-aksi detail" onclick="openDetailBpjs(${item.id}, '${escapeHtml(info)}', ${item.is_posted})" title="Buka Rincian">
                                     <i class="ph ph-list-numbers"></i>
@@ -662,15 +664,15 @@
 
                     html += `
                     <tr>
-                        <td class="text-center">${res.from + index}</td>
-                        <td class="text-center">${formatTanggal(item.tanggal)}</td>
-                        ${noSepCol}
-                        <td>
+                        <td class="text-center" data-label="No">${res.from + index}</td>
+                        <td class="text-center" data-label="Tanggal">${formatTanggal(item.tanggal)}</td>
+                        ${noSepCol ? noSepCol.replace('text-center', 'text-center" data-label="No SEP') : ''}
+                        <td data-label="Nama Pasien">
                             <div class="font-medium">${escapeHtml(item.nama_pasien ?? '-')}</div>
                             <div class="text-xs text-slate-400">${item.perusahaan?.nama ?? (item.transaksi || '-')}</div>
                         </td>
-                        <td><span class="badge badge-info">${item.ruangan?.nama ?? '-'}</span></td>
-                        <td class="text-right">
+                        <td data-label="Ruangan"><span class="badge badge-info">${item.ruangan?.nama ?? '-'}</span></td>
+                        <td class="text-right" data-label="RS / Pelayanan / Total">
                             <div class="nominal-group">
                                 <div class="nom-row">
                                     <div class="nom-val val-rs">${formatRupiahTable((parseFloat(item.rs_tindakan) || 0) + (parseFloat(item.rs_obat) || 0))}</div>
@@ -686,7 +688,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" data-label="Aksi">
                             <div class="flex justify-center gap-1">
                                 <button class="btn-aksi detail" onclick="detailPendapatanBpjs(${item.id})" title="View">
                                     <i class="ph ph-eye"></i>
@@ -1009,7 +1011,7 @@
                 openConfirm('Hapus Massal', 'Yakin ingin menghapus SELURUH data rincian pada kelompok ini?', async () => {
                     try {
                         const res = await fetch('/dashboard/pendapatan/bpjs/bulk-delete', {
-                            method: 'POST',
+                            method: 'DELETE',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -1153,39 +1155,71 @@
 
         loadMasterBpjs(1);
 
-        // Search Master
-        const searchMasterBpjs = document.getElementById('searchMasterBpjs');
-        if (searchMasterBpjs) {
-            let timer;
-            searchMasterBpjs.oninput = (e) => {
-                clearTimeout(timer);
-                timer = setTimeout(() => {
-                    masterKeyword = e.target.value.trim();
+        // Search Master (Top & Bottom Sync)
+        const searchMasterBpjsInputs = [
+            document.getElementById('searchMasterBpjs'),
+            document.getElementById('searchMasterBpjsBottom')
+        ];
+        searchMasterBpjsInputs.forEach(input => {
+            if (input) {
+                let timer;
+                input.oninput = (e) => {
+                    const val = e.target.value.trim();
+                    masterKeyword = val;
+                    searchMasterBpjsInputs.forEach(other => { if (other && other !== e.target) other.value = val; });
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { loadMasterBpjs(1); }, 400);
+                };
+            }
+        });
+
+        // Filter Status Master (Top & Bottom Sync)
+        const filterStatusMasterBpjsSelects = [
+            document.getElementById('filterStatusMasterBpjs'),
+            document.getElementById('filterStatusMasterBpjsBottom')
+        ];
+        filterStatusMasterBpjsSelects.forEach(sel => {
+            if (sel) {
+                sel.onchange = (e) => {
+                    masterStatus = e.target.value;
+                    filterStatusMasterBpjsSelects.forEach(other => { if (other && other !== e.target) other.value = e.target.value; });
                     loadMasterBpjs(1);
-                }, 400);
-            };
-        }
+                };
+            }
+        });
 
-        const filterStatusMasterBpjs = document.getElementById('filterStatusMasterBpjs');
-        if (filterStatusMasterBpjs) {
-            filterStatusMasterBpjs.onchange = (e) => {
-                masterStatus = e.target.value;
-                loadMasterBpjs(1);
-            };
-        }
+        // Filter Month Master (Top & Bottom Sync)
+        const filterMonthMasterBpjsInputs = [
+            document.getElementById('filterMonthMasterBpjs'),
+            document.getElementById('filterMonthMasterBpjsBottom')
+        ];
+        filterMonthMasterBpjsInputs.forEach(input => {
+            if (input) {
+                input.onchange = (e) => {
+                    masterMonth = e.target.value;
+                    filterMonthMasterBpjsInputs.forEach(other => { if (other && other !== e.target) other.value = e.target.value; });
+                    loadMasterBpjs(1);
+                };
+            }
+        });
 
-        // Search BPJS Records
-        const searchBpjs = document.getElementById('searchPendapatanBpjs');
-        if (searchBpjs) {
-            let timer;
-            searchBpjs.oninput = (e) => {
-                clearTimeout(timer);
-                timer = setTimeout(() => {
-                    bpjsKeyword = e.target.value.trim();
-                    loadPendapatanBpjs(1);
-                }, 400);
-            };
-        }
+        // Search BPJS Records (Top & Bottom Sync)
+        const searchBpjsInputs = [
+            document.getElementById('searchPendapatanBpjs'),
+            document.getElementById('searchPendapatanBpjsBottom')
+        ];
+        searchBpjsInputs.forEach(input => {
+            if (input) {
+                let timer;
+                input.oninput = (e) => {
+                    const val = e.target.value.trim();
+                    bpjsKeyword = val;
+                    searchBpjsInputs.forEach(other => { if (other && other !== e.target) other.value = val; });
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { loadPendapatanBpjs(1); }, 400);
+                };
+            }
+        });
 
         // Nominal formatting logic for BPJS details
         document.querySelectorAll('.nominal-display-bpjs').forEach(input => {

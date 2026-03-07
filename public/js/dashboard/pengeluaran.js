@@ -494,9 +494,9 @@ function loadPengeluaran(page = 1) {
             data.forEach(item => {
                 html += `
                 <tr>
-                    <td class="text-center">${no++}</td>
-                    <td class="text-center">${formatTanggal(item.spending_date)}</td>
-                    <td style="line-height: 1.4;">
+                    <td class="text-center" data-label="No">${no++}</td>
+                    <td class="text-center" data-label="Tanggal">${formatTanggal(item.spending_date)}</td>
+                    <td style="line-height: 1.4;" data-label="Tipe/Bukti">
                         <div class="flex flex-col gap-1">
                             <span class="badge-mini ${item.spending_type === 'UP' ? 'bg-orange-100 text-orange-700' :
                         (item.spending_type === 'GU' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700')
@@ -504,11 +504,11 @@ function loadPengeluaran(page = 1) {
                             <div style="color: #6366f1; font-weight: 600; font-size: 0.75rem; margin-top: 2px;">BUKTI: ${item.no_bukti || '-'}</div>
                         </div>
                     </td>
-                    <td>
+                    <td data-label="Uraian/Vendor">
                         <div class="font-medium">${escapeHtml(item.description)}</div>
                         <small class="text-slate-400">${item.vendor || 'Tanpa Vendor'}</small>
                     </td>
-                    <td>
+                    <td data-label="Nominal">
                         <div class="nominal-group">
                             <div class="nom-row">
                                 <div class="nom-val val-bruto">${formatRupiahTable(item.gross_value)}</div>
@@ -524,7 +524,7 @@ function loadPengeluaran(page = 1) {
                             </div>
                         </div>
                     </td>
-                    <td class="text-center">
+                    <td class="text-center" data-label="Aksi">
                         <div style="display: flex; gap: 4px; justify-content: center;">
                             <button class="btn-aksi" title="Preview" onclick="openPengeluaranDetail(${item.id})" 
                                 style="background: #eff6ff; color: #2563eb; width: 28px; height: 28px; border: 1px solid #3b82f6;">

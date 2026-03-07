@@ -34,46 +34,26 @@
     </div>
 
     {{-- SUMMARY CARDS (MASTER) --}}
-    <style>
-      .dashboard {
-        gap: 16px !important;
-      }
-
-      .pendapatan-summary-container {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 0px;
-      }
-
-      .pendapatan-summary-container .dashboard-cards {
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        width: 100%;
-        max-width: 850px;
-        gap: 16px;
-      }
-    </style>
-    <div class="pendapatan-summary-container">
-      <div class="dashboard-cards">
-        <div class="dash-card blue">
-          <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
-          <div class="dash-card-content">
-            <span class="label">Jasa Rumah Sakit</span>
-            <h3 id="masterSummaryRsUmum">Rp 0</h3>
-          </div>
+    <div class="grid-responsive grid-3 mb-4" style="max-width: 850px; margin-inline: auto;">
+      <div class="dash-card blue">
+        <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
+        <div class="dash-card-content">
+          <span class="label">Jasa Rumah Sakit</span>
+          <h3 id="masterSummaryRsUmum">Rp 0</h3>
         </div>
-        <div class="dash-card purple">
-          <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
-          <div class="dash-card-content">
-            <span class="label">Jasa Pelayanan</span>
-            <h3 id="masterSummaryPelayananUmum">Rp 0</h3>
-          </div>
+      </div>
+      <div class="dash-card purple">
+        <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
+        <div class="dash-card-content">
+          <span class="label">Jasa Pelayanan</span>
+          <h3 id="masterSummaryPelayananUmum">Rp 0</h3>
         </div>
-        <div class="dash-card green">
-          <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
-          <div class="dash-card-content">
-            <span class="label">Total Pendapatan</span>
-            <h3 id="masterSummaryTotalUmum" style="color: #16a34a;">Rp 0</h3>
-          </div>
+      </div>
+      <div class="dash-card green">
+        <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
+        <div class="dash-card-content">
+          <span class="label">Total Pendapatan</span>
+          <h3 id="masterSummaryTotalUmum" style="color: #16a34a;">Rp 0</h3>
         </div>
       </div>
     </div>
@@ -87,12 +67,14 @@
             data-table="masterTableUmum">
         </div>
         <div class="filter-wrapper">
-          <select id="filterStatusMasterUmum"
-            style="height: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px; padding: 0 16px; background: #fff; color: #475569; font-weight: 600; cursor: pointer; outline: none; transition: all 0.2s;">
+          <select id="filterStatusMasterUmum" class="filter-select">
             <option value="">Semua Status</option>
             <option value="DRAFT">📑 Draft</option>
             <option value="POSTED">✅ Diposting</option>
           </select>
+        </div>
+        <div class="filter-wrapper">
+          <input type="month" id="filterMonthMasterUmum" class="filter-select" style="max-width: 160px;">
         </div>
       </div>
 
@@ -102,18 +84,25 @@
       </div>
 
       <div class="table-container">
-        <table id="masterTableUmum" class="universal-table">
+        <table id="masterTableUmum" class="universal-table table-mobile-cards">
           <thead>
             <tr>
               <th class="checkbox-col">
                 <input type="checkbox" id="checkAllMasterUmum" onclick="toggleAllMasterUmum(this)" />
               </th>
-              <th class="text-center sortable">Tanggal PDPT/RK</th>
-              <th class="text-center sortable">Keterangan / No. Bukti</th>
-              <th class="text-right sortable">Jasa RS</th>
-              <th class="text-right sortable">Jasa Pelayanan</th>
-              <th class="text-right sortable">Total (Rp)</th>
-              <th class="text-center sortable">Status</th>
+              <th class="text-center sortable" onclick="sortMasterUmum('tanggal')" data-sort="tanggal">Tanggal PDPT/RK
+                <i class="ph ph-caret-up-down"></i>
+              </th>
+              <th class="text-center sortable" onclick="sortMasterUmum('keterangan')" data-sort="keterangan">Keterangan
+                / No. Bukti <i class="ph ph-caret-up-down"></i></th>
+              <th class="text-right sortable" onclick="sortMasterUmum('total_rs')" data-sort="total_rs">Jasa RS <i
+                  class="ph ph-caret-up-down"></i></th>
+              <th class="text-right sortable" onclick="sortMasterUmum('total_pelayanan')" data-sort="total_pelayanan">
+                Jasa Pelayanan <i class="ph ph-caret-up-down"></i></th>
+              <th class="text-right sortable" onclick="sortMasterUmum('total_all')" data-sort="total_all">Total (Rp) <i
+                  class="ph ph-caret-up-down"></i></th>
+              <th class="text-center sortable" onclick="sortMasterUmum('is_posted')" data-sort="is_posted">Status <i
+                  class="ph ph-caret-up-down"></i></th>
               <th class="action-col">Aksi</th>
             </tr>
           </thead>
@@ -178,51 +167,55 @@
     </div>
 
     {{-- SUMMARY CARDS (DETAIL) --}}
-    <div class="pendapatan-summary-container">
-      <div class="dashboard-cards">
-        <div class="dash-card blue">
-          <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
-          <div class="dash-card-content">
-            <span class="label">Jasa Rumah Sakit</span>
-            <h3 id="detailSummaryRsUmum">Rp 0</h3>
-          </div>
+    <div class="grid-responsive grid-3 mb-4" style="max-width: 850px; margin-inline: auto;">
+      <div class="dash-card blue">
+        <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
+        <div class="dash-card-content">
+          <span class="label">Jasa Rumah Sakit</span>
+          <h3 id="detailSummaryRsUmum">Rp 0</h3>
         </div>
-        <div class="dash-card purple">
-          <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
-          <div class="dash-card-content">
-            <span class="label">Jasa Pelayanan</span>
-            <h3 id="detailSummaryPelayananUmum">Rp 0</h3>
-          </div>
+      </div>
+      <div class="dash-card purple">
+        <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
+        <div class="dash-card-content">
+          <span class="label">Jasa Pelayanan</span>
+          <h3 id="detailSummaryPelayananUmum">Rp 0</h3>
         </div>
-        <div class="dash-card green">
-          <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
-          <div class="dash-card-content">
-            <span class="label">Total Pendapatan</span>
-            <h3 id="detailSummaryTotalUmum" style="color: #16a34a;">Rp 0</h3>
-          </div>
+      </div>
+      <div class="dash-card green">
+        <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
+        <div class="dash-card-content">
+          <span class="label">Total Pendapatan</span>
+          <h3 id="detailSummaryTotalUmum" style="color: #16a34a;">Rp 0</h3>
         </div>
       </div>
     </div>
 
     <div class="dashboard-box" style="padding: 0;">
       <div class="table-toolbar" style="padding: 16px; margin-bottom: 0; border-bottom: 1px solid #f1f5f9;">
-        <div class="table-search-wrapper" style="width: 100%;">
+        <div class="table-search-wrapper" style="flex: 1;">
           <i class="ph ph-magnifying-glass"></i>
           <input type="text" id="searchPendapatanUmum" class="table-search" placeholder="Cari nama pasien, ruangan..."
             data-table="pendapatanUmumTable">
         </div>
       </div>
       <div class="table-container" style="margin-top: 0; border-radius: 0; border: none; max-height: 60vh;">
-        <table id="pendapatanUmumTable" class="universal-table">
+        <table id="pendapatanUmumTable" class="universal-table table-mobile-cards">
           <thead>
             <tr>
               <th class="text-center checkbox-col">No</th>
-              <th class="text-center sortable">Tanggal</th>
-              <th class="text-center sortable">Nama Pasien</th>
-              <th class="text-center sortable">Ruangan</th>
-              <th class="text-right sortable">Jasa RS</th>
-              <th class="text-right sortable">Jasa Pelayanan</th>
-              <th class="text-right sortable">Total (Rp)</th>
+              <th class="text-center sortable" onclick="sortUmum('tanggal')" data-sort="tanggal">Tanggal <i
+                  class="ph ph-caret-up-down"></i></th>
+              <th class="text-center sortable" onclick="sortUmum('nama_pasien')" data-sort="nama_pasien">Nama Pasien <i
+                  class="ph ph-caret-up-down"></i></th>
+              <th class="text-center sortable" onclick="sortUmum('ruangan_id')" data-sort="ruangan_id">Ruangan <i
+                  class="ph ph-caret-up-down"></i></th>
+              <th class="text-right sortable" onclick="sortUmum('rs_tindakan')" data-sort="rs_tindakan">Jasa RS <i
+                  class="ph ph-caret-up-down"></i></th>
+              <th class="text-right sortable" onclick="sortUmum('pelayanan_tindakan')" data-sort="pelayanan_tindakan">
+                Jasa Pelayanan <i class="ph ph-caret-up-down"></i></th>
+              <th class="text-right sortable" onclick="sortUmum('total')" data-sort="total">Total (Rp) <i
+                  class="ph ph-caret-up-down"></i></th>
               <th class="action-col">Aksi</th>
             </tr>
           </thead>

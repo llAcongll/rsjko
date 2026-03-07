@@ -376,14 +376,14 @@ function renderRekeningTable(data) {
   pageData.forEach((row, i) => {
     tbody.innerHTML += `
       <tr>
-        <td>${start + i + 1}</td>
-        <td class="text-center">${formatDate(row.tanggal)}</td>
-        <td class="ellipsis" title="${row.bank}">${row.bank}</td>
-        <td><div class="ellipsis-content" title="${row.keterangan}">${row.keterangan}</div></td>
-        <td class="cd ${row.cd === 'C' ? 'credit' : 'debit'}">${row.cd}</td>
-        <td class="amount">${formatRupiahTable(row.jumlah)}</td>
-        <td class="amount">${formatRupiahTable(row.saldo_running)}</td>
-        <td>
+        <td data-label="No">${start + i + 1}</td>
+        <td class="text-center" data-label="Tanggal">${formatDate(row.tanggal)}</td>
+        <td class="ellipsis" title="${row.bank}" data-label="Bank">${row.bank}</td>
+        <td data-label="Keterangan"><div class="ellipsis-content" title="${row.keterangan}">${row.keterangan}</div></td>
+        <td class="cd ${row.cd === 'C' ? 'credit' : 'debit'}" data-label="C/D">${row.cd}</td>
+        <td class="amount" data-label="Jumlah">${formatRupiahTable(row.jumlah)}</td>
+        <td class="amount" data-label="Saldo">${formatRupiahTable(row.saldo_running)}</td>
+        <td data-label="Aksi">
           <div class="flex justify-center gap-2">
             <button class="btn-aksi detail" onclick="detailRekening(${row.id})" title="Lihat Detail">
               <i class="ph ph-eye"></i>

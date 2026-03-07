@@ -38,6 +38,7 @@ class RevenueMasterController extends Controller
         $perPage = $request->get('per_page', 10);
         $search = $request->get('search');
         $status = $request->get('status');
+        $month = $request->get('month'); // Added
         $sortBy = $request->get('sort_by', 'tanggal');
         $sortDir = $request->get('sort_dir', 'desc');
 
@@ -50,6 +51,9 @@ class RevenueMasterController extends Controller
         $query = RevenueMaster::where('tahun', $tahunAnggaran)
             ->when($category, function ($q) use ($category) {
                 $q->where('kategori', $category);
+            })
+            ->when($month, function ($q) use ($month) { // Added
+                $q->where('tanggal', 'like', "{$month}%");
             })
             ->when($status, function ($q) use ($status) {
                 if ($status === 'DRAFT') {

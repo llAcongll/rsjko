@@ -34,46 +34,26 @@
         </div>
 
         {{-- SUMMARY CARDS (MASTER) --}}
-        <style>
-            .dashboard {
-                gap: 16px !important;
-            }
-
-            .pendapatan-summary-container {
-                display: flex;
-                justify-content: center;
-                margin-bottom: 0px;
-            }
-
-            .pendapatan-summary-container .dashboard-cards {
-                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-                width: 100%;
-                max-width: 850px;
-                gap: 16px;
-            }
-        </style>
-        <div class="pendapatan-summary-container">
-            <div class="dashboard-cards">
-                <div class="dash-card blue">
-                    <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Jasa Rumah Sakit</span>
-                        <h3 id="masterSummaryRsLain">Rp 0</h3>
-                    </div>
+        <div class="grid-responsive grid-3 mb-4" style="max-width: 850px; margin-inline: auto;">
+            <div class="dash-card blue">
+                <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Jasa Rumah Sakit</span>
+                    <h3 id="masterSummaryRsLain">Rp 0</h3>
                 </div>
-                <div class="dash-card purple">
-                    <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Jasa Pelayanan</span>
-                        <h3 id="masterSummaryPelayananLain">Rp 0</h3>
-                    </div>
+            </div>
+            <div class="dash-card purple">
+                <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Jasa Pelayanan</span>
+                    <h3 id="masterSummaryPelayananLain">Rp 0</h3>
                 </div>
-                <div class="dash-card green">
-                    <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Total Lain-lain</span>
-                        <h3 id="masterSummaryTotalLain" style="color: #16a34a;">Rp 0</h3>
-                    </div>
+            </div>
+            <div class="dash-card green">
+                <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Total Lain-lain</span>
+                    <h3 id="masterSummaryTotalLain" style="color: #16a34a;">Rp 0</h3>
                 </div>
             </div>
         </div>
@@ -81,20 +61,20 @@
         {{-- MAIN CONTENT (MASTER) --}}
         <div class="dashboard-box">
             <div class="table-toolbar">
-                <div class="flex items-center gap-4">
-                    <div class="form-group-inline">
-                        <select id="filterStatusMasterLain" class="form-input"
-                            style="height:48px; width:220px; border-radius:12px;">
-                            <option value="">Semua Status</option>
-                            <option value="DRAFT">📑 Draft</option>
-                            <option value="POSTED">✅ Diposting</option>
-                        </select>
-                    </div>
-                </div>
                 <div class="table-search-wrapper">
                     <i class="ph ph-magnifying-glass"></i>
                     <input type="text" id="searchMasterLain" class="table-search"
                         placeholder="Cari tanggal, no bukti, atau keterangan..." data-table="masterTable">
+                </div>
+                <div class="filter-wrapper">
+                    <select id="filterStatusMasterLain" class="filter-select" style="width:220px;">
+                        <option value="">Semua Status</option>
+                        <option value="DRAFT">📑 Draft</option>
+                        <option value="POSTED">✅ Diposting</option>
+                    </select>
+                </div>
+                <div class="filter-wrapper">
+                    <input type="month" id="filterMonthMasterLain" class="filter-select" style="max-width: 160px;">
                 </div>
             </div>
 
@@ -114,18 +94,24 @@
             </div>
 
             <div class="table-container">
-                <table class="table universal-table" id="masterTable">
+                <table class="table universal-table table-mobile-cards" id="masterTable">
                     <thead>
                         <tr>
                             <th class="checkbox-col">
                                 <input type="checkbox" id="checkAllMasterLain" onclick="toggleAllMasterLain(this)" />
                             </th>
-                            <th class="text-center sortable">Tanggal PDPT/RK</th>
-                            <th class="text-center sortable">Keterangan / No. Bukti</th>
-                            <th class="text-right sortable">Jasa RS</th>
-                            <th class="text-right sortable">Jasa Pelayanan</th>
-                            <th class="text-right sortable">Total (Rp)</th>
-                            <th class="text-center sortable">Status</th>
+                            <th class="text-center sortable" onclick="sortMasterLain('tanggal')" data-sort="tanggal">
+                                Tanggal PDPT/RK <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-center sortable" onclick="sortMasterLain('keterangan')"
+                                data-sort="keterangan">Keterangan / No. Bukti <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-right sortable" onclick="sortMasterLain('total_rs')" data-sort="total_rs">
+                                Jasa RS <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-right sortable" onclick="sortMasterLain('total_pelayanan')"
+                                data-sort="total_pelayanan">Jasa Pelayanan <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-right sortable" onclick="sortMasterLain('total_all')" data-sort="total_all">
+                                Total (Rp) <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-center sortable" onclick="sortMasterLain('is_posted')"
+                                data-sort="is_posted">Status <i class="ph ph-caret-up-down"></i></th>
                             <th class="action-col">Aksi</th>
                         </tr>
                     </thead>
@@ -195,35 +181,33 @@
         </div>
 
         {{-- SUMMARY CARDS (DETAIL) --}}
-        <div class="pendapatan-summary-container">
-            <div class="dashboard-cards">
-                <div class="dash-card blue">
-                    <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Jasa Rumah Sakit</span>
-                        <h3 id="detailSummaryRsLain">Rp 0</h3>
-                    </div>
+        <div class="grid-responsive grid-3 mb-4" style="max-width: 850px; margin-inline: auto;">
+            <div class="dash-card blue">
+                <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Jasa Rumah Sakit</span>
+                    <h3 id="detailSummaryRsLain">Rp 0</h3>
                 </div>
-                <div class="dash-card purple">
-                    <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Jasa Pelayanan</span>
-                        <h3 id="detailSummaryPelayananLain">Rp 0</h3>
-                    </div>
+            </div>
+            <div class="dash-card purple">
+                <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Jasa Pelayanan</span>
+                    <h3 id="detailSummaryPelayananLain">Rp 0</h3>
                 </div>
-                <div class="dash-card green">
-                    <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Total Lain-lain</span>
-                        <h3 id="detailSummaryTotalLain" style="color: #16a34a;">Rp 0</h3>
-                    </div>
+            </div>
+            <div class="dash-card green">
+                <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Total Lain-lain</span>
+                    <h3 id="detailSummaryTotalLain" style="color: #16a34a;">Rp 0</h3>
                 </div>
             </div>
         </div>
 
         <div class="dashboard-box" style="padding: 0; overflow: hidden;">
             <div class="table-toolbar" style="padding: 16px; border-bottom: 1px solid #f1f5f9;">
-                <div class="table-search-wrapper" style="max-width: 100%;">
+                <div class="table-search-wrapper" style="flex: 1;">
                     <i class="ph ph-magnifying-glass"></i>
                     <input type="text" id="searchPendapatanLain" class="table-search"
                         placeholder="Cari nama pasien, rincian transaksi, ruangan..." data-table="pendapatanLainTable">
@@ -299,26 +283,30 @@
                         color: #059669;
                     }
                 </style>
-                <div class="table-container">
-                    <table id="pendapatanLainTable" class="table universal-table">
-                        <thead>
-                            <tr>
-                                <th class="text-center checkbox-col">No</th>
-                                <th class="text-center sortable">Tanggal</th>
-                                <th class="text-center sortable">Nama Pasien / Keterangan</th>
-                                <th class="text-center sortable">Sumber/MOU</th>
-                                <th class="text-center sortable">Ruangan</th>
-                                <th class="text-right sortable">RS / Pelayanan / Total</th>
-                                <th class="action-col">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pendapatanLainBody">
-                            <tr>
-                                <td colspan="7" class="text-center">Memuat rincian...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <table id="pendapatanLainTable" class="table universal-table table-mobile-cards">
+                    <thead>
+                        <tr>
+                            <th class="text-center checkbox-col">No</th>
+                            <th class="text-center sortable" onclick="sortLain('tanggal')" data-sort="tanggal">Tanggal
+                                <i class="ph ph-caret-up-down"></i>
+                            </th>
+                            <th class="text-center sortable" onclick="sortLain('nama_pasien')" data-sort="nama_pasien">
+                                Nama Pasien / Keterangan <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-center sortable" onclick="sortLain('sumber_mou')" data-sort="sumber_mou">
+                                Sumber/MOU <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-center sortable" onclick="sortLain('ruangan_id')" data-sort="ruangan_id">
+                                Ruangan <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-right sortable" onclick="sortLain('total')" data-sort="total">RS / Pelayanan
+                                / Total <i class="ph ph-caret-up-down"></i></th>
+                            <th class="action-col">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendapatanLainBody">
+                        <tr>
+                            <td colspan="7" class="text-center">Memuat rincian...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <div class="flex justify-between items-center" style="padding: 16px;">
                 <p id="paginationInfoLain" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0 dari 0 data

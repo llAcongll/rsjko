@@ -33,11 +33,15 @@
                 <thead>
                     <tr>
                         <th width="40" class="text-center checkbox-col">No</th>
-                        <th width="150">Nomor SPJ</th>
-                        <th width="120">Tanggal</th>
+                        <th width="150" class="sortable" onclick="sortSpj('spj_number')" data-sort="spj_number">Nomor
+                            SPJ <i class="ph ph-caret-up-down"></i></th>
+                        <th width="120" class="sortable" onclick="sortSpj('spj_date')" data-sort="spj_date">Tanggal <i
+                                class="ph ph-caret-up-down"></i></th>
                         <th>Penerima (Bendahara)</th>
-                        <th width="120" class="text-center">Items</th>
-                        <th width="120" class="text-center">Status</th>
+                        <th width="120" class="text-center sortable" onclick="sortSpj('items_count')"
+                            data-sort="items_count">Items <i class="ph ph-caret-up-down"></i></th>
+                        <th width="120" class="text-center sortable" onclick="sortSpj('status')" data-sort="status">
+                            Status <i class="ph ph-caret-up-down"></i></th>
                         <th width="100" class="text-center action-col">Aksi</th>
                     </tr>
                 </thead>

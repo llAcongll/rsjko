@@ -34,46 +34,26 @@
         </div>
 
         {{-- SUMMARY CARDS (MASTER) --}}
-        <style>
-            .dashboard {
-                gap: 16px !important;
-            }
-
-            .pendapatan-summary-container {
-                display: flex;
-                justify-content: center;
-                margin-bottom: 0px;
-            }
-
-            .pendapatan-summary-container .dashboard-cards {
-                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-                width: 100%;
-                max-width: 850px;
-                gap: 16px;
-            }
-        </style>
-        <div class="pendapatan-summary-container">
-            <div class="dashboard-cards">
-                <div class="dash-card blue">
-                    <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Jasa Rumah Sakit</span>
-                        <h3 id="masterSummaryRsBpjs">Rp 0</h3>
-                    </div>
+        <div class="grid-responsive grid-3 mb-4" style="max-width: 850px; margin-inline: auto;">
+            <div class="dash-card blue">
+                <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Jasa Rumah Sakit</span>
+                    <h3 id="masterSummaryRsBpjs">Rp 0</h3>
                 </div>
-                <div class="dash-card purple">
-                    <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Jasa Pelayanan</span>
-                        <h3 id="masterSummaryPelayananBpjs">Rp 0</h3>
-                    </div>
+            </div>
+            <div class="dash-card purple">
+                <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Jasa Pelayanan</span>
+                    <h3 id="masterSummaryPelayananBpjs">Rp 0</h3>
                 </div>
-                <div class="dash-card green">
-                    <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Total Klaim BPJS</span>
-                        <h3 id="masterSummaryTotalBpjs" style="color: #16a34a;">Rp 0</h3>
-                    </div>
+            </div>
+            <div class="dash-card green">
+                <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Total Klaim BPJS</span>
+                    <h3 id="masterSummaryTotalBpjs" style="color: #16a34a;">Rp 0</h3>
                 </div>
             </div>
         </div>
@@ -87,12 +67,14 @@
                         placeholder="Cari di daftar kelompok..." data-table="masterTable">
                 </div>
                 <div class="filter-wrapper">
-                    <select id="filterStatusMasterBpjs"
-                        style="height: 48px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px; padding: 0 16px; background: #fff; color: #475569; font-weight: 600; cursor: pointer; outline: none; transition: all 0.2s;">
+                    <select id="filterStatusMasterBpjs" class="filter-select">
                         <option value="">Semua Status</option>
                         <option value="DRAFT">📑 Draft</option>
                         <option value="POSTED">✅ Diposting</option>
                     </select>
+                </div>
+                <div class="filter-wrapper">
+                    <input type="month" id="filterMonthMasterBpjs" class="filter-select" style="max-width: 160px;">
                 </div>
             </div>
 
@@ -102,18 +84,24 @@
             </div>
 
             <div class="table-container">
-                <table id="masterTable" class="universal-table">
+                <table id="masterTable" class="universal-table table-mobile-cards">
                     <thead>
                         <tr>
                             <th class="checkbox-col">
                                 <input type="checkbox" id="checkAllMasterBpjs" onclick="toggleAllMasterBpjs(this)" />
                             </th>
-                            <th class="text-center sortable">Tanggal PDPT/RK</th>
-                            <th class="text-center sortable">Keterangan / No. Bukti</th>
-                            <th class="text-right sortable">Jasa RS</th>
-                            <th class="text-right sortable">Jasa Pelayanan</th>
-                            <th class="text-right sortable">Total (Rp)</th>
-                            <th class="text-center sortable">Status</th>
+                            <th class="text-center sortable" onclick="sortMasterBpjs('tanggal')" data-sort="tanggal">
+                                Tanggal PDPT/RK <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-center sortable" onclick="sortMasterBpjs('keterangan')"
+                                data-sort="keterangan">Keterangan / No. Bukti <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-right sortable" onclick="sortMasterBpjs('total_rs')" data-sort="total_rs">
+                                Jasa RS <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-right sortable" onclick="sortMasterBpjs('total_pelayanan')"
+                                data-sort="total_pelayanan">Jasa Pelayanan <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-right sortable" onclick="sortMasterBpjs('total_all')" data-sort="total_all">
+                                Total (Rp) <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-center sortable" onclick="sortMasterBpjs('is_posted')"
+                                data-sort="is_posted">Status <i class="ph ph-caret-up-down"></i></th>
                             <th class="action-col">Aksi</th>
                         </tr>
                     </thead>
@@ -154,18 +142,14 @@
             </div>
 
             <div class="dashboard-header-right">
-                <div class="bpjs-tab-group"
-                    style="display: flex; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 10px; margin-bottom: 12px;">
-                    <button class="bpjs-tab active" onclick="switchBpjsTab('REGULAR', this)" id="tabRegular"
-                        style="padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">
+                <div class="bpjs-tab-group tab-group">
+                    <button class="bpjs-tab tab-item active" onclick="switchBpjsTab('REGULAR', this)" id="tabRegular">
                         <i class="ph ph-clipboard-text"></i> Regular
                     </button>
-                    <button class="bpjs-tab" onclick="switchBpjsTab('EVAKUASI', this)" id="tabEvakuasi"
-                        style="padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">
+                    <button class="bpjs-tab tab-item" onclick="switchBpjsTab('EVAKUASI', this)" id="tabEvakuasi">
                         <i class="ph ph-ambulance"></i> Evakuasi
                     </button>
-                    <button class="bpjs-tab" onclick="switchBpjsTab('OBAT', this)" id="tabObat"
-                        style="padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">
+                    <button class="bpjs-tab tab-item" onclick="switchBpjsTab('OBAT', this)" id="tabObat">
                         <i class="ph ph-pill"></i> Obat
                     </button>
                 </div>
@@ -199,35 +183,33 @@
         </div>
 
         {{-- SUMMARY CARDS (DETAIL) --}}
-        <div class="pendapatan-summary-container">
-            <div class="dashboard-cards">
-                <div class="dash-card blue">
-                    <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Jasa Rumah Sakit</span>
-                        <h3 id="detailSummaryRsBpjs">Rp 0</h3>
-                    </div>
+        <div class="grid-responsive grid-3 mb-4" style="max-width: 850px; margin-inline: auto;">
+            <div class="dash-card blue">
+                <div class="dash-card-icon"><i class="ph ph-hospital"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Jasa Rumah Sakit</span>
+                    <h3 id="detailSummaryRsBpjs">Rp 0</h3>
                 </div>
-                <div class="dash-card purple">
-                    <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Jasa Pelayanan</span>
-                        <h3 id="detailSummaryPelayananBpjs">Rp 0</h3>
-                    </div>
+            </div>
+            <div class="dash-card purple">
+                <div class="dash-card-icon"><i class="ph ph-user-gear"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Jasa Pelayanan</span>
+                    <h3 id="detailSummaryPelayananBpjs">Rp 0</h3>
                 </div>
-                <div class="dash-card green">
-                    <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
-                    <div class="dash-card-content">
-                        <span class="label">Total Klaim BPJS</span>
-                        <h3 id="detailSummaryTotalBpjs" style="color: #16a34a;">Rp 0</h3>
-                    </div>
+            </div>
+            <div class="dash-card green">
+                <div class="dash-card-icon"><i class="ph ph-bank"></i></div>
+                <div class="dash-card-content">
+                    <span class="label">Total Klaim BPJS</span>
+                    <h3 id="detailSummaryTotalBpjs" style="color: #16a34a;">Rp 0</h3>
                 </div>
             </div>
         </div>
 
         <div class="dashboard-box" style="padding: 0;">
             <div class="table-toolbar" style="padding: 16px; margin-bottom: 0; border-bottom: 1px solid #f1f5f9;">
-                <div class="table-search-wrapper" style="width: 100%;">
+                <div class="table-search-wrapper" style="flex: 1;">
                     <i class="ph ph-magnifying-glass"></i>
                     <input type="text" id="searchPendapatanBpjs" class="table-search"
                         placeholder="Cari nama pasien, No SEP, ruangan..." data-table="pendapatanBpjsTable">
@@ -302,15 +284,21 @@
                         color: #059669;
                     }
                 </style>
-                <div class="table-container"><table id="pendapatanBpjsTable" class="universal-table">
+                <table id="pendapatanBpjsTable" class="universal-table table-mobile-cards">
                     <thead>
                         <tr>
                             <th class="text-center checkbox-col">No</th>
-                            <th class="text-center sortable">Tanggal</th>
-                            <th id="thNoSep" class="text-center sortable">No SEP</th>
-                            <th class="text-center sortable">Nama Pasien</th>
-                            <th class="text-center sortable">Ruangan</th>
-                            <th class="text-right sortable">RS / Pelayanan / Total</th>
+                            <th class="text-center sortable" onclick="sortBpjs('tanggal')" data-sort="tanggal">Tanggal
+                                <i class="ph ph-caret-up-down"></i>
+                            </th>
+                            <th id="thNoSep" class="text-center sortable" onclick="sortBpjs('no_sep')"
+                                data-sort="no_sep">No SEP <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-center sortable" onclick="sortBpjs('nama_pasien')" data-sort="nama_pasien">
+                                Nama Pasien <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-center sortable" onclick="sortBpjs('ruangan_id')" data-sort="ruangan_id">
+                                Ruangan <i class="ph ph-caret-up-down"></i></th>
+                            <th class="text-right sortable" onclick="sortBpjs('total')" data-sort="total">RS / Pelayanan
+                                / Total <i class="ph ph-caret-up-down"></i></th>
                             <th class="action-col">Aksi</th>
                         </tr>
                     </thead>
@@ -319,7 +307,7 @@
                             <td colspan="7" class="text-center">Memuat rincian...</td>
                         </tr>
                     </tbody>
-                </table></div>
+                </table>
             </div>
             <div class="flex justify-between items-center" style="padding: 16px;">
                 <p id="paginationInfoBpjs" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0 dari 0 data
@@ -336,6 +324,11 @@
     </div>
 
 </div>
+
+@include('dashboard.partials.pendapatan-master-modals')
+@include('dashboard.partials.pendapatan-bpjs-form')
+@include('dashboard.partials.pendapatan-bpjs-detail')
+@include('dashboard.partials.pendapatan-bpjs-import')
 
 <style>
     .bpjs-tab.active {

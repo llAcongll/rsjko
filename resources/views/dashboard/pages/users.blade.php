@@ -24,7 +24,7 @@
     </div>
 
     <div class="table-container">
-      <table id="tableUsers" class="table universal-table">
+      <table id="tableUsers" class="table universal-table table-mobile-cards">
         <thead>
           <tr>
             <th class="text-center checkbox-col">No</th>
@@ -37,14 +37,14 @@
         <tbody>
           @foreach($users as $u)
             <tr>
-              <td class="text-center">{{ $loop->iteration }}</td>
-              <td>{{ $u->username }}</td>
-              <td class="text-center">
+              <td class="text-center" data-label="No">{{ $loop->iteration }}</td>
+              <td data-label="Username">{{ $u->username }}</td>
+              <td class="text-center" data-label="Role">
                 <span class="badge {{ $u->role === 'ADMIN' ? 'badge-primary' : 'badge-info' }}">
                   {{ $u->role }}
                 </span>
               </td>
-              <td>
+              <td data-label="Aksi">
                 <div class="flex justify-center gap-2">
                   <button class="btn-aksi edit" onclick="editUser({{ $u->id }})" title="Edit User">
                     <i class="ph ph-pencil"></i>

@@ -3,6 +3,7 @@
     let masterPerPage = 10;
     let masterKeyword = '';
     let masterStatus = ''; // Added
+    let masterMonth = ''; // Added
     let masterSortBy = 'tanggal'; // Added
     let masterSortDir = 'desc'; // Added
     let selectedMasterId = null;
@@ -66,6 +67,7 @@
             per_page: masterPerPage,
             search: masterKeyword,
             status: masterStatus, // Added
+            month: masterMonth, // Added
             sort_by: masterSortBy, // Added
             sort_dir: masterSortDir, // Added
             kategori: 'LAIN',
@@ -109,25 +111,25 @@
 
                     tbody.insertAdjacentHTML('beforeend', `
                     <tr class="${selectedMasterId === item.id ? 'bg-blue-50' : ''}">
-                        <td class="text-center">
+                        <td class="text-center checkbox-col">
                             <input type="checkbox" class="master-checkbox" data-id="${item.id}" data-posted="${isPosted}" 
                                 ${isSelected ? 'checked' : ''} onchange="handleMasterCheckboxChangeLain(this, ${item.id}, ${isPosted})">
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" data-label="Tanggal PDPT/RK">
                             <div class="flex flex-col">
                                 <span class="font-bold text-slate-700">${formatTanggal(item.tanggal)}</span>
                                 ${item.tanggal_rk ? `<span class="text-xs text-slate-400">RK: ${formatTanggal(item.tanggal_rk)}</span>` : ''}
                             </div>
                         </td>
-                        <td>
+                        <td data-label="Keterangan / No. Bukti">
                             <div class="font-medium text-slate-700">${escapeHtml(item.keterangan || '-')}</div>
                             <div class="text-xs text-slate-400">${escapeHtml(item.no_bukti || '-')}</div>
                         </td>
-                        <td class="text-right font-mono text-blue-600">${formatRupiahTable(item.total_rs)}</td>
-                        <td class="text-right font-mono text-purple-600">${formatRupiahTable(item.total_pelayanan)}</td>
-                        <td class="text-right font-bold font-mono text-emerald-600">${formatRupiahTable(item.total_all)}</td>
-                        <td class="text-center">${statusBadge}</td>
-                        <td class="text-center">
+                        <td class="text-right font-mono text-blue-600" data-label="Jasa RS">${formatRupiahTable(item.total_rs)}</td>
+                        <td class="text-right font-mono text-purple-600" data-label="Jasa Pelayanan">${formatRupiahTable(item.total_pelayanan)}</td>
+                        <td class="text-right font-bold font-mono text-emerald-600" data-label="Total (Rp)">${formatRupiahTable(item.total_all)}</td>
+                        <td class="text-center" data-label="Status">${statusBadge}</td>
+                        <td class="text-center" data-label="Aksi">
                             <div class="flex justify-center gap-2">
                                 <button class="btn-aksi detail" onclick="openDetailLain(${item.id}, '${escapeHtml(info)}', ${item.is_posted})" title="Buka Rincian">
                                     <i class="ph ph-list-numbers"></i>
@@ -625,14 +627,14 @@
                 data.forEach((item, index) => {
                     tbody.insertAdjacentHTML('beforeend', `
                     <tr>
-                        <td class="text-center">${res.from + index}</td>
-                        <td class="text-center">${formatTanggal(item.tanggal)}</td>
-                        <td>
+                        <td class="text-center" data-label="No">${res.from + index}</td>
+                        <td class="text-center" data-label="Tanggal">${formatTanggal(item.tanggal)}</td>
+                        <td data-label="Nama Pasien / Keterangan">
                             <div class="font-medium">${escapeHtml(item.nama_pasien ?? '-')}</div>
                         </td>
-                        <td>${escapeHtml(item.mou?.nama ?? item.transaksi ?? '-')}</td>
-                        <td><span class="badge badge-info">${item.ruangan?.nama ?? '-'}</span></td>
-                        <td class="text-right">
+                        <td data-label="Sumber/MOU">${escapeHtml(item.mou?.nama ?? item.transaksi ?? '-')}</td>
+                        <td data-label="Ruangan"><span class="badge badge-info">${item.ruangan?.nama ?? '-'}</span></td>
+                        <td class="text-right" data-label="RS / Pelayanan / Total">
                             <div class="nominal-group">
                                 <div class="nom-row">
                                     <div class="nom-val val-rs">${formatRupiahTable((parseFloat(item.rs_tindakan) || 0) + (parseFloat(item.rs_obat) || 0))}</div>
@@ -648,7 +650,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" data-label="Aksi">
                             <div class="flex justify-center gap-1">
                                 <button class="btn-aksi detail" onclick="detailPendapatanLain(${item.id})" title="View">
                                     <i class="ph ph-eye"></i>
@@ -1033,31 +1035,71 @@
 
         loadMasterLain(1);
 
-        const searchMasterLain = document.getElementById('searchMasterLain');
-        if (searchMasterLain) {
-            let timer;
-            searchMasterLain.oninput = (e) => {
-                clearTimeout(timer);
-                timer = setTimeout(() => { masterKeyword = e.target.value.trim(); loadMasterLain(1); }, 400);
-            };
-        }
+        // Search Master (Top & Bottom Sync)
+        const searchMasterLainInputs = [
+            document.getElementById('searchMasterLain'),
+            document.getElementById('searchMasterLainBottom')
+        ];
+        searchMasterLainInputs.forEach(input => {
+            if (input) {
+                let timer;
+                input.oninput = (e) => {
+                    const val = e.target.value.trim();
+                    masterKeyword = val;
+                    searchMasterLainInputs.forEach(other => { if (other && other !== e.target) other.value = val; });
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { loadMasterLain(1); }, 400);
+                };
+            }
+        });
 
-        const filterStatusMasterLain = document.getElementById('filterStatusMasterLain');
-        if (filterStatusMasterLain) {
-            filterStatusMasterLain.onchange = (e) => {
-                masterStatus = e.target.value;
-                loadMasterLain(1);
-            };
-        }
+        // Filter Status Master (Top & Bottom Sync)
+        const filterStatusMasterLainSelects = [
+            document.getElementById('filterStatusMasterLain'),
+            document.getElementById('filterStatusMasterLainBottom')
+        ];
+        filterStatusMasterLainSelects.forEach(sel => {
+            if (sel) {
+                sel.onchange = (e) => {
+                    masterStatus = e.target.value;
+                    filterStatusMasterLainSelects.forEach(other => { if (other && other !== e.target) other.value = e.target.value; });
+                    loadMasterLain(1);
+                };
+            }
+        });
 
-        const searchLain = document.getElementById('searchPendapatanLain');
-        if (searchLain) {
-            let timer;
-            searchLain.oninput = (e) => {
-                clearTimeout(timer);
-                timer = setTimeout(() => { lainKeyword = e.target.value.trim(); loadPendapatanLain(1); }, 400);
-            };
-        }
+        // Filter Month Master (Top & Bottom Sync)
+        const filterMonthMasterLainInputs = [
+            document.getElementById('filterMonthMasterLain'),
+            document.getElementById('filterMonthMasterLainBottom')
+        ];
+        filterMonthMasterLainInputs.forEach(input => {
+            if (input) {
+                input.onchange = (e) => {
+                    masterMonth = e.target.value;
+                    filterMonthMasterLainInputs.forEach(other => { if (other && other !== e.target) other.value = e.target.value; });
+                    loadMasterLain(1);
+                };
+            }
+        });
+
+        // Search Detail (Top & Bottom Sync)
+        const searchLainInputs = [
+            document.getElementById('searchPendapatanLain'),
+            document.getElementById('searchPendapatanLainBottom')
+        ];
+        searchLainInputs.forEach(input => {
+            if (input) {
+                let timer;
+                input.oninput = (e) => {
+                    const val = e.target.value.trim();
+                    lainKeyword = val;
+                    searchLainInputs.forEach(other => { if (other && other !== e.target) other.value = val; });
+                    clearTimeout(timer);
+                    timer = setTimeout(() => { loadPendapatanLain(1); }, 400);
+                };
+            }
+        });
 
         document.querySelectorAll('.nominal-display-lain').forEach(input => {
             input.addEventListener('input', () => {

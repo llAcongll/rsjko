@@ -7,6 +7,7 @@
   let masterPerPage = 10;
   let masterKeyword = '';
   let masterStatus = '';
+  let masterMonth = ''; // Added
   let masterSortBy = 'tanggal';
   let masterSortDir = 'desc';
   let isEditMaster = false;
@@ -69,6 +70,7 @@
       per_page: masterPerPage,
       search: masterKeyword,
       status: masterStatus, // Added
+      month: masterMonth, // Added
       sort_by: masterSortBy,
       sort_dir: masterSortDir,
       kategori: 'UMUM',
@@ -107,26 +109,26 @@
 
           html += `
           <tr>
-            <td class="text-center">
+            <td class="text-center checkbox-col">
               <input type="checkbox" class="master-checkbox" value="${item.id}" data-posted="${item.is_posted}" onchange="updateSelectionUIUmum()" ${isChecked ? 'checked' : ''} />
             </td>
-            <td class="text-center">
+            <td class="text-center" data-label="Tanggal">
               <div class="font-medium">${formatTanggal(item.tanggal)}</div>
               ${item.tanggal_rk ? `<div class="text-xs text-slate-500">RK: ${formatTanggal(item.tanggal_rk)}</div>` : ''}
             </td>
-            <td>
+            <td data-label="Keterangan / No. Bukti">
               <div class="font-medium">${item.keterangan || '-'}</div>
               <div class="text-xs text-slate-500">${item.no_bukti || 'Tanpa No. Bukti'}</div>
             </td>
-            <td class="text-right font-medium text-blue-600">${formatRupiahTable(item.total_rs)}</td>
-            <td class="text-right font-medium text-purple-600">${formatRupiahTable(item.total_pelayanan)}</td>
-            <td class="text-right font-bold text-emerald-600" style="font-size:14px;">${formatRupiahTable(item.total_all)}</td>
-            <td class="text-center" style="white-space: nowrap;">
+            <td class="text-right font-medium text-blue-600" data-label="Total Jasa RS">${formatRupiahTable(item.total_rs)}</td>
+            <td class="text-right font-medium text-purple-600" data-label="Total Jasa Pelayanan">${formatRupiahTable(item.total_pelayanan)}</td>
+            <td class="text-right font-bold text-emerald-600" style="font-size:14px;" data-label="Total Pendapatan">${formatRupiahTable(item.total_all)}</td>
+            <td class="text-center" style="white-space: nowrap;" data-label="Status">
               ${item.is_posted
               ? '<span class="badge badge-success" style="display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;"><i class="ph ph-check-circle"></i> Diposting</span>'
               : '<span class="badge badge-warning" style="display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;"><i class="ph ph-clock"></i> Draft</span>'}
             </td>
-            <td class="text-center">
+            <td class="text-center" data-label="Aksi">
               <div class="flex justify-center gap-2">
                 <button class="btn-aksi detail" onclick="openDetailUmum(${item.id}, '${escapeHtml(info)}', ${item.is_posted})" title="Lihat Rincian"><i class="ph ph-list-numbers"></i></button>
                 ${(canEdit || canDelete || canPost) ? `
@@ -585,14 +587,14 @@
         data.forEach((item, index) => {
           html += `
           <tr>
-            <td class="text-center">${res.from + index}</td>
-            <td class="text-center">${formatTanggal(item.tanggal)}</td>
-            <td class="font-medium">${escapeHtml(item.nama_pasien)}</td>
-            <td><span class="badge badge-info">${item.ruangan?.nama ?? '-'}</span></td>
-            <td class="text-right font-medium text-blue-600">${formatRupiahTable((parseFloat(item.rs_tindakan) || 0) + (parseFloat(item.rs_obat) || 0))}</td>
-            <td class="text-right font-medium text-purple-600">${formatRupiahTable((parseFloat(item.pelayanan_tindakan) || 0) + (parseFloat(item.pelayanan_obat) || 0))}</td>
-            <td class="text-right font-bold text-emerald-600" style="font-size:14px;">${formatRupiahTable(item.total)}</td>
-            <td class="text-center">
+            <td class="text-center" data-label="No">${res.from + index}</td>
+            <td class="text-center" data-label="Tanggal">${formatTanggal(item.tanggal)}</td>
+            <td class="font-medium" data-label="Nama Pasien">${escapeHtml(item.nama_pasien)}</td>
+            <td data-label="Ruangan"><span class="badge badge-info">${item.ruangan?.nama ?? '-'}</span></td>
+            <td class="text-right font-medium text-blue-600" data-label="Jasa RS">${formatRupiahTable((parseFloat(item.rs_tindakan) || 0) + (parseFloat(item.rs_obat) || 0))}</td>
+            <td class="text-right font-medium text-purple-600" data-label="Jasa Pelayanan">${formatRupiahTable((parseFloat(item.pelayanan_tindakan) || 0) + (parseFloat(item.pelayanan_obat) || 0))}</td>
+            <td class="text-right font-bold text-emerald-600" style="font-size:14px;" data-label="Total">${formatRupiahTable(item.total)}</td>
+            <td class="text-center" data-label="Aksi">
               <div class="flex justify-center gap-2">
                 <button class="btn-aksi detail" onclick="detailPendapatanUmum(${item.id})"><i class="ph ph-eye"></i></button>
                 ${!activeMasterPosted ? `
@@ -1073,31 +1075,71 @@
 
     loadMasterUmum(1);
 
-    const searchMasterUmum = document.getElementById('searchMasterUmum');
-    if (searchMasterUmum) {
-      let timer;
-      searchMasterUmum.oninput = (e) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => { masterKeyword = e.target.value.trim(); loadMasterUmum(1); }, 400);
-      };
-    }
+    // Search Master (Top & Bottom Sync)
+    const searchMasterUmumInputs = [
+      document.getElementById('searchMasterUmum'),
+      document.getElementById('searchMasterUmumBottom')
+    ];
+    searchMasterUmumInputs.forEach(input => {
+      if (input) {
+        let timer;
+        input.oninput = (e) => {
+          const val = e.target.value.trim();
+          masterKeyword = val;
+          searchMasterUmumInputs.forEach(other => { if (other && other !== e.target) other.value = val; });
+          clearTimeout(timer);
+          timer = setTimeout(() => { loadMasterUmum(1); }, 400);
+        };
+      }
+    });
 
-    const filterStatusMasterUmum = document.getElementById('filterStatusMasterUmum');
-    if (filterStatusMasterUmum) {
-      filterStatusMasterUmum.onchange = (e) => {
-        masterStatus = e.target.value;
-        loadMasterUmum(1);
-      };
-    }
+    // Filter Status Master (Top & Bottom Sync)
+    const filterStatusMasterUmumSelects = [
+      document.getElementById('filterStatusMasterUmum'),
+      document.getElementById('filterStatusMasterUmumBottom')
+    ];
+    filterStatusMasterUmumSelects.forEach(sel => {
+      if (sel) {
+        sel.onchange = (e) => {
+          masterStatus = e.target.value;
+          filterStatusMasterUmumSelects.forEach(other => { if (other && other !== e.target) other.value = e.target.value; });
+          loadMasterUmum(1);
+        };
+      }
+    });
 
-    const searchUmum = document.getElementById('searchPendapatanUmum');
-    if (searchUmum) {
-      let timer;
-      searchUmum.oninput = (e) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => { detailKeyword = e.target.value.trim(); loadPendapatanUmum(1); }, 400);
-      };
-    }
+    // Filter Month Master (Top & Bottom Sync)
+    const filterMonthMasterUmumInputs = [
+      document.getElementById('filterMonthMasterUmum'),
+      document.getElementById('filterMonthMasterUmumBottom')
+    ];
+    filterMonthMasterUmumInputs.forEach(input => {
+      if (input) {
+        input.onchange = (e) => {
+          masterMonth = e.target.value;
+          filterMonthMasterUmumInputs.forEach(other => { if (other && other !== e.target) other.value = e.target.value; });
+          loadMasterUmum(1);
+        };
+      }
+    });
+
+    // Search Detail (Top & Bottom Sync)
+    const searchUmumInputs = [
+      document.getElementById('searchPendapatanUmum'),
+      document.getElementById('searchPendapatanUmumBottom')
+    ];
+    searchUmumInputs.forEach(input => {
+      if (input) {
+        let timer;
+        input.oninput = (e) => {
+          const val = e.target.value.trim();
+          detailKeyword = val;
+          searchUmumInputs.forEach(other => { if (other && other !== e.target) other.value = val; });
+          clearTimeout(timer);
+          timer = setTimeout(() => { loadPendapatanUmum(1); }, 400);
+        };
+      }
+    });
 
     const btnTambah = document.getElementById('btnTambahPendapatanUmum');
     if (btnTambah) {
