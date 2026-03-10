@@ -61,7 +61,7 @@
             <td colspan="7" class="title">RUMAH SAKIT JIWA DAN KETERGANTUNGAN OBAT ENGKU HAJI DAUD</td>
         </tr>
         <tr>
-            <td colspan="7" class="subtitle">Jalan Indun Suri – Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152</td>
+            <td colspan="7" class="subtitle">Jalan Indun Suri - Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152</td>
         </tr>
         <tr>
             <td colspan="7" class="subtitle">Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795</td>
@@ -160,3 +160,8 @@
 </body>
 
 </html>
+
+
+
+
+

@@ -32,3 +32,8 @@ class PenandaTangan extends Model
         $this->attributes['nip'] = str_replace([' ', '.'], '', $value);
     }
 }
+
+
+
+
+

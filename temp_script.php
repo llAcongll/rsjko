@@ -9,3 +9,8 @@ if ($d) {
     app(App\Services\BankLedgerService::class)->recordEntry($d->sp2d_date, 'DEPOSIT_LS', $d->value, 'fund_disbursements', $d->id, 'DEBIT', 'Penerimaan SP2D LS ' . $d->sp2d_no);
     echo "Success deposits LS into bank \n";
 }
+
+
+
+
+

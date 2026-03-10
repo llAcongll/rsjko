@@ -18,3 +18,8 @@ FundDisbursement::where('tahun', 2026)
     ->sum('value');
 
 print_r(DB::getQueryLog());
+
+
+
+
+

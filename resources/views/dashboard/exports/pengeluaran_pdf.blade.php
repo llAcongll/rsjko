@@ -26,8 +26,8 @@
                 <div style="font-size: 13pt; font-weight: bold; line-height: 1.2;">RUMAH SAKIT JIWA DAN KETERGANTUNGAN OBAT</div>
                 <div style="font-size: 13pt; font-weight: bold; line-height: 1.2;">ENGKU HAJI DAUD</div>
                 <div style="font-size: 8pt; margin-top: 10px; line-height: 1.4;">
-                    Jalan Indun Suri – Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
-                    Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795 • Pos-el: rsjkoehd@kepriprov.go.id Laman : www.rsudehd.kepriprov.go.id
+                    Jalan Indun Suri - Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
+                    Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795 "¢ Pos-el: rsjkoehd@kepriprov.go.id Laman : www.rsudehd.kepriprov.go.id
                 </div>
             </td>
         </tr>
@@ -133,3 +133,8 @@
     </table>
 </body>
 </html>
+
+
+
+
+

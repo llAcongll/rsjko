@@ -8,3 +8,8 @@ use Illuminate\Support\Facades\DB;
 
 echo "Database Name: " . DB::getDatabaseName() . "\n";
 echo "DB Host: " . env('DB_HOST') . "\n";
+
+
+
+
+

@@ -23,7 +23,7 @@
                     <span>Tampilkan</span>
                 </button>
                 <div class="filter-divider" style="width: 1px; height: 24px; background: #e2e8f0; margin: 0 8px;"></div>
-                @if(auth()->user()->hasPermission('LAPORAN_PENGELUARAN') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+                @if(auth()->user()->hasPermission('LAP_PENGELUARAN_VIEW') || auth()->user()->hasPermission('LAP_PENGELUARAN_EXPORT') || auth()->user()->hasPermission('LAP_LRA_VIEW'))
                     <button class="btn-preview" onclick="openPreviewModal('PENGELUARAN')">
                         <i class="ph ph-eye"></i>
                         <span>Preview & Unduh</span>
@@ -67,23 +67,32 @@
             <h3>Rincian Pengeluaran Per Kode Rekening</h3>
         </div>
         <div class="table-responsive">
-            <div class="table-container"><table class="report-table universal-table">
-                <thead>
-                    <tr>
-                        <th class="text-center">Sub Kode Rekening</th>
-                        <th class="text-center">Nama Rekening</th>
-                        <th class="text-center">Uang Persediaan</th>
-                        <th class="text-center">Ganti Uang</th>
-                        <th class="text-center">Langsung</th>
-                        <th class="text-center">Total Pengeluaran</th>
-                    </tr>
-                </thead>
-                <tbody id="laporanPengeluaranBody">
-                    <tr>
-                        <td colspan="6" class="text-center">Klik Tampilkan untuk memuat data.</td>
-                    </tr>
-                </tbody>
-            </table></div>
+            <div class="table-container">
+                <table class="report-table universal-table">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Sub Kode Rekening</th>
+                            <th class="text-center">Nama Rekening</th>
+                            <th class="text-center">Uang Persediaan</th>
+                            <th class="text-center">Ganti Uang</th>
+                            <th class="text-center">Langsung</th>
+                            <th class="text-center">Total Pengeluaran</th>
+                        </tr>
+                    </thead>
+                    <tbody id="laporanPengeluaranBody">
+                        <tr>
+                            <td colspan="6" class="text-center">Klik Tampilkan untuk memuat data.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+
+
+
+
+
+

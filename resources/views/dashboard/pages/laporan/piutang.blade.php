@@ -26,7 +26,7 @@
                     <i class="ph ph-magnifying-glass"></i>
                     <span>Tampilkan</span>
                 </button>
-                @if(auth()->user()->hasPermission('LAPORAN_PIUTANG') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+                @if(auth()->user()->hasPermission('LAP_PIUTANG_VIEW') || auth()->user()->hasPermission('LAP_PENDAPATAN_VIEW'))
                     <button class="btn-preview" onclick="openPreviewModal('PIUTANG')">
                         <i class="ph ph-file-search"></i>
                         <span>Preview & Unduh</span>
@@ -73,36 +73,44 @@
             <h3>Rincian Piutang Per Perusahaan</h3>
         </div>
         <div class="table-responsive">
-            <div class="table-container"><table class="report-table universal-table">
-                <thead>
-                    <tr>
-                        <th rowspan="2" class="text-center">Perusahaan</th>
-                        <th colspan="4" class="text-center">Saldo Awal (Tahun
-                            Lalu)</th>
-                        <th colspan="4" class="text-center">Tahun Berjalan
-                        </th>
-                        <th rowspan="2" class="text-center">Pelunasan Total</th>
-                        <th rowspan="2" class="text-center">Potongan Total</th>
-                        <th rowspan="2" class="text-center"
-                            id="headerSisaTahun">Sisa {{ session('tahun_anggaran', date('Y')) - 1 }}</th>
-                        <th rowspan="2" class="text-center">Saldo
-                            Akhir</th>
-                    </tr>
-                    <tr>
-                        <th class="text-center">Piutang</th>
-                        <th class="text-center">Lunas</th>
-                        <th class="text-center">Pot</th>
-                        <th class="text-center">Adm</th>
-                        <th class="text-center">Piutang</th>
-                        <th class="text-center">Lunas</th>
-                        <th class="text-center">Pot</th>
-                        <th class="text-center">Adm</th>
-                    </tr>
-                </thead>
-                <tbody id="laporanPiutangBody">
-                    <!-- Dynamic -->
-                </tbody>
-            </table></div>
+            <div class="table-container">
+                <table class="report-table universal-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" class="text-center">Perusahaan</th>
+                            <th colspan="4" class="text-center">Saldo Awal (Tahun
+                                Lalu)</th>
+                            <th colspan="4" class="text-center">Tahun Berjalan
+                            </th>
+                            <th rowspan="2" class="text-center">Pelunasan Total</th>
+                            <th rowspan="2" class="text-center">Potongan Total</th>
+                            <th rowspan="2" class="text-center" id="headerSisaTahun">Sisa
+                                {{ session('tahun_anggaran', date('Y')) - 1 }}</th>
+                            <th rowspan="2" class="text-center">Saldo
+                                Akhir</th>
+                        </tr>
+                        <tr>
+                            <th class="text-center">Piutang</th>
+                            <th class="text-center">Lunas</th>
+                            <th class="text-center">Pot</th>
+                            <th class="text-center">Adm</th>
+                            <th class="text-center">Piutang</th>
+                            <th class="text-center">Lunas</th>
+                            <th class="text-center">Pot</th>
+                            <th class="text-center">Adm</th>
+                        </tr>
+                    </thead>
+                    <tbody id="laporanPiutangBody">
+                        <!-- Dynamic -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+
+
+
+
+

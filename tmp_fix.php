@@ -25,3 +25,8 @@ $content = preg_replace('/}\s*$/', $method, $content);
 
 file_put_contents($f, $content);
 echo "Replaced properly\n";
+
+
+
+
+

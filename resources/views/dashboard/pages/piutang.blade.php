@@ -7,7 +7,7 @@
         </div>
 
         <div class="page-header-right">
-            @if(auth()->user()->hasPermission('PIUTANG_CREATE'))
+            @if(auth()->user()->hasPermission('PIUTANG_MANAGE'))
                 <button class="btn-tambah-data" id="btnTambahPiutang">
                     <i class="ph-bold ph-plus"></i>
                     <span>Catat Piutang</span>
@@ -86,7 +86,7 @@
         </div>
 
         <div class="flex justify-between items-center mt-4">
-            <p id="paginationInfoPiutang" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0 dari 0 data
+            <p id="paginationInfoPiutang" class="text-slate-500" style="font-size: 13px;">Menampilkan 0-0 dari 0 data
             </p>
 
             <div class="flex items-center gap-2">
@@ -103,3 +103,8 @@
 @include('dashboard.partials.piutang-form')
 @include('dashboard.partials.piutang-detail')
 </div>
+
+
+
+
+

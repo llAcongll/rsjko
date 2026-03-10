@@ -26,3 +26,8 @@ try {
     echo "Line: " . $e->getLine() . "\n";
     echo "Trace: " . $e->getTraceAsString() . "\n";
 }
+
+
+
+
+

@@ -31,3 +31,8 @@ return new class extends Migration {
         Schema::dropIfExists('penyesuaian_pendapatans');
     }
 };
+
+
+
+
+

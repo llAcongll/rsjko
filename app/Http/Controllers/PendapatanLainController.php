@@ -93,7 +93,7 @@ class PendapatanLainController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_MANAGE') || auth()->user()->isAdmin(), 403);
         $data = $request->validate([
             'tanggal' => 'required|date',
             'nama_pasien' => 'required|string|max:255',
@@ -141,7 +141,7 @@ class PendapatanLainController extends Controller
 
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_MANAGE') || auth()->user()->isAdmin(), 403);
         $pendapatan = PendapatanLain::findOrFail($id);
 
         if ($pendapatan->revenueMaster && $pendapatan->revenueMaster->is_posted) {
@@ -187,7 +187,7 @@ class PendapatanLainController extends Controller
 
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_MANAGE') || auth()->user()->isAdmin(), 403);
         $pendapatan = PendapatanLain::findOrFail($id);
 
         if ($pendapatan->revenueMaster && $pendapatan->revenueMaster->is_posted) {
@@ -215,7 +215,7 @@ class PendapatanLainController extends Controller
 
     public function downloadTemplate()
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_MANAGE') || auth()->user()->isAdmin(), 403);
         $headers = [
             'Content-type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename=template_pendapatan_lain.csv',
@@ -250,7 +250,7 @@ class PendapatanLainController extends Controller
 
     public function import(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_MANAGE') || auth()->user()->isAdmin(), 403);
         $request->validate([
             'file' => 'required|mimes:csv,txt',
             'revenue_master_id' => 'required|exists:revenue_masters,id'
@@ -318,7 +318,7 @@ class PendapatanLainController extends Controller
 
     public function bulkDelete(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PENDAPATAN_LAIN_MANAGE') || auth()->user()->isAdmin(), 403);
         $request->validate([
             'revenue_master_id' => 'required|exists:revenue_masters,id'
         ]);
@@ -338,3 +338,8 @@ class PendapatanLainController extends Controller
         return response()->json(['success' => true, 'count' => $count]);
     }
 }
+
+
+
+
+

@@ -21,3 +21,8 @@ class SP3BPRekonsiliasi extends Model
         return $this->belongsTo(SP3BP::class, 'sp3bp_id');
     }
 }
+
+
+
+
+

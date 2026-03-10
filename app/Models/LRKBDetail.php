@@ -20,3 +20,8 @@ class LRKBDetail extends Model
         return $this->belongsTo(LRKB::class, 'lrkb_id');
     }
 }
+
+
+
+
+

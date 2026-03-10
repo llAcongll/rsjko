@@ -6,7 +6,7 @@
     <div class="dashboard-header">
         <div class="dashboard-header-left">
             <h2><i class="ph ph-piggy-bank"></i> {{ $title }}</h2>
-            <p>Kelola saldo kas — UP dan GU</p>
+            <p>Kelola saldo kas - UP dan GU</p>
         </div>
 
         <div class="dashboard-header-right">
@@ -58,3 +58,8 @@
         initSaldoDana();
     }
 </script>
+
+
+
+
+

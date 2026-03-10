@@ -556,7 +556,7 @@ function loadPengeluaran(page = 1) {
 
 function renderPaginationPengeluaran(meta) {
     const info = document.getElementById('paginationInfoPengeluaran');
-    if (info) info.innerText = `Menampilkan ${meta.from ?? 0}–${meta.to ?? 0} dari ${meta.total ?? 0} data`;
+    if (info) info.innerText = `Menampilkan ${meta.from ?? 0}-${meta.to ?? 0} dari ${meta.total ?? 0} data`;
 
     const pageInfo = document.getElementById('pageInfoPengeluaran');
     if (pageInfo) pageInfo.innerText = `${meta.current_page} / ${meta.last_page}`;
@@ -669,7 +669,7 @@ async function loadRekeningPengeluaran(kategori) {
                             value: node.id,
                             kode: node.kode,
                             nama: node.nama,
-                            label: `${node.kode} — ${node.nama}`
+                            label: `${node.kode} - ${node.nama}`
                         });
                     }
                 }
@@ -695,7 +695,7 @@ async function loadRekeningPengeluaran(kategori) {
                             value: node.id,
                             kode: node.kode,
                             nama: node.nama,
-                            label: `${node.kode} — ${node.nama}`
+                            label: `${node.kode} - ${node.nama}`
                         });
                     }
                     if (node.children && node.children.length > 0) {
@@ -935,3 +935,7 @@ window.loadRekeningPengeluaran = loadRekeningPengeluaran;
 window.bindNoBuktiValidation = bindNoBuktiValidation;
 window.bindRekeningSearchable = bindRekeningSearchable;
 window.loadEditData = loadEditData;
+
+
+
+

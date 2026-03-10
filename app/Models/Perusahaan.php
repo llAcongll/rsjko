@@ -11,3 +11,8 @@ class Perusahaan extends Model
         'nama',
     ];
 }
+
+
+
+
+

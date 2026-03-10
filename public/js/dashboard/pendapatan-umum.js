@@ -97,9 +97,9 @@
           return;
         }
 
-        const canEdit = window.hasPermission('PENDAPATAN_UMUM_CREATE') || window.hasPermission('PENDAPATAN_UMUM_CRUD');
-        const canDelete = window.hasPermission('PENDAPATAN_UMUM_DELETE') || window.hasPermission('PENDAPATAN_UMUM_CRUD');
-        const canPost = window.hasPermission('PENDAPATAN_UMUM_POST');
+        const canEdit = window.hasPermission('PENDAPATAN_UMUM_MANAGE');
+        const canDelete = window.hasPermission('PENDAPATAN_UMUM_MANAGE');
+        const canPost = window.hasPermission('PENDAPATAN_UMUM_MANAGE');
         let html = '';
         data.forEach((item, index) => {
           const info = `${formatTanggal(item.tanggal)} - ${item.keterangan || 'Pendapatan Umum'}`;
@@ -206,7 +206,7 @@
   }
   function renderPaginationMasterUmum(meta) {
     const info = document.getElementById('paginationInfoMasterUmum');
-    if (info) info.innerText = `Menampilkan ${meta.from ?? 0}–${meta.to ?? 0} dari ${meta.total ?? 0} data`;
+    if (info) info.innerText = `Menampilkan ${meta.from ?? 0}-${meta.to ?? 0} dari ${meta.total ?? 0} data`;
 
     const pageInfo = document.getElementById('pageInfoMasterUmum');
     if (pageInfo) pageInfo.innerText = `${meta.current_page} / ${meta.last_page}`;
@@ -579,8 +579,8 @@
           return;
         }
 
-        const canCreateDetail = window.hasPermission('PENDAPATAN_UMUM_CREATE') || window.hasPermission('PENDAPATAN_UMUM_CRUD') || window.isAdmin;
-        const canDeleteDetail = window.hasPermission('PENDAPATAN_UMUM_DELETE') || window.hasPermission('PENDAPATAN_UMUM_CRUD') || window.isAdmin;
+        const canCreateDetail = window.hasPermission('PENDAPATAN_UMUM_MANAGE') || window.isAdmin;
+        const canDeleteDetail = window.hasPermission('PENDAPATAN_UMUM_MANAGE') || window.isAdmin;
 
         let html = '';
 
@@ -619,7 +619,7 @@
 
   function renderPaginationUmum(meta) {
     const info = document.getElementById('paginationInfoUmum');
-    if (info) info.innerText = `Menampilkan ${meta.from ?? 0}–${meta.to ?? 0} dari ${meta.total ?? 0} data`;
+    if (info) info.innerText = `Menampilkan ${meta.from ?? 0}-${meta.to ?? 0} dari ${meta.total ?? 0} data`;
 
     const pageInfo = document.getElementById('pageInfoUmum');
     if (pageInfo) pageInfo.innerText = `${meta.current_page} / ${meta.last_page}`;
@@ -655,7 +655,7 @@
     const totalEl = document.getElementById('totalPembayaran');
     if (totalEl) totalEl.innerText = 'Rp 0';
     const titleEl = document.querySelector('.modal-title');
-    if (titleEl) titleEl.innerText = '➕ Tambah Pasien Umum';
+    if (titleEl) titleEl.innerText = 'Ã¢Å¾â€¢ Tambah Pasien Umum';
 
     modal.classList.add('show');
     loadRuangan();
@@ -675,7 +675,7 @@
 
     const btnSimpan = document.getElementById('btnSimpanPendapatan');
     btnSimpan.disabled = true;
-    btnSimpan.innerText = '⏳ Menyimpan...';
+    btnSimpan.innerText = 'Ã¢³ Menyimpan...';
 
     const formData = new FormData(form);
     // Add activeMasterId
@@ -712,7 +712,7 @@
       toast(err.message, 'error');
     } finally {
       btnSimpan.disabled = false;
-      btnSimpan.innerText = '💾 Simpan';
+      btnSimpan.innerText = 'Ã°Å¸â€™¾ Simpan';
     }
   };
 
@@ -756,7 +756,7 @@
 
       hitungTotal();
       cekSiapSimpan();
-      document.querySelector('.modal-title').innerText = '✏️ Edit Pasien Umum';
+      document.querySelector('.modal-title').innerText = 'Ã¢Å“Ã¯¸ Edit Pasien Umum';
     });
   };
 
@@ -938,7 +938,7 @@
       const res = await fetch('/dashboard/ruangan-list');
       const data = await res.json();
       select.innerHTML = '<option value="">-- Pilih Ruangan --</option>';
-      data.forEach(r => select.insertAdjacentHTML('beforeend', `<option value="${r.id}">${r.kode} — ${r.nama}</option>`));
+      data.forEach(r => select.insertAdjacentHTML('beforeend', `<option value="${r.id}">${r.kode} - ${r.nama}</option>`));
       select.disabled = false;
     } catch { select.innerHTML = '<option value="">Gagal memuat</option>'; }
   }
@@ -968,7 +968,7 @@
         <div class="detail-row"><span class="label">Metode</span>
             <span class="value">
                 <span class="badge ${data.metode_pembayaran === 'TUNAI' ? 'tunai' : 'non-tunai'}">${data.metode_pembayaran}</span>
-                ${data.metode_pembayaran === 'NON_TUNAI' ? `<div class="text-xs text-slate-500 mt-1">${bankLabel} — ${data.metode_detail}</div>` : ''}
+                ${data.metode_pembayaran === 'NON_TUNAI' ? `<div class="text-xs text-slate-500 mt-1">${bankLabel} - ${data.metode_detail}</div>` : ''}
             </span>
         </div>
         <div class="my-4 border-t border-slate-100"></div>
@@ -1190,3 +1190,7 @@
   };
 
 })();
+
+
+
+

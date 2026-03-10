@@ -242,3 +242,7 @@ function renderJsonDetail(elementId, data) {
     html += '</div>';
     el.innerHTML = html;
 }
+
+
+
+

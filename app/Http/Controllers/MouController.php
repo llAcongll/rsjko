@@ -11,7 +11,7 @@ class MouController extends Controller
 {
     public function index()
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_MOU_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('MOU_VIEW'), 403);
 
         return view('dashboard.pages.mou');
     }
@@ -20,7 +20,7 @@ class MouController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_MOU_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('MOU_MANAGE'), 403);
 
         $request->validate([
             'nama' => 'required|string|max:100',
@@ -36,7 +36,7 @@ class MouController extends Controller
 
     public function update(Request $request, Mou $mou)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_MOU_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('MOU_MANAGE'), 403);
 
         $mou->update(
             $request->validate([
@@ -49,7 +49,7 @@ class MouController extends Controller
 
     public function destroy(Mou $mou)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_MOU_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('MOU_MANAGE'), 403);
 
         $mou->delete();
 
@@ -88,3 +88,8 @@ class MouController extends Controller
         return 'MOU' . str_pad($num + 1, 3, '0', STR_PAD_LEFT);
     }
 }
+
+
+
+
+

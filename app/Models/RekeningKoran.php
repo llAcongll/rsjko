@@ -29,3 +29,8 @@ class RekeningKoran extends Model
         'is_saldo_awal' => 'boolean',
     ];
 }
+
+
+
+
+

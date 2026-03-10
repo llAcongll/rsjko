@@ -11,3 +11,8 @@ foreach ($tables as $table) {
     $tableName = array_values((array) $table)[0];
     echo "$tableName\n";
 }
+
+
+
+
+

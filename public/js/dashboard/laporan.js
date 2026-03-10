@@ -5,7 +5,25 @@ window.initLaporan = function (type = 'PENDAPATAN') {
     if (document.getElementById('laporanStart')) document.getElementById('laporanStart').value = firstDay;
     if (document.getElementById('laporanEnd')) document.getElementById('laporanEnd').value = today;
 
-    loadLaporan(type);
+    // Special initialization for LRA
+    if (type === 'ANGGARAN' || type === 'LRA') {
+        const startInput = document.getElementById('startDate');
+        const endInput = document.getElementById('endDate');
+
+        if (startInput && endInput) {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+
+            startInput.value = `${year}-${month}-01`;
+            endInput.value = window.getTodayLocal();
+        }
+    }
+
+    // Delay a bit to ensure DOM elements are ready if newly injected
+    setTimeout(() => {
+        loadLaporan(type);
+    }, 100);
 };
 
 window.handleTriwulanChange = function (tw) {
@@ -90,8 +108,8 @@ window.loadLaporan = async function (type) {
 
     window.lastLaporanType = type;
 
-    // Only validate dates for reports that need start/end range
-    if (!end && !['REKON', 'DPA', 'PIUTANG', 'BKU'].includes(type)) {
+    // Only validate dates for reports that need start/end range from default inputs
+    if (!end && !['ANGGARAN', 'REKON', 'DPA', 'PIUTANG', 'BKU', 'BKU_PENDAPATAN', 'LAK', 'NERACA', 'LO', 'LPE', 'CALK', 'LPSAL', 'RKA', 'RBA'].includes(type)) {
         toast('Pilih tanggal!', 'error');
         return;
     }
@@ -104,13 +122,23 @@ window.loadLaporan = async function (type) {
         const params = `start=${start}&end=${end}&tahun=${tahun}`;
         switch (type) {
             case 'PENDAPATAN': url = `/dashboard/laporan/data?${params}`; break;
-            case 'REKON': url = `/dashboard/laporan/rekon?${params}`; break;
+            case 'REKON':
+                const periode = document.getElementById('rekonFilterPeriode')?.value || 'Bulanan';
+                const bulan = document.getElementById('rekonFilterBulan')?.value;
+                const triwulan = document.getElementById('rekonFilterTriwulan')?.value;
+                const semester = document.getElementById('rekonFilterSemester')?.value;
+                url = `/dashboard/laporan/rekon?periode=${periode}&bulan=${bulan}&triwulan=${triwulan}&semester=${semester}&${params}`;
+                break;
             case 'PIUTANG': url = `/dashboard/laporan/piutang?${params}`; break;
             case 'MOU': url = `/dashboard/laporan/mou?${params}`; break;
             case 'ANGGARAN': {
-                const cat = document.getElementById('lraCategory')?.value || 'SEMUA';
-                const level = document.getElementById('lraLevel')?.value || '3'; // Default to Jenis (Level 3)
-                url = `/dashboard/laporan/anggaran?${params}&category=${cat}&level=${level}`;
+                const start = document.getElementById('startDate')?.value;
+                const end = document.getElementById('endDate')?.value;
+                const tahun = document.getElementById('laporanTahun')?.value || '';
+                const kategori = document.getElementById('lraCategory')?.value || 'SEMUA';
+                const klasifikasi = document.getElementById('lraLevel')?.value || '3';
+
+                url = `/dashboard/laporan/lra?start=${start}&end=${end}&tahun=${tahun}&kategori=${kategori}&klasifikasi=${klasifikasi}`;
                 break;
             }
             case 'PENGELUARAN': url = `/dashboard/laporan/pengeluaran?${params}`; break;
@@ -120,7 +148,69 @@ window.loadLaporan = async function (type) {
                 url = `/dashboard/laporan/bku?month=${month}&year=${year}`;
                 break;
             }
+            case 'BKU_PENDAPATAN': {
+                const month = document.getElementById('incomeBkuMonth')?.value || '';
+                const year = document.getElementById('incomeBkuYear')?.value || '';
+                url = `/dashboard/bku-penerimaan?month=${month}&year=${year}`;
+                break;
+            }
             case 'DPA': url = `/dashboard/laporan/dpa`; break;
+            case 'LAK': {
+                const periode = document.getElementById('lakFilterPeriode')?.value || 'Bulanan';
+                const bulan = document.getElementById('lakFilterBulan')?.value;
+                const triwulan = document.getElementById('lakFilterTriwulan')?.value;
+                const semester = document.getElementById('lakFilterSemester')?.value;
+                url = `/dashboard/laporan/lak?periode=${periode}&bulan=${bulan}&triwulan=${triwulan}&semester=${semester}&${params}`;
+                break;
+            }
+            case 'NERACA': {
+                const bEl = document.getElementById('neracaFilterBulan');
+                const b = bEl ? bEl.value : (new Date().getMonth() + 1);
+                url = `/dashboard/laporan/neraca?bulan=${b}`;
+                break;
+            }
+            case 'LO': {
+                const periode = document.getElementById('loPeriode')?.value || 'Tahunan';
+                const bulan = document.getElementById('loBulan')?.value;
+                const triwulan = document.getElementById('loTriwulan')?.value;
+                const semester = document.getElementById('loSemester')?.value;
+                url = `/dashboard/laporan/lo?periode=${periode}&bulan=${bulan}&triwulan=${triwulan}&semester=${semester}&${params}`;
+                break;
+            }
+            case 'LPE': {
+                const periode = document.getElementById('lpePeriode')?.value || 'Tahunan';
+                const bulan = document.getElementById('lpeBulan')?.value;
+                const triwulan = document.getElementById('lpeTriwulan')?.value;
+                const semester = document.getElementById('lpeSemester')?.value;
+                url = `/dashboard/laporan/lpe?periode=${periode}&bulan=${bulan}&triwulan=${triwulan}&semester=${semester}&${params}`;
+                break;
+            }
+            case 'CALK': {
+                const periode = document.getElementById('calkPeriode')?.value || 'Tahunan';
+                const bulan = document.getElementById('calkBulan')?.value;
+                const triwulan = document.getElementById('calkTriwulan')?.value;
+                const semester = document.getElementById('calkSemester')?.value;
+                // Use calkTahun if exists, otherwise fall back to global laporanTahun
+                const targetTahun = document.getElementById('calkTahun')?.value || tahun;
+                url = `/dashboard/laporan/calk?periode=${periode}&bulan=${bulan}&triwulan=${triwulan}&semester=${semester}&tahun=${targetTahun}`;
+                break;
+            }
+            case 'LPSAL': {
+                const periode = document.getElementById('lpsalPeriode')?.value || 'Tahunan';
+                const bulan = document.getElementById('lpsalBulan')?.value;
+                const triwulan = document.getElementById('lpsalTriwulan')?.value;
+                const semester = document.getElementById('lpsalSemester')?.value;
+                url = `/dashboard/laporan/lpsal?periode=${periode}&bulan=${bulan}&triwulan=${triwulan}&semester=${semester}&${params}`;
+                break;
+            }
+            case 'RKA': {
+                url = `/dashboard/laporan/rka?${params}`;
+                break;
+            }
+            case 'RBA': {
+                url = `/dashboard/laporan/rba?${params}`;
+                break;
+            }
         }
 
         const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
@@ -135,6 +225,18 @@ window.loadLaporan = async function (type) {
         else if (type === 'PIUTANG') renderPiutang(data);
         else if (type === 'MOU') renderMou(data);
         else if (type === 'ANGGARAN') renderAnggaran(data);
+        else if (type === 'LAK') renderLak(data);
+        else if (type === 'BKU_PENDAPATAN') {
+            // No direct render function needed here if called from within BKU page, 
+            // but for preview modal it uses window.lastLaporanData
+        }
+        else if (type === 'NERACA') renderNeraca(data);
+        else if (type === 'LO') renderLo(data);
+        else if (type === 'LPE') renderLpe(data);
+        else if (type === 'CALK') renderCalk(data);
+        else if (type === 'LPSAL') renderLpsal(data);
+        else if (type === 'RKA') renderRka(data);
+        else if (type === 'RBA') renderRba(data);
         else if (type === 'BKU') {
             // No specific render function needed for BKU in the main view yet,
             // as it currently uses pagination in treasurer.js, 
@@ -149,6 +251,9 @@ window.loadLaporan = async function (type) {
             }
         }
         else if (type === 'DPA') renderDPA(data);
+        else if (type === 'LAK') renderLak(data);
+        else if (type === 'NERACA') renderNeraca(data);
+        else if (type === 'LO') renderLo(data);
 
     } catch (err) {
         console.error(err);
@@ -367,68 +472,472 @@ function renderPendapatan(data) {
             patientBody.innerHTML = html;
         }
     }
+
+    // 6. Render Additive Reports
+    if (data.additive_report) {
+        renderAdditiveReports(data.additive_report);
+    }
+}
+
+
+function renderAdditiveReports(report) {
+    if (!report) return;
+
+    // 1. Tunai
+    const tunaiBody = document.getElementById('laporanTunaiBody');
+    if (tunaiBody) {
+        let html = '';
+        let total = 0, totalCount = 0;
+        report.tunai.forEach((item, idx) => {
+            const val = parseFloat(item.total) || 0;
+            const cnt = parseInt(item.count) || 0;
+            total += val;
+            totalCount += cnt;
+            html += `<tr><td class="text-center">${idx + 1}</td><td>${item.unit}</td><td class="text-center">${cnt}</td><td class="text-right">${formatRupiahTable(val)}</td></tr>`;
+        });
+        html += `<tr style="background:#f8fafc; font-weight:800;"><td colspan="2" class="text-center">TOTAL PENERIMAAN PASIEN TUNAI</td><td class="text-center">${totalCount}</td><td class="text-right">${formatRupiahTable(total)}</td></tr>`;
+        tunaiBody.innerHTML = html || '<tr><td colspan="4" class="text-center">Tidak ada data</td></tr>';
+    }
+
+    // 2. Non Tunai
+    const nonTunaiBody = document.getElementById('laporanNonTunaiBody');
+    if (nonTunaiBody) {
+        let html = '';
+        let totalQris = 0, totalTrans = 0, totalAll = 0, totalPasienQris = 0, totalPasienTrans = 0, totalPasienAll = 0;
+        report.non_tunai.forEach((item, idx) => {
+            const qrisVal = parseFloat(item.qris_amount) || 0;
+            const transVal = parseFloat(item.transfer_amount) || 0;
+            const allVal = parseFloat(item.total_amount) || 0;
+            const cntQris = parseInt(item.pasien_qris) || 0;
+            const cntTrans = parseInt(item.pasien_transfer) || 0;
+            const cntTotal = parseInt(item.total_pasien) || 0;
+
+            totalQris += qrisVal;
+            totalTrans += transVal;
+            totalAll += allVal;
+            totalPasienQris += cntQris;
+            totalPasienTrans += cntTrans;
+            totalPasienAll += cntTotal;
+
+            html += `<tr>
+                <td class="text-center">${idx + 1}</td>
+                <td>${item.unit}</td>
+                <td class="text-center">${cntQris}</td>
+                <td class="text-center">${cntTrans}</td>
+                <td class="text-center">${cntTotal}</td>
+                <td class="text-right">${formatRupiahTable(qrisVal)}</td>
+                <td class="text-right">${formatRupiahTable(transVal)}</td>
+                <td class="text-right" style="font-weight:700">${formatRupiahTable(allVal)}</td>
+            </tr>`;
+        });
+        html += `<tr style="background:#f8fafc; font-weight:800;">
+            <td colspan="2" class="text-center">TOTAL PENERIMAAN PASIEN NON TUNAI</td>
+            <td class="text-center">${totalPasienQris}</td>
+            <td class="text-center">${totalPasienTrans}</td>
+            <td class="text-center">${totalPasienAll}</td>
+            <td class="text-right">${formatRupiahTable(totalQris)}</td>
+            <td class="text-right">${formatRupiahTable(totalTrans)}</td>
+            <td class="text-right">${formatRupiahTable(totalAll)}</td>
+        </tr>`;
+        nonTunaiBody.innerHTML = html || '<tr><td colspan="8" class="text-center">Tidak ada data</td></tr>';
+    }
+
+    // 3. BPJS
+    const bpjsBody = document.getElementById('laporanBpjsBody');
+    if (bpjsBody) {
+        let html = '';
+        let totalGross = 0, totalCount = 0;
+        report.bpjs.data.forEach((item, idx) => {
+            const val = parseFloat(item.total) || 0;
+            const cnt = parseInt(item.count) || 0;
+            totalGross += val;
+            totalCount += cnt;
+            html += `<tr>
+                <td class="text-center">${idx + 1}</td>
+                <td>${item.unit}</td>
+                <td class="text-center">${cnt}</td>
+                <td class="text-right">${formatRupiahTable(val)}</td>
+                <td class="text-right">0</td>
+                <td class="text-right">0</td>
+                <td class="text-right">${formatRupiahTable(val)}</td>
+            </tr>`;
+        });
+        const vpk = parseFloat(report.bpjs.deductions.vpk || 0);
+        const adm = parseFloat(report.bpjs.deductions.adm || 0);
+        const net = totalGross - vpk - adm;
+        html += `<tr style="background:#f8fafc; font-weight:800;">
+            <td colspan="2" class="text-center">TOTAL PENERIMAAN BPJS KESEHATAN</td>
+            <td class="text-center">${totalCount}</td>
+            <td class="text-right">${formatRupiahTable(totalGross)}</td>
+            <td class="text-right">${formatRupiahTable(vpk)}</td>
+            <td class="text-right">${formatRupiahTable(adm)}</td>
+            <td class="text-right">${formatRupiahTable(net)}</td>
+        </tr>`;
+        bpjsBody.innerHTML = html || '<tr><td colspan="7" class="text-center">Tidak ada data</td></tr>';
+    }
+
+    // 4. Jaminan
+    const jaminanBody = document.getElementById('laporanJaminanBody');
+    if (jaminanBody) {
+        let html = '';
+        let total = 0, totalCount = 0;
+        report.jaminan.forEach((item, idx) => {
+            const val = parseFloat(item.total) || 0;
+            const cnt = parseInt(item.count) || 0;
+            total += val;
+            totalCount += cnt;
+            html += `<tr>
+                <td class="text-center">${idx + 1}</td>
+                <td>${item.penjamin}</td>
+                <td>${item.unit}</td>
+                <td class="text-center">${cnt}</td>
+                <td class="text-right">${formatRupiahTable(val)}</td>
+            </tr>`;
+        });
+        html += `<tr style="background:#f8fafc; font-weight:800;"><td colspan="3" class="text-center">TOTAL PENERIMAAN PASIEN JAMINAN</td><td class="text-center">${totalCount}</td><td class="text-right">${formatRupiahTable(total)}</td></tr>`;
+        jaminanBody.innerHTML = html || '<tr><td colspan="5" class="text-center">Tidak ada data</td></tr>';
+    }
+
+    // 5. Kerjasama
+    const kerjasamaBody = document.getElementById('laporanKerjasamaBody');
+    if (kerjasamaBody) {
+        let html = '';
+        let total = 0, totalCount = 0;
+        report.kerjasama.forEach((item, idx) => {
+            const val = parseFloat(item.total) || 0;
+            const cnt = parseInt(item.count) || 0;
+            total += val;
+            totalCount += cnt;
+            html += `<tr><td class="text-center">${idx + 1}</td><td>${item.instansi}</td><td class="text-center">${cnt}</td><td class="text-right">${formatRupiahTable(val)}</td></tr>`;
+        });
+        html += `<tr style="background:#f8fafc; font-weight:800;"><td colspan="2" class="text-center">TOTAL PENERIMAAN KERJA SAMA</td><td class="text-center">${totalCount}</td><td class="text-right">${formatRupiahTable(total)}</td></tr>`;
+        kerjasamaBody.innerHTML = html || '<tr><td colspan="4" class="text-center">Tidak ada data</td></tr>';
+    }
+
+    // 6. Lain-lain
+    const lainBody = document.getElementById('laporanLainBody');
+    if (lainBody) {
+        let html = '';
+        let total = 0, totalCount = 0;
+        report.lain.forEach((item, idx) => {
+            const val = parseFloat(item.total) || 0;
+            const cnt = parseInt(item.count) || 0;
+            total += val;
+            totalCount += cnt;
+            html += `<tr><td class="text-center">${idx + 1}</td><td>${item.keterangan || '-'}</td><td class="text-center">${cnt}</td><td class="text-right">${formatRupiahTable(val)}</td></tr>`;
+        });
+        html += `<tr style="background:#f8fafc; font-weight:800;"><td colspan="2" class="text-center">TOTAL PENERIMAAN LAIN-LAIN</td><td class="text-center">${totalCount}</td><td class="text-right">${formatRupiahTable(total)}</td></tr>`;
+        lainBody.innerHTML = html || '<tr><td colspan="4" class="text-center">Tidak ada data</td></tr>';
+    }
+
+    // Summary Bank
+    const bankSummaryBody = document.getElementById('laporanBankSummaryBody');
+    if (bankSummaryBody) {
+        let html = '';
+        let total = 0, totalCount = 0;
+        report.bank_summary.forEach((item, idx) => {
+            const val = parseFloat(item.total) || 0;
+            const cnt = parseInt(item.count) || 0;
+            total += val;
+            totalCount += cnt;
+            html += `<tr><td class="text-center">${idx + 1}</td><td>${item.bank}</td><td class="text-center">${cnt}</td><td class="text-right">${formatRupiahTable(val)}</td></tr>`;
+        });
+        html += `<tr style="background:#f8fafc; font-weight:800;"><td colspan="2" class="text-center">TOTAL KESELURUHAN PENERIMAAN</td><td class="text-center">${totalCount}</td><td class="text-right">${formatRupiahTable(total)}</td></tr>`;
+        bankSummaryBody.innerHTML = html || '<tr><td colspan="4" class="text-center">Tidak ada data</td></tr>';
+    }
+
+    // Summary Unit
+    const unitSummaryBody = document.getElementById('laporanUnitSummaryBody');
+    if (unitSummaryBody) {
+        let html = '';
+        let total = 0, totalCount = 0;
+        report.unit_summary.forEach((item, idx) => {
+            const val = parseFloat(item.total) || 0;
+            const cnt = parseInt(item.count) || 0;
+            total += val;
+            totalCount += cnt;
+            html += `<tr><td class="text-center">${idx + 1}</td><td>${item.unit}</td><td class="text-center">${cnt}</td><td class="text-right">${formatRupiahTable(val)}</td></tr>`;
+        });
+        html += `<tr style="background:#f8fafc; font-weight:800;"><td colspan="2" class="text-center">TOTAL PENDAPATAN PER UNIT</td><td class="text-center">${totalCount}</td><td class="text-right">${formatRupiahTable(total)}</td></tr>`;
+        unitSummaryBody.innerHTML = html || '<tr><td colspan="4" class="text-center">Tidak ada data</td></tr>';
+    }
 }
 
 function renderRekon(data) {
-    const body = document.getElementById('laporanRekonBody');
-    if (!body) return;
+    const recapBody = document.getElementById('rekonRecapBody');
+    const bankBody = document.getElementById('rekonBankBalanceBody');
+    const analysisBody = document.getElementById('laporanRekonBody');
+    if (!analysisBody) return;
 
     // Summary Els
     const sumBank = document.getElementById('rekonTotalBank');
     const sumPend = document.getElementById('rekonTotalPend');
     const sumDiff = document.getElementById('rekonTotalDiff');
 
-    let totalBank = 0;
-    let totalPend = 0;
+    analysisBody.innerHTML = '';
+    if (recapBody) recapBody.innerHTML = '';
+    if (bankBody) bankBody.innerHTML = '';
 
-    body.innerHTML = '';
-
-    // Check if data is not empty before mapping 
-    if (!data || data.length === 0) {
-        body.innerHTML = '<tr><td colspan="6" style="text-align:center">📭 Tidak ada data transaksi</td></tr>';
+    // Check if data is not empty
+    if (!data || !data.analysis || data.analysis.length === 0) {
+        analysisBody.innerHTML = '<tr><td colspan="6" style="text-align:center">Ã°Å¸â€œ­ Tidak ada data transaksi</td></tr>';
+        if (recapBody) recapBody.innerHTML = '<tr><td colspan="5" class="text-center">Tidak ada data rekap</td></tr>';
+        if (bankBody) bankBody.innerHTML = '<tr><td colspan="5" class="text-center">Tidak ada data saldo bank</td></tr>';
         if (sumBank) sumBank.innerText = 'Rp 0';
         if (sumPend) sumPend.innerText = 'Rp 0';
         if (sumDiff) sumDiff.innerText = 'Rp 0';
         return;
     }
+
+    // 1. BAGIAN A - Rekapitulasi Pendapatan
+    if (data.recap && recapBody) {
+        let recapHtml = '';
+        data.recap.forEach(item => {
+            const sColor = item.selisih === 0 ? '#16a34a' : '#ef4444';
+            let remarks = item.selisih === 0 ? 'MATCH' : (item.selisih < 0 ? 'PENDAPATAN > SETORAN' : 'SETORAN > PENDAPATAN');
+
+            recapHtml += `
+                <tr>
+                    <td class="text-center font-bold">${item.bulan}</td>
+                    <td class="text-right">${formatRupiahTable(item.pendapatan_modul)}</td>
+                    <td class="text-right">${formatRupiahTable(item.bank)}</td>
+                    <td class="text-right" style="font-weight:700; color:${sColor}">${formatRupiahTable(item.selisih)}</td>
+                    <td class="text-left" style="font-size:12px; color:#64748b;">${remarks}</td>
+                </tr>
+            `;
+        });
+        recapBody.innerHTML = recapHtml;
+    }
+
+    // 2. BAGIAN B - Saldo Rekening Koran
+    if (data.section_b && bankBody) {
+        let bankHtml = '';
+        data.section_b.forEach((item, idx) => {
+            bankHtml += `
+                <tr>
+                    <td class="text-center">${idx + 1}</td>
+                    <td class="text-left"><strong>${item.bank}</strong></td>
+                    <td class="text-left">${item.nama_rekening}</td>
+                    <td class="text-center"><code>${item.no_rekening}</code></td>
+                    <td class="text-right" style="font-weight:700;">${formatRupiahTable(item.saldo_akhir)}</td>
+                </tr>
+            `;
+        });
+        bankBody.innerHTML = bankHtml;
+    }
+
+    // 3. BAGIAN C - Analisis Selisih & Status Transaksi
     let html = '';
-    data.forEach(item => {
-        totalBank += Number(item.bank);
-        totalPend += Number(item.pendapatan);
+    let totalBankValue = 0;
+    let totalPendValue = 0;
 
-        const isMatch = Math.abs(item.selisih) < 1;
+    data.analysis.forEach(item => {
+        const isMatch = item.status === 'MATCH';
+        totalBankValue += Number(item.bank);
+        totalPendValue += Number(item.nominal);
 
-        let statusClass = 'badge-danger';
-        let statusText = '❌ SELISIH';
+        let statusClass = 'badge-success';
+        let statusText = '✅ MATCH';
 
-        if (isMatch) {
-            statusClass = 'badge-success';
-            statusText = '✅ MATCH';
-        }
+        if (item.status === 'BELUM DISETOR') { statusClass = 'badge-danger'; statusText = 'Ã¢Å¡ Ã¯¸ BELUM DISETOR'; }
+        else if (item.status === 'BELUM DICATAT') { statusClass = 'badge-warning'; statusText = 'Ã¢â€œ BELUM DICATAT'; }
+        else if (item.status === 'DELAY SETORAN') { statusClass = 'badge-info'; statusText = 'Ã¢³ DELAY'; }
+        else if (item.status === 'SELISIH NOMINAL') { statusClass = 'badge-danger'; statusText = 'Ã¢Å’ SELISIH'; }
 
         const selisihColor = item.selisih === 0 ? '#64748b' : (item.selisih > 0 ? '#16a34a' : '#ef4444');
 
         html += `
-            <tr>
-                <td class="text-center" style="font-weight:600;">${item.tanggal}</td>
+            <tr style="${!isMatch ? 'background: #fffafa;' : ''}">
+                <td class="text-center" style="font-weight:600;">${formatTanggal(item.tanggal)}</td>
+                <td style="text-align:right">${formatRupiahTable(item.nominal)}</td>
                 <td style="text-align:right">${formatRupiahTable(item.bank)}</td>
-                <td style="text-align:right">${formatRupiahTable(item.pendapatan)}</td>
                 <td style="text-align:right; font-weight:600; color:${selisihColor}">${formatRupiahTable(item.selisih)}</td>
-                <td style="text-align:left; color:#64748b; font-size:13px; white-space: normal; line-height: 1.6; min-width: 250px; padding: 10px;">${item.keterangan}</td>
+                <td style="text-align:left; color:#64748b; font-size:12px; line-height: 1.4; min-width: 200px;">
+                    <strong>[${item.kategori}]</strong> ${item.keterangan || '-'}
+                </td>
                 <td style="text-align:center"><span class="badge ${statusClass}">${statusText}</span></td>
             </tr>
         `;
     });
-    body.innerHTML = html;
+    analysisBody.innerHTML = html;
 
-    if (sumBank) sumBank.innerText = formatRupiah(totalBank);
-    if (sumPend) sumPend.innerText = formatRupiah(totalPend);
+    // Update Cards
+    if (sumBank) sumBank.innerText = formatRupiah(totalBankValue);
+    if (sumPend) sumPend.innerText = formatRupiah(totalPendValue);
     if (sumDiff) {
-        const net = totalBank - totalPend;
+        const net = totalBankValue - totalPendValue;
         sumDiff.innerText = formatRupiah(net);
         sumDiff.style.color = net === 0 ? '#16a34a' : '#ef4444';
     }
 }
+
+function renderLak(data) {
+    const container = document.getElementById('lakContent');
+    if (!container) return;
+
+    if (!data || !data.categories) {
+        container.innerHTML = '<div class="empty-state"><p>Gagal memuat data LAK</p></div>';
+        return;
+    }
+
+    const { saldo_awal, categories, total_masuk, total_keluar, kenaikan, saldo_akhir } = data;
+
+    let html = `
+        <div class="lak-container" style="background:#fff; padding:30px; border-radius:12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <table style="width:100%; border-collapse:collapse; font-size:11pt;">
+                <tbody>
+                    <tr style="font-weight:bold; background:#f8fafc;">
+                        <td style="padding:12px; border:1px solid #e2e8f0; width:70%;">URAIAN</td>
+                        <td style="padding:12px; border:1px solid #e2e8f0; text-align:right;">JUMLAH (Rp)</td>
+                    </tr>
+    `;
+
+    const sections = [
+        { key: 'OPERASI', label: 'A. ARUS KAS DARI AKTIVITAS OPERASI' },
+        { key: 'INVESTASI', label: 'B. ARUS KAS DARI AKTIVITAS INVESTASI' },
+        { key: 'PENDANAAN', label: 'C. ARUS KAS DARI AKTIVITAS PENDANAAN' },
+        { key: 'UNMAPPED', label: 'D. TRANSAKSI BELUM TERKLASIFIKASI' }
+    ];
+
+    sections.forEach(sec => {
+        const cat = categories[sec.key];
+        if (!cat) return;
+
+        html += `
+            <tr style="font-weight:bold; background:#f1f5f9;">
+                <td colspan="2" style="padding:12px; border:1px solid #e2e8f0;">${sec.label}</td>
+            </tr>
+        `;
+
+        // Inflows
+        if (cat.in.length > 0) {
+            cat.in.forEach(item => {
+                html += `
+                    <tr>
+                        <td style="padding:8px 12px 8px 30px; border:1px solid #e2e8f0;">Arus Kas Masuk: ${item.uraian}</td>
+                        <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">${formatRupiahTable(item.total)}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Outflows
+        if (cat.out.length > 0) {
+            cat.out.forEach(item => {
+                html += `
+                    <tr>
+                        <td style="padding:8px 12px 8px 30px; border:1px solid #e2e8f0;">Arus Kas Keluar: ${item.uraian}</td>
+                        <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">(${formatRupiahTable(item.total)})</td>
+                    </tr>
+                `;
+            });
+        }
+
+        const net = cat.total_in - cat.total_out;
+        html += `
+            <tr style="font-weight:bold;">
+                <td style="padding:12px; border:1px solid #e2e8f0;">Arus Kas Bersih dari Aktivitas ${sec.key.charAt(0) + sec.key.slice(1).toLowerCase()}</td>
+                <td style="padding:12px; border:1px solid #e2e8f0; text-align:right; border-top:2px solid #000;">${formatRupiahTable(net)}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+                    <tr style="height:20px;"></tr>
+                    <tr style="font-weight:bold; font-size:12pt; background:#f8fafc;">
+                        <td style="padding:15px; border:1px solid #e2e8f0;">KENAIKAN / (PENURUNAN) KAS BERSIH</td>
+                        <td style="padding:15px; border:1px solid #e2e8f0; text-align:right;">${formatRupiahTable(kenaikan)}</td>
+                    </tr>
+                    <tr style="font-weight:bold;">
+                        <td style="padding:12px; border:1px solid #e2e8f0;">SALDO KAS AWAL PERIODE</td>
+                        <td style="padding:12px; border:1px solid #e2e8f0; text-align:right;">${formatRupiahTable(saldo_awal)}</td>
+                    </tr>
+                    <tr style="font-weight:bold; background:#eff6ff; color:#1e40af;">
+                        <td style="padding:15px; border:1px solid #e2e8f0;">SALDO KAS AKHIR PERIODE</td>
+                        <td style="padding:15px; border:1px solid #e2e8f0; text-align:right; font-size:13pt;">${formatRupiahTable(saldo_akhir)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
+
+function renderNeraca(data) {
+    const container = document.getElementById('neracaContent');
+    if (!container) return;
+
+    if (!data || !data.assets) {
+        container.innerHTML = '<div class="empty-state"><p>Gagal memuat data Neraca</p></div>';
+        return;
+    }
+
+    const f = (n) => new Intl.NumberFormat('id-ID').format(n);
+
+    container.innerHTML = `
+        <div class="card" style="padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <div style="text-align:center; margin-bottom: 24px;">
+                <h3 style="font-weight: 700; color: #1e293b; margin: 0; font-size: 16pt;">NERACA</h3>
+                <h4 style="margin: 5px 0; color: #475569;">RSJKO ENGKU HAJI DAUD</h4>
+                <p style="color: #64748b; margin: 4px 0;">Per ${data.period.end_date}</p>
+            </div>
+
+            <table class="table-report" style="width: 100%; border-collapse: collapse; font-size: 11pt;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                        <th style="padding: 12px 15px; text-align: left; color: #475569; font-weight: 600; width: 70%;">URAIAN</th>
+                        <th style="padding: 12px 15px; text-align: right; color: #475569; font-weight: 600; width: 30%;">JUMLAH (RP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: #f1f5f9;"><td colspan="2" style="font-weight: 700; padding: 12px 15px;">ASET</td></tr>
+                    
+                    <tr><td style="padding-left: 30px; font-weight: 600; border-top: 1px solid #f1f5f9;">ASET LANCAR</td><td style="text-align: right; font-weight: 600; border-top: 1px solid #f1f5f9;">${f(data.assets.lancar.total)}</td></tr>
+                    <tr><td style="padding-left: 50px; color: #475569;">Kas dan Setara Kas</td><td style="text-align: right;">${f(data.assets.lancar.kas || 0)}</td></tr>
+                    <tr><td style="padding-left: 50px; color: #475569;">Piutang Pelayanan</td><td style="text-align: right;">${f(data.assets.lancar.piutang || 0)}</td></tr>
+                    <tr><td style="padding-left: 50px; color: #475569;">Persediaan</td><td style="text-align: right;">${f(data.assets.lancar.persediaan || 0)}</td></tr>
+                    
+                    <tr style="height: 10px;"><td colspan="2"></td></tr>
+
+                    <tr><td style="padding-left: 30px; font-weight: 600; border-top: 1px solid #f1f5f9;">ASET TETAP</td><td style="text-align: right; font-weight: 600; border-top: 1px solid #f1f5f9;">${f(data.assets.tetap.total || 0)}</td></tr>
+                    <tr><td style="padding-left: 50px; color: #475569;">Aset Tetap (Netto)</td><td style="text-align: right;">${f(data.assets.tetap.total || 0)}</td></tr>
+                    
+                    <tr style="background: #f1f5f9; border-top: 1px solid #cbd5e1;">
+                        <td style="font-weight: 700; padding: 15px; font-size: 12pt;">TOTAL ASET</td>
+                        <td style="text-align: right; font-weight: 800; color: #0284c7; font-size: 13pt;">${f(data.assets.grand_total || 0)}</td>
+                    </tr>
+
+                    <tr style="height: 30px;"><td colspan="2"></td></tr>
+
+                    <tr style="background: #f1f5f9;"><td colspan="2" style="font-weight: 700; padding: 12px 15px;">KEWAJIBAN & EKUITAS</td></tr>
+                    
+                    <tr><td style="padding-left: 30px; font-weight: 600; border-top: 1px solid #f1f5f9;">KEWAJIBAN</td><td style="text-align: right; font-weight: 600; border-top: 1px solid #f1f5f9;">${f(data.liabilities.total || 0)}</td></tr>
+                    <tr><td style="padding-left: 50px; color: #475569;">Kewajiban Jangka Pendek</td><td style="text-align: right;">${f(data.liabilities.total || 0)}</td></tr>
+                    
+                    <tr style="height: 10px;"><td colspan="2"></td></tr>
+
+                    <tr><td style="padding-left: 30px; font-weight: 600; border-top: 1px solid #f1f5f9;">EKUITAS</td><td style="text-align: right; font-weight: 600; border-top: 1px solid #f1f5f9;">${f(data.equity.total || 0)}</td></tr>
+                    <tr><td style="padding-left: 50px; color: #475569;">Ekuitas</td><td style="text-align: right;">${f(data.equity.total || 0)}</td></tr>
+
+                    <tr style="background: #f1f5f9; border-top: 1px solid #cbd5e1;">
+                        <td style="font-weight: 700; padding: 15px; font-size: 12pt;">TOTAL KEWAJIBAN & EKUITAS</td>
+                        <td style="text-align: right; font-weight: 800; color: #0284c7; font-size: 13pt;">${f((data.liabilities.total || 0) + (data.equity.total || 0))}</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+
+        </div>
+    `;
+}
+
+window.toggleRekonPeriodInputs = function () {
+    const p = document.getElementById('rekonFilterPeriode').value;
+    document.getElementById('rekonMonthContainer').style.display = (p === 'Bulanan') ? 'block' : 'none';
+    document.getElementById('rekonQuarterContainer').style.display = (p === 'Triwulan') ? 'block' : 'none';
+    document.getElementById('rekonSemesterContainer').style.display = (p === 'Semester') ? 'block' : 'none';
+};
 
 function renderPiutang(data) {
     if (document.getElementById('headerSisaTahun')) {
@@ -538,11 +1047,11 @@ function renderAnggaran(data) {
         };
 
         if (data.category === 'SEMUA') {
-            cardsContainer.insertAdjacentHTML('beforeend', createRow('PENDAPATAN', data.sub_totals.pendapatan.target, data.sub_totals.pendapatan.real, data.sub_totals.pendapatan.persen));
-            cardsContainer.insertAdjacentHTML('beforeend', createRow('BELANJA', data.sub_totals.pengeluaran.target, data.sub_totals.pengeluaran.real, data.sub_totals.pengeluaran.persen));
+            cardsContainer.insertAdjacentHTML('beforeend', createRow('PENDAPATAN', data.sub_totals.pendapatan.target, data.sub_totals.pendapatan.real_kini, data.sub_totals.pendapatan.persen_kini || 0));
+            cardsContainer.insertAdjacentHTML('beforeend', createRow('BELANJA', data.sub_totals.pengeluaran.target, data.sub_totals.pengeluaran.real_kini, data.sub_totals.pengeluaran.persen_kini || 0));
         } else {
             const label = data.category === 'PENDAPATAN' ? 'PENDAPATAN' : 'BELANJA';
-            cardsContainer.insertAdjacentHTML('beforeend', createRow(label, data.totals.target, data.totals.realisasi_total, data.totals.persen));
+            cardsContainer.insertAdjacentHTML('beforeend', createRow(label, data.totals.target, data.totals.realisasi_kini, data.totals.persen_kini || 0));
         }
     }
 
@@ -589,16 +1098,23 @@ function renderAnggaran(data) {
                         </tr>
                     `;
                 } else {
-                    // Standard LRA Mode: Simplified columns
+                    // Standard LRA Mode: Show Realisasi Kini (Period)
+                    const kiniPercent = item.target > 0 ? Math.round((item.realisasi_kini / item.target) * 100) : 0;
+                    const kiniSelisih = item.target - item.realisasi_kini;
+
                     rowsHtml += `
                         <tr class="${isHeader ? 'row-header' : 'row-detail'}">
                             <td class="col-kode">${item.kode}</td>
                             <td class="col-uraian"><span>${item.nama}</span></td>
                             <td class="col-mono ">${valTarget}</td>
-                            <td class="col-mono font-bold text-slate-900">${valTotal}</td>
-                            <td class="col-mono ${item.selisih < 0 ? 'text-red-500' : 'text-slate-500'}">${valSelisih}</td>
-                            <td class="text-center font-bold" style="color:${progressColor}">${valPersen}</td>
-                            <td class="col-progress">${valProgress}</td>
+                            <td class="col-mono font-bold text-slate-900">${valKini}</td>
+                            <td class="col-mono ${kiniSelisih < 0 ? 'text-red-500' : 'text-slate-500'}">${formatRupiah(kiniSelisih)}</td>
+                            <td class="text-center font-bold" style="color:${progressColor}">${kiniPercent}%</td>
+                            <td class="col-progress">
+                                <div class="progress-track">
+                                    <div class="progress-fill" style="width: ${Math.min(kiniPercent, 100)}%; background:${progressColor};"></div>
+                                </div>
+                            </td>
                         </tr>
                     `;
                 }
@@ -826,10 +1342,10 @@ function renderPengeluaran(data) {
 
 window.exportLaporan = function (type) {
     const reportType = type || window.lastLaporanType || 'PENDAPATAN';
-    const start = document.getElementById('laporanStart')?.value;
-    const end = document.getElementById('laporanEnd')?.value;
+    const start = (reportType === 'ANGGARAN') ? document.getElementById('startDate')?.value : document.getElementById('laporanStart')?.value;
+    const end = (reportType === 'ANGGARAN') ? document.getElementById('endDate')?.value : document.getElementById('laporanEnd')?.value;
 
-    if (!end && !['REKON', 'DPA', 'PIUTANG', 'BKU'].includes(reportType)) {
+    if (!end && !['ANGGARAN', 'REKON', 'DPA', 'PIUTANG', 'BKU', 'BKU_PENDAPATAN'].includes(reportType)) {
         toast('Pilih tanggal!', 'error');
         return;
     }
@@ -842,7 +1358,16 @@ window.exportLaporan = function (type) {
         'ANGGARAN': 'anggaran',
         'PENGELUARAN': 'pengeluaran',
         'DPA': 'dpa',
-        'BKU': 'bku'
+        'BKU': 'bku',
+        'BKU_PENDAPATAN': 'bku-penerimaan',
+        'LAK': 'lak',
+        'NERACA': 'neraca',
+        'LO': 'lo',
+        'LPE': 'lpe',
+        'CALK': 'calk',
+        'LPSAL': 'lpsal',
+        'RKA': 'rka',
+        'RBA': 'rba'
     };
 
     const ptKiri = document.getElementById('ptSelectKiri')?.value || '';
@@ -860,7 +1385,7 @@ window.exportLaporan = function (type) {
     let url = `/dashboard/laporan/export/${endpoint}?start=${start}&end=${end}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
 
     if (reportType === 'ANGGARAN') {
-        const cat = document.getElementById('lraCategory')?.value || 'PENDAPATAN';
+        const cat = document.getElementById('lraCategory')?.value || 'SEMUA';
         url += `&category=${cat}`;
 
         const tw = document.getElementById('sp3bpTriwulan')?.value;
@@ -876,8 +1401,52 @@ window.exportLaporan = function (type) {
         const year = document.getElementById('ledgerYear')?.value || '';
         url = `/dashboard/laporan/export/${endpoint}?month=${month}&year=${year}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
     }
+    if (reportType === 'BKU_PENDAPATAN') {
+        const month = document.getElementById('incomeBkuMonth')?.value || '';
+        const year = document.getElementById('incomeBkuYear')?.value || '';
+        const isPdf = endpoint.includes('pdf');
+        const bku_endpoint = isPdf ? '/dashboard/bku-penerimaan/export/pdf' : '/dashboard/bku-penerimaan/export/excel';
+        url = `${bku_endpoint}?month=${month}&year=${year}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
+    if (reportType === 'NERACA') {
+        const bEl = document.getElementById('neracaFilterBulan');
+        const b = bEl ? bEl.value : (new Date().getMonth() + 1);
+        url = `/dashboard/laporan/export/${endpoint}?bulan=${b}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
+    if (reportType === "LO") {
+        const p = document.getElementById("loPeriode")?.value || "Tahunan";
+        const b = document.getElementById("loBulan")?.value || "";
+        const tw = document.getElementById("loTriwulan")?.value || "";
+        const sem = document.getElementById("loSemester")?.value || "";
+        url = `/dashboard/laporan/export/${endpoint}?periode=${p}&bulan=${b}&triwulan=${tw}&semester=${sem}&start=${start}&end=${end}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
+    if (reportType === "LPE") {
+        const p = document.getElementById("lpePeriode")?.value || "Tahunan";
+        const b = document.getElementById("lpeBulan")?.value || "";
+        const tw = document.getElementById("lpeTriwulan")?.value || "";
+        const sem = document.getElementById("lpeSemester")?.value || "";
+        url = `/dashboard/laporan/export/${endpoint}?periode=${p}&bulan=${b}&triwulan=${tw}&semester=${sem}&start=${start}&end=${end}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
+    if (reportType === "CALK") {
+        const p = document.getElementById("calkPeriode")?.value || "Tahunan";
+        const b = document.getElementById("calkBulan")?.value || "";
+        const tw = document.getElementById("calkTriwulan")?.value || "";
+        const sem = document.getElementById("calkSemester")?.value || "";
+        url = `/dashboard/laporan/export/${endpoint}?periode=${p}&bulan=${b}&triwulan=${tw}&semester=${sem}&start=${start}&end=${end}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
+    if (reportType === "LPSAL") {
+        const p = document.getElementById("lpsalPeriode")?.value || "Tahunan";
+        const b = document.getElementById("lpsalBulan")?.value || "";
+        const tw = document.getElementById("lpsalTriwulan")?.value || "";
+        const sem = document.getElementById("lpsalSemester")?.value || "";
+        url = `/dashboard/laporan/export/${endpoint}?periode=${p}&bulan=${b}&triwulan=${tw}&semester=${sem}&start=${start}&end=${end}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
+    if (reportType === "RKA" || reportType === "RBA") {
+        const th = document.getElementById("laporanTahun")?.value || new Date().getFullYear();
+        url = `/dashboard/laporan/export/${endpoint}?tahun=${th}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
     window.location.href = url;
-    toast(`⏳ Menyiapkan Unduh Excel ${reportType}...`, 'info');
+    toast(`Ã¢³ Menyiapkan Unduh Excel ${reportType}...`, 'info');
 };
 
 window.exportPdf = function (type) {
@@ -892,15 +1461,22 @@ window.exportPdf = function (type) {
         }
         const endpoint = reportType === 'LRKB' ? 'lrkb' : 'sp3bp';
         const url = `/dashboard/pengesahan/${endpoint}/${id}/print`;
+        if (reportType === "LO") {
+            const p = document.getElementById("loPeriode")?.value || "Tahunan";
+            const b = document.getElementById("loBulan")?.value || "";
+            const tw = document.getElementById("loTriwulan")?.value || "";
+            const sem = document.getElementById("loSemester")?.value || "";
+            url = `/dashboard/laporan/export/${endpoint}?periode=${p}&bulan=${b}&triwulan=${tw}&semester=${sem}&start=${start}&end=${end}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+        }
         window.location.href = url;
-        toast(`⏳ Menyiapkan Unduh PDF ${reportType}...`, 'info');
+        toast(`Ã¢³ Menyiapkan Unduh PDF ${reportType}...`, 'info');
         return;
     }
 
-    const start = document.getElementById('laporanStart')?.value;
-    const end = document.getElementById('laporanEnd')?.value;
+    const start = (reportType === 'ANGGARAN') ? document.getElementById('startDate')?.value : document.getElementById('laporanStart')?.value;
+    const end = (reportType === 'ANGGARAN') ? document.getElementById('endDate')?.value : document.getElementById('laporanEnd')?.value;
 
-    if (!end && !['REKON', 'DPA', 'PIUTANG', 'BKU'].includes(reportType)) {
+    if (!end && !['ANGGARAN', 'REKON', 'DPA', 'PIUTANG', 'BKU', 'BKU_PENDAPATAN'].includes(reportType)) {
         toast('Pilih tanggal!', 'error');
         return;
     }
@@ -913,7 +1489,16 @@ window.exportPdf = function (type) {
         'ANGGARAN': 'anggaran-pdf',
         'PENGELUARAN': 'pengeluaran-pdf',
         'DPA': 'dpa-pdf',
-        'BKU': 'bku-pdf'
+        'BKU': 'bku-pdf',
+        'BKU_PENDAPATAN': 'bku-penerimaan-pdf',
+        'LAK': 'lak-pdf',
+        'NERACA': 'neraca-pdf',
+        'LO': 'lo-pdf',
+        'LPE': 'lpe-pdf',
+        'CALK': 'calk-pdf',
+        'LPSAL': 'lpsal-pdf',
+        'RKA': 'rka-pdf',
+        'RBA': 'rba-pdf'
     };
 
     const ptKiri = document.getElementById('ptSelectKiri')?.value || '';
@@ -931,7 +1516,7 @@ window.exportPdf = function (type) {
     let url = `/dashboard/laporan/export/${endpoint}?start=${start}&end=${end}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
 
     if (reportType === 'ANGGARAN') {
-        const cat = document.getElementById('lraCategory')?.value || 'PENDAPATAN';
+        const cat = document.getElementById('lraCategory')?.value || 'SEMUA';
         url += `&category=${cat}`;
 
         const tw = document.getElementById('sp3bpTriwulan')?.value;
@@ -947,8 +1532,52 @@ window.exportPdf = function (type) {
         const year = document.getElementById('ledgerYear')?.value || '';
         url = `/dashboard/laporan/export/${endpoint}?month=${month}&year=${year}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
     }
+    if (reportType === 'BKU_PENDAPATAN') {
+        const month = document.getElementById('incomeBkuMonth')?.value || '';
+        const year = document.getElementById('incomeBkuYear')?.value || '';
+        const isPdf = endpoint.includes('pdf');
+        const bku_endpoint = isPdf ? '/dashboard/bku-penerimaan/export/pdf' : '/dashboard/bku-penerimaan/export/excel';
+        url = `${bku_endpoint}?month=${month}&year=${year}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
+    if (reportType === 'NERACA') {
+        const bEl = document.getElementById('neracaFilterBulan');
+        const b = bEl ? bEl.value : (new Date().getMonth() + 1);
+        url = `/dashboard/laporan/export/${endpoint}?bulan=${b}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
+    if (reportType === 'LO') {
+        const p = document.getElementById("loPeriode")?.value || "Tahunan";
+        const b = document.getElementById("loBulan")?.value || "";
+        const tw = document.getElementById("loTriwulan")?.value || "";
+        const sem = document.getElementById("loSemester")?.value || "";
+        url = `/dashboard/laporan/export/${endpoint}?periode=${p}&bulan=${b}&triwulan=${tw}&semester=${sem}&start=${start}&end=${end}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
+    if (reportType === 'LPE') {
+        const p = document.getElementById("lpePeriode")?.value || "Tahunan";
+        const b = document.getElementById("lpeBulan")?.value || "";
+        const tw = document.getElementById("lpeTriwulan")?.value || "";
+        const sem = document.getElementById("lpeSemester")?.value || "";
+        url = `/dashboard/laporan/export/${endpoint}?periode=${p}&bulan=${b}&triwulan=${tw}&semester=${sem}&start=${start}&end=${end}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
+    if (reportType === 'CALK') {
+        const p = document.getElementById("calkPeriode")?.value || "Tahunan";
+        const b = document.getElementById("calkBulan")?.value || "";
+        const tw = document.getElementById("calkTriwulan")?.value || "";
+        const sem = document.getElementById("calkSemester")?.value || "";
+        url = `/dashboard/laporan/export/${endpoint}?periode=${p}&bulan=${b}&triwulan=${tw}&semester=${sem}&start=${start}&end=${end}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
+    if (reportType === 'LPSAL') {
+        const p = document.getElementById("lpsalPeriode")?.value || "Tahunan";
+        const b = document.getElementById("lpsalBulan")?.value || "";
+        const tw = document.getElementById("lpsalTriwulan")?.value || "";
+        const sem = document.getElementById("lpsalSemester")?.value || "";
+        url = `/dashboard/laporan/export/${endpoint}?periode=${p}&bulan=${b}&triwulan=${tw}&semester=${sem}&start=${start}&end=${end}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
+    if (reportType === 'RKA' || reportType === 'RBA') {
+        const th = document.getElementById("laporanTahun")?.value || new Date().getFullYear();
+        url = `/dashboard/laporan/export/${endpoint}?tahun=${th}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
+    }
     window.location.href = url;
-    toast(`⏳ Menyiapkan Export PDF ${reportType}...`, 'info');
+    toast(`Ã¢³ Menyiapkan Export PDF ${reportType}...`, 'info');
 };
 
 window.numFr = (num) => {
@@ -979,9 +1608,16 @@ window.openPreviewModal = function (type) {
         'ANGGARAN': 'LAPORAN REALISASI ANGGARAN',
         'PENGELUARAN': 'LAPORAN REALISASI BELANJA',
         'DPA': 'LAPORAN DOKUMEN PELAKSANAAN ANGGARAN (DPA)',
-        'BKU': 'BUKU KAS UMUM (BKU)',
+        'BKU': 'BUKU KAS UMUM PENGELUARAN (BKU)',
+        'BKU_PENDAPATAN': 'BUKU KAS UMUM PENDAPATAN (BKU)',
         'LRKB': 'LAPORAN REKONSILIASI KAS BENDAHARA (LRKB)',
-        'SP3BP': 'SURAT PERINTAH PENGESAHAN PENDAPATAN DAN BELANJA (SP3BP)'
+        'SP3BP': 'SURAT PERINTAH PENGESAHAN PENDAPATAN DAN BELANJA (SP3BP)',
+        'LAK': 'LAPORAN ARUS KAS (LAK)',
+        'NERACA': 'LAPORAN NERACA',
+        'LO': 'LAPORAN OPERASIONAL (LO)',
+        'LPE': 'LAPORAN PERUBAHAN EKUITAS (LPE)',
+        'RKA': 'RENCANA KERJA ANGGARAN (RKA)',
+        'RBA': 'RENCANA BISNIS ANGGARAN (RBA)'
     };
 
     // Special Title for SPTJB
@@ -1011,15 +1647,22 @@ window.openPreviewModal = function (type) {
         }
     }
 
-    if (!window.lastLaporanData || window.lastLaporanType !== reportType || (reportType === 'BKU' && !window._bkuAlreadyReloaded)) {
+    if (!window.lastLaporanData || window.lastLaporanType !== reportType || (reportType === 'BKU' && !window._bkuAlreadyReloaded) || (reportType === 'BKU_PENDAPATAN' && !window._bkuPenerimaanAlreadyReloaded)) {
         if (reportType === 'BKU') {
-            // For BKU, ALWAYS reload to get the latest data (as it might have been updated on the same page)
             window._bkuAlreadyReloaded = true;
             toast('Memuat data BKU...', 'info');
             loadLaporan('BKU').then(() => {
                 openPreviewModal('BKU');
-                // Reset flag after a small delay to allow future reloads but prevent immediate recursion
                 setTimeout(() => { window._bkuAlreadyReloaded = false; }, 100);
+            });
+            return;
+        }
+        if (reportType === 'BKU_PENDAPATAN') {
+            window._bkuPenerimaanAlreadyReloaded = true;
+            toast('Memuat data BKU Pendapatan...', 'info');
+            loadLaporan('BKU_PENDAPATAN').then(() => {
+                openPreviewModal('BKU_PENDAPATAN');
+                setTimeout(() => { window._bkuPenerimaanAlreadyReloaded = false; }, 100);
             });
             return;
         }
@@ -1033,7 +1676,7 @@ window.openPreviewModal = function (type) {
     // Hide Excel export for LRKB/SP3BP as they only have PDF
     const excelBtn = document.querySelector('button[onclick="exportLaporan()"]');
     if (excelBtn) {
-        excelBtn.style.display = (['LRKB', 'SP3BP'].includes(reportType)) ? 'none' : 'flex';
+        excelBtn.style.display = (['LRKB', 'SP3BP', 'BKU_PENDAPATAN'].includes(reportType)) ? 'none' : 'flex';
     }
 
     // --- Load Penanda Tangan Dropdowns (Kiri, Tengah & Kanan) ---
@@ -1060,21 +1703,44 @@ window.openPreviewModal = function (type) {
 
     if (periodeEl) {
         if (reportType === 'REKON') {
-            periodeEl.innerText = `Laporan Tahunan (Tahun Anggaran Berjalan)`;
+            periodeEl.innerText = '';
+            periodeEl.style.display = 'none';
         } else if (reportType === 'DPA') {
+            periodeEl.style.display = 'block';
             periodeEl.innerText = `Tahun Anggaran: ${data.tahun || window.tahunAnggaran}`;
-        } else if (reportType === 'BKU') {
-            periodeEl.innerText = `Periode: ${data.period || '-'}`;
-        } else if (reportType === 'PIUTANG') {
-            const tahunVal = document.getElementById('laporanTahun')?.value || new Date().getFullYear();
-            periodeEl.innerText = `Tahun Anggaran: ${tahunVal}`;
+        } else if (['NERACA', 'LO', 'LAK', 'ANGGARAN', 'REKON', 'LPE', 'RKA', 'RBA'].includes(reportType)) {
+            periodeEl.innerText = '';
+            periodeEl.style.display = 'none';
         } else {
-            periodeEl.innerText = customPeriod ? customPeriod : `Periode: ${formatTanggal(start)} s/d ${formatTanggal(end)}`;
+            periodeEl.style.display = 'block';
+            if (reportType === 'BKU') {
+                periodeEl.innerText = `Periode: ${data.period || '-'}`;
+            } else if (reportType === 'PIUTANG') {
+                const tahunVal = document.getElementById('laporanTahun')?.value || new Date().getFullYear();
+                periodeEl.innerText = `Tahun Anggaran: ${tahunVal}`;
+            } else {
+                periodeEl.innerText = customPeriod ? customPeriod : `Periode: ${formatTanggal(start)} s/d ${formatTanggal(end)}`;
+            }
         }
     }
 
+    // Always ensure the Kop Line is visible unless specifically told otherwise (restoring for REKON)
+    if (document.getElementById('previewHeaderLine')) {
+        document.getElementById('previewHeaderLine').style.display = 'block';
+    }
+
     const modalMainTitle = document.getElementById('previewMainTitle');
-    if (modalMainTitle) modalMainTitle.innerText = customTitle || titleMapping[reportType] || 'LAPORAN';
+    if (modalMainTitle) {
+        if (['REKON', 'NERACA', 'LO', 'LAK', 'ANGGARAN', 'LPE', 'CALK', 'RKA', 'RBA'].includes(reportType)) {
+            modalMainTitle.innerText = '';
+            modalMainTitle.style.display = 'none';
+            modalMainTitle.style.textDecoration = 'none';
+        } else {
+            modalMainTitle.style.display = 'block';
+            modalMainTitle.style.textDecoration = 'underline';
+            modalMainTitle.innerText = customTitle || titleMapping[reportType] || 'LAPORAN';
+        }
+    }
 
     const modalTitle = document.getElementById('modalReportTitle');
     if (modalTitle) modalTitle.innerText = `Preview ${customTitle || titleMapping[reportType] || 'Laporan'}`;
@@ -1279,29 +1945,129 @@ window.openPreviewModal = function (type) {
         tablesContainer.innerHTML += roomHtml;
 
     } else if (reportType === 'REKON') {
+        const periodText = document.getElementById('rekonFilterPeriode')?.value || 'Bulanan';
+        let detailPeriod = '';
+        const romans = { '1': 'I', '2': 'II', '3': 'III', '4': 'IV' };
+
+        if (periodText === 'Bulanan') {
+            detailPeriod = 'BULAN ' + (document.getElementById('rekonFilterBulan')?.options[document.getElementById('rekonFilterBulan').selectedIndex].text || '').toUpperCase();
+        } else if (periodText === 'Triwulan') {
+            const tw = document.getElementById('rekonFilterTriwulan')?.value;
+            detailPeriod = 'TRIWULAN ' + (romans[tw] || tw);
+        } else if (periodText === 'Semester') {
+            const sem = document.getElementById('rekonFilterSemester')?.value;
+            detailPeriod = 'SEMESTER ' + (romans[sem] || sem);
+        } else {
+            detailPeriod = 'TAHUNAN';
+        }
+
         let rekonHtml = `
-            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
-                <thead style="background:#f8fafc;">
+            <div style="text-align:center; margin-bottom: 25px;">
+                <h4 style="margin:0; font-size:11pt; font-weight:normal; text-transform:uppercase;">RSJKO ENGKU HAJI DAUD</h4>
+                <h2 style="margin:5px 0; font-size:13pt; font-weight:bold; text-decoration:underline;">BERITA ACARA REKONSILIASI DATA KEUANGAN</h2>
+                <p style="margin:0; font-size:11pt; font-weight:bold;">PERIODE ${detailPeriod}</p>
+            </div>
+            
+            <p style="margin-bottom:20px; text-align:justify; line-height:1.5;">Telah dilakukan Rekonsiliasi Data Keuangan antara <strong>BADAN KEUANGAN DAN ASET DAERAH PROVINSI KEPRI</strong> dengan <strong>RSJKO ENGKU HAJI DAUD</strong> dengan hasil sebagai berikut:</p>
+
+            <div style="margin-bottom: 30px;">
+                <h6 style="font-weight:bold; margin-bottom:10px; font-size:10pt;">BAGIAN A - DATA KAS BENDAHARA PENERIMAAN</h6>
+                <table style="width:100%; border-collapse:collapse; font-size:9pt;">
+                    <thead style="background:#f1f5f9;">
+                        <tr>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width:5%;">No</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:left; width:35%;">Uraian</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:right; width:20%;">Pendapatan Sistem</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:right; width:20%;">Rekening Koran Bank</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:right; width:20%;">Selisih</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+        let totalSistem = 0, totalBank = 0;
+        if (data.recap) {
+            data.recap.forEach((item, idx) => {
+                totalSistem += Number(item.pendapatan_modul);
+                totalBank += Number(item.bank);
+                rekonHtml += `
                     <tr>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 15%;">Bulan</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 22%;">Bank (Kredit)</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 22%;">Modul Netto</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">Selisih Harian</th>
-                        <th style="border:1px solid #000; padding:8px; text-align:center; width: 21%;">Selisih Kumulatif</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-        data.forEach(item => {
+                        <td style="border:1px solid #000; padding:8px; text-align:center;">${idx + 1}</td>
+                        <td style="border:1px solid #000; padding:8px;">Pendapatan Periode ${item.bulan}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.pendapatan_modul)}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.bank)}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:right; font-weight:bold;">${fr(item.selisih)}</td>
+                    </tr>`;
+            });
             rekonHtml += `
-                <tr>
-                    <td style="border:1px solid #000; padding:8px; text-align:center;">${item.tanggal}</td>
-                    <td style="border:1px solid #000; padding:8px;">${fr(item.bank)}</td>
-                    <td style="border:1px solid #000; padding:8px;">${fr(item.pendapatan)}</td>
-                    <td style="border:1px solid #000; padding:8px;">${fr(item.selisih)}</td>
-                    <td style="border:1px solid #000; padding:8px; font-weight:bold;">${fr(item.kumulatif)}</td>
+                <tr style="background:#f1f5f9; font-weight:bold;">
+                    <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center;">JUMLAH TOTAL</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(totalSistem)}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(totalBank)}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(totalBank - totalSistem)}</td>
                 </tr>`;
-        });
-        rekonHtml += `</tbody></table> `;
+        }
+        rekonHtml += `</tbody></table></div>`;
+
+        rekonHtml += `
+            <div style="margin-bottom: 30px;">
+                <h6 style="font-weight:bold; margin-bottom:10px; font-size:10pt;">BAGIAN B - DATA SALDO REKENING KORAN</h6>
+                <table style="width:100%; border-collapse:collapse; font-size:9pt;">
+                    <thead style="background:#f1f5f9;">
+                        <tr>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width:5%;">No</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:left;">Nama Bank</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:left;">Nama Rekening</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">No Rekening</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:right; width:20%;">Saldo Akhir</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+        if (data.section_b) {
+            data.section_b.forEach((item, idx) => {
+                rekonHtml += `
+                    <tr>
+                        <td style="border:1px solid #000; padding:8px; text-align:center;">${idx + 1}</td>
+                        <td style="border:1px solid #000; padding:8px;">${item.bank}</td>
+                        <td style="border:1px solid #000; padding:8px;">${item.nama_rekening}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:center;">${item.no_rekening}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:right; font-weight:bold;">${fr(item.saldo_akhir)}</td>
+                    </tr>`;
+            });
+        }
+        rekonHtml += `</tbody></table></div>`;
+
+        rekonHtml += `
+            <div style="margin-bottom: 30px;">
+                <h6 style="font-weight:bold; margin-bottom:10px; font-size:10pt;">BAGIAN C - ANALISIS SELISIH TRANSAKSI</h6>
+                <table style="width:100%; border-collapse:collapse; font-size:8pt;">
+                    <thead style="background:#f1f5f9;">
+                        <tr>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">Tanggal</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">Sistem</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">Bank</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">Selisih</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">Status</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:left;">Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+        if (data.analysis) {
+            data.analysis.forEach(row => {
+                rekonHtml += `
+                    <tr>
+                        <td style="border:1px solid #000; padding:8px; text-align:center;">${formatDateShort(row.tanggal)}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(row.nominal)}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(row.bank)}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(row.selisih)}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold;">${row.status}</td>
+                        <td style="border:1px solid #000; padding:8px;">${row.keterangan || '-'}</td>
+                    </tr>`;
+            });
+        }
+        rekonHtml += `</tbody></table></div>`;
+        tablesContainer.innerHTML = rekonHtml;
+
         tablesContainer.innerHTML = rekonHtml;
 
     } else if (reportType === 'PIUTANG') {
@@ -1457,13 +2223,15 @@ window.openPreviewModal = function (type) {
                         <td style="border:1px solid #000; padding:5px; text-align:center;">${totals.persen}%</td>
                     </tr>`;
             } else {
+                const rKini = totals.real_kini || 0;
+                const pKini = totals.persen_kini || 0;
                 return `
                     <tr style="background:#f1f5f9; font-weight:bold;">
                         <td colspan="2" style="border:1px solid #000; padding:5px; text-align:center;">TOTAL ${title}</td>
                         <td style="border:1px solid #000; padding:5px; text-align:right;">${numFr(totals.target)}</td>
-                        <td style="border:1px solid #000; padding:5px; text-align:right;">${numFr(totals.real)}</td>
-                        <td style="border:1px solid #000; padding:5px; text-align:right;">${numFr(totals.target - totals.real)}</td>
-                        <td style="border:1px solid #000; padding:5px; text-align:center;">${totals.persen}%</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right;">${numFr(rKini)}</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:right;">${numFr(totals.target - rKini)}</td>
+                        <td style="border:1px solid #000; padding:5px; text-align:center;">${pKini}%</td>
                     </tr>`;
             }
         };
@@ -1478,8 +2246,8 @@ window.openPreviewModal = function (type) {
             tableBody += getTotalRowHtml('BELANJA (PENGELUARAN)', data.sub_totals.pengeluaran);
 
             // Surplus row
-            const diff = data.totals.target - data.totals.realisasi_total;
             if (isSptjb) {
+                const diff = data.totals.target - data.totals.realisasi_total;
                 tableBody += `
                     <tr style="background:#e2e8f0; font-weight:bold; font-size:10pt;">
                         <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center;">SURPLUS / (DEFISIT) ANGGARAN</td>
@@ -1491,13 +2259,14 @@ window.openPreviewModal = function (type) {
                         <td style="border:1px solid #000; padding:8px; text-align:center;">${data.totals.persen}%</td>
                     </tr>`;
             } else {
+                const diffKini = data.totals.target - data.totals.realisasi_kini;
                 tableBody += `
                     <tr style="background:#e2e8f0; font-weight:bold; font-size:10pt;">
                         <td colspan="2" style="border:1px solid #000; padding:10px; text-align:center;">SURPLUS / (DEFISIT) ANGGARAN</td>
                         <td style="border:1px solid #000; padding:10px; text-align:right;">${numFr(data.totals.target)}</td>
-                        <td style="border:1px solid #000; padding:10px; text-align:right;">${numFr(data.totals.realisasi_total)}</td>
-                        <td style="border:1px solid #000; padding:10px; text-align:right;">${numFr(diff)}</td>
-                        <td style="border:1px solid #000; padding:10px; text-align:center;">${data.totals.persen}%</td>
+                        <td style="border:1px solid #000; padding:10px; text-align:right;">${numFr(data.totals.realisasi_kini)}</td>
+                        <td style="border:1px solid #000; padding:10px; text-align:right;">${numFr(diffKini)}</td>
+                        <td style="border:1px solid #000; padding:10px; text-align:center;">${data.totals.persen_kini || 0}%</td>
                     </tr>`;
             }
         } else {
@@ -1534,6 +2303,11 @@ window.openPreviewModal = function (type) {
         `;
 
         tablesContainer.innerHTML = `
+            <div style="text-align:center; margin-bottom: 25px;">
+                <h4 style="margin:0; font-size:11pt; font-weight:normal; text-transform:uppercase;">RSJKO ENGKU HAJI DAUD</h4>
+                <h2 style="margin:5px 0; font-size:13pt; font-weight:bold; text-decoration:underline;">LAPORAN REALISASI ANGGARAN (LRA)</h2>
+                <p style="margin:0; font-size:11pt; font-weight:bold;">PERIODE ${formatTanggal(start)} s.d ${formatTanggal(end)}</p>
+            </div>
             <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:8pt;">
                 <thead style="background:#f8fafc;">
                     ${headerHtml}
@@ -1660,6 +2434,90 @@ window.openPreviewModal = function (type) {
             </tbody>
         </table>`;
         tablesContainer.innerHTML = html;
+    } else if (reportType === 'RKA') {
+        const data = window.lastLaporanData;
+        const fr = (v) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2 }).format(v);
+
+        let html = `
+            <div style="text-align:center; margin-bottom: 25px;">
+                <h4 style="margin:0; font-size:11pt; font-weight:normal; text-transform:uppercase;">RSJKO ENGKU HAJI DAUD</h4>
+                <h2 style="margin:5px 0; font-size:13pt; font-weight:bold; text-decoration:underline;">RENCANA KERJA ANGGARAN (RKA)</h2>
+                <p style="margin:0; font-size:11pt; font-weight:bold;">TAHUN ANGGARAN ${data.tahun}</p>
+            </div>
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                <thead>
+                    <tr style="background:#f1f5f9;">
+                        <th style="border:1px solid #000; padding:10px; text-align:left; width:20%;">KODE REKENING</th>
+                        <th style="border:1px solid #000; padding:10px; text-align:left; width:55%;">URAIAN</th>
+                        <th style="border:1px solid #000; padding:10px; text-align:right; width:25%;">ANGGARAN (RP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.data.map(item => `
+                        <tr>
+                            <td style="border:1px solid #000; padding:8px; font-weight: ${item.level <= 3 ? 'bold' : 'normal'};">
+                                ${item.kode}
+                            </td>
+                            <td style="border:1px solid #000; padding:8px; padding-left: ${(item.level - 1) * 20}px; font-weight: ${item.level <= 3 ? 'bold' : 'normal'};">
+                                ${item.nama}
+                            </td>
+                            <td style="border:1px solid #000; padding:8px; text-align:right; font-weight: ${item.level <= 3 ? 'bold' : 'normal'};">
+                                ${fr(item.anggaran)}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        tablesContainer.innerHTML = html;
+    } else if (reportType === 'RBA') {
+        const data = window.lastLaporanData;
+        const fr = (v) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2 }).format(v);
+
+        let html = `
+            <div style="text-align:center; margin-bottom: 25px;">
+                <h4 style="margin:0; font-size:11pt; font-weight:normal; text-transform:uppercase;">RSJKO ENGKU HAJI DAUD</h4>
+                <h2 style="margin:5px 0; font-size:13pt; font-weight:bold; text-decoration:underline;">RENCANA BISNIS ANGGARAN (RBA) BLUD</h2>
+                <p style="margin:0; font-size:11pt; font-weight:bold;">TAHUN ANGGARAN ${data.tahun}</p>
+            </div>
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:10pt;">
+                <thead>
+                    <tr style="background:#f1f5f9;">
+                        <th style="border:1px solid #000; padding:12px; text-align:left; width:70%;">URAIAN</th>
+                        <th style="border:1px solid #000; padding:12px; text-align:right; width:30%;">JUMLAH (RP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background:#f8fafc; font-weight:bold;">
+                        <td style="border:1px solid #000; padding:10px;">I. PENDAPATAN BLUD</td>
+                        <td style="border:1px solid #000; padding:10px; text-align:right;">${fr(data.summary.pendapatan)}</td>
+                    </tr>
+                    ${data.breakdown.filter(i => i.category === 'PENDAPATAN').map(item => `
+                        <tr>
+                            <td style="border:1px solid #000; padding:8px; padding-left: ${(item.level) * 20}px;">${item.nama}</td>
+                            <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.anggaran)}</td>
+                        </tr>
+                    `).join('')}
+
+                    <tr style="background:#f8fafc; font-weight:bold;">
+                        <td style="border:1px solid #000; padding:10px;">II. BELANJA BLUD</td>
+                        <td style="border:1px solid #000; padding:10px; text-align:right;">${fr(data.summary.belanja)}</td>
+                    </tr>
+                    ${data.breakdown.filter(i => i.category === 'PENGELUARAN').map(item => `
+                        <tr>
+                            <td style="border:1px solid #000; padding:8px; padding-left: ${(item.level) * 20}px;">${item.nama}</td>
+                            <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.anggaran)}</td>
+                        </tr>
+                    `).join('')}
+
+                    <tr style="background:#e2e8f0; font-weight:bold; font-size:11pt;">
+                        <td style="border:1px solid #000; padding:15px;">SURPLUS / (DEFISIT)</td>
+                        <td style="border:1px solid #000; padding:15px; text-align:right;">${fr(data.summary.surplus_defisit)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+        tablesContainer.innerHTML = html;
     } else if (reportType === 'BKU') {
         let bkuHtml = `
             <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:7pt;">
@@ -1708,7 +2566,7 @@ window.openPreviewModal = function (type) {
             </table>`;
         tablesContainer.innerHTML = bkuHtml;
 
-        // Add special BKU footer info
+        // Add mandated BKU footer info for preview
         const bkuFooter = `
             <div style="margin-top:20px; font-size:9pt; font-family: 'Inter', sans-serif;">
                 <div style="display:flex; margin-bottom:4px;">
@@ -1743,6 +2601,189 @@ window.openPreviewModal = function (type) {
             </div>
         `;
         tablesContainer.insertAdjacentHTML('beforeend', bkuFooter);
+    } else if (reportType === 'BKU_PENDAPATAN') {
+        const openingBalance = data.opening_balance || 0;
+        let bkuHtml = `
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:8pt;">
+                <thead style="background:#f8fafc;">
+                    <tr>
+                        <th style="border:1px solid #000; padding:6px; text-align:center; width: 30px;">No</th>
+                        <th style="border:1px solid #000; padding:6px; text-align:center; width: 75px;">Tanggal</th>
+                        <th style="border:1px solid #000; padding:6px; text-align:center; width: 85px;">No Bukti</th>
+                        <th style="border:1px solid #000; padding:6px; text-align:center;">Uraian / Keterangan</th>
+                        <th style="border:1px solid #000; padding:6px; text-align:center; width: 85px;">Sumber</th>
+                        <th style="border:1px solid #000; padding:6px; text-align:center; width: 100px;">Penerimaan</th>
+                        <th style="border:1px solid #000; padding:6px; text-align:center; width: 100px;">Pengeluaran</th>
+                        <th style="border:1px solid #000; padding:6px; text-align:center; width: 110px;">Saldo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.data.map((item, i) => `
+                    <tr>
+                        <td style="border:1px solid #000; padding:6px; text-align:center;">${i + 1}</td>
+                        <td style="border:1px solid #000; padding:6px; text-align:center;">${formatTanggal(item.tanggal)}</td>
+                        <td style="border:1px solid #000; padding:6px; text-align:center; font-family: monospace;">${item.reference_id > 0 ? 'TRX-' + item.reference_id : '-'}</td>
+                        <td style="border:1px solid #000; padding:6px;">${item.uraian || '-'}</td>
+                        <td style="border:1px solid #000; padding:6px; text-align:center;">${item.sumber || '-'}</td>
+                        <td style="border:1px solid #000; padding:6px; text-align:right; color:#059669;">${item.penerimaan > 0 ? numFr(item.penerimaan) : '-'}</td>
+                        <td style="border:1px solid #000; padding:6px; text-align:right; color:#dc2626;">${item.pengeluaran > 0 ? numFr(item.pengeluaran) : '-'}</td>
+                        <td style="border:1px solid #000; padding:6px; text-align:right; font-weight:bold;">${numFr(item.saldo)}</td>
+                    </tr>`).join('')}
+                    <tr style="background:#f1f5f9; font-weight:bold;">
+                        <td colspan="5" style="border:1px solid #000; padding:8px; text-align:center;">TOTAL MUTASI & SALDO AKHIR</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:right;">${numFr(data.summary.total_penerimaan)}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:right;">${numFr(data.summary.total_pengeluaran)}</td>
+                        <td style="border:1px solid #000; padding:8px; text-align:right;">${numFr(data.summary.final_saldo)}</td>
+                    </tr>
+                </tbody>
+            </table>`;
+        tablesContainer.innerHTML = bkuHtml;
+
+        // Add special BKU footer info for Income
+        const bkuFooter = `
+            <div style="margin-top:20px; font-size:9pt; font-family: 'Inter', sans-serif;">
+                <div style="display:flex; margin-bottom:4px;">
+                    <div style="width:250px;">Jumlah Penerimaan Tunai sampai periode ini</div>
+                    <div style="width:20px;">:</div>
+                    <div style="font-weight:bold;">Rp ${numFr(data.summary.cumulative_penerimaan)}</div>
+                </div>
+                <div style="display:flex; margin-bottom:15px;">
+                    <div style="width:250px;">Jumlah Setoran ke Bank sampai periode ini</div>
+                    <div style="width:20px;">:</div>
+                    <div style="font-weight:bold;">Rp ${numFr(data.summary.cumulative_pengeluaran)}</div>
+                </div>
+                
+                <div style="margin-top:15px;">
+                    <div style="font-weight:bold; text-decoration:underline;">Catatan :</div>
+                    <div style="display:flex; margin-top:4px;">
+                        <div style="width:250px;">Saldo Kas Bendahara per akhir bulan</div>
+                        <div style="width:20px;">:</div>
+                        <div style="font-weight:bold;">Rp ${numFr(data.summary.final_saldo)}</div>
+                    </div>
+                    <div style="display:flex; margin-top:20px;">
+                        <div style="width:250px;">Saldo Rekening per akhir bulan</div>
+                        <div style="width:20px;">:</div>
+                        <div style="font-weight:bold;">&nbsp;</div>
+                    </div>
+                    <div style="display:flex; margin-top:2px; font-style: italic; color: #4b5563; font-size: 8.5pt;">
+                        <div style="width:250px; padding-left: 20px;">- Bank Riau Kepri Syariah</div>
+                        <div style="width:20px;">:</div>
+                        <div>Rp ${numFr(data.summary.bank_brk || 0)}</div>
+                    </div>
+                    <div style="display:flex; margin-top:2px; font-style: italic; color: #4b5563; font-size: 8.5pt;">
+                        <div style="width:250px; padding-left: 20px;">- Bank Syariah Indonesia</div>
+                        <div style="width:20px;">:</div>
+                        <div>Rp ${numFr(data.summary.bank_bsi || 0)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        tablesContainer.insertAdjacentHTML('beforeend', bkuFooter);
+    } else if (reportType === 'LAK') {
+        const cats = data.categories;
+        const fr = (v) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2 }).format(v);
+
+        let lakHtml = `
+            <div style="text-align:center; margin-bottom: 25px;">
+                <h4 style="margin:0; font-size:11pt; font-weight:normal; text-transform:uppercase;">RSJKO ENGKU HAJI DAUD</h4>
+                <h2 style="margin:5px 0; font-size:13pt; font-weight:bold; text-decoration:underline;">LAPORAN ARUS KAS (LAK)</h2>
+                <p style="margin:0; font-size:11pt; font-weight:bold;">PERIODE ${data.period.start_formatted} s.d ${data.period.end_formatted}</p>
+            </div>
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:10pt;">
+                <thead>
+                    <tr style="background:#f8fafc;">
+                        <th style="border:1px solid #000; padding:10px; text-align:left; width: 70%;">URAIAN</th>
+                        <th style="border:1px solid #000; padding:10px; text-align:right; width: 30%;">JUMLAH (Rp)</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        const sections = {
+            'OPERASI': 'A. ARUS KAS DARI AKTIVITAS OPERASI',
+            'INVESTASI': 'B. ARUS KAS DARI AKTIVITAS INVESTASI',
+            'PENDANAAN': 'C. ARUS KAS DARI AKTIVITAS PENDANAAN',
+            'UNMAPPED': 'D. TRANSAKSI BELUM TERKLASIFIKASI'
+        };
+
+        Object.entries(sections).forEach(([key, label]) => {
+            const cat = cats[key];
+            lakHtml += `<tr style="font-weight:bold; background:#f1f5f9;"><td colspan="2" style="border:1px solid #000; padding:8px;">${label}</td></tr>`;
+
+            cat.in.forEach(item => {
+                lakHtml += `<tr><td style="border:1px solid #000; padding:8px; padding-left:25px;">Arus Kas Masuk: ${item.uraian}</td><td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.total)}</td></tr>`;
+            });
+            cat.out.forEach(item => {
+                lakHtml += `<tr><td style="border:1px solid #000; padding:8px; padding-left:25px;">Arus Kas Keluar: ${item.uraian}</td><td style="border:1px solid #000; padding:8px; text-align:right;">(${fr(item.total)})</td></tr>`;
+            });
+
+            lakHtml += `<tr style="font-weight:bold;"><td style="border:1px solid #000; padding:8px;">Arus Kas Bersih dari Aktivitas ${key.toLowerCase()}</td><td style="border:1px solid #000; padding:8px; text-align:right; border-top:2px solid #000;">${fr(cat.total_in - cat.total_out)}</td></tr>`;
+        });
+
+        lakHtml += `
+            <tr style="height:15px;"><td colspan="2" style="border:none;"></td></tr>
+            <tr style="font-weight:bold;">
+                <td style="border:1px solid #000; padding:10px;">KENAIKAN / (PENURUNAN) KAS BERSIH</td>
+                <td style="border:1px solid #000; padding:10px; text-align:right;">${fr(data.kenaikkan)}</td>
+            </tr>
+            <tr style="font-weight:bold;">
+                <td style="border:1px solid #000; padding:10px;">SALDO KAS AWAL PERIODE</td>
+                <td style="border:1px solid #000; padding:10px; text-align:right;">${fr(data.saldo_awal)}</td>
+            </tr>
+            <tr style="font-weight:bold; background:#eff6ff; font-size:11pt;">
+                <td style="border:1px solid #000; padding:12px;">SALDO KAS AKHIR PERIODE</td>
+                <td style="border:1px solid #000; padding:12px; text-align:right;">${fr(data.saldo_akhir)}</td>
+            </tr>
+        </tbody></table>`;
+        tablesContainer.innerHTML = lakHtml;
+    } else if (reportType === 'NERACA') {
+        const data = window.lastLaporanData;
+        const fr = (v) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2 }).format(v);
+
+        let headerHtml = `
+            <div style="text-align:center; margin-bottom: 25px;">
+                <h4 style="margin:0; font-size:11pt; font-weight:normal; text-transform:uppercase;">RSJKO ENGKU HAJI DAUD</h4>
+                <h2 style="margin:5px 0; font-size:13pt; font-weight:bold; text-decoration:underline;">LAPORAN NERACA</h2>
+                <p style="margin:0; font-size:11pt; font-weight:bold;">PER ${data.period.end_date_formatted}</p>
+            </div>
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:10pt;">
+                <thead>
+                    <tr style="background:#f1f5f9;">
+                        <th style="border:1px solid #000; padding:10px; text-align:left; width:70%;">URAIAN</th>
+                        <th style="border:1px solid #000; padding:10px; text-align:right; width:30%;">JUMLAH (RP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="font-weight:bold; background:#e2e8f0;"><td colspan="2" style="border:1px solid #000; padding:8px;">ASET</td></tr>
+                    <tr style="font-weight:bold;"><td style="border:1px solid #000; padding:8px; padding-left:20px;">ASET LANCAR</td><td style="border:1px solid #000; padding:8px; text-align:right;">${fr(data.assets.lancar.total)}</td></tr>
+                    <tr><td style="border:1px solid #000; padding:8px; padding-left:40px;">Kas dan Setara Kas</td><td style="border:1px solid #000; padding:8px; text-align:right;">${fr(data.assets.lancar.kas)}</td></tr>
+                    <tr><td style="border:1px solid #000; padding:8px; padding-left:40px;">Piutang Pelayanan</td><td style="border:1px solid #000; padding:8px; text-align:right;">${fr(data.assets.lancar.piutang)}</td></tr>
+                    <tr><td style="border:1px solid #000; padding:8px; padding-left:40px;">Persediaan</td><td style="border:1px solid #000; padding:8px; text-align:right;">${fr(data.assets.lancar.persediaan)}</td></tr>
+                    
+                    <tr style="font-weight:bold;"><td style="border:1px solid #000; padding:8px; padding-left:20px;">ASET TETAP</td><td style="border:1px solid #000; padding:8px; text-align:right;">${fr(data.assets.tetap.total)}</td></tr>
+                    <tr><td style="border:1px solid #000; padding:8px; padding-left:40px;">Aset Tetap (Netto)</td><td style="border:1px solid #000; padding:8px; text-align:right;">${fr(data.assets.tetap.total)}</td></tr>
+                    
+                    <tr style="font-weight:bold; background:#e2e8f0; font-size:11pt;">
+                        <td style="border:1px solid #000; padding:12px;">TOTAL ASET</td>
+                        <td style="border:1px solid #000; padding:12px; text-align:right;">${fr(data.assets.grand_total)}</td>
+                    </tr>
+
+                    <tr style="height:15px;"><td colspan="2" style="border:none;"></td></tr>
+
+                    <tr style="font-weight:bold; background:#e2e8f0;"><td colspan="2" style="border:1px solid #000; padding:8px;">KEWAJIBAN & EKUITAS</td></tr>
+                    <tr style="font-weight:bold;"><td style="border:1px solid #000; padding:8px; padding-left:20px;">KEWAJIBAN</td><td style="border:1px solid #000; padding:8px; text-align:right;">${fr(data.liabilities.total)}</td></tr>
+                    <tr><td style="border:1px solid #000; padding:8px; padding-left:40px;">Kewajiban Jangka Pendek</td><td style="border:1px solid #000; padding:8px; text-align:right;">${fr(data.liabilities.total)}</td></tr>
+                    
+                    <tr style="font-weight:bold;"><td style="border:1px solid #000; padding:8px; padding-left:20px;">EKUITAS</td><td style="border:1px solid #000; padding:8px; text-align:right;">${fr(data.equity.total)}</td></tr>
+                    <tr><td style="border:1px solid #000; padding:8px; padding-left:40px;">Ekuitas</td><td style="border:1px solid #000; padding:8px; text-align:right;">${fr(data.equity.total)}</td></tr>
+
+                    <tr style="font-weight:bold; background:#e2e8f0; font-size:11pt;">
+                        <td style="border:1px solid #000; padding:12px;">TOTAL KEWAJIBAN & EKUITAS</td>
+                        <td style="border:1px solid #000; padding:12px; text-align:right;">${fr(data.liabilities.total + data.equity.total)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+        tablesContainer.innerHTML = headerHtml;
     } else if (reportType === 'LRKB') {
         const triwulans = ["", "I (SATU)", "II (DUA)", "III (TIGA)", "IV (EMPAT)"];
         const months = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -1944,6 +2985,64 @@ window.openPreviewModal = function (type) {
         if (periodeEl) {
             periodeEl.innerText = `PERIODE ${periodStr.toUpperCase()}`;
         }
+    } else if (reportType === 'LO') {
+        const data = window.lastLaporanData;
+        const fr = (v) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2 }).format(v);
+
+        let loHtml = `
+            <div style="text-align:center; margin-bottom: 25px;">
+                <h4 style="margin:0; font-size:11pt; font-weight:normal; text-transform:uppercase;">RSJKO ENGKU HAJI DAUD</h4>
+                <h2 style="margin:5px 0; font-size:13pt; font-weight:bold; text-decoration:underline;">LAPORAN OPERASIONAL (LO)</h2>
+                <p style="margin:0; font-size:11pt; font-weight:bold;">PERIODE ${data.period.start_formatted} s.d ${data.period.end_formatted}</p>
+            </div>
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:10pt;">
+                <thead>
+                    <tr style="background:#f1f5f9;">
+                        <th style="border:1px solid #000; padding:10px; text-align:left; width:70%;">URAIAN</th>
+                        <th style="border:1px solid #000; padding:10px; text-align:right; width:30%;">JUMLAH (RP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="font-weight:bold; background:#e2e8f0;"><td colspan="2" style="border:1px solid #000; padding:8px;">I. PENDAPATAN DARI KEGIATAN OPERASIONAL</td></tr>
+                    ${data.revenue.items.map(item => `
+                        <tr>
+                            <td style="border:1px solid #000; padding:8px; padding-left:30px;">${item.label}</td>
+                            <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.value)}</td>
+                        </tr>
+                    `).join('')}
+                    <tr style="font-weight:bold; background:#f8fafc;">
+                        <td style="border:1px solid #000; padding:10px;">JUMLAH PENDAPATAN OPERASIONAL</td>
+                        <td style="border:1px solid #000; padding:10px; text-align:right;">${fr(data.revenue.total)}</td>
+                    </tr>
+
+                    <tr style="height:15px;"><td colspan="2" style="border:none;"></td></tr>
+
+                    <tr style="font-weight:bold; background:#e2e8f0;"><td colspan="2" style="border:1px solid #000; padding:8px;">II. BEBAN OPERASIONAL</td></tr>
+                    ${data.expenses.items.map(item => `
+                        <tr>
+                            <td style="border:1px solid #000; padding:8px; padding-left:30px;">${item.label}</td>
+                            <td style="border:1px solid #000; padding:8px; text-align:right;">${fr(item.value)}</td>
+                        </tr>
+                    `).join('')}
+                    <tr style="font-weight:bold; background:#f8fafc;">
+                        <td style="border:1px solid #000; padding:10px;">JUMLAH BEBAN OPERASIONAL</td>
+                        <td style="border:1px solid #000; padding:10px; text-align:right;">${fr(data.expenses.total)}</td>
+                    </tr>
+
+                    <tr style="height:20px;"><td colspan="2" style="border:none;"></td></tr>
+
+                    <tr style="font-weight:bold; background:${data.surplus_defisit >= 0 ? '#f0fdf4' : '#fef2f2'};">
+                        <td style="border:1px solid #000; padding:12px; font-size:11pt; color:${data.surplus_defisit >= 0 ? '#166534' : '#991b1b'};">
+                            ${data.surplus_defisit >= 0 ? 'SURPLUS' : 'DEFISIT'} OPERASIONAL (LO)
+                        </td>
+                        <td style="border:1px solid #000; padding:12px; text-align:right; font-size:11pt; color:${data.surplus_defisit >= 0 ? '#166534' : '#991b1b'};">
+                            ${fr(data.surplus_defisit)}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+        tablesContainer.innerHTML = loHtml;
     }
 
     // Initial Signatory Setup (Trio)
@@ -2788,3 +3887,396 @@ window.batalSahkanSp3bp = function (id) {
         }
     }, 'Buka Pengesahan', 'ph-lock-key-open', 'btn-warning');
 };
+
+window.renderNeraca = function (data) {
+    const container = document.getElementById('neracaContent');
+    if (!container) return;
+
+    const f = (n) => new Intl.NumberFormat('id-ID').format(n);
+
+    container.innerHTML = `
+        <div class="card" style="padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
+                <div style="text-align: left;">
+                    <h4 style="margin: 0; color: #64748b; font-size: 10pt; letter-spacing: 1px; text-transform: uppercase;">RSJKO ENGKU HAJI DAUD</h4>
+                    <h2 style="margin: 5px 0; color: #1e293b; font-weight: 800; font-size: 16pt;">LAPORAN NERACA</h2>
+                    <p style="margin: 0; color: #0284c7; font-weight: 600; font-size: 11pt;">PER ${data.period.end_date_formatted}</p>
+                </div>
+
+            </div>
+
+            <table class="table-report" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                        <th style="padding: 12px 15px; text-align: left; color: #475569; font-weight: 600;">URAIAN</th>
+                        <th style="padding: 12px 15px; text-align: right; color: #475569; font-weight: 600;">JUMLAH (RP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: #f1f5f9;"><td colspan="2" style="font-weight: 700; padding: 10px 15px;">ASET</td></tr>
+                    
+                    <tr><td style="padding-left: 30px; font-weight: 600;">ASET LANCAR</td><td style="text-align: right; font-weight: 600;">${f(data.assets.lancar.total)}</td></tr>
+                    <tr><td style="padding-left: 50px;">Kas dan Setara Kas</td><td style="text-align: right;">${f(data.assets.lancar.kas)}</td></tr>
+                    <tr><td style="padding-left: 50px;">Piutang Pelayanan</td><td style="text-align: right;">${f(data.assets.lancar.piutang)}</td></tr>
+                    <tr><td style="padding-left: 50px;">Persediaan</td><td style="text-align: right;">${f(data.assets.lancar.persediaan)}</td></tr>
+                    
+                    <tr><td style="padding-left: 30px; font-weight: 600;">ASET TETAP</td><td style="text-align: right; font-weight: 600;">${f(data.assets.tetap.total)}</td></tr>
+                    <tr><td style="padding-left: 50px;">Aset Tetap (Netto)</td><td style="text-align: right;">${f(data.assets.tetap.total)}</td></tr>
+                    
+                    <tr style="background: #f1f5f9; border-top: 1px solid #cbd5e1;">
+                        <td style="font-weight: 700; padding: 12px 15px;">TOTAL ASET</td>
+                        <td style="text-align: right; font-weight: 700; color: #0284c7;">${f(data.assets.grand_total)}</td>
+                    </tr>
+
+                    <tr style="height: 20px;"><td colspan="2"></td></tr>
+
+                    <tr style="background: #f1f5f9;"><td colspan="2" style="font-weight: 700; padding: 10px 15px;">KEWAJIBAN & EKUITAS</td></tr>
+                    
+                    <tr><td style="padding-left: 30px; font-weight: 600;">KEWAJIBAN</td><td style="text-align: right; font-weight: 600;">${f(data.liabilities.total)}</td></tr>
+                    <tr><td style="padding-left: 50px;">Kewajiban Jangka Pendek</td><td style="text-align: right;">${f(data.liabilities.total)}</td></tr>
+                    
+                    <tr><td style="padding-left: 30px; font-weight: 600;">EKUITAS</td><td style="text-align: right; font-weight: 600;">${f(data.equity.total)}</td></tr>
+                    <tr><td style="padding-left: 50px;">Ekuitas</td><td style="text-align: right;">${f(data.equity.total)}</td></tr>
+
+                    <tr style="background: #f1f5f9; border-top: 1px solid #cbd5e1;">
+                        <td style="font-weight: 700; padding: 12px 15px;">TOTAL KEWAJIBAN & EKUITAS</td>
+                        <td style="text-align: right; font-weight: 700; color: #0284c7;">${f(data.liabilities.total + data.equity.total)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+};
+
+window.renderLpe = function (data) {
+    const container = document.getElementById('lpeContent');
+    if (!container) return;
+
+    const f = (n) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2 }).format(n);
+
+    let html = `
+        <div class="card" style="padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
+                <div style="text-align: left;">
+                    <h4 style="margin: 0; color: #64748b; font-size: 10pt; letter-spacing: 1px; text-transform: uppercase;">RSJKO ENGKU HAJI DAUD</h4>
+                    <h2 style="margin: 5px 0; color: #1e293b; font-weight: 800; font-size: 16pt;">LAPORAN PERUBAHAN EKUITAS</h2>
+                    <p style="margin: 0; color: #0284c7; font-weight: 600; font-size: 11pt;">PER ${data.period.end_date_formatted.toUpperCase()}</p>
+                </div>
+            </div>
+
+            <table class="table-report" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                        <th style="padding: 12px 15px; text-align: left; color: #475569; font-weight: 600;">URAIAN</th>
+                        <th style="padding: 12px 15px; text-align: right; color: #475569; font-weight: 600;">JUMLAH (RP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 12px 15px;">Ekuitas Awal</td>
+                        <td style="text-align: right; padding: 12px 15px;">${f(data.ekuitas_awal)}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 15px;">Surplus / (Defisit) Laporan Operasional</td>
+                        <td style="text-align: right; padding: 12px 15px;">${f(data.surplus_defisit_lo)}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 15px;">Koreksi Nilai Ekuitas</td>
+                        <td style="text-align: right; padding: 12px 15px;">${f(data.koreksi)}</td>
+                    </tr>
+                    <tr style="font-weight: 800; background: #f1f5f9; border-top: 2px solid #e2e8f0;">
+                        <td style="padding: 15px; font-size: 11pt;">EKUITAS AKHIR</td>
+                        <td style="text-align: right; padding: 15px; font-size: 11pt;">${f(data.ekuitas_akhir)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+    container.innerHTML = html;
+};
+
+window.renderLpsal = function (data) {
+    const container = document.getElementById('lpsalContent');
+    if (!container) return;
+
+    const f = (n) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2 }).format(n);
+
+    let html = `
+        <div class="card" style="padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
+                <div style="text-align: left;">
+                    <h4 style="margin: 0; color: #64748b; font-size: 10pt; letter-spacing: 1px; text-transform: uppercase;">RSJKO ENGKU HAJI DAUD</h4>
+                    <h2 style="margin: 5px 0; color: #1e293b; font-weight: 800; font-size: 16pt;">LAPORAN PERUBAHAN SISA ANGGARAN LEBIH (LPSAL)</h2>
+                    <p style="margin: 0; color: #0284c7; font-weight: 600; font-size: 11pt;">PER ${data.period.end_date_formatted.toUpperCase()}</p>
+                </div>
+            </div>
+
+            <table class="table-report" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                        <th style="padding: 12px 15px; text-align: left; color: #475569; font-weight: 600;">URAIAN</th>
+                        <th style="padding: 12px 15px; text-align: right; color: #475569; font-weight: 600;">JUMLAH (RP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 12px 15px;">Sisa Anggaran Lebih Awal (SAL Awal)</td>
+                        <td style="text-align: right; padding: 12px 15px;">${f(data.sal_awal)}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 15px; padding-left: 30px;">Penggunaan SAL Tahun Berjalan</td>
+                        <td style="text-align: right; padding: 12px 15px;">(${f(data.penggunaan_sal)})</td>
+                    </tr>
+                    <tr style="background: #f8fafc; font-weight: 600;">
+                        <td style="padding: 12px 15px; padding-left: 50px;">Subtotal</td>
+                        <td style="text-align: right; padding: 12px 15px;">${f(data.sal_awal - data.penggunaan_sal)}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 15px;">Sisa Lebih/Kurang Pembiayaan Anggaran (SiLPA/SiKPA)</td>
+                        <td style="text-align: right; padding: 12px 15px;">${f(data.silpa)}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 15px;">Koreksi Kesalahan Pembukuan Tahun Sebelumnya</td>
+                        <td style="text-align: right; padding: 12px 15px;">${f(data.koreksi)}</td>
+                    </tr>
+                    <tr style="font-weight: 800; background: #f1f5f9; border-top: 2px solid #e2e8f0;">
+                        <td style="padding: 15px; font-size: 11pt;">SISA ANGGARAN LEBIH AKHIR (SAL AKHIR)</td>
+                        <td style="text-align: right; padding: 15px; font-size: 11pt;">${f(data.sal_akhir)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+    container.innerHTML = html;
+};
+
+window.renderCalk = function (data) {
+    const container = document.getElementById('calkContent');
+    if (!container) return;
+
+    const babs = [
+        { id: 'BAB_I', title: 'BAB I - Informasi Umum' },
+        { id: 'BAB_II', title: 'BAB II - Kebijakan Akuntansi' },
+        { id: 'BAB_III', title: 'BAB III - Penjelasan LRA' },
+        { id: 'BAB_IV', title: 'BAB IV - Penjelasan LO' },
+        { id: 'BAB_V', title: 'BAB V - Penjelasan Neraca' },
+        { id: 'BAB_VI', title: 'BAB VI - Penjelasan LAK' },
+        { id: 'BAB_VII', title: 'BAB VII - Penjelasan LPE' },
+    ];
+
+    let html = `
+        <div style="max-width: 900px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h4 style="margin:0; text-transform:uppercase; color:#64748b;">RSJKO ENGKU HAJI DAUD</h4>
+                <h2 style="margin:5px 0; font-weight:800;">CATATAN ATAS LAPORAN KEUANGAN</h2>
+                <p style="color:#0284c7; font-weight:600;">PER ${data.period.end_date_formatted.toUpperCase()}</p>
+            </div>
+    `;
+
+    babs.forEach(bab => {
+        html += `
+            <div class="calk-bab-card">
+                <div class="calk-bab-header">
+                    <h4>${bab.title}</h4>
+                    <button class="btn-save-bab" onclick="saveCalkBab('${bab.id}')">
+                        <i class="ph ph-floppy-disk"></i>
+                        Simpan
+                    </button>
+                </div>
+                <div class="calk-bab-body">
+                    <textarea id="editor_${bab.id}" class="calk-editor" placeholder="Tuliskan penjelasan untuk ${bab.title} di sini...">${data.sections[bab.id] || ''}</textarea>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    container.innerHTML = html;
+};
+
+window.renderLo = function (data) {
+    const container = document.getElementById('loContent');
+    if (!container) return;
+
+    const f = (n) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2 }).format(n);
+
+    let html = `
+        <div class="card" style="padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
+                <div style="text-align: left;">
+                    <h4 style="margin: 0; color: #64748b; font-size: 10pt; letter-spacing: 1px; text-transform: uppercase;">RSJKO ENGKU HAJI DAUD</h4>
+                    <h2 style="margin: 5px 0; color: #1e293b; font-weight: 800; font-size: 16pt;">LAPORAN OPERASIONAL</h2>
+                    <p style="margin: 0; color: #0284c7; font-weight: 600; font-size: 11pt;">PERIODE ${data.period.start_formatted} s.d ${data.period.end_formatted}</p>
+                </div>
+
+            </div>
+
+            <table class="table-report" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                        <th style="padding: 12px 15px; text-align: left; color: #475569; font-weight: 600;">URAIAN</th>
+                        <th style="padding: 12px 15px; text-align: right; color: #475569; font-weight: 600;">JUMLAH (RP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: #f1f5f9;"><td colspan="2" style="font-weight: 700; padding: 10px 15px;">PENDAPATAN DARI KEGIATAN OPERASIONAL</td></tr>
+                    ${data.revenue.items.map(item => `
+                        <tr>
+                            <td style="padding-left: 30px;">${item.label}</td>
+                            <td style="text-align: right;">${f(item.value)}</td>
+                        </tr>
+                    `).join('')}
+                    <tr style="font-weight: 700; background: #f8fafc; border-top: 1px solid #e2e8f0;">
+                        <td style="padding: 12px 15px;">JUMLAH PENDAPATAN OPERASIONAL</td>
+                        <td style="text-align: right;">${f(data.revenue.total)}</td>
+                    </tr>
+
+                    <tr style="height: 20px;"><td colspan="2"></td></tr>
+
+                    <tr style="background: #f1f5f9;"><td colspan="2" style="font-weight: 700; padding: 10px 15px;">BEBAN OPERASIONAL</td></tr>
+                    ${data.expenses.items.map(item => `
+                        <tr>
+                            <td style="padding-left: 30px;">${item.label}</td>
+                            <td style="text-align: right;">${f(item.value)}</td>
+                        </tr>
+                    `).join('')}
+                    <tr style="font-weight: 700; background: #f8fafc; border-top: 1px solid #e2e8f0;">
+                        <td style="padding: 12px 15px;">JUMLAH BEBAN OPERASIONAL</td>
+                        <td style="text-align: right;">${f(data.expenses.total)}</td>
+                    </tr>
+
+                    <tr style="height: 20px;"><td colspan="2"></td></tr>
+
+                    <tr style="background: ${data.surplus_defisit >= 0 ? '#f0fdf4' : '#fef2f2'}; border: 1px solid ${data.surplus_defisit >= 0 ? '#bbf7d0' : '#fecaca'};">
+                        <td style="padding: 15px; font-weight: 800; font-size: 11pt; color: ${data.surplus_defisit >= 0 ? '#166534' : '#991b1b'};">
+                            ${data.surplus_defisit >= 0 ? 'SURPLUS' : 'DEFISIT'} OPERASIONAL (LO)
+                        </td>
+                        <td style="text-align: right; padding: 15px; font-weight: 800; font-size: 11pt; color: ${data.surplus_defisit >= 0 ? '#166534' : '#991b1b'};">
+                            ${f(data.surplus_defisit)}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+    container.innerHTML = html;
+};
+
+window.renderRka = function (data) {
+    const container = document.getElementById('rkaContent');
+    if (!container) return;
+
+    const f = (n) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2 }).format(n);
+
+    let html = `
+        <div class="card" style="padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
+                <div style="text-align: left;">
+                    <h4 style="margin: 0; color: #64748b; font-size: 10pt; letter-spacing: 1px; text-transform: uppercase;">RSJKO ENGKU HAJI DAUD</h4>
+                    <h2 style="margin: 5px 0; color: #1e293b; font-weight: 800; font-size: 16pt;">RENCANA KERJA ANGGARAN (RKA)</h2>
+                    <p style="margin: 0; color: #0284c7; font-weight: 600; font-size: 11pt;">TAHUN ANGGARAN ${data.tahun}</p>
+                </div>
+            </div>
+
+            <table class="table-report" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                        <th style="padding: 12px 15px; text-align: left; color: #475569; font-weight: 600; width: 180px;">KODE REKENING</th>
+                        <th style="padding: 12px 15px; text-align: left; color: #475569; font-weight: 600;">URAIAN</th>
+                        <th style="padding: 12px 15px; text-align: right; color: #475569; font-weight: 600; width: 220px;">ANGGARAN (RP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.data.map(item => `
+                        <tr>
+                            <td style="padding: 10px 15px; color: ${item.level <= 3 ? '#1e293b' : '#64748b'}; font-weight: ${item.level <= 3 ? '700' : '400'};">
+                                ${item.kode}
+                            </td>
+                            <td style="padding: 10px 15px; padding-left: ${(item.level - 1) * 20}px; font-weight: ${item.level <= 3 ? '700' : '400'}; color: ${item.level <= 3 ? '#1e293b' : '#475569'};">
+                                ${item.nama}
+                            </td>
+                            <td style="padding: 10px 15px; text-align: right; font-weight: ${item.level <= 3 ? '700' : '400'};">
+                                ${f(item.anggaran)}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+    container.innerHTML = html;
+};
+
+window.renderRba = function (data) {
+    const container = document.getElementById('rbaContent');
+    if (!container) return;
+
+    const f = (n) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2 }).format(n);
+
+    let html = `
+        <div class="card" style="padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
+                <div style="text-align: left;">
+                    <h4 style="margin: 0; color: #64748b; font-size: 10pt; letter-spacing: 1px; text-transform: uppercase;">RSJKO ENGKU HAJI DAUD</h4>
+                    <h2 style="margin: 5px 0; color: #1e293b; font-weight: 800; font-size: 16pt;">RENCANA BISNIS ANGGARAN (RBA) BLUD</h2>
+                    <p style="margin: 0; color: #0284c7; font-weight: 600; font-size: 11pt;">TAHUN ANGGARAN ${data.tahun}</p>
+                </div>
+            </div>
+
+            <table class="table-report" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                        <th style="padding: 15px; text-align: left; color: #475569; font-weight: 700;">URAIAN</th>
+                        <th style="padding: 15px; text-align: right; color: #475569; font-weight: 700; width: 300px;">TOTAL ANGGARAN (RP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: #f1f5f9; font-weight: 800; color: #0f172a;">
+                        <td style="padding: 15px;">I. PENDAPATAN BLUD</td>
+                        <td style="padding: 15px; text-align: right;">${f(data.summary.pendapatan)}</td>
+                    </tr>
+                    ${data.breakdown.filter(i => i.category === 'PENDAPATAN').map(item => `
+                        <tr>
+                            <td style="padding: 10px 15px; padding-left: ${(item.level) * 20}px; color: #475569;">${item.nama}</td>
+                            <td style="padding: 10px 15px; text-align: right; font-weight: ${item.level <= 3 ? '600' : '400'};">${f(item.anggaran)}</td>
+                        </tr>
+                    `).join('')}
+
+                    <tr style="background: #f1f5f9; font-weight: 800; color: #0f172a;">
+                        <td style="padding: 15px;">II. BELANJA BLUD</td>
+                        <td style="padding: 15px; text-align: right;">${f(data.summary.belanja)}</td>
+                    </tr>
+                    ${data.breakdown.filter(i => i.category === 'PENGELUARAN').map(item => `
+                        <tr>
+                            <td style="padding: 10px 15px; padding-left: ${(item.level) * 20}px; color: #475569;">${item.nama}</td>
+                            <td style="padding: 10px 15px; text-align: right; font-weight: ${item.level <= 3 ? '600' : '400'};">${f(item.anggaran)}</td>
+                        </tr>
+                    `).join('')}
+
+                    <tr style="background: #e2e8f0; font-weight: 900; font-size: 11pt; color: #1e293b; border-top: 2px solid #cbd5e1;">
+                        <td style="padding: 20px 15px;">SURPLUS / (DEFISIT)</td>
+                        <td style="padding: 20px 15px; text-align: right; color: ${data.summary.surplus_defisit >= 0 ? '#059669' : '#dc2626'};">
+                            ${f(data.summary.surplus_defisit)}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+    container.innerHTML = html;
+};
+
+window.formatDateShort = (d) => {
+    if (!d) return '-';
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return d;
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+};
+
+
+
+
+

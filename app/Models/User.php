@@ -47,3 +47,8 @@ class User extends Authenticatable
         return in_array($permission, $this->permissions);
     }
 }
+
+
+
+
+

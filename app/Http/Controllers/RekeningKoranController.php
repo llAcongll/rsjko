@@ -21,10 +21,10 @@ class RekeningKoranController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_VIEW') || auth()->user()->hasPermission('REKENING_PENGELUARAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REKKOR_VIEW'), 403);
 
         $q = RekeningKoran::query()
-            ->where('tahun', session('tahun_anggaran'));
+            ->where('tahun', session('tahun_anggaran', date('Y')));
 
         if ($request->filled('bank') && $request->bank !== 'Semua Bank') {
             $q->where('bank', $request->bank);
@@ -51,7 +51,7 @@ class RekeningKoranController extends Controller
 
     public function setSaldoAwal(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
 
         $request->validate([
             'bank' => 'required',
@@ -87,7 +87,7 @@ class RekeningKoranController extends Controller
 
     public function deleteSaldoAwal(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
 
         $request->validate([
             'bank' => 'required',
@@ -105,7 +105,7 @@ class RekeningKoranController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
 
         $data = $request->validate([
             'tanggal' => 'required|date',
@@ -152,13 +152,13 @@ class RekeningKoranController extends Controller
 
     public function show(RekeningKoran $rekeningKoran)
     {
-        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_VIEW') || auth()->user()->hasPermission('REKENING_PENGELUARAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REKKOR_VIEW'), 403);
         return response()->json($rekeningKoran);
     }
 
     public function update(Request $request, RekeningKoran $rekeningKoran)
     {
-        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
 
         // Proteksi data yang sudah diposting
         if ($rekeningKoran->cd === 'C' && $rekeningKoran->revenue_master_id) {
@@ -228,7 +228,7 @@ class RekeningKoranController extends Controller
 
     public function destroy(RekeningKoran $rekeningKoran)
     {
-        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
 
         // Proteksi data yang sudah diposting
         if ($rekeningKoran->cd === 'C' && $rekeningKoran->revenue_master_id) {
@@ -269,7 +269,7 @@ class RekeningKoranController extends Controller
 
     public function downloadTemplate()
     {
-        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
 
         $headers = [
             'Content-Type' => 'text/csv',
@@ -288,7 +288,7 @@ class RekeningKoranController extends Controller
 
     public function import(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
 
         $request->validate([
             'file' => 'required|file|mimes:csv,txt'
@@ -412,7 +412,7 @@ class RekeningKoranController extends Controller
     }
     public function bulkDelete(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_CRUD') || auth()->user()->hasPermission('REKENING_PENGELUARAN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
 
         $bank = $request->input('bank');
         $start = $request->input('start');
@@ -466,7 +466,7 @@ class RekeningKoranController extends Controller
 
     public function print(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_VIEW') || auth()->user()->hasPermission('REKENING_PENGELUARAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REKKOR_EXPORT'), 403);
 
         $bank = $request->input('bank');
         $start = $request->input('start');
@@ -527,7 +527,7 @@ class RekeningKoranController extends Controller
 
     public function exportExcel(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKENING_PENDAPATAN_VIEW') || auth()->user()->hasPermission('REKENING_PENGELUARAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REKKOR_EXPORT'), 403);
 
         $bank = $request->input('bank');
         $start = $request->input('start');
@@ -576,3 +576,8 @@ class RekeningKoranController extends Controller
         ]);
     }
 }
+
+
+
+
+

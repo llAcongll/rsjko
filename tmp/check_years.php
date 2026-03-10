@@ -22,3 +22,8 @@ foreach ($tables as $t) {
         echo "Year: {$y->tahun}, Total: {$y->count}, Orphans: $orphans\n";
     }
 }
+
+
+
+
+

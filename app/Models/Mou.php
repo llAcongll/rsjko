@@ -11,3 +11,8 @@ class Mou extends Model
         'nama',
     ];
 }
+
+
+
+
+

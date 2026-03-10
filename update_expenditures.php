@@ -8,3 +8,8 @@ foreach (\App\Models\Expenditure::all() as $e) {
     app(App\Services\ExpenditureService::class)->update($e->id, $e->toArray());
 }
 echo "Done";
+
+
+
+
+

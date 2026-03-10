@@ -14,3 +14,8 @@ $counts = DB::table('revenue_masters')
 foreach ($counts as $c) {
     echo "Is Posted: " . ($c->is_posted ? 'TRUE' : 'FALSE') . ", Count: " . $c->count . "\n";
 }
+
+
+
+
+

@@ -12,3 +12,8 @@ $totalQuery = clone $query;
 $totals = $totalQuery->reorder()->selectRaw('SUM(total_all) as grand_total')->first();
 
 echo "Page 2 aggregate when cloned AFTER paginate: " . floatval($totals->grand_total) . "\n";
+
+
+
+
+

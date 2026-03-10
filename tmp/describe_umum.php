@@ -10,3 +10,8 @@ $cols = DB::select('DESCRIBE pendapatan_umum');
 foreach ($cols as $c) {
     echo "{$c->Field} ({$c->Type})\n";
 }
+
+
+
+
+

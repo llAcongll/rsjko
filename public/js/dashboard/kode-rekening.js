@@ -55,8 +55,8 @@ function renderNode(node) {
   const wrap = document.createElement('div');
   wrap.className = 'kode-node';
 
-  const crudPerm = (currentCategory === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_CRUD' : 'KODE_REKENING_PENDAPATAN_CRUD';
-  const canCRUD = window.hasPermission(crudPerm) || window.hasPermission('KODE_REKENING_CRUD');
+  const crudPerm = (currentCategory === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_MANAGE' : 'KODE_REKENING_PENDAPATAN_MANAGE';
+  const canCRUD = window.hasPermission(crudPerm) || window.hasPermission('KODE_REKENING_MANAGE');
 
   const badge = node.tipe === 'detail' && node.sumber_data
     ? `<span class="sumber-badge">${node.sumber_data.replace('_', ' ')}</span>`
@@ -286,3 +286,7 @@ window.openKodeRekening = async function (category = 'PENDAPATAN', btn) {
   // Load the tree data
   loadKodeRekening(category);
 };
+
+
+
+

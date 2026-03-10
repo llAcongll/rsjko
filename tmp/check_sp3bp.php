@@ -16,3 +16,8 @@ if (Schema::hasTable($t)) {
 } else {
     echo "Table not found\n";
 }
+
+
+
+
+

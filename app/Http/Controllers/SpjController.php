@@ -13,7 +13,7 @@ class SpjController extends Controller
 {
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPJ') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('SPJ_VIEW') || auth()->user()->isAdmin(), 403);
 
         $search = $request->get('search');
         $limit = $request->get('limit', 10);
@@ -29,7 +29,7 @@ class SpjController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPJ') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('SPJ_MANAGE') || auth()->user()->isAdmin(), 403);
 
         $data = $request->validate([
             'spj_number' => 'required|string|max:100|unique:spj,spj_number',
@@ -73,13 +73,13 @@ class SpjController extends Controller
 
     public function show($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPJ') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('SPJ_VIEW') || auth()->user()->isAdmin(), 403);
         return response()->json(Spj::with(['bendahara', 'items.expenditure.kodeRekening'])->findOrFail($id));
     }
 
     public function updateStatus(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPJ') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('SPJ_MANAGE') || auth()->user()->isAdmin(), 403);
 
         $data = $request->validate([
             'status' => 'required|in:DRAFT,SUBMITTED,VALID'
@@ -93,7 +93,7 @@ class SpjController extends Controller
 
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPJ') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('SPJ_MANAGE') || auth()->user()->isAdmin(), 403);
         try {
             $spj = Spj::findOrFail($id);
 
@@ -138,7 +138,7 @@ class SpjController extends Controller
 
     public function print($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_SPJ') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('SPJ_PRINT') || auth()->user()->isAdmin(), 403);
         $spj = Spj::with(['bendahara', 'items.expenditure.kodeRekening'])->findOrFail($id);
 
         // Sanitize filename: replace / and \ with - as they are invalid in filenames
@@ -150,3 +150,8 @@ class SpjController extends Controller
         return $pdf->stream("SPJ-{$safeNumber}.pdf");
     }
 }
+
+
+
+
+

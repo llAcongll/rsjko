@@ -8,7 +8,7 @@
             </div>
 
             <div class="page-header-right">
-                @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CREATE') || auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CRUD') || auth()->user()->hasPermission('PENDAPATAN_JAMINAN_POST'))
+                @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_MANAGE'))
                     <button class="btn-toolbar btn-toolbar-info" onclick="bulkPostMasterJaminan()">
                         <i class="ph ph-check-square-offset"></i>
                         <span>Posting Masal</span>
@@ -69,7 +69,7 @@
                 <div class="filter-wrapper">
                     <select id="filterStatusMasterJaminan" class="filter-select" style="width:220px;">
                         <option value="">Semua Status</option>
-                        <option value="DRAFT">📑 Draft</option>
+                        <option value="DRAFT">📝 Draft</option>
                         <option value="POSTED">✅ Diposting</option>
                     </select>
                 </div>
@@ -123,7 +123,7 @@
                 </table>
             </div>
             <div class="flex justify-between items-center mt-2">
-                <p id="paginationInfoMasterJaminan" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0 dari
+                <p id="paginationInfoMasterJaminan" class="text-slate-500" style="font-size: 13px;">Menampilkan 0-0 dari
                     0 data
                 </p>
                 <div class="flex items-center gap-2">
@@ -156,22 +156,22 @@
             <div class="dashboard-header-right">
                 <div style="display: flex; gap: 8px; justify-content: flex-end;">
                     <div class="toolbar-group" style="display: flex; gap: 8px;">
-                        @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CREATE') || auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CRUD'))
+                        @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_MANAGE'))
                             <a href="/dashboard/pendapatan/jaminan/template" class="btn-toolbar btn-toolbar-outline"
                                 title="Download Template CSV"><i class="ph ph-download-simple"></i><span>Template</span></a>
                         @endif
-                        @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CREATE') || auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CRUD'))
+                        @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_MANAGE'))
                             <button class="btn-toolbar btn-toolbar-outline" id="btnImportJaminan"
                                 title="Import Data dari CSV"><i class="ph ph-file-arrow-up"></i><span>Import</span></button>
                         @endif
-                        @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_DELETE') || auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CRUD'))
+                        @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_MANAGE'))
                             <button class="btn-toolbar btn-toolbar-outline btn-bulk-delete" id="btnBulkDeleteJaminan"
                                 title="Hapus massal rincian" style="color: #ef4444; border-color: #fca5a5;">
                                 <i class="ph ph-trash"></i><span>Hapus Massal</span>
                             </button>
                         @endif
                     </div>
-                    @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CREATE') || auth()->user()->hasPermission('PENDAPATAN_JAMINAN_CRUD'))
+                    @if(auth()->user()->hasPermission('PENDAPATAN_JAMINAN_MANAGE'))
                         <button class="btn-tambah-data" id="btnTambahPendapatanJaminan"
                             style="background:#059669; height: 44px;" onclick="openPendapatanJaminanModal()">
                             <i class="ph-bold ph-plus"></i>
@@ -311,7 +311,7 @@
                 </table>
             </div>
             <div class="flex justify-between items-center" style="padding: 16px;">
-                <p id="paginationInfoJaminan" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0 dari 0
+                <p id="paginationInfoJaminan" class="text-slate-500" style="font-size: 13px;">Menampilkan 0-0 dari 0
                     data</p>
                 <div class="flex items-center gap-2">
                     <button id="prevPageJaminan" class="btn-aksi" disabled><i class="ph ph-caret-left"></i></button>
@@ -325,3 +325,9 @@
     </div>
 
 </div>
+
+
+
+
+
+

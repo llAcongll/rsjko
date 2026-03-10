@@ -8,7 +8,7 @@
       </div>
 
       <div class="page-header-right">
-        @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE') || auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD') || auth()->user()->hasPermission('PENDAPATAN_UMUM_POST'))
+        @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_MANAGE'))
           <button class="btn-toolbar btn-toolbar-info" onclick="bulkPostMasterUmum()">
             <i class="ph ph-check-square-offset"></i>
             <span>Posting Masal</span>
@@ -69,7 +69,7 @@
         <div class="filter-wrapper">
           <select id="filterStatusMasterUmum" class="filter-select">
             <option value="">Semua Status</option>
-            <option value="DRAFT">📑 Draft</option>
+            <option value="DRAFT">📝 Draft</option>
             <option value="POSTED">✅ Diposting</option>
           </select>
         </div>
@@ -114,7 +114,7 @@
         </table>
       </div>
       <div class="flex justify-between items-center mt-2">
-        <p id="paginationInfoMasterUmum" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0 dari 0 data</p>
+        <p id="paginationInfoMasterUmum" class="text-slate-500" style="font-size: 13px;">Menampilkan 0-0 dari 0 data</p>
         <div class="flex items-center gap-2">
           <button id="prevPageMasterUmum" class="btn-aksi" disabled><i class="ph ph-caret-left"></i></button>
           <span id="pageInfoMasterUmum" class="font-medium"
@@ -141,22 +141,22 @@
       </div>
       <div class="dashboard-header-right" style="display: flex; gap: 8px;">
         <div class="toolbar-group" style="display: flex; gap: 8px;">
-          @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE') || auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD'))
+          @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_MANAGE'))
             <a href="/dashboard/pendapatan/umum/template" class="btn-toolbar btn-toolbar-outline"
               title="Download Template CSV"><i class="ph ph-download-simple"></i><span>Template</span></a>
           @endif
-          @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE') || auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD'))
+          @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_MANAGE'))
             <button class="btn-toolbar btn-toolbar-outline" id="btnImportUmum" title="Import Data dari CSV"><i
                 class="ph ph-file-arrow-up"></i><span>Import</span></button>
           @endif
-          @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_DELETE') || auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD'))
+          @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_MANAGE'))
             <button class="btn-toolbar btn-toolbar-outline btn-bulk-delete" id="btnBulkDeleteUmum"
               title="Hapus Massal Rincian Pasien" style="color: #ef4444; border-color: #fca5a5;">
               <i class="ph ph-trash"></i><span>Hapus Massal</span>
             </button>
           @endif
         </div>
-        @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_CREATE') || auth()->user()->hasPermission('PENDAPATAN_UMUM_CRUD'))
+        @if(auth()->user()->hasPermission('PENDAPATAN_UMUM_MANAGE'))
           <button class="btn-tambah-data" id="btnTambahPendapatanUmum" style="background:#059669; height: 44px;"
             onclick="openPendapatanModal()">
             <i class="ph-bold ph-plus"></i>
@@ -227,7 +227,7 @@
         </table>
       </div>
       <div class="flex justify-between items-center" style="padding: 16px;">
-        <p id="paginationInfoUmum" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0 dari 0 data</p>
+        <p id="paginationInfoUmum" class="text-slate-500" style="font-size: 13px;">Menampilkan 0-0 dari 0 data</p>
         <div class="flex items-center gap-2">
           <button id="prevPageUmum" class="btn-aksi" disabled><i class="ph ph-caret-left"></i></button>
           <span id="pageInfoUmum" class="font-medium" style="font-size: 14px; min-width: 100px; text-align: center;">1 /
@@ -244,3 +244,9 @@
 
 
 </div>
+
+
+
+
+
+

@@ -36,8 +36,8 @@ class KodeRekeningController extends Controller
             } else {
                 if ($category === 'PENGELUARAN') {
                     $hasAccess = auth()->user()->hasPermission('KODE_REKENING_PENGELUARAN_VIEW')
-                        || auth()->user()->hasPermission('SPP_CRUD')
-                        || auth()->user()->hasPermission('PENCAIRAN_CRUD');
+                        || auth()->user()->hasPermission('SPP_MANAGE')
+                        || auth()->user()->hasPermission('PENCAIRAN_MANAGE');
                 } else {
                     $hasAccess = auth()->user()->hasPermission('KODE_REKENING_PENDAPATAN_VIEW');
                 }
@@ -63,7 +63,7 @@ class KodeRekeningController extends Controller
     public function store(Request $request)
     {
         $category = $request->get('category');
-        $permission = ($category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_CRUD' : 'KODE_REKENING_PENDAPATAN_CRUD';
+        $permission = ($category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_MANAGE' : 'KODE_REKENING_PENDAPATAN_MANAGE';
         abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->isAdmin(), 403);
 
         $data = $request->validate([
@@ -105,7 +105,7 @@ class KodeRekeningController extends Controller
     public function update(Request $request, $id)
     {
         $rekening = KodeRekening::findOrFail($id);
-        $permission = ($rekening->category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_CRUD' : 'KODE_REKENING_PENDAPATAN_CRUD';
+        $permission = ($rekening->category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_MANAGE' : 'KODE_REKENING_PENDAPATAN_MANAGE';
         abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->isAdmin(), 403);
 
         $data = $request->validate([
@@ -144,7 +144,7 @@ class KodeRekeningController extends Controller
     public function destroy($id)
     {
         $rekening = KodeRekening::findOrFail($id);
-        $permission = ($rekening->category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_CRUD' : 'KODE_REKENING_PENDAPATAN_CRUD';
+        $permission = ($rekening->category === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_MANAGE' : 'KODE_REKENING_PENDAPATAN_MANAGE';
         abort_unless(auth()->user()->hasPermission($permission) || auth()->user()->isAdmin(), 403);
 
         try {
@@ -208,3 +208,8 @@ class KodeRekeningController extends Controller
         return $this->service->buildTree($category, $tahun);
     }
 }
+
+
+
+
+

@@ -33,3 +33,8 @@ class Piutang extends Model
         return $this->belongsTo(Perusahaan::class, 'perusahaan_id');
     }
 }
+
+
+
+
+

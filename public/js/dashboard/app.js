@@ -2,6 +2,18 @@
    CORE FUNCTIONS (Global Scope)
 ========================= */
 
+function guardPermission(permission) {
+  if (!window.hasPermission(permission)) {
+    if (typeof window.showToast === 'function') {
+      window.showToast("Akses ditolak", "error");
+    } else {
+      alert("Akses ditolak");
+    }
+    return false;
+  }
+  return true;
+}
+
 function hideSubmenus() {
   document.querySelectorAll('.submenu-child').forEach(s => s.style.display = 'none');
   document.querySelectorAll('.dropdown-icon').forEach(c => c.style.transform = 'rotate(0deg)');
@@ -20,11 +32,11 @@ window.loadContent = async function (page) {
   if (!mainContent) return false;
 
   try {
-    mainContent.innerHTML = "<div style='display:flex;justify-content:center;padding:40px;'><p>⏳ Memuat...</p></div>";
+    mainContent.innerHTML = "<div style='display:flex;justify-content:center;padding:40px;'><p>Ã¢³ Memuat...</p></div>";
 
     const res = await fetch(`/dashboard/content/${page}`);
     if (!res.ok) {
-      mainContent.innerHTML = "<p>❌ Gagal memuat konten</p>";
+      mainContent.innerHTML = "<p>Ã¢Å’ Gagal memuat konten</p>";
       return false;
     }
 
@@ -33,7 +45,7 @@ window.loadContent = async function (page) {
     return true;
   } catch (err) {
     console.error(err);
-    mainContent.innerHTML = "<p>❌ Terjadi kesalahan</p>";
+    mainContent.innerHTML = "<p>Ã¢Å’ Terjadi kesalahan</p>";
     return false;
   }
 };
@@ -60,6 +72,8 @@ window.closeOnMobile = () => {
 ========================= */
 
 window.openDashboard = async (btn) => {
+  if (!guardPermission('DASHBOARD_VIEW')) return;
+
   hideSubmenus();
   setActiveMenu(btn);
   closeOnMobile();
@@ -71,15 +85,19 @@ window.openDashboard = async (btn) => {
   }
 };
 
-window.openRekening = (btn) => {
-  const parentBtn = document.getElementById('btnPendapatan');
+window.openRekening = (btn, type) => {
+  const parentBtn = document.getElementById('btnPerencanaan');
   setActiveMenu(parentBtn);
   closeOnMobile();
 
-  loadContent("rekening");
+  if (type) {
+    window.openKodeRekening(type, btn);
+    return;
+  }
 
+  loadContent("rekening");
   document
-    .querySelectorAll('#submenuPendapatan button')
+    .querySelectorAll('#submenuPerencanaan button')
     .forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
 
@@ -89,6 +107,9 @@ window.openRekening = (btn) => {
 };
 
 window.openKodeRekening = async (type, btn) => {
+  const perm = type === 'PENGELUARAN' ? 'KODE_REKENING_PENGELUARAN_VIEW' : 'KODE_REKENING_PENDAPATAN_VIEW';
+  if (!guardPermission(perm)) return;
+
   const parentBtn = document.getElementById('btnPerencanaan');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -105,7 +126,17 @@ window.openKodeRekening = async (type, btn) => {
   }
 };
 
+window.openAnggaran = (btn, type) => {
+  if (type) {
+    window.openAnggaranRekening(type, btn);
+    return;
+  }
+};
+
 window.openAnggaranRekening = async (type, btn) => {
+  const perm = type === 'PENGELUARAN' ? 'ANGGARAN_PENGELUARAN_VIEW' : 'ANGGARAN_PENDAPATAN_VIEW';
+  if (!guardPermission(perm)) return;
+
   const parentBtn = document.getElementById('btnPerencanaan');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -123,6 +154,8 @@ window.openAnggaranRekening = async (type, btn) => {
 };
 
 window.openPiutang = async (btn) => {
+  if (!guardPermission('PIUTANG_VIEW')) return;
+
   const parentBtn = document.getElementById('btnPendapatan');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -140,6 +173,8 @@ window.openPiutang = async (btn) => {
 };
 
 window.openPenyesuaian = async (btn) => {
+  if (!guardPermission('PENYESUAIAN_VIEW')) return;
+
   const parentBtn = document.getElementById('btnPendapatan');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -155,6 +190,12 @@ window.openPenyesuaian = async (btn) => {
     window.initPenyesuaian();
   }
 };
+
+window.openPendapatanUmum = (btn) => window.openPendapatan('UMUM', btn);
+window.openPendapatanBpjs = (btn) => window.openPendapatan('BPJS', btn);
+window.openPendapatanJaminan = (btn) => window.openPendapatan('JAMINAN', btn);
+window.openPendapatanKerjasama = (btn) => window.openPendapatan('KERJASAMA', btn);
+window.openPendapatanLain = (btn) => window.openPendapatan('LAIN', btn);
 
 window.toggleLaporan = function (btn) {
   const sub = document.getElementById("submenuLaporan");
@@ -172,8 +213,29 @@ window.toggleLaporan = function (btn) {
 
 window.openLaporan = async function (type, btn) {
   if (!type) return;
-
   type = type.toUpperCase();
+
+  const permMap = {
+    'PENDAPATAN': 'LAP_PENDAPATAN_VIEW',
+    'PENGELUARAN': 'LAP_PENGELUARAN_VIEW',
+    'REKON': 'LAP_REKON_VIEW',
+    'PIUTANG': 'LAP_PIUTANG_VIEW',
+    'ANGGARAN': 'LAP_LRA_VIEW',
+    'LRA': 'LAP_LRA_VIEW',
+    'LO': 'LAP_LO_VIEW',
+    'NERACA': 'LAP_NERACA_VIEW',
+    'LAK': 'LAP_LAK_VIEW',
+    'LPE': 'LAP_LPE_VIEW',
+    'LPSAL': 'LAP_LPSAL_VIEW',
+    'CALK': 'LAP_CALK_VIEW',
+    'RKA': 'LAP_RKA_VIEW',
+    'RBA': 'LAP_RBA_VIEW',
+    'DPA': 'LAP_DPA_VIEW'
+  };
+
+  const perm = permMap[type];
+  if (perm && !guardPermission(perm)) return;
+
   const parentBtn = document.getElementById('btnLaporan');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -192,6 +254,8 @@ window.openLaporan = async function (type, btn) {
 };
 
 window.openRuangan = async (btn) => {
+  if (!guardPermission('RUANGAN_VIEW')) return;
+
   const parentBtn = document.getElementById('btnMaster');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -219,6 +283,8 @@ window.openRuangan = async (btn) => {
 };
 
 window.openPerusahaanPage = async (btn) => {
+  if (!guardPermission('PERUSAHAAN_VIEW')) return;
+
   const parentBtn = document.getElementById('btnMaster');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -242,6 +308,8 @@ window.openPerusahaanPage = async (btn) => {
 };
 
 window.openMouPage = async (btn) => {
+  if (!guardPermission('MOU_VIEW')) return;
+
   const parentBtn = document.getElementById('btnMaster');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -265,6 +333,8 @@ window.openMouPage = async (btn) => {
 };
 
 window.openPenandaTangan = async (btn) => {
+  if (!guardPermission('PENANDATANGAN_VIEW')) return;
+
   const parentBtn = document.getElementById('btnMaster');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -282,32 +352,100 @@ window.openPenandaTangan = async (btn) => {
 };
 
 window.openUsers = (btn) => {
-  const parentBtn = document.getElementById('btnMaster');
+  if (!guardPermission('USER_VIEW')) return;
+
+  const parentBtn = document.getElementById('btnSystem');
   setActiveMenu(parentBtn);
   closeOnMobile();
 
   loadContent("users");
 
   document
-    .querySelectorAll('#submenuMaster button')
+    .querySelectorAll('#submenuSystem button')
     .forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
 };
 
 window.openActivityLogs = async (btn) => {
-  const parentBtn = document.getElementById('btnMaster');
+  if (!guardPermission('LOG_VIEW')) return;
+
+  const parentBtn = document.getElementById('btnSystem');
   setActiveMenu(parentBtn);
   closeOnMobile();
 
   await loadContent("master/logs");
 
   document
-    .querySelectorAll('#submenuMaster button')
+    .querySelectorAll('#submenuSystem button')
     .forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
 
   if (typeof window.initLogs === 'function') {
     window.initLogs();
+  }
+};
+
+window.openRekeningKoran = async (btn) => {
+  if (!guardPermission('REKKOR_VIEW')) return;
+
+  const parentBtn = document.getElementById('btnKasPend');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+  await loadContent('pendapatan/rekening-koran');
+  document
+    .querySelectorAll('#submenuKasPend button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (typeof window.initRekening === 'function') {
+    window.initRekening();
+  }
+};
+
+window.openRekeningKoranPengeluaran = async (btn) => {
+  if (!guardPermission('REK_KORAN_PENG_VIEW')) return;
+
+  const parentBtn = document.getElementById('btnKasPeng');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+  await loadContent('pengeluaran/rekening-koran');
+  document
+    .querySelectorAll('#submenuKasPeng button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (typeof window.initBankLedger === 'function') {
+    window.initBankLedger();
+  }
+};
+
+window.openIncomeCashBook = async (btn) => {
+  if (!guardPermission('BKU_PENDAPATAN_VIEW')) return;
+
+  const parentBtn = document.getElementById('btnKasPend');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+  await loadContent('pendapatan/BKU');
+  document
+    .querySelectorAll('#submenuKasPend button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (typeof window.initIncomeCashBook === 'function') {
+    window.initIncomeCashBook();
+  }
+};
+
+window.openTreasurerCash = async (btn) => {
+  if (!guardPermission('BKU_PENGELUARAN_VIEW')) return;
+
+  const parentBtn = document.getElementById('btnKasPeng');
+  setActiveMenu(parentBtn);
+  closeOnMobile();
+  await loadContent('pengeluaran/ledger');
+  document
+    .querySelectorAll('#submenuKasPeng button')
+    .forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (typeof window.initLedger === 'function') {
+    window.initLedger();
   }
 };
 
@@ -370,8 +508,64 @@ window.togglePengesahan = function (btn) {
   }
 };
 
+window.toggleKasPend = function (btn) {
+  const sub = document.getElementById("submenuKasPend");
+  const caret = btn.querySelector('.dropdown-icon');
+  const isOpen = sub && sub.style.display === "block";
+  hideSubmenus();
+  if (sub && !isOpen) {
+    sub.style.display = "block";
+    if (caret) caret.style.transform = 'rotate(180deg)';
+    setActiveMenu(btn);
+  }
+};
+
+window.toggleKasPeng = function (btn) {
+  const sub = document.getElementById("submenuKasPeng");
+  const caret = btn.querySelector('.dropdown-icon');
+  const isOpen = sub && sub.style.display === "block";
+  hideSubmenus();
+  if (sub && !isOpen) {
+    sub.style.display = "block";
+    if (caret) caret.style.transform = 'rotate(180deg)';
+    setActiveMenu(btn);
+  }
+};
+
+window.toggleMaster = function (btn) {
+  const sub = document.getElementById("submenuMaster");
+  const caret = btn.querySelector('.dropdown-icon');
+  const isOpen = sub && sub.style.display === "block";
+  hideSubmenus();
+  if (sub && !isOpen) {
+    sub.style.display = "block";
+    if (caret) caret.style.transform = 'rotate(180deg)';
+    setActiveMenu(btn);
+  }
+};
+
+window.toggleSystem = function (btn) {
+  const sub = document.getElementById("submenuSystem");
+  const caret = btn.querySelector('.dropdown-icon');
+  const isOpen = sub && sub.style.display === "block";
+  hideSubmenus();
+  if (sub && !isOpen) {
+    sub.style.display = "block";
+    if (caret) caret.style.transform = 'rotate(180deg)';
+    setActiveMenu(btn);
+  }
+};
+
 window.openPengesahan = async function (type, btn) {
   if (!type) return;
+
+  const permMap = {
+    'SP3BP': 'SP3BP_VIEW',
+    'SPTJB': 'SPTJB_VIEW',
+    'LRKB': 'LRKB_VIEW'
+  };
+  const perm = permMap[type.toUpperCase()];
+  if (perm && !guardPermission(perm)) return;
 
   type = type.toUpperCase();
   const parentBtn = document.getElementById('btnPengesahan');
@@ -393,6 +587,7 @@ window.openPengesahan = async function (type, btn) {
 
 window.openPengeluaran = async function (kategori, btn) {
   if (!kategori) return;
+  if (!guardPermission('BELANJA_VIEW')) return;
 
   const parentBtn = document.getElementById('btnPengeluaran');
   setActiveMenu(parentBtn);
@@ -413,6 +608,7 @@ window.openPengeluaran = async function (kategori, btn) {
 };
 
 window.openSpj = async function (btn) {
+  if (!guardPermission('SPJ_VIEW')) return;
   const parentBtn = document.getElementById('btnPengeluaran');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -431,6 +627,7 @@ window.openSpj = async function (btn) {
 };
 
 window.openSppPage = async function (btn) {
+  if (!guardPermission('SPP_VIEW')) return;
   const parentBtn = document.getElementById('btnPengeluaran');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -450,6 +647,7 @@ window.openSppPage = async function (btn) {
 };
 
 window.openSpmPage = async function (btn) {
+  if (!guardPermission('SPM_VIEW')) return;
   const parentBtn = document.getElementById('btnPengeluaran');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -469,6 +667,7 @@ window.openSpmPage = async function (btn) {
 };
 
 window.openSp2dPage = async function (btn) {
+  if (!guardPermission('SP2D_VIEW')) return;
   const parentBtn = document.getElementById('btnPengeluaran');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -488,6 +687,7 @@ window.openSp2dPage = async function (btn) {
 };
 
 window.openPencairanPage = async function (btn) {
+  if (!guardPermission('SP2D_VIEW')) return; // Pencairan usually tied to SP2D access
   const parentBtn = document.getElementById('btnPengeluaran');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -506,7 +706,16 @@ window.openPencairanPage = async function (btn) {
   }
 };
 
+/* =========================
+   ALIASES FOR SIDEBAR (Fix ReferenceError)
+========================= */
+window.openExpenditure = (btn) => window.openPengeluaran('PEGAWAI', btn);
+window.openSpp = (btn) => window.openSppPage(btn);
+window.openSpm = (btn) => window.openSpmPage(btn);
+window.openSp2d = (btn) => window.openSp2dPage(btn);
+
 window.openLaporanSpp = async function (btn) {
+  if (!guardPermission('LAP_PENGELUARAN_VIEW')) return;
   const parentBtn = document.getElementById('btnLaporan');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -526,6 +735,7 @@ window.openLaporanSpp = async function (btn) {
 };
 
 window.openLaporanSpm = async function (btn) {
+  if (!guardPermission('LAP_PENGELUARAN_VIEW')) return;
   const parentBtn = document.getElementById('btnLaporan');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -545,6 +755,7 @@ window.openLaporanSpm = async function (btn) {
 };
 
 window.openLaporanSp2d = async function (btn) {
+  if (!guardPermission('LAP_PENGELUARAN_VIEW')) return;
   const parentBtn = document.getElementById('btnLaporan');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -563,43 +774,9 @@ window.openLaporanSp2d = async function (btn) {
   }
 };
 
-window.openTreasurerCash = async function (btn) {
-  const parentBtn = document.getElementById('btnPengeluaran');
-  setActiveMenu(parentBtn);
-  closeOnMobile();
-
-  await loadContent('pengeluaran/ledger');
-
-  document
-    .querySelectorAll('#submenuPengeluaran button')
-    .forEach(b => b.classList.remove('active'));
-
-  if (btn) btn.classList.add('active');
-
-  if (typeof window.initLedger === 'function') {
-    window.initLedger();
-  }
-};
-
-window.openRekeningKoranPengeluaran = async function (btn) {
-  const parentBtn = document.getElementById('btnPengeluaran');
-  setActiveMenu(parentBtn);
-  closeOnMobile();
-
-  await loadContent('pengeluaran/rekening-koran');
-
-  document
-    .querySelectorAll('#submenuPengeluaran button')
-    .forEach(b => b.classList.remove('active'));
-
-  if (btn) btn.classList.add('active');
-
-  if (typeof window.initBankLedger === 'function') {
-    window.initBankLedger();
-  }
-};
-
 window.openSaldoDana = async function (btn) {
+  if (!guardPermission('BELANJA_VIEW')) return;
+
   const parentBtn = document.getElementById('btnPengeluaran');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -621,6 +798,18 @@ window.openPendapatan = async function (jenis, btn) {
   if (!jenis) return;
 
   jenis = jenis.toUpperCase();
+  const permMap = {
+    'UMUM': 'PENDAPATAN_UMUM_VIEW',
+    'BPJS': 'PENDAPATAN_BPJS_VIEW',
+    'JAMINAN': 'PENDAPATAN_JAMINAN_VIEW',
+    'KERJASAMA': 'PENDAPATAN_KERJA_VIEW',
+    'LAIN': 'PENDAPATAN_LAIN_VIEW',
+    'BKU': 'BKU_PENDAPATAN_VIEW'
+  };
+
+  const perm = permMap[jenis];
+  if (perm && !guardPermission(perm)) return;
+
   const parentBtn = document.getElementById('btnPendapatan');
   setActiveMenu(parentBtn);
   closeOnMobile();
@@ -807,3 +996,7 @@ document.addEventListener('click', (e) => {
     // e.target.dispatchEvent(new Event('modalClosed'));
   }
 });
+
+
+
+

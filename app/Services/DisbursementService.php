@@ -142,6 +142,22 @@ class DisbursementService
 
             $disbursement->save();
 
+            // AUTO-CREATE EXPENDITURE FOR SIMPLE LS (Direct Entry)
+            if ($disbursement->status === 'CAIR' && $disbursement->type === 'LS' && $disbursement->kode_rekening_id && $disbursement->expenditures()->count() === 0) {
+                app(\App\Services\ExpenditureService::class)->store([
+                    'fund_disbursement_id' => $disbursement->id,
+                    'spending_date' => $disbursement->sp2d_date,
+                    'kode_rekening_id' => $disbursement->kode_rekening_id,
+                    'description' => $disbursement->uraian ?: ($disbursement->description ?: 'Belanja LS'),
+                    'gross_value' => $disbursement->value,
+                    'tax' => 0,
+                    'spending_type' => 'LS',
+                    'siklus_up' => 0,
+                    'vendor' => $disbursement->recipient_party ?: '',
+                    'no_bukti' => $disbursement->no_bukti ?: ($disbursement->sp2d_no ?: 'LS-' . $disbursement->id),
+                ]);
+            }
+
             // Ledger impact only when CAIR or SPP/SPM (Pengajuan)
             if (in_array($intendedStatus, ['SPP', 'SPM', 'CAIR'])) {
                 $this->applyLedgerImpact($disbursement);
@@ -273,6 +289,25 @@ class DisbursementService
                 }
 
                 $disbursement->save(); // Save to make sure we don't have mismatch issues if ledger needs saved data
+
+                // AUTO-CREATE EXPENDITURE FOR SIMPLE LS
+                // If it's an LS disbursement with an activity (kode_rekening_id) but NO linked expenditures,
+                // we create one automatically so it shows up in reports and maintains BKU balance.
+                if ($disbursement->type === 'LS' && $disbursement->kode_rekening_id && $disbursement->expenditures()->count() === 0) {
+                    app(\App\Services\ExpenditureService::class)->store([
+                        'fund_disbursement_id' => $disbursement->id,
+                        'spending_date' => $disbursement->sp2d_date,
+                        'kode_rekening_id' => $disbursement->kode_rekening_id,
+                        'description' => $disbursement->uraian ?: ($disbursement->description ?: 'Belanja LS'),
+                        'gross_value' => $disbursement->value,
+                        'tax' => 0,
+                        'spending_type' => 'LS',
+                        'siklus_up' => 0,
+                        'vendor' => $disbursement->recipient_party ?: '',
+                        'no_bukti' => $disbursement->no_bukti ?: ($disbursement->sp2d_no ?: 'LS-' . $disbursement->id),
+                    ]);
+                }
+
                 $this->applyLedgerImpact($disbursement);
                 return $disbursement;
             } else {
@@ -362,7 +397,7 @@ class DisbursementService
             } else {
                 // SALDO DANA (Non-activity): This is a cash refill (UP/GU)
                 // Money flows INTO the Treasurer Cash ONLY when SP2D actually settled (CAIR)
-                // No CREDIT here — the CREDIT happens when Expenditures are recorded
+                // No CREDIT here - the CREDIT happens when Expenditures are recorded
                 if ($disbursement->status === 'CAIR') {
                     $type = "AJU_{$disbursement->type}";
                     $desc = ($disbursement->uraian ?: ($disbursement->description ?: "Isi Saldo Kas {$disbursement->type}"));
@@ -498,3 +533,8 @@ class DisbursementService
         });
     }
 }
+
+
+
+
+

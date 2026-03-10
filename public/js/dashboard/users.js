@@ -1,5 +1,5 @@
 /* ==================================================
-   USERS CRUD – FINAL STABLE VERSION
+   USERS CRUD - FINAL STABLE VERSION
 ================================================== */
 
 let editingUserId = null;
@@ -15,7 +15,7 @@ window.sortUsers = function (col) {
   }
 
   const mainContent = document.getElementById("mainContent");
-  mainContent.innerHTML = "<div style='display:flex;justify-content:center;padding:40px;'><p>⏳ Mengurutkan...</p></div>";
+  mainContent.innerHTML = "<div style='display:flex;justify-content:center;padding:40px;'><p>Ã¢³ Mengurutkan...</p></div>";
 
   fetch(`/dashboard/content/users?sort_by=${usersSortBy}&sort_dir=${usersSortDir}`)
     .then(r => r.text())
@@ -47,7 +47,7 @@ async function fetchJsonSafe(response) {
   try {
     return JSON.parse(text);
   } catch (e) {
-    console.error('❌ RESPONSE BUKAN JSON:', text);
+    console.error('Ã¢Å’ RESPONSE BUKAN JSON:', text);
     throw new Error('Server tidak mengembalikan JSON');
   }
 }
@@ -59,7 +59,7 @@ window.openUserForm = function (id = null, username = '', role = 'USER', permiss
   editingUserId = id;
 
   document.getElementById('userModalTitle').innerText =
-    id ? '✏️ Edit User' : '➕ Tambah User';
+    id ? 'Ã¢Å“Ã¯¸ Edit User' : 'Ã¢Å¾â€¢ Tambah User';
 
   document.getElementById('userUsername').value = username;
   document.getElementById('userPassword').value = '';
@@ -134,7 +134,7 @@ window.submitUser = function () {
     headers: {
       'X-CSRF-TOKEN': csrfToken(),
       'Content-Type': 'application/json',
-      'Accept': 'application/json' // 🔑 WAJIB
+      'Accept': 'application/json' // Ã°Å¸â€â€˜ WAJIB
     },
     body: JSON.stringify({ username, password, role, permissions })
   })
@@ -203,4 +203,8 @@ window.deleteUser = function (id) {
     }
   );
 };
+
+
+
+
 

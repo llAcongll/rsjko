@@ -14,15 +14,15 @@ window.openRuanganForm = function (id = null, kode = '', nama = '') {
   const kodeEl = document.getElementById('ruanganKode');
   const namaEl = document.getElementById('ruanganNama');
 
-  titleEl.innerText = id ? '✏️ Edit Ruangan' : '🏥 Tambah Ruangan';
+  titleEl.innerText = id ? 'Ã¢Å“Ã¯¸ Edit Ruangan' : 'Ã°Å¸¥ Tambah Ruangan';
   namaEl.value = nama || '';
 
   if (id) {
-    // EDIT → kode tetap
+    // EDIT Ã¢â€ â€™ kode tetap
     kodeEl.value = kode;
     kodeEl.readOnly = true;
   } else {
-    // TAMBAH → auto-generate kode
+    // TAMBAH Ã¢â€ â€™ auto-generate kode
     kodeEl.value = '';
     kodeEl.readOnly = true;
 
@@ -86,7 +86,7 @@ window.submitRuangan = function () {
     .then(() => {
       closeRuanganModal();
       if (typeof window.loadRuanganTable === 'function') {
-        window.loadRuanganTable(); // 🔥 REFRESH DATA SAJA
+        window.loadRuanganTable(); // Ã°Å¸â€¥ REFRESH DATA SAJA
       }
       toast('Ruangan berhasil disimpan', 'success');
     })
@@ -97,19 +97,19 @@ window.submitRuangan = function () {
    LOAD DATA RUANGAN
 ========================= */
 window.loadRuanganTable = function () {
-  console.log('🔥 loadRuanganTable DIPANGGIL');
+  console.log('Ã°Å¸â€¥ loadRuanganTable DIPANGGIL');
 
   fetch('/dashboard/ruangan-list', {
     headers: { 'Accept': 'application/json' }
   })
     .then(r => r.json())
     .then(data => {
-      // 🔑 SIMPAN KE STATE
+      // Ã°Å¸â€â€˜ SIMPAN KE STATE
       ruanganData = data;
       filteredRuangan = [...data];
       currentPage = 1;
 
-      // 🔥 RENDER LEWAT SATU PINTU
+      // Ã°Å¸â€¥ RENDER LEWAT SATU PINTU
       renderRuanganPage();
       updatePaginationInfo(filteredRuangan.length);
       updateSortIconsRuangan();
@@ -272,7 +272,7 @@ function renderRuanganPage() {
 
   tbody.innerHTML = '';
 
-  const canCRUD = window.hasPermission('MASTER_CRUD');
+  const canCRUD = window.hasPermission('MASTER_MANAGE');
 
   pageData.forEach((r, i) => {
     tbody.innerHTML += `
@@ -337,8 +337,12 @@ function updatePaginationInfo(total) {
   const end = Math.min(currentPage * perPage, total);
 
   pageInfo.innerText = `Halaman ${currentPage} / ${totalPage}`;
-  ruanganInfo.innerText = `Menampilkan ${start}–${end} dari ${total} data`;
+  ruanganInfo.innerText = `Menampilkan ${start}-${end} dari ${total} data`;
 
   prevBtn.disabled = currentPage === 1;
   nextBtn.disabled = currentPage === totalPage;
 }
+
+
+
+

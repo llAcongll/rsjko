@@ -48,3 +48,8 @@ class PendapatanLain extends Model
         return $this->belongsTo(RevenueMaster::class, 'revenue_master_id');
     }
 }
+
+
+
+
+

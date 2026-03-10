@@ -9,3 +9,8 @@ foreach ($allDates as $d) {
     }
 }
 echo json_encode($diffs);
+
+
+
+
+

@@ -31,3 +31,8 @@ class AnggaranRincian extends Model
         return $this->belongsTo(AnggaranRekening::class, 'anggaran_rekening_id');
     }
 }
+
+
+
+
+

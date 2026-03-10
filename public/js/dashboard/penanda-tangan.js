@@ -232,7 +232,7 @@ function renderPtPage() {
 
     tbody.innerHTML = '';
 
-    const canCRUD = window.hasPermission('MASTER_CRUD') || window.isAdmin;
+    const canCRUD = window.hasPermission('MASTER_MANAGE') || window.isAdmin;
 
     if (pageData.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding: 24px; color: #64748b;">Tidak ada data penanda tangan</td></tr>';
@@ -282,7 +282,7 @@ function updatePtPaginationInfo(total) {
     const end = Math.min(currentPtPage * ptPerPage, total);
 
     pageInfo.innerText = `Halaman ${currentPtPage} / ${totalPage}`;
-    infoText.innerText = total > 0 ? `Menampilkan ${start}–${end} dari ${total} data` : 'Menampilkan 0 data';
+    infoText.innerText = total > 0 ? `Menampilkan ${start}-${end} dari ${total} data` : 'Menampilkan 0 data';
 
     prevBtn.disabled = currentPtPage === 1;
     nextBtn.disabled = currentPtPage === totalPage;
@@ -309,3 +309,7 @@ window.initPenandaTangan = function () {
         loadPenandaTanganTable();
     }
 };
+
+
+
+

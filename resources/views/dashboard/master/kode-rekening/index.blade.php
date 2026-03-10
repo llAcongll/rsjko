@@ -7,7 +7,7 @@
       <p>Kelola struktur kode rekening pendapatan</p>
     </div>
 
-    @if(auth()->user()->hasPermission('KODE_REKENING_CRUD'))
+    @if(auth()->user()->hasPermission('KODE_REKENING_MANAGE'))
       <div class="dashboard-header-right">
         <button class="btn-tambah-data" onclick="openKodeRekeningForm()">
           <i class="ph-bold ph-plus"></i>
@@ -23,3 +23,8 @@
   </div>
 
 </div>
+
+
+
+
+

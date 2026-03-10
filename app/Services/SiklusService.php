@@ -44,3 +44,8 @@ class SiklusService
         return DocumentSequence::nextNumber('CYCLE_INTERNAL', $year, $siklus, $type);
     }
 }
+
+
+
+
+

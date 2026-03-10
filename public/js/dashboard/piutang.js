@@ -120,12 +120,12 @@ function renderPiutangTable(items, from) {
                     <button class="btn-aksi detail" onclick="detailPiutang(${item.id})" title="Lihat Detail">
                         <i class="ph ph-eye"></i>
                     </button>
-                    ${window.hasPermission('PIUTANG_CREATE') || window.hasPermission('PIUTANG_CRUD') ? `
+                    ${window.hasPermission('PIUTANG_MANAGE') || window.hasPermission('PIUTANG_MANAGE') ? `
                     <button class="btn-aksi edit" onclick="editPiutang(${item.id})" title="Edit Data">
                         <i class="ph ph-pencil-simple"></i>
                     </button>
                     ` : ''}
-                    ${window.hasPermission('PIUTANG_DELETE') || window.hasPermission('PIUTANG_CRUD') ? `
+                    ${window.hasPermission('PIUTANG_MANAGE') || window.hasPermission('PIUTANG_MANAGE') ? `
                     <button class="btn-aksi delete" onclick="deletePiutang(${item.id})" title="Hapus Data">
                         <i class="ph ph-trash"></i>
                     </button>
@@ -148,7 +148,7 @@ function updatePaginationPiutang(data) {
 
     // Note: ID in View might need check, using generic ID
     const info = document.getElementById('paginationInfoPiutang');
-    if (info) info.innerText = `Menampilkan ${data.from || 0}–${data.to || 0} dari ${data.total} data`;
+    if (info) info.innerText = `Menampilkan ${data.from || 0}-${data.to || 0} dari ${data.total} data`;
 }
 
 function updateSummaryPiutang(agg) {
@@ -443,5 +443,9 @@ window.detailPiutang = function (id) {
 window.closeDetailPiutang = function () {
     document.getElementById('piutangDetailModal')?.classList.remove('show');
 };
+
+
+
+
 
 

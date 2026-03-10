@@ -20,3 +20,8 @@ class SP3BPBelanja extends Model
         return $this->belongsTo(SP3BP::class, 'sp3bp_id');
     }
 }
+
+
+
+
+

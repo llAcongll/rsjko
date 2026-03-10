@@ -14,3 +14,8 @@ if ($id) {
     \App\Http\Controllers\RevenueMasterController::recalculate($id);
     echo "After restore to true: " . \App\Models\RekeningKoran::where('revenue_master_id', $id)->count() . "\n";
 }
+
+
+
+
+

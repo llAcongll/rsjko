@@ -68,7 +68,7 @@
                     OBAT</div>
                 <div style="font-size: 13pt; font-weight: bold; line-height: 1.2;">ENGKU HAJI DAUD</div>
                 <div style="font-size: 8pt; margin-top: 5px;">
-                    Jalan Indun Suri – Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
+                    Jalan Indun Suri - Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
                     Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795
                 </div>
             </td>
@@ -164,3 +164,8 @@
 </body>
 
 </html>
+
+
+
+
+

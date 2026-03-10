@@ -35,3 +35,8 @@ class TreasurerCash extends Model
         'balance' => 'decimal:2',
     ];
 }
+
+
+
+
+

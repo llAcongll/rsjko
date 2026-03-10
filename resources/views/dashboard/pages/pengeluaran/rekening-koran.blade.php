@@ -10,7 +10,7 @@
         </div>
 
         <div class="dashboard-header-right">
-            @if(auth()->user()->hasPermission('PENGELUARAN_CAIR') || auth()->user()->isAdmin())
+            @if(auth()->user()->hasPermission('REK_KORAN_PENG_IMPORT'))
                 <button id="btnSetSaldoAwal" class="btn-tambah-data btn-secondary" onclick="openBankLedgerSaldoAwalModal()"
                     style="margin-right: 8px;">
                     <i class="ph-bold ph-wallet"></i>
@@ -109,3 +109,8 @@
         </div>
     </div>
 </div>
+
+
+
+
+

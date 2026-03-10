@@ -14,15 +14,15 @@ window.openPerusahaanForm = function (id = null, kode = '', nama = '') {
     const kodeEl = document.getElementById('perusahaanKode');
     const namaEl = document.getElementById('perusahaanNama');
 
-    titleEl.innerText = id ? '✏️ Edit Perusahaan' : '🏢 Tambah Perusahaan';
+    titleEl.innerText = id ? 'Ã¢Å“Ã¯¸ Edit Perusahaan' : 'Ã°Å¸¢ Tambah Perusahaan';
     namaEl.value = nama || '';
 
     if (id) {
-        // EDIT → kode tetap
+        // EDIT Ã¢â€ â€™ kode tetap
         kodeEl.value = kode;
         kodeEl.readOnly = true;
     } else {
-        // TAMBAH → auto-generate kode
+        // TAMBAH Ã¢â€ â€™ auto-generate kode
         kodeEl.value = '';
         kodeEl.readOnly = true;
 
@@ -97,7 +97,7 @@ window.submitPerusahaan = function () {
    LOAD DATA PERUSAHAAN
 ========================= */
 window.loadPerusahaanTable = function () {
-    console.log('🔥 loadPerusahaanTable DIPANGGIL');
+    console.log('Ã°Å¸â€¥ loadPerusahaanTable DIPANGGIL');
 
     fetch('/dashboard/perusahaan-list', {
         headers: { 'Accept': 'application/json' }
@@ -256,7 +256,7 @@ function renderPerusahaanPage() {
 
     tbody.innerHTML = '';
 
-    const canCRUD = window.hasPermission('MASTER_CRUD');
+    const canCRUD = window.hasPermission('MASTER_MANAGE');
 
     pageData.forEach((r, i) => {
         const escapedNama = r.nama.replace(/'/g, "\\'");
@@ -323,9 +323,13 @@ function updatePaginationInfoPerusahaan(total) {
 
     pageInfo.innerText = `Halaman ${currentPagePerusahaan} / ${totalPage}`;
     perusahaanInfo.innerText = total > 0
-        ? `Menampilkan ${start}–${end} dari ${total} data`
+        ? `Menampilkan ${start}-${end} dari ${total} data`
         : 'Tidak ada data';
 
     prevBtn.disabled = currentPagePerusahaan === 1;
     nextBtn.disabled = currentPagePerusahaan === totalPage;
 }
+
+
+
+

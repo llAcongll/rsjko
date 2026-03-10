@@ -6,3 +6,8 @@ $kernel->bootstrap();
 
 $rm = App\Models\RevenueMaster::where('id', 119)->first();
 echo json_encode($rm->toArray()) . "\n";
+
+
+
+
+

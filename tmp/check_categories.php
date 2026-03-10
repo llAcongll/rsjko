@@ -10,3 +10,8 @@ $categories = DB::table('revenue_masters')->select('kategori', DB::raw('count(*)
 foreach ($categories as $c) {
     echo "Category: '{$c->kategori}', Count: {$c->count}\n";
 }
+
+
+
+
+

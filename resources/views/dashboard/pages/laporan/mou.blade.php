@@ -22,7 +22,7 @@
                     <i class="ph ph-magnifying-glass"></i>
                     <span>Tampilkan</span>
                 </button>
-                @if(auth()->user()->hasPermission('LAPORAN_MOU') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+                @if(auth()->user()->hasPermission('LAP_MOU_VIEW') || auth()->user()->hasPermission('LAP_LRA_VIEW'))
                     <button class="btn-preview" onclick="openPreviewModal('MOU')">
                         <i class="ph ph-file-search"></i>
                         <span>Preview & Unduh</span>
@@ -58,3 +58,10 @@
         </div>
     </div>
 </div>
+
+
+
+
+
+
+

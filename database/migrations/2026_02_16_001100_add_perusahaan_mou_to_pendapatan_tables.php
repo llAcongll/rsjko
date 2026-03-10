@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        // BPJS → perusahaan_id (fixed: BPJS Kesehatan)
+        // BPJS Ã¢â€ â€™ perusahaan_id (fixed: BPJS Kesehatan)
         Schema::table('pendapatan_bpjs', function (Blueprint $table) {
             $table->foreignId('perusahaan_id')
                 ->nullable()
@@ -17,7 +17,7 @@ return new class extends Migration {
                 ->nullOnDelete();
         });
 
-        // JAMINAN → perusahaan_id (banyak pilihan)
+        // JAMINAN Ã¢â€ â€™ perusahaan_id (banyak pilihan)
         Schema::table('pendapatan_jaminan', function (Blueprint $table) {
             $table->foreignId('perusahaan_id')
                 ->nullable()
@@ -27,7 +27,7 @@ return new class extends Migration {
                 ->nullOnDelete();
         });
 
-        // KERJASAMA → mou_id
+        // KERJASAMA Ã¢â€ â€™ mou_id
         Schema::table('pendapatan_kerjasama', function (Blueprint $table) {
             $table->foreignId('mou_id')
                 ->nullable()
@@ -37,7 +37,7 @@ return new class extends Migration {
                 ->nullOnDelete();
         });
 
-        // LAIN-LAIN → mou_id
+        // LAIN-LAIN Ã¢â€ â€™ mou_id
         Schema::table('pendapatan_lain', function (Blueprint $table) {
             $table->foreignId('mou_id')
                 ->nullable()
@@ -71,3 +71,8 @@ return new class extends Migration {
         });
     }
 };
+
+
+
+
+

@@ -32,3 +32,8 @@ class PenyesuaianPendapatan extends Model
         return $this->belongsTo(Perusahaan::class);
     }
 }
+
+
+
+
+

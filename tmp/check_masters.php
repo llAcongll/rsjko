@@ -11,3 +11,8 @@ echo "Total masters: " . $masters->count() . "\n";
 foreach ($masters as $m) {
     echo "ID: {$m->id}, Tanggal: {$m->tanggal}, Tahun: {$m->tahun}, Kategori: {$m->kategori}\n";
 }
+
+
+
+
+

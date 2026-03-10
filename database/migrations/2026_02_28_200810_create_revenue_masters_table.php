@@ -40,3 +40,8 @@ return new class extends Migration {
         Schema::dropIfExists('revenue_masters');
     }
 };
+
+
+
+
+

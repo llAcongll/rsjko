@@ -25,3 +25,8 @@ class PengesahanPeriode extends Model
         return $this->hasOne(SP3BP::class, 'periode_id');
     }
 }
+
+
+
+
+

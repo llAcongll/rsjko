@@ -9,7 +9,7 @@
     <div class="page-header-right">
       <div class="rekening-filter-inline"
         style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
-        @if(auth()->user()->hasPermission('REKENING_TEMPLATE'))
+        @if(auth()->user()->hasPermission('REKKOR_MANAGE'))
           <button class="btn-toolbar btn-toolbar-outline"
             onclick="window.location.href='/dashboard/rekening-korans/template'" title="Download Template CSV">
             <i class="ph ph-download-simple"></i>
@@ -17,7 +17,7 @@
           </button>
         @endif
 
-        @if(auth()->user()->hasPermission('REKENING_IMPORT'))
+        @if(auth()->user()->hasPermission('REKKOR_MANAGE'))
           <input type="file" id="importRekeningFile" style="display: none;" accept=".csv"
             onchange="uploadRekeningImport(this)">
           <button class="btn-toolbar btn-toolbar-outline" onclick="document.getElementById('importRekeningFile').click()"
@@ -26,7 +26,7 @@
             <span>Import</span>
           </button>
         @endif
-        @if(auth()->user()->hasPermission('REKENING_BULK'))
+        @if(auth()->user()->hasPermission('REKKOR_MANAGE'))
           <button class="btn-toolbar btn-toolbar-danger" onclick="deleteBulkRekening()" title="Hapus Massal">
             <i class="ph ph-trash"></i>
             <span>Hapus Massal</span>
@@ -56,7 +56,7 @@
       </div>
 
       <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
-        @if(auth()->user()->hasPermission('REKENING_CRUD'))
+        @if(auth()->user()->hasPermission('REKKOR_MANAGE'))
           <button class="btn-tambah-data btn-secondary" onclick="openRekeningSaldoAwalModal()">
             <i class="ph-bold ph-wallet"></i>
             <span>Set Saldo Awal</span>
@@ -134,7 +134,7 @@
       </table>
     </div>
     <div class="flex justify-between items-center mt-4">
-      <p id="rekeningInfo" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0 dari 0 data</p>
+      <p id="rekeningInfo" class="text-slate-500" style="font-size: 13px;">Menampilkan 0-0 dari 0 data</p>
 
       <div class="flex items-center gap-2">
         <button id="prevPageRekening" class="btn-aksi" onclick="changeRekeningPage(-1)" disabled>
@@ -150,3 +150,8 @@
   </div>
 
 </div>
+
+
+
+
+

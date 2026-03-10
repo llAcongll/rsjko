@@ -284,7 +284,7 @@ function loadSaldoTable() {
                 const statusHtml = '<span style="font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:4px; background:#dcfce7; color:#166534;">CAIR</span>';
                 const siklusLabel = item.siklus_up && item.type === 'GU' ? `GU-${item.siklus_up}` : '-';
 
-                const canDelete = window.hasPermission('SALDO_DANA_CRUD');
+                const canDelete = window.hasPermission('BKU_PENGELUARAN_VIEW') || window.hasPermission('SPP_MANAGE');
                 const deleteBtn = canDelete ? `<button class="btn-aksi delete" title="Hapus" onclick="hapusSaldo(${item.id})"><i class="ph ph-trash"></i></button>` : '';
 
                 html += `
@@ -444,8 +444,8 @@ window.initDisbursement = function () {
     disbursementPageMode = window._disbursementPageMode || 'SPP';
 
     // Configure page based on mode
-    const titleEl = document.querySelector('.dashboard-header h2');
-    const subEl = document.querySelector('.dashboard-header p');
+    const titleEl = document.querySelector('.page-header h2');
+    const subEl = document.querySelector('.page-header p');
     const addBtn = document.querySelector('.btn-tambah-data');
 
     if (disbursementPageMode === 'SPP') {
@@ -464,8 +464,8 @@ window.initDisbursement = function () {
         if (addBtn) addBtn.style.display = 'none';
         disbursementStatusFilter = 'SPM,CAIR';
     } else if (disbursementPageMode === 'PENCAIRAN') {
-        if (titleEl) titleEl.innerHTML = '<i class="ph ph-wallet"></i> Realisasi Pencairan (UP/GU/LS)';
-        if (subEl) subEl.textContent = 'Daftar kegiatan yang telah dicairkan';
+        if (titleEl) titleEl.innerHTML = '<i class="ph ph-wallet"></i> Pencairan Dana (SP2D)';
+        if (subEl) subEl.textContent = 'Kelola pencairan dana (UP/GU/LS) — Alur: SPP → SPM → SP2D (Cair)';
         if (addBtn) addBtn.style.display = 'none';
         disbursementStatusFilter = 'CAIR';
     } else if (disbursementPageMode === 'REPORT_SPP') {
@@ -575,14 +575,14 @@ window.loadDisbursements = function () {
                 } else {
                     // Build action buttons based on current status AND page mode
                     let actionHtml = '';
-                    const canSppCreate = window.hasPermission('SPP_CRUD') || window.hasPermission('PENCAIRAN_CRUD');
-                    const canSppDelete = window.hasPermission('SPP_CRUD') || window.hasPermission('PENCAIRAN_CRUD');
-                    const canSpmCreate = window.hasPermission('SPM_CRUD') || window.hasPermission('PENCAIRAN_CRUD');
-                    const canSpmDelete = window.hasPermission('SPM_CRUD') || window.hasPermission('PENCAIRAN_CRUD');
-                    const canSp2dCreate = window.hasPermission('SP2D_CRUD') || window.hasPermission('PENCAIRAN_CRUD');
-                    const canSp2dDelete = window.hasPermission('SP2D_CRUD') || window.hasPermission('PENCAIRAN_CRUD');
-                    const canCairView = window.hasPermission('PENCAIRAN_VIEW') || window.hasPermission('PENCAIRAN_CRUD');
-                    const canCairCreate = window.hasPermission('PENCAIRAN_CRUD');
+                    const canSppCreate = window.hasPermission('SPP_MANAGE');
+                    const canSppDelete = window.hasPermission('SPP_MANAGE');
+                    const canSpmCreate = window.hasPermission('SPM_MANAGE');
+                    const canSpmDelete = window.hasPermission('SPM_MANAGE');
+                    const canSp2dCreate = window.hasPermission('SP2D_MANAGE');
+                    const canSp2dDelete = window.hasPermission('SP2D_MANAGE');
+                    const canCairView = window.hasPermission('SPP_VIEW') || window.hasPermission('SPM_VIEW') || window.hasPermission('SP2D_VIEW');
+                    const canCairCreate = window.hasPermission('SPP_MANAGE');
 
                     if (disbursementPageMode === 'SPP') {
                         if (item.status === 'DRAFT' || item.status === 'SPP') {
@@ -601,7 +601,38 @@ window.loadDisbursements = function () {
                             if (canSp2dCreate) actionHtml += `<button class="btn-aksi" title="Cairkan (Assign SP2D)" onclick="advanceStatus(${item.id}, 'CAIR')" style="color:#1d4ed8;"><i class="ph ph-check-circle"></i> <span style='font-size:0.7rem'>Assign SP2D</span></button>`;
                         }
                         if (item.status === 'CAIR') {
-                            actionHtml += `<span style="font-size:0.7rem; color:#64748b">Selesai (Lihat di Pencairan)</span>`;
+                            actionHtml += `<div style="display: flex; gap: 6px; justify-content: center; align-items: center;">`;
+                            if (canCairView || canCairCreate) {
+                                actionHtml += `
+                                    <button class="btn-aksi" title="Detail Belanja" onclick="openBelanjaItems(${item.id})" 
+                                        style="width: auto; height: 32px; padding: 0 12px; border-radius: 8px; background: #ecfdf5; color: #059669; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1px solid #10b981;">
+                                        <i class="ph ph-shopping-cart" style="font-size: 14px;"></i> <span>Belanja</span>
+                                    </button>
+                                `;
+                            }
+                            actionHtml += `
+                                <button class="btn-aksi" title="Lihat Detail" onclick="viewDisbursement(${item.id})" 
+                                    style="width: 32px; height: 32px; background: #eff6ff; color: #2563eb; border: 1px solid #3b82f6;">
+                                    <i class="ph ph-eye"></i>
+                                </button>
+                            `;
+                            if (canCairCreate) {
+                                actionHtml += `
+                                    <button class="btn-aksi" title="Edit Data" onclick="editDisbursement(${item.id})" 
+                                        style="width: 32px; height: 32px; background: #fffbeb; color: #d97706; border: 1px solid #f59e0b;">
+                                        <i class="ph ph-pencil-simple"></i>
+                                    </button>
+                                `;
+                            }
+                            if (canSp2dDelete) {
+                                actionHtml += `
+                                    <button class="btn-aksi" title="Batalkan SP2D" onclick="revertStatus(${item.id}, 'SPM')" 
+                                        style="width: auto; height: 32px; padding: 0 12px; border-radius: 8px; background: #fef2f2; color: #dc2626; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1px solid #ef4444;">
+                                        <i class="ph ph-arrow-counter-clockwise" style="font-size: 14px;"></i> <span>Batal</span>
+                                    </button>
+                                `;
+                            }
+                            actionHtml += `</div>`;
                         }
                     } else if (disbursementPageMode === 'PENCAIRAN') {
                         if (item.status === 'CAIR') {
@@ -719,7 +750,7 @@ window.closeConfirmActionModal = function () {
 };
 
 /**
- * Dynamic modal that creates its own DOM — immune to CSS stacking context issues.
+ * Dynamic modal that creates its own DOM - immune to CSS stacking context issues.
  * @param {object} opts - { icon, iconColor, title, message, confirmText, confirmColor, onConfirm, showInput?, inputPlaceholder? }
  */
 window.showActionModal = function showActionModal(opts) {
@@ -848,7 +879,7 @@ function executeAdvance(id, newStatus, label, manualNo = '') {
 }
 
 window.revertStatus = function (id, targetStatus) {
-    const labels = { SPP: 'SPM → SPP', SPM: 'SP2D → SPM' };
+    const labels = { SPP: 'SPM Ã¢â€ â€™ SPP', SPM: 'SP2D Ã¢â€ â€™ SPM' };
     const label = labels[targetStatus] || targetStatus;
 
     showActionModal({
@@ -1066,7 +1097,7 @@ async function loadDisbursementRekening() {
                         value: node.id,
                         kode: node.kode,
                         nama: node.nama,
-                        label: `${node.kode} — ${node.nama}`
+                        label: `${node.kode} - ${node.nama}`
                     });
                 }
                 if (node.children && node.children.length > 0) {
@@ -1260,7 +1291,7 @@ function updateUraianSuggestions() {
     // 1. Suggest Current Rekening Name
     if (searchRek && searchRek.value) {
         // Strip the code prefix if present
-        const parts = searchRek.value.split(' — ');
+        const parts = searchRek.value.split(' - ');
         const name = parts.length > 1 ? parts[1] : searchRek.value;
         const opt = document.createElement('option');
         opt.value = name;
@@ -1550,6 +1581,30 @@ window.loadLedger = function (page = 1) {
                         <td class="text-right font-bold">${formatRupiahTable(res.summary.final_balance)}</td>
                     </tr>
                 `);
+
+                // Update Footer Summaries
+                const s = res.summary;
+                const formatNum = (v) => Number(v || 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                // Use income_receipts and income_deposits for the "Penerimaan Tunai" and "Setoran" labels
+                const fP = document.getElementById('footerTotalPenerimaan');
+                const fK = document.getElementById('footerTotalPengeluaran');
+                const fS = document.getElementById('footerFinalSaldo');
+                const fBRK = document.getElementById('footerBankBRK');
+                const fBSI = document.getElementById('footerBankBSI');
+
+                if (fP) fP.innerText = 'Rp ' + formatNum(s.income_receipts || 0);
+                if (fK) fK.innerText = 'Rp ' + formatNum(s.income_deposits || 0);
+                if (fS) fS.innerText = 'Rp ' + formatNum(s.income_final_saldo || s.final_tunai);
+                if (fBRK) fBRK.innerText = 'Rp ' + formatNum(s.income_bank_brk || s.final_bank_brk);
+                if (fBSI) fBSI.innerText = 'Rp ' + formatNum(s.income_bank_bsi || s.final_bank_bsi);
+
+                // Update Label if month is null (full year)
+                const month = document.getElementById('ledgerMonth')?.value || '';
+                const footerLabelS = document.getElementById('footerLabelSaldoAkhir');
+                if (footerLabelS) {
+                    footerLabelS.innerText = month ? 'Saldo Kas Bendahara Akhir Bulan' : 'Saldo Kas Bendahara Akhir Tahun';
+                }
             }
 
             updateLedgerPagination(res);
@@ -1686,7 +1741,7 @@ window.loadBelanjaItems = function (id) {
                     if (expenditures.length === 0) {
                         html = '<tr><td colspan="6" class="text-center" style="padding: 20px; color: #94a3b8;">Belum ada rincian kegiatan.</td></tr>';
                     } else {
-                        const canCairCreate = window.hasPermission('PENCAIRAN_CRUD') || window.hasPermission('SPP_CRUD');
+                        const canCairCreate = window.hasPermission('SPP_MANAGE') || window.hasPermission('SP2D_MANAGE');
                         expenditures.forEach((ex, idx) => {
                             usedSum += parseFloat(ex.gross_value) || 0;
 
@@ -1843,7 +1898,7 @@ window.addNewBelanjaItem = function () {
             if (rekHidden && rekSearch && d.kode_rekening_id) {
                 rekHidden.value = d.kode_rekening_id;
                 if (d.kode_rekening) {
-                    rekSearch.value = `${d.kode_rekening.kode} — ${d.kode_rekening.nama}`;
+                    rekSearch.value = `${d.kode_rekening.kode} - ${d.kode_rekening.nama}`;
                 } else {
                     const opt = (rekeningOptions || []).find(o => o.value == d.kode_rekening_id);
                     if (opt) rekSearch.value = opt.label;
@@ -1934,3 +1989,7 @@ function executeDeleteBelanjaItem(id) {
         })
         .catch(err => toast(err.message || 'Gagal menghapus', 'error'));
 }
+
+
+
+

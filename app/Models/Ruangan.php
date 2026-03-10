@@ -11,3 +11,8 @@ class Ruangan extends Model
         'nama',
     ];
 }
+
+
+
+
+

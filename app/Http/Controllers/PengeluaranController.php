@@ -97,7 +97,7 @@ class PengeluaranController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_MANAGE') || auth()->user()->isAdmin(), 403);
         $data = $request->validate([
             'tanggal' => 'required|date',
             'kategori' => 'required|in:PEGAWAI,BARANG_JASA,MODAL',
@@ -139,7 +139,7 @@ class PengeluaranController extends Controller
 
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_MANAGE') || auth()->user()->isAdmin(), 403);
         $data = $request->validate([
             'tanggal' => 'required|date',
             'kategori' => 'required|in:PEGAWAI,BARANG_JASA,MODAL',
@@ -174,9 +174,14 @@ class PengeluaranController extends Controller
 
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('BELANJA_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('BELANJA_MANAGE') || auth()->user()->isAdmin(), 403);
         $this->service->delete($id);
 
         return response()->json(['status' => 'ok']);
     }
 }
+
+
+
+
+

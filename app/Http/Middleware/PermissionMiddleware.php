@@ -14,7 +14,7 @@ class PermissionMiddleware
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, string $permission): Response
+    public function handle(Request $request, Closure $next, ...$permissions): Response
     {
         if (!Auth::check()) {
             abort(401);
@@ -22,11 +22,21 @@ class PermissionMiddleware
 
         $user = Auth::user();
 
-        // Admin gets pass or check specific permission
-        if ($user->isAdmin() || $user->hasPermission($permission)) {
+        if ($user->isAdmin()) {
             return $next($request);
+        }
+
+        foreach ($permissions as $permission) {
+            if ($user->hasPermission($permission)) {
+                return $next($request);
+            }
         }
 
         abort(403, 'Anda tidak memiliki hak akses untuk fitur ini.');
     }
 }
+
+
+
+
+

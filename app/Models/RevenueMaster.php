@@ -58,3 +58,8 @@ class RevenueMaster extends Model
         return $this->hasMany(PendapatanKerjasama::class, 'revenue_master_id');
     }
 }
+
+
+
+
+

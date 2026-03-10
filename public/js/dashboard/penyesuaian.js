@@ -134,12 +134,12 @@ function renderPenyesuaianTable(items, from) {
                     <button class="btn-aksi detail" onclick="detailPenyesuaian(${item.id})" title="Detail">
                         <i class="ph ph-eye"></i>
                     </button>
-                    ${window.hasPermission('PENYESUAIAN_CREATE') ? `
+                    ${window.hasPermission('PENYESUAIAN_MANAGE') ? `
                     <button class="btn-aksi edit" onclick="editPenyesuaian(${item.id})" title="Edit">
                         <i class="ph ph-pencil-simple"></i>
                     </button>
                     ` : ''}
-                    ${window.hasPermission('PENYESUAIAN_DELETE') ? `
+                    ${window.hasPermission('PENYESUAIAN_MANAGE') ? `
                     <button class="btn-aksi delete" onclick="deletePenyesuaian(${item.id})" title="Hapus">
                         <i class="ph ph-trash"></i>
                     </button>
@@ -155,7 +155,7 @@ function updatePaginationPenyesuaian(data) {
     document.getElementById('prevPagePenyesuaian').disabled = data.current_page === 1;
     document.getElementById('nextPagePenyesuaian').disabled = data.current_page === data.last_page;
     document.getElementById('pageInfoPenyesuaian').innerText = `${data.current_page} / ${data.last_page}`;
-    document.getElementById('paginationInfoPenyesuaian').innerText = `Menampilkan ${data.from || 0}–${data.to || 0} dari ${data.total} data`;
+    document.getElementById('paginationInfoPenyesuaian').innerText = `Menampilkan ${data.from || 0}-${data.to || 0} dari ${data.total} data`;
 }
 
 window.openPenyesuaianModal = function () {
@@ -402,3 +402,7 @@ window.detailPenyesuaian = async function (id) {
         content.innerHTML = `<div class="text-center text-red-500 py-4">${err.message}</div>`;
     }
 }
+
+
+
+

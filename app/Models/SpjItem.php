@@ -21,3 +21,8 @@ class SpjItem extends Model
         return $this->belongsTo(Expenditure::class);
     }
 }
+
+
+
+
+

@@ -34,7 +34,7 @@
                             DAUD</h2>
                         <div class="address"
                             style="line-height: 1.4; margin-top: 0; font-size: 10pt; font-weight: normal; color: #000;">
-                            Jalan Indun Suri – Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
+                            Jalan Indun Suri - Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
                             Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795<br>
                             Pos-el: rsjkoehd@kepriprov.go.id Laman : www.rsudehd.kepriprov.go.id
                         </div>
@@ -42,7 +42,7 @@
                     <div style="width: 165px;"></div>
                 </div>
 
-                <div style="height: 4px; background: #000; margin: -10px 0 20px;"></div>
+                <div id="previewHeaderLine" style="height: 4px; background: #000; margin: -10px 0 20px;"></div>
 
                 <div
                     style="text-align: center; margin-top: 20px; margin-bottom: 30px; width: 100%; position: relative;">
@@ -148,3 +148,8 @@
         </div>
     </div>
 </div>
+
+
+
+
+

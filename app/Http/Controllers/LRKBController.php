@@ -21,14 +21,14 @@ class LRKBController extends Controller
 
     public function index()
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('LRKB_VIEW'), 403);
         $lrkbs = LRKB::orderBy('id', 'asc')->get();
         return response()->json($lrkbs);
     }
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('LRKB_GENERATE'), 403);
         $request->validate([
             'triwulan' => 'nullable|integer|between:1,4',
             'bulan' => 'nullable|integer|between:1,12',
@@ -59,14 +59,14 @@ class LRKBController extends Controller
 
     public function show($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('LRKB_VIEW'), 403);
         $lrkb = LRKB::with(['details'])->findOrFail($id);
         return response()->json($lrkb);
     }
 
     public function generate($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('LRKB_GENERATE'), 403);
         $lrkb = LRKB::findOrFail($id);
         if ($lrkb->status === 'dikunci') {
             return response()->json(['error' => 'Data sudah dikunci'], 422);
@@ -87,12 +87,37 @@ class LRKBController extends Controller
         $startDate = Carbon::create($year, $startMonth, 1)->toDateString();
         $endDate = Carbon::create($year, $endMonth, 1)->endOfMonth()->toDateString();
 
-        // 1. Calculate Mutasi (Income & Expense)
-        $pendapatan = DB::table('pendapatan_umum')->whereBetween('tanggal', [$startDate, $endDate])->where('tahun', $year)->sum('total')
-            + DB::table('pendapatan_bpjs')->whereBetween('tanggal', [$startDate, $endDate])->where('tahun', $year)->sum('total')
-            + DB::table('pendapatan_jaminan')->whereBetween('tanggal', [$startDate, $endDate])->where('tahun', $year)->sum('total')
-            + DB::table('pendapatan_kerjasama')->whereBetween('tanggal', [$startDate, $endDate])->where('tahun', $year)->sum('total')
-            + DB::table('pendapatan_lain')->whereBetween('tanggal', [$startDate, $endDate])->where('tahun', $year)->sum('total');
+        // 1. Calculate Mutasi (Income & Expense) - ONLY POSTED
+        $pendapatan = DB::table('pendapatan_umum as t')
+            ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+            ->whereBetween('t.tanggal', [$startDate, $endDate])
+            ->where('rm.tahun', $year)
+            ->where('rm.is_posted', 1)
+            ->sum('t.total')
+            + DB::table('pendapatan_bpjs as t')
+                ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+                ->whereBetween('t.tanggal', [$startDate, $endDate])
+                ->where('rm.tahun', $year)
+                ->where('rm.is_posted', 1)
+                ->sum('t.total')
+            + DB::table('pendapatan_jaminan as t')
+                ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+                ->whereBetween('t.tanggal', [$startDate, $endDate])
+                ->where('rm.tahun', $year)
+                ->where('rm.is_posted', 1)
+                ->sum('t.total')
+            + DB::table('pendapatan_kerjasama as t')
+                ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+                ->whereBetween('t.tanggal', [$startDate, $endDate])
+                ->where('rm.tahun', $year)
+                ->where('rm.is_posted', 1)
+                ->sum('t.total')
+            + DB::table('pendapatan_lain as t')
+                ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+                ->whereBetween('t.tanggal', [$startDate, $endDate])
+                ->where('rm.tahun', $year)
+                ->where('rm.is_posted', 1)
+                ->sum('t.total');
 
         $penyesuaian = DB::table('penyesuaian_pendapatans')
             ->whereBetween('tanggal', [$startDate, $endDate])
@@ -129,10 +154,18 @@ class LRKBController extends Controller
         }
 
         // 3. Get Physical Balances at the end of period from BKU
-        $bku = $this->reportService->getBkuData($year, $endMonth);
-        $summary = $bku['summary'] ?? [];
-        $saldoBank = $summary['final_bank'] ?? 0;
-        $saldoTunai = $summary['final_tunai'] ?? 0;
+        // Expenditure BKU
+        $bkuExp = $this->reportService->getBkuData($year, $endMonth);
+        $summaryExp = $bkuExp['summary'] ?? [];
+        $saldoBank = $summaryExp['final_bank'] ?? 0;
+        $saldoTunaiExp = $summaryExp['final_tunai'] ?? 0;
+
+        // Income BKU (Undeposited Cash)
+        $incomeCashBookService = app(\App\Services\IncomeCashBookService::class);
+        $bkuInc = $incomeCashBookService->getLedgerData($year, $endMonth);
+        $saldoTunaiInc = $bkuInc['summary']['final_saldo'] ?? 0;
+
+        $saldoTunai = $saldoTunaiExp + $saldoTunaiInc;
         $saldoFisik = $saldoBank + $saldoTunai;
 
         // 4. Calculate Book Balance
@@ -182,7 +215,7 @@ class LRKBController extends Controller
 
     public function validateLrkb($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_POST'), 403);
+        abort_unless(auth()->user()->hasPermission('LRKB_APPROVE'), 403);
         $lrkb = LRKB::findOrFail($id);
         if ($lrkb->selisih != 0) {
             return response()->json(['error' => 'Rekonsiliasi tidak bisa divalidasi karena terdapat selisih kas!'], 422);
@@ -194,7 +227,7 @@ class LRKBController extends Controller
 
     public function unvalidateLrkb($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_POST'), 403);
+        abort_unless(auth()->user()->hasPermission('LRKB_APPROVE'), 403);
         $lrkb = LRKB::findOrFail($id);
 
         // Check if used by final SP3BP
@@ -220,7 +253,7 @@ class LRKBController extends Controller
 
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_DELETE'), 403);
+        abort_unless(auth()->user()->hasPermission('LRKB_MANAGE'), 403);
         $lrkb = LRKB::findOrFail($id);
         if ($lrkb->status !== 'draft') {
             return response()->json(['error' => 'Hanya data draft yang dapat dihapus'], 422);
@@ -231,7 +264,7 @@ class LRKBController extends Controller
 
     public function saveCatatan(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('LRKB_GENERATE'), 403);
         $lrkb = LRKB::findOrFail($id);
         if ($lrkb->status !== 'draft') {
             return response()->json(['error' => 'Catatan hanya dapat diubah pada status Draft'], 422);
@@ -243,10 +276,15 @@ class LRKBController extends Controller
 
     public function print($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('LRKB_PRINT'), 403);
         $lrkb = LRKB::with(['details'])->findOrFail($id);
         $pdf = Pdf::loadView('dashboard.exports.lrkb_pdf', compact('lrkb'))
             ->setPaper('f4', 'portrait');
         return $pdf->stream("LRKB_{$lrkb->triwulan}_{$lrkb->tahun}.pdf");
     }
 }
+
+
+
+
+

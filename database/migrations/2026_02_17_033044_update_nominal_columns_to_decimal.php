@@ -69,3 +69,8 @@ return new class extends Migration {
         // No down migration as converting back might lose precision if data was stored with decimals
     }
 };
+
+
+
+
+

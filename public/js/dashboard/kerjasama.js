@@ -104,9 +104,9 @@
                         ? '<span class="badge badge-success" style="display:inline-flex; align-items:center; gap:4px; white-space:nowrap;"><i class="ph-bold ph-check-circle"></i> Diposting</span>'
                         : '<span class="badge badge-warning">Draft</span>';
 
-                    const canEdit = window.hasPermission('PENDAPATAN_KERJA_CREATE') || window.hasPermission('PENDAPATAN_KERJA_CRUD') || window.isAdmin;
-                    const canDelete = window.hasPermission('PENDAPATAN_KERJA_DELETE') || window.hasPermission('PENDAPATAN_KERJA_CRUD') || window.isAdmin;
-                    const canPost = window.hasPermission('PENDAPATAN_KERJA_POST') || window.isAdmin;
+                    const canEdit = window.hasPermission('PENDAPATAN_KERJA_MANAGE') || window.isAdmin;
+                    const canDelete = window.hasPermission('PENDAPATAN_KERJA_MANAGE') || window.isAdmin;
+                    const canPost = window.hasPermission('PENDAPATAN_KERJA_MANAGE') || window.isAdmin;
                     const isSelected = selectedMasterIds.includes(item.id);
 
                     tbody.insertAdjacentHTML('beforeend', `
@@ -176,7 +176,7 @@
 
     function renderPaginationMasterKerjasama(meta) {
         const info = document.getElementById('paginationInfoMasterKerjasama');
-        if (info) info.innerText = `Menampilkan ${meta.from || 0}–${meta.to || 0} dari ${meta.total || 0} data`;
+        if (info) info.innerText = `Menampilkan ${meta.from || 0}-${meta.to || 0} dari ${meta.total || 0} data`;
 
         const pageInfo = document.getElementById('pageInfoMasterKerjasama');
         if (pageInfo) pageInfo.innerText = `${meta.current_page} / ${meta.last_page}`;
@@ -623,8 +623,8 @@
                     return;
                 }
 
-                const canEditDetail = (window.hasPermission('PENDAPATAN_KERJA_CREATE') || window.hasPermission('PENDAPATAN_KERJA_CRUD') || window.isAdmin) && !activeMasterPosted;
-                const canDeleteDetail = (window.hasPermission('PENDAPATAN_KERJA_DELETE') || window.hasPermission('PENDAPATAN_KERJA_CRUD') || window.isAdmin) && !activeMasterPosted;
+                const canEditDetail = (window.hasPermission('PENDAPATAN_KERJA_MANAGE') || window.isAdmin) && !activeMasterPosted;
+                const canDeleteDetail = (window.hasPermission('PENDAPATAN_KERJA_MANAGE') || window.isAdmin) && !activeMasterPosted;
 
                 tbody.innerHTML = '';
                 data.forEach((item, index) => {
@@ -694,7 +694,7 @@
 
     function renderPaginationKerjasama(meta) {
         const info = document.getElementById('paginationInfoKerjasama');
-        if (info) info.innerText = `Menampilkan ${meta.from || 0}–${meta.to || 0} dari ${meta.total || 0} data`;
+        if (info) info.innerText = `Menampilkan ${meta.from || 0}-${meta.to || 0} dari ${meta.total || 0} data`;
         const pageInfo = document.getElementById('pageInfoKerjasama');
         if (pageInfo) pageInfo.innerText = `${meta.current_page} / ${meta.last_page}`;
         const prev = document.getElementById('prevPageKerjasama');
@@ -780,7 +780,7 @@
         isEditKerjasama = true;
         editKerjasamaId = id;
         const title = document.querySelector('#pendapatanKerjasamaModal .modal-title');
-        if (title) title.innerText = '✏️ Edit Pendapatan Kerjasama';
+        if (title) title.innerText = 'Ã¢Å“Ã¯¸ Edit Pendapatan Kerjasama';
 
         const data = await fetch(`/dashboard/pendapatan/kerjasama/${id}`, { headers: { Accept: 'application/json' } }).then(res => res.json());
         await openPendapatanKerjasamaModal();
@@ -982,7 +982,7 @@
         data.forEach(item => {
             const opt = document.createElement('option');
             opt.value = item.id;
-            opt.innerText = `${item[codeKey]} — ${item[nameKey]}`;
+            opt.innerText = `${item[codeKey]} - ${item[nameKey]}`;
             opt.dataset.nama = item.nama;
             select.appendChild(opt);
         });
@@ -1179,3 +1179,7 @@
     };
 
 })();
+
+
+
+

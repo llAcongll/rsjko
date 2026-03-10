@@ -28,3 +28,8 @@ return new class extends Migration {
         Schema::dropIfExists('penanda_tangans');
     }
 };
+
+
+
+
+

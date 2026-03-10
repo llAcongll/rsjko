@@ -44,3 +44,8 @@ class Pengeluaran extends Model
         return $this->belongsTo(KodeRekening::class, 'kode_rekening_id');
     }
 }
+
+
+
+
+

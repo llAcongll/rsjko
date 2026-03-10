@@ -127,34 +127,18 @@
 </head>
 
 <body>
-    <table style="width: 100%; border: none; margin-bottom: 0;">
-        <tr>
-            <td style="width: 165px; border: none; vertical-align: top;">
-                <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w400"
-                    style="height: 165px; width: auto; object-fit: contain;">
-            </td>
-            <td style="border: none; text-align: center; vertical-align: top; padding-right: 165px;">
-                <div style="font-size: 14pt; line-height: 1.2;">PEMERINTAH PROVINSI KEPULAUAN RIAU</div>
-                <div style="font-size: 13pt; font-weight: bold; line-height: 1.2;">RUMAH SAKIT JIWA DAN KETERGANTUNGAN OBAT</div>
-                <div style="font-size: 13pt; font-weight: bold; line-height: 1.2;">ENGKU HAJI DAUD</div>
-                <div style="font-size: 8pt; margin-top: 10px; line-height: 1.4;">
-                    Jalan Indun Suri – Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
-                    Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795 • Pos-el: rsjkoehd@kepriprov.go.id Laman : www.rsudehd.kepriprov.go.id
-                </div>
-            </td>
-        </tr>
-    </table>
-    <div class="header-line"></div>
-
-    <div class="report-title">
-        <h3>{{ $report_title ?? 'LAPORAN REALISASI ANGGARAN ' . ($category === 'SEMUA' ? 'PENDAPATAN DAN BELANJA' : ($category === 'PENGELUARAN' ? 'BELANJA' : 'PENDAPATAN')) }}</h3>
-        <p>
+    <div class="title-container" style="text-align:center; margin-bottom: 25px;">
+        <div style="font-size: 11pt; text-transform: uppercase;">RSJKO ENGKU HAJI DAUD</div>
+        <div style="font-size: 13pt; font-weight: bold; text-decoration: underline; margin: 5px 0;">
+            {{ $report_title ?? 'LAPORAN REALISASI ANGGARAN (LRA)' }}
+        </div>
+        <div style="font-size: 11pt; font-weight: bold;">
             @if(isset($report_period))
                 {{ $report_period }}
             @else
-                Periode: {{ Carbon::parse($start)->translatedFormat('d F Y') }} s/d {{ Carbon::parse($end)->translatedFormat('d F Y') }}
+                PERIODE {{ Carbon::parse($start)->translatedFormat('d F Y') }} s.d {{ Carbon::parse($end)->translatedFormat('d F Y') }}
             @endif
-        </p>
+        </div>
     </div>
 
     @php
@@ -368,3 +352,8 @@
 </body>
 
 </html>
+
+
+
+
+

@@ -105,9 +105,9 @@
                         ? '<span class="badge badge-success" style="display:inline-flex; align-items:center; gap:4px; white-space:nowrap;"><i class="ph-bold ph-check-circle"></i> Diposting</span>'
                         : '<span class="badge badge-warning">Draft</span>';
 
-                    const canEdit = window.hasPermission('PENDAPATAN_BPJS_CREATE') || window.hasPermission('PENDAPATAN_BPJS_CRUD') || window.isAdmin;
-                    const canDelete = window.hasPermission('PENDAPATAN_BPJS_DELETE') || window.hasPermission('PENDAPATAN_BPJS_CRUD') || window.isAdmin;
-                    const canPost = window.hasPermission('PENDAPATAN_BPJS_POST') || window.isAdmin;
+                    const canEdit = window.hasPermission('PENDAPATAN_BPJS_MANAGE') || window.isAdmin;
+                    const canDelete = window.hasPermission('PENDAPATAN_BPJS_MANAGE') || window.isAdmin;
+                    const canPost = window.hasPermission('PENDAPATAN_BPJS_MANAGE') || window.isAdmin;
                     const isSelected = selectedMasterIds.includes(item.id);
 
                     html += `
@@ -178,7 +178,7 @@
 
     function renderPaginationMasterBpjs(meta) {
         const info = document.getElementById('paginationInfoMasterBpjs');
-        if (info) info.innerText = `Menampilkan ${meta.from || 0}–${meta.to || 0} dari ${meta.total || 0} data`;
+        if (info) info.innerText = `Menampilkan ${meta.from || 0}-${meta.to || 0} dari ${meta.total || 0} data`;
 
         const pageInfo = document.getElementById('pageInfoMasterBpjs');
         if (pageInfo) pageInfo.innerText = `${meta.current_page} / ${meta.last_page}`;
@@ -653,8 +653,8 @@
                     return;
                 }
 
-                const canEditDetail = (window.hasPermission('PENDAPATAN_BPJS_CREATE') || window.hasPermission('PENDAPATAN_BPJS_CRUD') || window.isAdmin) && !activeMasterPosted;
-                const canDeleteDetail = (window.hasPermission('PENDAPATAN_BPJS_DELETE') || window.hasPermission('PENDAPATAN_BPJS_CRUD') || window.isAdmin) && !activeMasterPosted;
+                const canEditDetail = (window.hasPermission('PENDAPATAN_BPJS_MANAGE') || window.isAdmin) && !activeMasterPosted;
+                const canDeleteDetail = (window.hasPermission('PENDAPATAN_BPJS_MANAGE') || window.isAdmin) && !activeMasterPosted;
 
                 let html = '';
                 data.forEach((item, index) => {
@@ -728,7 +728,7 @@
 
     function renderPaginationBpjs(meta) {
         const info = document.getElementById('paginationInfoBpjs');
-        if (info) info.innerText = `Menampilkan ${meta.from || 0}–${meta.to || 0} dari ${meta.total || 0} data`;
+        if (info) info.innerText = `Menampilkan ${meta.from || 0}-${meta.to || 0} dari ${meta.total || 0} data`;
         const pageInfo = document.getElementById('pageInfoBpjs');
         if (pageInfo) pageInfo.innerText = `${meta.current_page} / ${meta.last_page}`;
         const prev = document.getElementById('prevPageBpjs');
@@ -824,7 +824,7 @@
         isEditBpjs = true;
         editBpjsId = id;
         const title = document.querySelector('#pendapatanBpjsModal .modal-title');
-        if (title) title.innerText = '✏️ Edit Pendapatan BPJS';
+        if (title) title.innerText = 'Ã¢Å“Ã¯¸ Edit Pendapatan BPJS';
 
         const data = await fetch(`/dashboard/pendapatan/bpjs/${id}`, { headers: { Accept: 'application/json' } }).then(res => res.json());
 
@@ -1100,7 +1100,7 @@
         data.forEach(item => {
             const opt = document.createElement('option');
             opt.value = item.id;
-            opt.innerText = `${item[codeKey]} — ${item[nameKey]}`;
+            opt.innerText = `${item[codeKey]} - ${item[nameKey]}`;
             opt.dataset.nama = item.nama;
             select.appendChild(opt);
         });
@@ -1302,3 +1302,7 @@
     };
 
 })();
+
+
+
+

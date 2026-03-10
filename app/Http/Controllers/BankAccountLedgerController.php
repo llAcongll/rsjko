@@ -20,7 +20,7 @@ class BankAccountLedgerController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REK_KORAN_PENG_VIEW') || auth()->user()->isAdmin(), 403);
 
         $month = $request->get('month', date('n'));
         $year = $request->get('year', date('Y'));
@@ -92,7 +92,7 @@ class BankAccountLedgerController extends Controller
 
     public function deposit(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_CREATE') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REK_KORAN_PENG_IMPORT') || auth()->user()->isAdmin(), 403);
 
         $request->validate([
             'date' => 'required|date',
@@ -130,7 +130,7 @@ class BankAccountLedgerController extends Controller
 
     public function setSaldoAwal(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_CREATE') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REK_KORAN_PENG_IMPORT') || auth()->user()->isAdmin(), 403);
 
         $request->validate([
             'amount' => 'required|numeric|min:0',
@@ -181,7 +181,7 @@ class BankAccountLedgerController extends Controller
 
     public function deleteSaldoAwal(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_DELETE') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REK_KORAN_PENG_MANAGE') || auth()->user()->isAdmin(), 403);
         $request->validate([
             'bank' => 'required|string'
         ]);
@@ -201,7 +201,7 @@ class BankAccountLedgerController extends Controller
 
     public function updateDeposit(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_EDIT') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REK_KORAN_PENG_MANAGE') || auth()->user()->isAdmin(), 403);
 
         $request->validate([
             'date' => 'required|date',
@@ -244,7 +244,7 @@ class BankAccountLedgerController extends Controller
 
     public function destroyDeposit($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_DELETE') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REK_KORAN_PENG_MANAGE') || auth()->user()->isAdmin(), 403);
 
         $entry = BankAccountLedger::findOrFail($id);
         if ($entry->type !== 'DEPOSIT_MANUAL') {
@@ -262,7 +262,7 @@ class BankAccountLedgerController extends Controller
 
     public function adjustment(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_CREATE') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REK_KORAN_PENG_IMPORT') || auth()->user()->isAdmin(), 403);
 
         $request->validate([
             'date' => 'required|date',
@@ -310,7 +310,7 @@ class BankAccountLedgerController extends Controller
 
     public function updateAdjustment(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_EDIT') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REK_KORAN_PENG_MANAGE') || auth()->user()->isAdmin(), 403);
 
         $request->validate([
             'date' => 'required|date',
@@ -363,7 +363,7 @@ class BankAccountLedgerController extends Controller
 
     public function destroyAdjustment($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGELUARAN_RK_DELETE') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('REK_KORAN_PENG_MANAGE') || auth()->user()->isAdmin(), 403);
 
         $entry = BankAccountLedger::findOrFail($id);
         if ($entry->type !== 'PENYESUAIAN') {
@@ -379,3 +379,8 @@ class BankAccountLedgerController extends Controller
         return response()->json(['message' => 'Mutasi penyesuaian berhasil dihapus']);
     }
 }
+
+
+
+
+

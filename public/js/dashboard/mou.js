@@ -14,15 +14,15 @@ window.openMouForm = function (id = null, kode = '', nama = '') {
     const kodeEl = document.getElementById('mouKode');
     const namaEl = document.getElementById('mouNama');
 
-    titleEl.innerText = id ? '✏️ Edit MOU' : '🤝 Tambah MOU';
+    titleEl.innerText = id ? 'Ã¢Å“Ã¯¸ Edit MOU' : 'Ã°Å¸¤ Tambah MOU';
     namaEl.value = nama || '';
 
     if (id) {
-        // EDIT → kode tetap
+        // EDIT Ã¢â€ â€™ kode tetap
         kodeEl.value = kode;
         kodeEl.readOnly = true;
     } else {
-        // TAMBAH → auto-generate kode
+        // TAMBAH Ã¢â€ â€™ auto-generate kode
         kodeEl.value = '';
         kodeEl.readOnly = true;
 
@@ -97,7 +97,7 @@ window.submitMou = function () {
    LOAD DATA MOU
 ========================= */
 window.loadMouTable = function () {
-    console.log('🔥 loadMouTable DIPANGGIL');
+    console.log('Ã°Å¸â€¥ loadMouTable DIPANGGIL');
 
     fetch('/dashboard/mou-list', {
         headers: { 'Accept': 'application/json' }
@@ -256,7 +256,7 @@ function renderMouPage() {
 
     tbody.innerHTML = '';
 
-    const canCRUD = window.hasPermission('MASTER_CRUD');
+    const canCRUD = window.hasPermission('MASTER_MANAGE');
 
     pageData.forEach((r, i) => {
         const escapedNama = r.nama.replace(/'/g, "\\'");
@@ -323,9 +323,13 @@ function updatePaginationInfoMou(total) {
 
     pageInfo.innerText = `Halaman ${currentPageMou} / ${totalPage}`;
     mouInfo.innerText = total > 0
-        ? `Menampilkan ${start}–${end} dari ${total} data`
+        ? `Menampilkan ${start}-${end} dari ${total} data`
         : 'Tidak ada data';
 
     prevBtn.disabled = currentPageMou === 1;
     nextBtn.disabled = currentPageMou === totalPage;
 }
+
+
+
+

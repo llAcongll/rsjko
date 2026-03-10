@@ -8,7 +8,7 @@ let activeAnggaranTahun = null;
 let currentCategoryAnggaran = 'PENDAPATAN';
 
 /* =========================
-   INIT — called after AJAX content load
+   INIT - called after AJAX content load
 ========================= */
 // Note: No DOMContentLoaded needed. Initialization is done by
 // openAnggaranRekening() after loadContent() injects the HTML.
@@ -62,8 +62,8 @@ function renderAnggaranNode(node, level) {
   row.className = `anggaran-row ${isHeader ? 'header-node' : 'detail-node'}`;
   row.style.paddingLeft = (level * 24 + 16) + 'px';
 
-  const crudPerm = (currentCategoryAnggaran === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_CRUD' : 'KODE_REKENING_PENDAPATAN_CRUD';
-  const canCRUD = window.hasPermission(crudPerm) || window.hasPermission('KODE_REKENING_CRUD');
+  const crudPerm = (currentCategoryAnggaran === 'PENGELUARAN') ? 'KODE_REKENING_PENGELUARAN_MANAGE' : 'KODE_REKENING_PENDAPATAN_MANAGE';
+  const canCRUD = window.hasPermission(crudPerm) || window.hasPermission('KODE_REKENING_MANAGE');
 
   row.innerHTML = `
     <div class="col-kode">${node.kode}</div>
@@ -101,7 +101,7 @@ window.openAnggaranModal = function (id, nama) {
   document.getElementById('arKodeRekeningId').value = id;
   document.getElementById('arTahun').value = activeAnggaranTahun;
   if (document.getElementById('arTahunLabel')) document.getElementById('arTahunLabel').innerText = activeAnggaranTahun;
-  document.getElementById('anggaranModalTitle').innerText = `💰 Anggaran: ${nama}`;
+  document.getElementById('anggaranModalTitle').innerText = `Ã°Å¸â€™° Anggaran: ${nama}`;
   document.getElementById('rincianBody').innerHTML = '';
   document.getElementById('arNilai').value = 'Rp 0';
 
@@ -217,7 +217,7 @@ function csrfToken() {
 }
 
 /* =====================================================
-   MENU HANDLER – ANGGARAN PENDAPATAN
+   MENU HANDLER - ANGGARAN PENDAPATAN
    Uses loadContent() from app.js for proper AJAX loading
 ===================================================== */
 window.openAnggaranRekening = async function (category = 'PENDAPATAN', btn) {
@@ -241,4 +241,8 @@ window.openAnggaranRekening = async function (category = 'PENDAPATAN', btn) {
     loadAnggaran(tahun, category);
   }
 };
+
+
+
+
 

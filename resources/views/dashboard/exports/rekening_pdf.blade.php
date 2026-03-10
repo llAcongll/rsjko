@@ -74,7 +74,7 @@
             <h2 style="margin: 0; padding: 0; font-size: 16pt; font-weight: bold; color: #000; line-height: 1.2;">
                 ENGKU HAJI DAUD</h2>
             <div style="line-height: 1.4; margin-top: 5px; font-size: 9pt; font-weight: normal; color: #000;">
-                Jalan Indun Suri – Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
+                Jalan Indun Suri - Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
                 Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795<br>
                 Pos-el: rsjkoehd@kepriprov.go.id Laman : www.rsudehd.kepriprov.go.id
             </div>
@@ -173,3 +173,8 @@
 </body>
 
 </html>
+
+
+
+
+

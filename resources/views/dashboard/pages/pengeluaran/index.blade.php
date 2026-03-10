@@ -322,7 +322,7 @@
             </table>
         </div>
         <div class="flex justify-between items-center mt-4">
-            <p id="paginationInfoPengeluaran" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0
+            <p id="paginationInfoPengeluaran" class="text-slate-500" style="font-size: 13px;">Menampilkan 0-0
                 dari 0
                 data</p>
 
@@ -342,3 +342,8 @@
         initPengeluaran('{{ $param }}');
     }
 </script>
+
+
+
+
+

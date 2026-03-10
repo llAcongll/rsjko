@@ -5,7 +5,7 @@
       <p>Kelola daftar Master Ruangan di rumah sakit</p>
     </div>
 
-    @if(auth()->user()->hasPermission('MASTER_CRUD'))
+    @if(auth()->user()->hasPermission('MASTER_MANAGE'))
       <div class="page-header-right">
         <button class="btn-tambah-data" onclick="openRuanganForm()">
           <i class="ph-bold ph-plus"></i>
@@ -52,3 +52,8 @@
   </div>
 
 </div>
+
+
+
+
+

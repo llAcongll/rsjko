@@ -11,7 +11,7 @@ class PerusahaanController extends Controller
 {
     public function index()
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_PERUSAHAAN_VIEW') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PERUSAHAAN_VIEW'), 403);
 
         return view('dashboard.pages.perusahaan');
     }
@@ -20,7 +20,7 @@ class PerusahaanController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_PERUSAHAAN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PERUSAHAAN_MANAGE'), 403);
 
         $request->validate([
             'nama' => 'required|string|max:100',
@@ -36,7 +36,7 @@ class PerusahaanController extends Controller
 
     public function update(Request $request, Perusahaan $perusahaan)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_PERUSAHAAN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PERUSAHAAN_MANAGE'), 403);
 
         $perusahaan->update(
             $request->validate([
@@ -49,7 +49,7 @@ class PerusahaanController extends Controller
 
     public function destroy(Perusahaan $perusahaan)
     {
-        abort_unless(auth()->user()->hasPermission('MASTER_PERUSAHAAN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PERUSAHAAN_MANAGE'), 403);
 
         $perusahaan->delete();
 
@@ -88,3 +88,8 @@ class PerusahaanController extends Controller
         return 'PRS' . str_pad($num + 1, 3, '0', STR_PAD_LEFT);
     }
 }
+
+
+
+
+

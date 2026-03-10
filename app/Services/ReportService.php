@@ -368,106 +368,286 @@ class ReportService
     /**
      * Get Rekon (Rekonsiliasi Bank vs Pendapatan)
      */
-    public function getRekonData($tahun)
+    /**
+     * Get Rekon (Rekonsiliasi Bank vs Pendapatan) - New Implementation based on Blueprint
+     */
+    public function getRekonData($start = null, $end = null, $tahun = null)
     {
-        $rekKoran = DB::table('rekening_korans')
+        if (!$tahun)
+            $tahun = session('tahun_anggaran', date('Y'));
+
+        $queryRm = DB::table('revenue_masters as rm')
+            ->leftJoin(DB::raw("(
+                SELECT 
+                    revenue_master_id, 
+                    SUM(jumlah) as total_bank,
+                    GROUP_CONCAT(tanggal) as bank_dates,
+                    GROUP_CONCAT(bank) as bank_names,
+                    GROUP_CONCAT(keterangan) as bank_remarks
+                FROM rekening_korans 
+                WHERE cd = 'C' 
+                GROUP BY revenue_master_id
+            ) as rk"), 'rm.id', '=', 'rk.revenue_master_id')
+            ->where('rm.tahun', $tahun)
+            ->where('rm.is_posted', 1);
+
+        if ($start)
+            $queryRm->where('rm.tanggal', '>=', $start);
+        if ($end)
+            $queryRm->where('rm.tanggal', '<=', $end);
+
+        $rmWithRk = $queryRm->select(
+            'rm.id',
+            'rm.tanggal as tgl_pendapatan',
+            'rm.total_all as total_pendapatan',
+            'rm.kategori',
+            'rk.total_bank',
+            'rk.bank_dates',
+            'rk.bank_names',
+            'rk.bank_remarks'
+        )
+            ->orderBy('rm.tanggal', 'asc')
+            ->get();
+
+        // 2. Ambil Rekening Koran yang belum memiliki revenue_master_id (BELUM DICATAT)
+        $queryOrphan = DB::table('rekening_korans')
             ->where('tahun', $tahun)
             ->where('cd', 'C')
-            ->select(DB::raw('MONTH(tanggal) as bulan'), DB::raw('SUM(jumlah) as total'))
+            ->whereNull('revenue_master_id');
+
+        if ($start)
+            $queryOrphan->where('tanggal', '>=', $start);
+        if ($end)
+            $queryOrphan->where('tanggal', '<=', $end);
+
+        $orphanedRk = $queryOrphan->orderBy('tanggal', 'asc')->get();
+
+        // 3. Ambil data penyesuaian
+        $queryDed = DB::table('penyesuaian_pendapatans')
+            ->where('tahun', $tahun);
+
+        if ($start)
+            $queryDed->where('tanggal', '>=', $start);
+        if ($end)
+            $queryDed->where('tanggal', '<=', $end);
+
+        $deductionsRaw = $queryDed->select(
+            DB::raw('MONTH(tanggal) as bulan'),
+            DB::raw('SUM(IFNULL(potongan, 0)) as total_potongan'),
+            DB::raw('SUM(IFNULL(administrasi_bank, 0)) as total_adm')
+        )
             ->groupBy('bulan')
-            ->get()
-            ->pluck('total', 'bulan');
+            ->get();
 
-        $tables = ['pendapatan_umum', 'pendapatan_bpjs', 'pendapatan_jaminan', 'pendapatan_kerjasama', 'pendapatan_lain'];
-        $revenues = [];
-        foreach ($tables as $table) {
-            $data = $this->getActiveRevenueQuery($table)
-                ->where('tahun', $tahun)
-                ->select(DB::raw('MONTH(tanggal) as bulan'), DB::raw('SUM(total) as total'))
-                ->groupBy('bulan')
-                ->get();
-            foreach ($data as $d) {
-                $revenues[$d->bulan] = ($revenues[$d->bulan] ?? 0) + $d->total;
-            }
-        }
+        $deductions = $deductionsRaw->keyBy('bulan');
 
-        $deductions = DB::table('penyesuaian_pendapatans')
-            ->where('tahun', $tahun)
-            ->select(DB::raw('MONTH(tanggal) as bulan'), DB::raw('SUM(IFNULL(potongan, 0) + IFNULL(administrasi_bank, 0)) as total_ded'))
-            ->groupBy('bulan')
-            ->get()
-            ->pluck('total_ded', 'bulan');
+        // 4. Proses Klasifikasi Status
+        $analysis = $rmWithRk->map(function ($item) {
+            $bankTotal = (float) ($item->total_bank ?? 0);
+            $pendTotal = (float) $item->total_pendapatan;
+            $diff = $bankTotal - $pendTotal;
 
-        foreach ($deductions as $bulan => $totalDed) {
-            $revenues[$bulan] = ($revenues[$bulan] ?? 0) - $totalDed;
-        }
+            $status = 'MATCH';
+            $remarks = '';
 
-        $rekonData = [];
-        $namaBulan = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'];
-
-        for ($i = 1; $i <= 12; $i++) {
-            $bank = (float) ($rekKoran[$i] ?? 0);
-            $pend = (float) ($revenues[$i] ?? 0);
-            $diff = $bank - $pend;
-
-            $keterangan = 'Data Cocok (Match)';
-            if (abs($diff) > 0.1) {
-                // Find transactions from bank that don't have a matching record in income modules
-                $tables = ['pendapatan_umum', 'pendapatan_bpjs', 'pendapatan_jaminan', 'pendapatan_kerjasama', 'pendapatan_lain'];
-
-                $unmatchedTransactions = [];
-                $bankRecords = DB::table('rekening_korans')
-                    ->whereYear('tanggal', $tahun)
-                    ->whereMonth('tanggal', $i)
-                    ->where('cd', 'C')
-                    ->orderBy('tanggal', 'asc')
-                    ->get();
-
-                foreach ($bankRecords as $bankItem) {
-                    $hasMatch = false;
-                    foreach ($tables as $table) {
-                        if ($this->getActiveRevenueQuery($table)->where('tanggal', $bankItem->tanggal)->where('total', $bankItem->jumlah)->exists()) {
-                            $hasMatch = true;
-                            break;
-                        }
-                    }
-
-                    if (!$hasMatch) {
-                        $bankName = ($bankItem->bank == 'Bank Riau Kepri Syariah' || $bankItem->bank == 'BRK') ? 'BRK' : (($bankItem->bank == 'Bank Syariah Indonesia' || $bankItem->bank == 'BSI') ? 'BSI' : $bankItem->bank);
-                        $tgl = \Carbon\Carbon::parse($bankItem->tanggal)->format('d/m');
-                        // Clean up description: remove common noise or keep first 50 chars
-                        $rawDesc = $bankItem->keterangan;
-                        $desc = (strlen($rawDesc) > 40) ? substr($rawDesc, 0, 37) . '...' : $rawDesc;
-
-                        $unmatchedTransactions[] = "{$bankName} {$tgl} [Rp " . number_format($bankItem->jumlah, 0, ',', '.') . "] - {$desc}";
-                        if (count($unmatchedTransactions) >= 3)
-                            break;
+            if (!$item->total_bank) {
+                $status = 'BELUM DISETOR';
+                $remarks = 'Master pendapatan ada, mutasi bank tidak ditemukan';
+            } else {
+                // Check for Delay Setoran (beda bulan)
+                $bankDatesArray = explode(',', $item->bank_dates);
+                $isDelay = false;
+                foreach ($bankDatesArray as $bd) {
+                    if (Carbon::parse($bd)->format('m') != Carbon::parse($item->tgl_pendapatan)->format('m')) {
+                        $isDelay = true;
+                        break;
                     }
                 }
 
-                if (!empty($unmatchedTransactions)) {
-                    $keterangan = "Belum Tercatat:<br>";
-                    foreach ($unmatchedTransactions as $ut) {
-                        $keterangan .= "• {$ut}<br>";
-                    }
-                    if (count($unmatchedTransactions) >= 3) {
-                        $keterangan .= "...";
-                    }
-                } else {
-                    $keterangan = "Sisa selisih harian:<br>Rp " . number_format(abs($diff), 0, ',', '.');
+                if ($isDelay) {
+                    $status = 'DELAY SETORAN';
+                    $remarks = 'Setoran masuk ke bank di bulan berbeda';
+                } elseif (abs($diff) > 0.01) {
+                    $status = 'SELISIH NOMINAL';
+                    $remarks = 'Selisih Rp ' . number_format(abs($diff), 0, ',', '.');
                 }
             }
 
-            $rekonData[] = (object) [
-                'tanggal' => $namaBulan[$i],
-                'bank' => $bank,
-                'pendapatan' => $pend,
+            return (object) [
+                'id' => $item->id,
+                'tanggal' => $item->tgl_pendapatan,
+                'kategori' => $item->kategori,
+                'nominal' => $item->total_pendapatan,
+                'bank' => $bankTotal,
                 'selisih' => $diff,
-                'keterangan' => $keterangan
+                'status' => $status,
+                'keterangan' => $remarks
+            ];
+        });
+
+        // Tambahkan orphaned RK ke analisis
+        foreach ($orphanedRk as $rk) {
+            $analysis->push((object) [
+                'id' => null,
+                'tanggal' => $rk->tanggal,
+                'kategori' => 'BANK',
+                'nominal' => 0,
+                'bank' => (float) $rk->jumlah,
+                'selisih' => (float) $rk->jumlah,
+                'status' => 'BELUM DICATAT',
+                'keterangan' => "Mutasi {$rk->bank}: {$rk->keterangan}"
+            ]);
+        }
+
+        // 5. Rekap Bulanan
+        $namaBulan = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'];
+        $monthlyRecap = [];
+        $monthsInPeriod = [];
+        if ($start && $end) {
+            $s = Carbon::parse($start);
+            $e = Carbon::parse($end);
+            while ($s <= $e) {
+                $monthsInPeriod[] = $s->month;
+                $s->addMonth();
+            }
+            $monthsInPeriod = array_unique($monthsInPeriod);
+        } else {
+            $monthsInPeriod = range(1, 12);
+        }
+
+        foreach ($monthsInPeriod as $i) {
+            $monthData = $analysis->filter(function ($item) use ($i) {
+                return Carbon::parse($item->tanggal)->month == $i;
+            });
+
+            $pot = (float) ($deductions->get($i)->total_potongan ?? 0);
+            $adm = (float) ($deductions->get($i)->total_adm ?? 0);
+
+            $bankTotal = $monthData->sum('bank');
+            $pendModul = $monthData->sum('nominal');
+            $netto = $pendModul - ($pot + $adm);
+            $selisih = $bankTotal - $netto;
+
+            $monthlyRecap[] = (object) [
+                'bulan' => $namaBulan[$i],
+                'bank' => $bankTotal,
+                'pendapatan_modul' => $pendModul,
+                'penyesuaian' => $pot + $adm,
+                'netto' => $netto,
+                'selisih' => $selisih
             ];
         }
 
-        return $rekonData;
+        // 6. Section B - Data Rekening Koran (Saldo Akhir per Bank)
+        $banks = ['Bank Syariah Indonesia', 'Bank Riau Kepri Syariah'];
+        $bankMetadata = [
+            'Bank Syariah Indonesia' => [
+                'display' => 'BANK BSI',
+                'nama' => 'RSJKO EHD ENGKU HAJI DAUD',
+                'rek' => '7030374937'
+            ],
+            'Bank Riau Kepri Syariah' => [
+                'display' => 'BANK RIAU KEPRI SYARIAH',
+                'nama' => 'RSJKO EHD PENERIMAAN BLUD',
+                'rek' => '1460101234'
+            ],
+        ];
+
+        $sectionB = [];
+        foreach ($banks as $b) {
+            $qSaldo = DB::table('rekening_korans')
+                ->where('bank', $b)
+                ->where('tahun', $tahun);
+
+            if ($end)
+                $qSaldo->where('tanggal', '<=', $end);
+
+            $items = $qSaldo->orderBy('tanggal', 'asc')->orderBy('id', 'asc')->get();
+            $balance = 0;
+            foreach ($items as $it) {
+                if ($it->cd === 'C')
+                    $balance += $it->jumlah;
+                else
+                    $balance -= $it->jumlah;
+            }
+
+            $sectionB[] = (object) [
+                'bank' => $bankMetadata[$b]['display'],
+                'nama_rekening' => $bankMetadata[$b]['nama'],
+                'no_rekening' => $bankMetadata[$b]['rek'],
+                'saldo_akhir' => $balance
+            ];
+        }
+
+        // 6. Komponen Pendapatan Detail (Agregat per Tahun)
+        $components = $this->getRekonComponents($tahun);
+
+        $romans = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV'];
+        $label = 'TAHUNAN';
+        if ($start && $end) {
+            $dtStart = Carbon::parse($start);
+            $dtEnd = Carbon::parse($end);
+
+            if ($dtStart->month == $dtEnd->month) {
+                $label = 'BULAN ' . strtoupper($namaBulan[$dtStart->month]);
+            } elseif ($dtStart->month == 1 && $dtEnd->month == 3) {
+                $label = 'TRIWULAN I';
+            } elseif ($dtStart->month == 4 && $dtEnd->month == 6) {
+                $label = 'TRIWULAN II';
+            } elseif ($dtStart->month == 7 && $dtEnd->month == 9) {
+                $label = 'TRIWULAN III';
+            } elseif ($dtStart->month == 10 && $dtEnd->month == 12) {
+                $label = 'TRIWULAN IV';
+            } elseif ($dtStart->month == 1 && $dtEnd->month == 6) {
+                $label = 'SEMESTER I';
+            } elseif ($dtStart->month == 7 && $dtEnd->month == 12) {
+                $label = 'SEMESTER II';
+            }
+        }
+
+        return [
+            'recap' => $monthlyRecap,
+            'analysis' => $analysis->sortBy('tanggal')->values(),
+            'section_b' => $sectionB,
+            'period' => [
+                'start' => $start,
+                'end' => $end,
+                'tahun' => $tahun,
+                'label' => $label
+            ]
+        ];
+    }
+
+    private function getRekonComponents($tahun)
+    {
+        $tables = [
+            'UMUM' => 'pendapatan_umum',
+            'BPJS' => 'pendapatan_bpjs',
+            'JAMINAN' => 'pendapatan_jaminan',
+            'KERJASAMA' => 'pendapatan_kerjasama',
+            'LAIN' => 'pendapatan_lain'
+        ];
+
+        $results = [];
+        foreach ($tables as $key => $table) {
+            $total = $this->getActiveRevenueQuery($table)
+                ->where('tahun', $tahun)
+                ->sum('total');
+            $results["Pendapatan $key"] = (float) $total;
+        }
+
+        $ded = DB::table('penyesuaian_pendapatans')
+            ->where('tahun', $tahun)
+            ->selectRaw('SUM(potongan) as pot, SUM(administrasi_bank) as adm')
+            ->first();
+
+        $results['Potongan'] = (float) ($ded->pot ?? 0);
+        $results['Administrasi Bank'] = (float) ($ded->adm ?? 0);
+
+        $netto = array_sum(array_slice($results, 0, 5)) - ($results['Potongan'] + $results['Administrasi Bank']);
+        $results['Pendapatan Netto'] = $netto;
+
+        return $results;
     }
 
     /**
@@ -686,7 +866,8 @@ class ReportService
                 'realisasi_lalu' => $totalRealLalu,
                 'realisasi_kini' => $totalRealKini,
                 'realisasi_total' => $totalRealTotal,
-                'persen' => $totalTarget != 0 ? round(($totalRealTotal / abs($totalTarget)) * 100, 2) : 0
+                'persen' => $totalTarget != 0 ? round(($totalRealTotal / abs($totalTarget)) * 100, 2) : 0,
+                'persen_kini' => $totalTarget != 0 ? round(($totalRealKini / abs($totalTarget)) * 100, 2) : 0
             ]
         ];
 
@@ -697,14 +878,16 @@ class ReportService
                     'real' => $pendTotals['real'],
                     'real_lalu' => $pendTotals['lalu'],
                     'real_kini' => $pendTotals['kini'],
-                    'persen' => $pendTotals['target'] > 0 ? round(($pendTotals['real'] / $pendTotals['target']) * 100, 2) : 0
+                    'persen' => $pendTotals['target'] > 0 ? round(($pendTotals['real'] / $pendTotals['target']) * 100, 2) : 0,
+                    'persen_kini' => $pendTotals['target'] > 0 ? round(($pendTotals['kini'] / $pendTotals['target']) * 100, 2) : 0
                 ],
                 'pengeluaran' => [
                     'target' => $pengTotals['target'],
                     'real' => $pengTotals['real'],
                     'real_lalu' => $pengTotals['lalu'],
                     'real_kini' => $pengTotals['kini'],
-                    'persen' => $pengTotals['target'] > 0 ? round(($pengTotals['real'] / $pengTotals['target']) * 100, 2) : 0
+                    'persen' => $pengTotals['target'] > 0 ? round(($pengTotals['real'] / $pengTotals['target']) * 100, 2) : 0,
+                    'persen_kini' => $pengTotals['target'] > 0 ? round(($pengTotals['kini'] / $pengTotals['target']) * 100, 2) : 0
                 ]
             ];
             $res['data_pendapatan'] = array_values(array_filter($report, fn($item) => $item['category'] === 'PENDAPATAN'));
@@ -734,6 +917,15 @@ class ReportService
                     $realLalu = DB::table('expenditures')->where('kode_rekening_id', $node->id)->whereBetween('spending_date', [$startOfYear, $prevEnd])->sum('gross_value');
                 $realKini = DB::table('expenditures')->where('kode_rekening_id', $node->id)->whereBetween('spending_date', [$start, $end])->sum('gross_value');
                 $realTotal = $realLalu + $realKini;
+            }
+
+            if ($realKini > 0) {
+                \Log::info('LRA Realisasi Filter', [
+                    'node' => $node->nama,
+                    'start' => $start,
+                    'end' => $end,
+                    'realisasiKini' => $realKini
+                ]);
             }
         } else {
             foreach ($node->children as $child) {
@@ -1006,7 +1198,7 @@ class ReportService
                 if (str_starts_with($item->type, 'AJU_') || $item->type === 'PENYESUAIAN_SP2D') {
                     $item->sp2d_penerimaan = (float) $item->debit;
                 } elseif (in_array($item->type, ['TERIMA_UP', 'GU', 'UP', 'LS_RECEIPT', 'LS_IN', 'DEPOSIT_LS', 'ACTIVITY_LS'])) {
-                    // Legacy types or LS — all SP2D-related inflows
+                    // Legacy types or LS - all SP2D-related inflows
                     $item->sp2d_penerimaan = (float) $item->debit;
                 } elseif (in_array($item->type, ['TRANSFER_PENERIMAAN', 'SISA_KAS'])) {
                     $item->transfer_penerimaan = (float) $item->debit;
@@ -1064,6 +1256,11 @@ class ReportService
             ->where('date', '<=', $endDate)
             ->sum('credit');
 
+        // Get Income-specific summary data (Penerimaan Tunai & Setoran)
+        $incomeService = app(\App\Services\IncomeCashBookService::class);
+        $incomeData = $incomeService->getLedgerData((int) $year, $month ? (int) $month : null);
+        $incomeSummary = $incomeData['summary'];
+
         return [
             'data' => $data,
             'opening_balance' => $openingSaldoDana + $openingBank,
@@ -1079,7 +1276,13 @@ class ReportService
                 'final_bank_brk' => $finalBankBrk,
                 'final_bank_bsi' => $finalBankBsi,
                 'final_tunai' => $finalSaldoDana,
-                'final_balance' => $finalBku
+                'final_balance' => $finalBku,
+                // Add Income Summary
+                'income_receipts' => $incomeSummary['cumulative_penerimaan'],
+                'income_deposits' => $incomeSummary['cumulative_pengeluaran'],
+                'income_final_saldo' => $incomeSummary['final_saldo'],
+                'income_bank_brk' => $incomeSummary['bank_brk'],
+                'income_bank_bsi' => $incomeSummary['bank_bsi'],
             ],
             'period' => $month ? \Carbon\Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y') : $year
         ];
@@ -1103,4 +1306,155 @@ class ReportService
                 ->where('revenue_masters.is_posted', true);
         });
     }
+
+    public function getDetailedRevenueByType($start, $end, $tahun)
+    {
+        // 1. PENERIMAAN PASIEN TUNAI
+        $tunai = $this->getActiveRevenueQuery('pendapatan_umum')
+            ->join('ruangans', 'pendapatan_umum.ruangan_id', '=', 'ruangans.id')
+            ->whereBetween('tanggal', [$start, $end])
+            ->where('tahun', $tahun)
+            ->where('metode_pembayaran', 'TUNAI')
+            ->select('ruangans.nama as unit', DB::raw('COUNT(*) as count, SUM(total) as total'))
+            ->groupBy('ruangans.nama')
+            ->get();
+
+        // 2. PENERIMAAN PASIEN NON TUNAI
+        $nonTunai = $this->getActiveRevenueQuery('pendapatan_umum')
+            ->join('ruangans', 'pendapatan_umum.ruangan_id', '=', 'ruangans.id')
+            ->whereBetween('tanggal', [$start, $end])
+            ->where('tahun', $tahun)
+            ->where('metode_pembayaran', 'NON_TUNAI')
+            ->select(
+                'ruangans.nama as unit',
+                DB::raw("COUNT(CASE WHEN metode_detail = 'QRIS' THEN 1 END) as pasien_qris"),
+                DB::raw("COUNT(CASE WHEN metode_detail != 'QRIS' THEN 1 END) as pasien_transfer"),
+                DB::raw('COUNT(*) as total_pasien'),
+                DB::raw("SUM(IF(metode_detail = 'QRIS', total, 0)) as qris_amount"),
+                DB::raw("SUM(IF(metode_detail != 'QRIS', total, 0)) as transfer_amount"),
+                DB::raw('SUM(total) as total_amount')
+            )
+            ->groupBy('ruangans.nama')
+            ->get();
+
+        // 3. PENERIMAAN PASIEN BPJS KESEHATAN
+        $bpjsRaw = $this->getActiveRevenueQuery('pendapatan_bpjs')
+            ->join('ruangans', 'pendapatan_bpjs.ruangan_id', '=', 'ruangans.id')
+            ->whereBetween('tanggal', [$start, $end])
+            ->where('tahun', $tahun)
+            ->select('ruangans.nama as unit', DB::raw('COUNT(*) as count, SUM(total) as total'))
+            ->groupBy('ruangans.nama')
+            ->get();
+
+        $bpjsDeductions = DB::table('penyesuaian_pendapatans')
+            ->whereBetween('tanggal', [$start, $end])
+            ->where('tahun', $tahun)
+            ->where('kategori', 'BPJS')
+            ->select(
+                DB::raw('SUM(IFNULL(potongan, 0)) as vpk'),
+                DB::raw('SUM(IFNULL(administrasi_bank, 0)) as adm')
+            )
+            ->first();
+
+        // 4. PENERIMAAN PASIEN JAMINAN (Asuransi/Perusahaan)
+        $jaminan = $this->getActiveRevenueQuery('pendapatan_jaminan')
+            ->join('ruangans', 'pendapatan_jaminan.ruangan_id', '=', 'ruangans.id')
+            ->whereBetween('tanggal', [$start, $end])
+            ->where('tahun', $tahun)
+            ->select('transaksi as penjamin', 'ruangans.nama as unit', DB::raw('COUNT(*) as count, SUM(total) as total'))
+            ->groupBy('transaksi', 'ruangans.nama')
+            ->get();
+
+        // 5. PENERIMAAN KERJA SAMA
+        $kerjasama = $this->getActiveRevenueQuery('pendapatan_kerjasama')
+            ->whereBetween('tanggal', [$start, $end])
+            ->where('tahun', $tahun)
+            ->select('transaksi as instansi', DB::raw('COUNT(*) as count, SUM(total) as total'))
+            ->groupBy('transaksi')
+            ->get();
+
+        // 6. PENERIMAAN LAIN-LAIN
+        $lain = $this->getActiveRevenueQuery('pendapatan_lain')
+            ->whereBetween('tanggal', [$start, $end])
+            ->where('tahun', $tahun)
+            ->select('transaksi as keterangan', DB::raw('COUNT(*) as count, SUM(total) as total'))
+            ->groupBy('transaksi')
+            ->get();
+
+        // SUMMARY PER UNIT (All sources)
+        $units = DB::table('ruangans')->select('id', 'nama')->get();
+        $unitSummary = [];
+        foreach ($units as $u) {
+            $sum = 0;
+            $count = 0;
+            $tables = ['pendapatan_umum', 'pendapatan_bpjs', 'pendapatan_jaminan', 'pendapatan_kerjasama', 'pendapatan_lain'];
+            foreach ($tables as $tbl) {
+                $q = $this->getActiveRevenueQuery($tbl)
+                    ->where('ruangan_id', $u->id)
+                    ->whereBetween('tanggal', [$start, $end])
+                    ->where('tahun', $tahun);
+
+                $sum += $q->sum('total');
+                $count += $q->count();
+            }
+            if ($sum > 0) {
+                $unitSummary[] = ['unit' => $u->nama, 'count' => $count, 'total' => $sum];
+            }
+        }
+
+        // SUMMARY PER BANK
+        $brkTotal = 0;
+        $bsiTotal = 0;
+        $brkCount = 0;
+        $bsiCount = 0;
+        $tables = ['pendapatan_umum', 'pendapatan_bpjs', 'pendapatan_jaminan', 'pendapatan_kerjasama', 'pendapatan_lain'];
+
+        foreach ($tables as $tbl) {
+            // BRK
+            $qBrk = $this->getActiveRevenueQuery($tbl)
+                ->whereBetween('tanggal', [$start, $end])
+                ->where('tahun', $tahun)
+                ->where(function ($q) {
+                    $q->where('metode_pembayaran', 'TUNAI')
+                        ->orWhereIn('bank', ['BRK', 'Bank Riau Kepri Syariah']);
+                });
+            $brkTotal += $qBrk->sum('total');
+            $brkCount += $qBrk->count();
+
+            // BSI
+            $qBsi = $this->getActiveRevenueQuery($tbl)
+                ->whereBetween('tanggal', [$start, $end])
+                ->where('tahun', $tahun)
+                ->whereIn('bank', ['BSI', 'Bank Syariah Indonesia']);
+            $bsiTotal += $qBsi->sum('total');
+            $bsiCount += $qBsi->count();
+        }
+
+        // Subtract deductions from BRK
+        $totalDed = ($bpjsDeductions->vpk ?? 0) + ($bpjsDeductions->adm ?? 0);
+        $brkTotal -= $totalDed;
+
+        return [
+            'tunai' => $tunai,
+            'non_tunai' => $nonTunai,
+            'bpjs' => [
+                'data' => $bpjsRaw,
+                'deductions' => $bpjsDeductions
+            ],
+            'jaminan' => $jaminan,
+            'kerjasama' => $kerjasama,
+            'lain' => $lain,
+            'unit_summary' => $unitSummary,
+            'bank_summary' => [
+                ['bank' => 'BANK RIAU KEPRI SYARIAH', 'count' => $brkCount, 'total' => $brkTotal],
+                ['bank' => 'BANK SYARIAH INDONESIA (BSI)', 'count' => $bsiCount, 'total' => $bsiTotal],
+            ]
+        ];
+    }
+
 }
+
+
+
+
+

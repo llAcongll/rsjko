@@ -188,7 +188,7 @@ $report .= "Generated on: " . date('Y-m-d H:i:s') . "\n";
 $report .= "Mode: " . ($isFixMode ? "Auto-Fix & Repair" : "Audit Only (No Changes Made)") . "\n\n";
 
 if (empty($results)) {
-    $report .= "✅ **All systems go!** No table inconsistencies detected across the application.\n";
+    $report .= "Ã¢Å“â€¦ **All systems go!** No table inconsistencies detected across the application.\n";
 } else {
     $report .= "| File | Issues Found / Resolved | Status |\n";
     $report .= "| :--- | :--- | :--- |\n";
@@ -209,3 +209,8 @@ if (!is_dir($artifactDir)) {
 
 file_put_contents($reportFile, $report);
 echo "Audit complete. Processed " . count($files) . " files.\nFound " . count($results) . " files with issues.\nReport saved to: $reportFile\n";
+
+
+
+
+

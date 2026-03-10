@@ -509,6 +509,355 @@
         </tbody>
     </table>
 
+    <!-- ADDITIVE SECTIONS -->
+    <!-- 1. TUNAI -->
+    <div class="section-title" style="background-color: #fbbf24; color: #000;">1. PENERIMAAN PASIEN TUNAI</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 5%;">NO</th>
+                <th style="width: 50%;">UNIT</th>
+                <th style="width: 15%;">TOTAL PASIEN</th>
+                <th style="width: 30%;">JUMLAH (RP)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $stTotal = 0; $stCount = 0; @endphp
+            @foreach($additive_report['tunai'] as $idx => $item)
+                @php $stTotal += $item->total; $stCount += $item->count; @endphp
+                <tr>
+                    <td class="text-center">{{ $idx + 1 }}</td>
+                    <td>{{ $item->unit }}</td>
+                    <td class="text-center">{{ $item->count }}</td>
+                    <td class="text-right">
+                        <div class="currency-box">
+                            <span class="currency-symbol">Rp</span>
+                            <span class="currency-value">{{ number_format($item->total, 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                </tr>
+            @endforeach
+            <tr class="total-row">
+                <td colspan="2" class="text-center">TOTAL PENERIMAAN PASIEN TUNAI</td>
+                <td class="text-center">{{ $stCount }}</td>
+                <td class="text-right">
+                    <div class="currency-box">
+                        <span class="currency-symbol">Rp</span>
+                        <span class="currency-value">{{ number_format($stTotal, 2, ',', '.') }}</span>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 2. NON TUNAI -->
+    <div class="section-title" style="background-color: #fbbf24; color: #000;">2. PENERIMAAN PASIEN NON TUNAI</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 5%;">NO</th>
+                <th style="width: 25%;">UNIT</th>
+                <th style="width: 10%;">PSN QRIS</th>
+                <th style="width: 10%;">PSN TRF</th>
+                <th style="width: 10%;">TOT PSN</th>
+                <th style="width: 13%;">QRIS (RP)</th>
+                <th style="width: 13%;">TRF (RP)</th>
+                <th style="width: 14%;">TOTAL (RP)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php 
+                $sntQris = 0; $sntTrans = 0; $sntTotal = 0; 
+                $sntPQris = 0; $sntPTrans = 0; $sntPAll = 0; 
+            @endphp
+            @foreach($additive_report['non_tunai'] as $idx => $item)
+                @php 
+                    $sntQris += $item->qris_amount; 
+                    $sntTrans += $item->transfer_amount; 
+                    $sntTotal += $item->total_amount; 
+                    $sntPQris += $item->pasien_qris;
+                    $sntPTrans += $item->pasien_transfer;
+                    $sntPAll += $item->total_pasien;
+                @endphp
+                <tr>
+                    <td class="text-center">{{ $idx + 1 }}</td>
+                    <td>{{ $item->unit }}</td>
+                    <td class="text-center">{{ $item->pasien_qris }}</td>
+                    <td class="text-center">{{ $item->pasien_transfer }}</td>
+                    <td class="text-center">{{ $item->total_pasien }}</td>
+                    <td class="text-right">{{ number_format($item->qris_amount, 2, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($item->transfer_amount, 2, ',', '.') }}</td>
+                    <td class="text-right font-bold">{{ number_format($item->total_amount, 2, ',', '.') }}</td>
+                </tr>
+            @endforeach
+            <tr class="total-row">
+                <td colspan="2" class="text-center">TOTAL PENERIMAAN PASIEN NON TUNAI</td>
+                <td class="text-center">{{ $sntPQris }}</td>
+                <td class="text-center">{{ $sntPTrans }}</td>
+                <td class="text-center">{{ $sntPAll }}</td>
+                <td class="text-right">{{ number_format($sntQris, 2, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($sntTrans, 2, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($sntTotal, 2, ',', '.') }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 3. BPJS -->
+    <div class="section-title" style="background-color: #fbbf24; color: #000;">3. PENERIMAAN PASIEN BPJS KESEHATAN</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 5%;">NO</th>
+                <th style="width: 20%;">UNIT</th>
+                <th style="width: 10%;">TOTAL PASIEN</th>
+                <th style="width: 17%;">BPJS (GROSS)</th>
+                <th style="width: 16%;">VPK / POTONGAN</th>
+                <th style="width: 16%;">ADM BANK</th>
+                <th style="width: 16%;">JUMLAH (NET)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $sbpTotal = 0; $sbpCount = 0; @endphp
+            @foreach($additive_report['bpjs']['data'] as $idx => $item)
+                @php $sbpTotal += $item->total; $sbpCount += $item->count; @endphp
+                <tr>
+                    <td class="text-center">{{ $idx + 1 }}</td>
+                    <td>{{ $item->unit }}</td>
+                    <td class="text-center">{{ $item->count }}</td>
+                    <td class="text-right">
+                         <div class="currency-box">
+                            <span class="currency-symbol">Rp</span>
+                            <span class="currency-value">{{ number_format($item->total, 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                    <td class="text-right">0,00</td>
+                    <td class="text-right">0,00</td>
+                    <td class="text-right font-bold">
+                        <div class="currency-box">
+                            <span class="currency-symbol">Rp</span>
+                            <span class="currency-value">{{ number_format($item->total, 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                </tr>
+            @endforeach
+            @php 
+                $vpk = $additive_report['bpjs']['deductions']->vpk ?? 0;
+                $adm = $additive_report['bpjs']['deductions']->adm ?? 0;
+                $net = $sbpTotal - $vpk - $adm;
+            @endphp
+            <tr class="total-row">
+                <td colspan="2" class="text-center">TOTAL PENERIMAAN BPJS KESEHATAN</td>
+                <td class="text-center">{{ $sbpCount }}</td>
+                <td class="text-right">{{ number_format($sbpTotal, 2, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($vpk, 2, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($adm, 2, ',', '.') }}</td>
+                <td class="text-right font-bold">{{ number_format($net, 2, ',', '.') }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 4. JAMINAN -->
+    <div class="section-title" style="background-color: #fbbf24; color: #000;">4. PENERIMAAN PASIEN JAMINAN (ASURANSI, PT, DLL)</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 5%;">NO</th>
+                <th style="width: 30%;">PENJAMIN / PERUSAHAAN</th>
+                <th style="width: 30%;">UNIT</th>
+                <th style="width: 10%;">TOTAL PASIEN</th>
+                <th style="width: 25%;">JUMLAH (RP)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $sjTotal = 0; $sjCount = 0; @endphp
+            @foreach($additive_report['jaminan'] as $idx => $item)
+                @php $sjTotal += $item->total; $sjCount += $item->count; @endphp
+                <tr>
+                    <td class="text-center">{{ $idx + 1 }}</td>
+                    <td>{{ $item->penjamin }}</td>
+                    <td>{{ $item->unit }}</td>
+                    <td class="text-center">{{ $item->count }}</td>
+                    <td class="text-right">
+                        <div class="currency-box">
+                            <span class="currency-symbol">Rp</span>
+                            <span class="currency-value">{{ number_format($item->total, 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                </tr>
+            @endforeach
+            <tr class="total-row">
+                <td colspan="3" class="text-center">TOTAL PENERIMAAN PASIEN JAMINAN</td>
+                <td class="text-center">{{ $sjCount }}</td>
+                <td class="text-right">
+                    <div class="currency-box">
+                        <span class="currency-symbol">Rp</span>
+                        <span class="currency-value">{{ number_format($sjTotal, 2, ',', '.') }}</span>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 5. KERJASAMA -->
+    <div class="section-title" style="background-color: #fbbf24; color: #000;">5. PENERIMAAN KERJA SAMA (PKL, MAGANG, DLL)</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 5%;">NO</th>
+                <th style="width: 55%;">KERJA SAMA (INSTANSI)</th>
+                <th style="width: 15%;">JUMLAH KEGIATAN</th>
+                <th style="width: 25%;">JUMLAH (RP)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $skTotal = 0; $skCount = 0; @endphp
+            @foreach($additive_report['kerjasama'] as $idx => $item)
+                @php $skTotal += $item->total; $skCount += $item->count; @endphp
+                <tr>
+                    <td class="text-center">{{ $idx + 1 }}</td>
+                    <td>{{ $item->instansi }}</td>
+                    <td class="text-center">{{ $item->count }}</td>
+                    <td class="text-right">
+                        <div class="currency-box">
+                            <span class="currency-symbol">Rp</span>
+                            <span class="currency-value">{{ number_format($item->total, 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                </tr>
+            @endforeach
+            <tr class="total-row">
+                <td colspan="2" class="text-center">TOTAL PENERIMAAN KERJA SAMA</td>
+                <td class="text-center">{{ $skCount }}</td>
+                <td class="text-right">
+                    <div class="currency-box">
+                        <span class="currency-symbol">Rp</span>
+                        <span class="currency-value">{{ number_format($skTotal, 2, ',', '.') }}</span>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 6. LAIN-LAIN -->
+    <div class="section-title" style="background-color: #fbbf24; color: #000;">6. PENERIMAAN LAIN-LAIN</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 5%;">NO</th>
+                <th style="width: 55%;">KETERANGAN</th>
+                <th style="width: 15%;">JUMLAH KEGIATAN</th>
+                <th style="width: 25%;">JUMLAH (RP)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $slTotal = 0; $slCount = 0; @endphp
+            @foreach($additive_report['lain'] as $idx => $item)
+                @php $slTotal += $item->total; $slCount += $item->count; @endphp
+                <tr>
+                    <td class="text-center">{{ $idx + 1 }}</td>
+                    <td>{{ $item->keterangan }}</td>
+                    <td class="text-center">{{ $item->count }}</td>
+                    <td class="text-right">
+                        <div class="currency-box">
+                            <span class="currency-symbol">Rp</span>
+                            <span class="currency-value">{{ number_format($item->total, 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                </tr>
+            @endforeach
+            <tr class="total-row">
+                <td colspan="2" class="text-center">TOTAL PENERIMAAN LAIN-LAIN</td>
+                <td class="text-center">{{ $slCount }}</td>
+                <td class="text-right">
+                    <div class="currency-box">
+                        <span class="currency-symbol">Rp</span>
+                        <span class="currency-value">{{ number_format($slTotal, 2, ',', '.') }}</span>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- REKAP BANK -->
+    <div class="section-title" style="background-color: #fbbf24; color: #000;">REKAPITULASI PENERIMAAN PER BANK</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 5%;">NO</th>
+                <th style="width: 55%;">NAMA BANK</th>
+                <th style="width: 15%;">TOTAL TRANSAKSI</th>
+                <th style="width: 25%;">JUMLAH (RP)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $sbTotal = 0; $sbCount = 0; @endphp
+            @foreach($additive_report['bank_summary'] as $idx => $item)
+                @php $sbTotal += $item['total']; $sbCount += $item['count']; @endphp
+                <tr>
+                    <td class="text-center">{{ $idx + 1 }}</td>
+                    <td>{{ $item['bank'] }}</td>
+                    <td class="text-center">{{ $item['count'] }}</td>
+                    <td class="text-right">
+                        <div class="currency-box">
+                            <span class="currency-symbol">Rp</span>
+                            <span class="currency-value">{{ number_format($item['total'], 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                </tr>
+            @endforeach
+            <tr class="total-row">
+                <td colspan="2" class="text-center">TOTAL KESELURUHAN PENERIMAAN BANK</td>
+                <td class="text-center">{{ $sbCount }}</td>
+                <td class="text-right">
+                    <div class="currency-box">
+                        <span class="currency-symbol">Rp</span>
+                        <span class="currency-value">{{ number_format($sbTotal, 2, ',', '.') }}</span>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- REKAP UNIT -->
+    <div class="section-title" style="background-color: #fbbf24; color: #000;">REKAPITULASI PENDAPATAN PER UNIT</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 5%;">NO</th>
+                <th style="width: 55%;">UNIT</th>
+                <th style="width: 15%;">TOTAL PASIEN</th>
+                <th style="width: 25%;">JUMLAH (RP)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $suTotal = 0; $suCount = 0; @endphp
+            @foreach($additive_report['unit_summary'] as $idx => $item)
+                @php $suTotal += $item['total']; $suCount += $item['count']; @endphp
+                <tr>
+                    <td class="text-center">{{ $idx + 1 }}</td>
+                    <td>{{ $item['unit'] }}</td>
+                    <td class="text-center">{{ $item['count'] }}</td>
+                    <td class="text-right">
+                        <div class="currency-box">
+                            <span class="currency-symbol">Rp</span>
+                            <span class="currency-value">{{ number_format($item['total'], 2, ',', '.') }}</span>
+                        </div>
+                    </td>
+                </tr>
+            @endforeach
+            <tr class="total-row">
+                <td colspan="2" class="text-center">TOTAL PENDAPATAN PER UNIT</td>
+                <td class="text-center">{{ $suCount }}</td>
+                <td class="text-right">
+                    <div class="currency-box">
+                        <span class="currency-symbol">Rp</span>
+                        <span class="currency-value">{{ number_format($suTotal, 2, ',', '.') }}</span>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
     <table style="width: 100%; border: none; margin-top: 50px;">
         <tr>
             <td style="width: 33%; border: none; text-align: center; vertical-align: top;">
@@ -554,3 +903,8 @@
 </body>
 
 </html>
+
+
+
+
+

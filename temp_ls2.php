@@ -9,3 +9,8 @@ if ($d) {
     app(App\Services\BankLedgerService::class)->recordEntry($d->sp2d_date, 'DEPOSIT_LS', $d->value, 'fund_disbursements', $d->id, 'DEBIT', 'Penerimaan LS ' . $d->sp2d_no);
     app(App\Services\BankLedgerService::class)->recordEntry($d->sp2d_date, 'WITHDRAW_LS', $d->value, 'fund_disbursements', $d->id, 'CREDIT', 'Belanja LS ' . $d->sp2d_no);
 }
+
+
+
+
+

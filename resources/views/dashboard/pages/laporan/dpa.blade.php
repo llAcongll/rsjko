@@ -21,7 +21,7 @@
                     <span>Tampilkan</span>
                 </button>
                 <div class="filter-divider" style="width: 1px; height: 24px; background: #e2e8f0; margin: 0 8px;"></div>
-                @if(auth()->user()->hasPermission('LAPORAN_ANGGARAN') || auth()->user()->hasPermission('LAPORAN_VIEW'))
+                @if(auth()->user()->hasPermission('LAP_DPA_VIEW'))
                     <button class="btn-preview" onclick="openPreviewModal('DPA')">
                         <i class="ph ph-eye"></i>
                         <span>Preview & Unduh</span>
@@ -66,3 +66,9 @@
         </div>
     </div>
 </div>
+
+
+
+
+
+

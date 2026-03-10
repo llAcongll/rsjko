@@ -174,7 +174,7 @@ window.renderPagination = function (elementId, meta, callbackName) {
 
   let html = `
     <div class="pagination-info">
-      Menampilkan ${meta.from ?? 0}–${meta.to ?? 0} dari ${meta.total ?? 0} data
+      Menampilkan ${meta.from ?? 0}-${meta.to ?? 0} dari ${meta.total ?? 0} data
     </div>
     <div class="pagination-actions">
       <button class="btn-pagi" ${meta.current_page === 1 ? 'disabled' : ''} onclick="${callbackName}(${meta.current_page - 1})">
@@ -342,3 +342,7 @@ window.previewExportExcel = function (tableId, filename = 'Export') {
     URL.revokeObjectURL(url);
   };
 };
+
+
+
+

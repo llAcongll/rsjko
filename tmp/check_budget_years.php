@@ -10,3 +10,8 @@ $years = DB::table('anggaran_rekening')->select('tahun', DB::raw('count(*) as co
 foreach ($years as $y) {
     echo "Year: {$y->tahun}, Total: {$y->count}\n";
 }
+
+
+
+
+

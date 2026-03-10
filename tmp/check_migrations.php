@@ -10,3 +10,8 @@ $migrations = DB::table('migrations')->orderBy('id', 'desc')->get();
 foreach ($migrations as $m) {
     echo "Migration: {$m->migration}, Batch: {$m->batch}\n";
 }
+
+
+
+
+

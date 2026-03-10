@@ -7,7 +7,7 @@
         </div>
 
         <div class="page-header-right">
-            @if(auth()->user()->hasPermission('PENYESUAIAN_CRUD'))
+            @if(auth()->user()->hasPermission('PENYESUAIAN_MANAGE'))
                 <button class="btn-tambah-data" id="btnTambahPenyesuaian">
                     <i class="ph-bold ph-plus"></i>
                     <span>Penyesuaian</span>
@@ -96,7 +96,7 @@
         </div>
 
         <div class="flex justify-between items-center mt-4">
-            <p id="paginationInfoPenyesuaian" class="text-slate-500" style="font-size: 13px;">Menampilkan 0–0 dari 0
+            <p id="paginationInfoPenyesuaian" class="text-slate-500" style="font-size: 13px;">Menampilkan 0-0 dari 0
                 data</p>
 
             <div class="flex items-center gap-2">
@@ -108,3 +108,8 @@
         </div>
     </div>
 </div>
+
+
+
+
+

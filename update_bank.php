@@ -10,3 +10,8 @@ foreach (\App\Models\Expenditure::all() as $e) {
     }
 }
 echo "Done";
+
+
+
+
+

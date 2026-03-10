@@ -86,7 +86,7 @@ class PenyesuaianPendapatanController extends Controller
     ========================= */
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENYESUAIAN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PIUTANG_MANAGE') || auth()->user()->isAdmin(), 403); // Penyesuaian is part of Piutang/Income adj
         $data = $request->validate([
             'tanggal' => 'required|date',
             'kategori' => 'required|in:BPJS,JAMINAN',
@@ -114,7 +114,7 @@ class PenyesuaianPendapatanController extends Controller
     ========================= */
     public function update(Request $request, $id)
     {
-        abort_unless(auth()->user()->hasPermission('PENYESUAIAN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PIUTANG_MANAGE') || auth()->user()->isAdmin(), 403);
         $item = PenyesuaianPendapatan::findOrFail($id);
         $data = $request->validate([
             'tanggal' => 'required|date',
@@ -142,7 +142,7 @@ class PenyesuaianPendapatanController extends Controller
     ========================= */
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENYESUAIAN_CRUD') || auth()->user()->isAdmin(), 403);
+        abort_unless(auth()->user()->hasPermission('PIUTANG_MANAGE') || auth()->user()->isAdmin(), 403);
         $item = PenyesuaianPendapatan::findOrFail($id);
         $item->delete();
 
@@ -151,3 +151,8 @@ class PenyesuaianPendapatanController extends Controller
         ]);
     }
 }
+
+
+
+
+

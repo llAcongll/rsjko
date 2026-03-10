@@ -6,7 +6,7 @@
             <p>Kelola daftar Penanda Tangan untuk laporan operasional</p>
         </div>
 
-        @if(auth()->user()->hasPermission('MASTER_CRUD') || auth()->user()->isAdmin())
+        @if(auth()->user()->hasPermission('MASTER_MANAGE') || auth()->user()->isAdmin())
             <div class="page-header-right">
                 <button class="btn-tambah-data" onclick="openPenandaTanganForm()">
                     <i class="ph-bold ph-plus"></i>
@@ -60,3 +60,8 @@
 </div>
 
 </div>
+
+
+
+
+

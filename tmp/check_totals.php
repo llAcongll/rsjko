@@ -21,3 +21,8 @@ if ($totalMasters > 0) {
         echo "ID: {$s->id}, Kategori: {$s->kategori}, Total: {$s->total_all}\n";
     }
 }
+
+
+
+
+

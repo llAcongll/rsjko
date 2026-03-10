@@ -57,3 +57,8 @@ class Expenditure extends Model
         return $this->belongsTo(FundDisbursement::class);
     }
 }
+
+
+
+
+

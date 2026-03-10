@@ -15,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->redirectTo('/login', '/dashboard');
 
-        // ✅ REGISTER ALIAS MIDDLEWARE (LARAVEL 11 WAY)
+        // Ã¢Å“â€¦ REGISTER ALIAS MIDDLEWARE (LARAVEL 11 WAY)
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'permission' => \App\Http\Middleware\PermissionMiddleware::class,
@@ -28,3 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->create();
+
+
+
+
+

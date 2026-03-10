@@ -18,7 +18,7 @@ return new class extends Migration {
                   ->constrained('kode_rekening')
                   ->nullOnDelete();
 
-            $table->unsignedTinyInteger('level'); // 1–6
+            $table->unsignedTinyInteger('level'); // 1-6
             $table->enum('tipe', ['header','detail'])->default('header');
             $table->boolean('is_active')->default(true);
 
@@ -33,3 +33,8 @@ return new class extends Migration {
         Schema::dropIfExists('kode_rekening');
     }
 };
+
+
+
+
+

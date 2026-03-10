@@ -24,3 +24,8 @@ try {
             $q->whereNull('spp_no')->orWhereNull('kode_rekening_id');
         })->toSql() . PHP_EOL;
 }
+
+
+
+
+

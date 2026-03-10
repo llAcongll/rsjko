@@ -35,3 +35,8 @@ class Spj extends Model
         return $this->hasMany(FundDisbursement::class, 'spj_id');
     }
 }
+
+
+
+
+

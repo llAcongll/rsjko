@@ -40,3 +40,8 @@ class SP3BP extends Model
         return $this->hasOne(SP3BPRekonsiliasi::class, 'sp3bp_id');
     }
 }
+
+
+
+
+

@@ -6,6 +6,10 @@ let rekeningFilteredData = [];
 let rekeningSortBy = 'tanggal';
 let rekeningSortDir = 'asc';
 
+window.initRekening = function () {
+  loadRekening();
+};
+
 // Helper untuk mendapatkan base URL dashboard secara dinamis
 const getDashboardUrl = (path) => {
   const base = window.location.pathname.split('/dashboard')[0];
@@ -24,7 +28,7 @@ window.openRekeningForm = function (row = null) {
   editingRekeningId = row ? row.id : null;
 
   rekeningModalTitle.innerText =
-    row ? '✏️ Edit Rekening' : '➕ Tambah Rekening';
+    row ? 'Ã¢Å“Ã¯¸ Edit Rekening' : 'Ã¢Å¾â€¢ Tambah Rekening';
 
   rkTanggal.value = formatDateForInput(row?.tanggal);
 
@@ -266,7 +270,7 @@ window.loadRekening = function () {
 /* =========================
    RENDER TABLE + SUMMARY
 ========================= */
-// 🔹 refactor calculation logic for reuse
+// Ã°Å¸â€¹ refactor calculation logic for reuse
 function getRekeningProcessedData(data) {
   const bankFilter = document.getElementById('filterBank')?.value || '';
   const startDateFilter = document.getElementById('filterStart')?.value || '';
@@ -371,7 +375,7 @@ function renderRekeningTable(data) {
   const end = start + REKENING_PER_PAGE;
   const pageData = processed.slice(start, end);
 
-  const canCRUD = window.hasPermission('REKENING_CRUD');
+  const canCRUD = window.hasPermission('REKENING_MANAGE');
 
   pageData.forEach((row, i) => {
     tbody.innerHTML += `
@@ -512,7 +516,7 @@ window.openPreviewRekening = function () {
                 <h2 style="margin: 0; padding: 0; font-size: 16pt; font-weight: bold; color: #000; line-height: 1.2;">
                     ENGKU HAJI DAUD</h2>
                 <div style="line-height: 1.4; margin-top: 5px; font-size: 9pt; font-weight: normal; color: #000;">
-                    Jalan Indun Suri – Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
+                    Jalan Indun Suri - Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152<br>
                     Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795<br>
                     Pos-el: rsjkoehd@kepriprov.go.id Laman : www.rsudehd.kepriprov.go.id
                 </div>
@@ -776,12 +780,12 @@ function updateRekeningInfo(from, to, total) {
   if (!info) return;
 
   if (!total) {
-    info.innerText = 'Menampilkan 0–0 dari 0 data';
+    info.innerText = 'Menampilkan 0-0 dari 0 data';
     return;
   }
 
   const totalPages = Math.ceil(total / REKENING_PER_PAGE);
-  info.innerText = `Menampilkan ${from}–${to} dari ${total} data • Halaman ${rekeningCurrentPage} dari ${totalPages}`;
+  info.innerText = `Menampilkan ${from}-${to} dari ${total} data "¢ Halaman ${rekeningCurrentPage} dari ${totalPages}`;
 }
 
 /* =========================
@@ -802,7 +806,7 @@ function renderRekeningPagination(totalCount) {
   const from = totalCount ? (rekeningCurrentPage - 1) * REKENING_PER_PAGE + 1 : 0;
   const to = Math.min(rekeningCurrentPage * REKENING_PER_PAGE, totalCount);
 
-  info.innerText = `Menampilkan ${from}–${to} dari ${totalCount} data`;
+  info.innerText = `Menampilkan ${from}-${to} dari ${totalCount} data`;
   pageInfo.innerText = `${rekeningCurrentPage} / ${totalPages}`;
 
   prevBtn.disabled = rekeningCurrentPage === 1;
@@ -1045,3 +1049,6 @@ window.submitRekeningSaldoAwal = function (e) {
 };
 
 document.querySelector('.main')?.classList.add('rekening-mode');
+
+
+

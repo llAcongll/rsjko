@@ -14,3 +14,8 @@ foreach ($tables as $table) {
         echo "Table: $tableName, Count: $count\n";
     }
 }
+
+
+
+
+

@@ -25,7 +25,7 @@ class SP3BPController extends Controller
 
     public function index()
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('SP3BP_VIEW'), 403);
         $periodes = PengesahanPeriode::with('sp3bp')
             ->orderBy('id', 'asc')
             ->get();
@@ -34,7 +34,7 @@ class SP3BPController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('SP3BP_GENERATE'), 403);
         $request->validate([
             'triwulan' => 'nullable|integer|between:1,4',
             'bulan' => 'nullable|integer|between:1,12',
@@ -65,7 +65,7 @@ class SP3BPController extends Controller
 
     public function show($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('SP3BP_VIEW'), 403);
         $sp3bp = SP3BP::with(['periode', 'detailPendapatan', 'detailBelanja', 'rekonsiliasi'])
             ->where('periode_id', $id)
             ->first();
@@ -84,7 +84,7 @@ class SP3BPController extends Controller
 
     public function generate($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_CREATE'), 403);
+        abort_unless(auth()->user()->hasPermission('SP3BP_GENERATE'), 403);
         $periode = PengesahanPeriode::findOrFail($id);
 
         if ($periode->status === 'terkunci') {
@@ -145,10 +145,18 @@ class SP3BPController extends Controller
         $saldoAkhir = $saldoAwal + $totalPendapatan - $totalBelanja;
 
         // 5. Get reconciliation data (BKU summary from the end of period)
-        $bku = $this->reportService->getBkuData($year, $bkuLastMonth);
-        $summary = $bku['summary'] ?? [];
-        $saldoBank = $summary['final_bank'] ?? 0;
-        $saldoTunai = $summary['final_tunai'] ?? 0;
+        // Expenditure BKU
+        $bkuExp = $this->reportService->getBkuData($year, $bkuLastMonth);
+        $summaryExp = $bkuExp['summary'] ?? [];
+        $saldoBank = $summaryExp['final_bank'] ?? 0;
+        $saldoTunaiExp = $summaryExp['final_tunai'] ?? 0;
+
+        // Income BKU
+        $incomeCashBookService = app(\App\Services\IncomeCashBookService::class);
+        $bkuInc = $incomeCashBookService->getLedgerData($year, $bkuLastMonth);
+        $saldoTunaiInc = $bkuInc['summary']['final_saldo'] ?? 0;
+
+        $saldoTunai = $saldoTunaiExp + $saldoTunaiInc;
         $saldoBuku = $saldoBank + $saldoTunai;
         $selisih = round($saldoAkhir - $saldoBuku, 2);
 
@@ -238,26 +246,87 @@ class SP3BPController extends Controller
     {
         switch ($sumberData) {
             case 'PASIEN_UMUM':
-                return DB::table('pendapatan_umum')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
+                return DB::table('pendapatan_umum as t')
+                    ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+                    ->where('rm.tahun', $tahun)
+                    ->where('rm.is_posted', 1)
+                    ->whereBetween('t.tanggal', [$startDate, $endDate])
+                    ->sum('t.total');
             case 'BPJS_JAMINAN':
-                $bpjs = DB::table('pendapatan_bpjs')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
-                $jam = DB::table('pendapatan_jaminan')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
+                $bpjs = DB::table('pendapatan_bpjs as t')
+                    ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+                    ->where('rm.tahun', $tahun)
+                    ->where('rm.is_posted', 1)
+                    ->whereBetween('t.tanggal', [$startDate, $endDate])
+                    ->sum('t.total');
+                $jam = DB::table('pendapatan_jaminan as t')
+                    ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+                    ->where('rm.tahun', $tahun)
+                    ->where('rm.is_posted', 1)
+                    ->whereBetween('t.tanggal', [$startDate, $endDate])
+                    ->sum('t.total');
                 $ded = DB::table('penyesuaian_pendapatans')->whereIn('kategori', ['BPJS', 'JAMINAN'])->whereBetween('tanggal', [$startDate, $endDate])->where('tahun', $tahun)->sum(DB::raw('IFNULL(potongan, 0) + IFNULL(administrasi_bank, 0)'));
                 return ($bpjs + $jam) - $ded;
             case 'KERJASAMA':
-                return DB::table('pendapatan_kerjasama')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
+                return DB::table('pendapatan_kerjasama as t')
+                    ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+                    ->where('rm.tahun', $tahun)
+                    ->where('rm.is_posted', 1)
+                    ->whereBetween('t.tanggal', [$startDate, $endDate])
+                    ->sum('t.total');
             case 'PKL':
-                return DB::table('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where(fn($q) => $q->where('transaksi', 'like', '%PKL%')->orWhere('transaksi', 'like', '%Praktek Kerja Lapangan%'))->sum('total');
+                return DB::table('pendapatan_lain as t')
+                    ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+                    ->where('rm.tahun', $tahun)
+                    ->where('rm.is_posted', 1)
+                    ->whereBetween('t.tanggal', [$startDate, $endDate])
+                    ->where(fn($q) => $q->where('t.transaksi', 'like', '%PKL%')->orWhere('t.transaksi', 'like', '%Praktek Kerja Lapangan%'))
+                    ->sum('t.total');
             case 'MAGANG':
-                return DB::table('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Magang%')->sum('total');
+                return DB::table('pendapatan_lain as t')
+                    ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+                    ->where('rm.tahun', $tahun)
+                    ->where('rm.is_posted', 1)
+                    ->whereBetween('t.tanggal', [$startDate, $endDate])
+                    ->where('t.transaksi', 'like', '%Magang%')
+                    ->sum('t.total');
             case 'PENELITIAN':
-                return DB::table('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Penelitian%')->sum('total');
+                return DB::table('pendapatan_lain as t')
+                    ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+                    ->where('rm.tahun', $tahun)
+                    ->where('rm.is_posted', 1)
+                    ->whereBetween('t.tanggal', [$startDate, $endDate])
+                    ->where('t.transaksi', 'like', '%Penelitian%')
+                    ->sum('t.total');
             case 'PERMINTAAN_DATA':
-                return DB::table('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Permintaan Data%')->sum('total');
+                return DB::table('pendapatan_lain as t')
+                    ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+                    ->where('rm.tahun', $tahun)
+                    ->where('rm.is_posted', 1)
+                    ->whereBetween('t.tanggal', [$startDate, $endDate])
+                    ->where('t.transaksi', 'like', '%Permintaan Data%')
+                    ->sum('t.total');
             case 'STUDY_BANDING':
-                return DB::table('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'like', '%Study Banding%')->sum('total');
+                return DB::table('pendapatan_lain as t')
+                    ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+                    ->where('rm.tahun', $tahun)
+                    ->where('rm.is_posted', 1)
+                    ->whereBetween('t.tanggal', [$startDate, $endDate])
+                    ->where('t.transaksi', 'like', '%Study Banding%')
+                    ->sum('t.total');
             case 'LAIN_LAIN':
-                return DB::table('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->where('transaksi', 'NOT LIKE', '%PKL%')->where('transaksi', 'NOT LIKE', '%Praktek Kerja Lapangan%')->where('transaksi', 'NOT LIKE', '%Magang%')->where('transaksi', 'NOT LIKE', '%Penelitian%')->where('transaksi', 'NOT LIKE', '%Permintaan Data%')->where('transaksi', 'NOT LIKE', '%Study Banding%')->sum('total');
+                return DB::table('pendapatan_lain as t')
+                    ->join('revenue_masters as rm', 't.revenue_master_id', '=', 'rm.id')
+                    ->where('rm.tahun', $tahun)
+                    ->where('rm.is_posted', 1)
+                    ->whereBetween('t.tanggal', [$startDate, $endDate])
+                    ->where('t.transaksi', 'NOT LIKE', '%PKL%')
+                    ->where('t.transaksi', 'NOT LIKE', '%Praktek Kerja Lapangan%')
+                    ->where('t.transaksi', 'NOT LIKE', '%Magang%')
+                    ->where('t.transaksi', 'NOT LIKE', '%Penelitian%')
+                    ->where('t.transaksi', 'NOT LIKE', '%Permintaan Data%')
+                    ->where('t.transaksi', 'NOT LIKE', '%Study Banding%')
+                    ->sum('t.total');
         }
         return 0;
     }
@@ -276,7 +345,7 @@ class SP3BPController extends Controller
 
     public function sahkan($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_POST'), 403);
+        abort_unless(auth()->user()->hasPermission('SP3BP_APPROVE'), 403);
         $sp3bp = SP3BP::with('rekonsiliasi')->where('periode_id', $id)->firstOrFail();
 
         if ($sp3bp->selisih != 0) {
@@ -296,7 +365,7 @@ class SP3BPController extends Controller
 
     public function batalSah($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_POST'), 403);
+        abort_unless(auth()->user()->hasPermission('SP3BP_APPROVE'), 403);
         $sp3bp = SP3BP::where('periode_id', $id)->firstOrFail();
 
         $sp3bp->status = 'draft';
@@ -310,7 +379,7 @@ class SP3BPController extends Controller
     }
     public function printPdf($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_VIEW'), 403);
+        abort_unless(auth()->user()->hasPermission('SP3BP_PRINT'), 403);
         $sp3bp = SP3BP::with(['periode', 'detailPendapatan', 'detailBelanja', 'rekonsiliasi'])
             ->where('periode_id', $id)
             ->firstOrFail();
@@ -323,7 +392,7 @@ class SP3BPController extends Controller
 
     public function destroy($id)
     {
-        abort_unless(auth()->user()->hasPermission('PENGESAHAN_DELETE'), 403);
+        abort_unless(auth()->user()->hasPermission('SP3BP_GENERATE'), 403);
         $periode = PengesahanPeriode::findOrFail($id);
 
         if ($periode->status === 'terkunci') {
@@ -335,3 +404,8 @@ class SP3BPController extends Controller
         return response()->json(['message' => 'Periode berhasil dihapus']);
     }
 }
+
+
+
+
+
