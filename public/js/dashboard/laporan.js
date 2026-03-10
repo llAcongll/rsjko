@@ -1876,16 +1876,16 @@ window.openPreviewModal = function (type) {
         // 4. BANK RECEPTION Table
         let bankHtml = `
             <h6 style="margin:25px 0 10px; font-weight:bold; border-left:4px solid #3b82f6; padding-left:10px; font-size:11pt;">4. RINCIAN PENERIMAAN BANK</h6>
-                                                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
-                                                    <thead style="background:#f8fafc;">
-                                                        <tr>
-                                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 40%;">Uraian Akun</th>
-                                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">BRK</th>
-                                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">BSI</th>
-                                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">Total</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>`;
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                    <thead style="background:#f8fafc;">
+                        <tr>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 40%;">Uraian Akun</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">BRK</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">BSI</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
 
         let tBRK = 0, tBSI = 0, tBAll = 0;
         categoryKeys.forEach(key => {
@@ -1896,33 +1896,33 @@ window.openPreviewModal = function (type) {
             const tot = parseFloat(item.banks.TOTAL) || 0;
             tBRK += brk; tBSI += bsi; tBAll += tot;
             bankHtml += `
-                                                        <tr>
-                                                            <td style="border:1px solid #000; padding:8px;">${item.nama}</td>
-                                                            <td style="border:1px solid #000; padding:8px;">${fr(brk)}</td>
-                                                            <td style="border:1px solid #000; padding:8px;">${fr(bsi)}</td>
-                                                            <td style="border:1px solid #000; padding:8px; font-weight:bold;">${fr(tot)}</td>
-                                                        </tr>`;
+                        <tr>
+                            <td style="border:1px solid #000; padding:8px;">${item.nama}</td>
+                            <td style="border:1px solid #000; padding:8px;">${fr(brk)}</td>
+                            <td style="border:1px solid #000; padding:8px;">${fr(bsi)}</td>
+                            <td style="border:1px solid #000; padding:8px; font-weight:bold;">${fr(tot)}</td>
+                        </tr>`;
         });
         bankHtml += `<tr style="background:#f1f5f9; font-weight:bold;">
-                                                            <td style="border:1px solid #000; padding:8px; text-align:center;">JUMLAH PENERIMAAN BANK</td>
-                                                            <td style="border:1px solid #000; padding:8px;">${fr(tBRK)}</td>
-                                                            <td style="border:1px solid #000; padding:8px;">${fr(tBSI)}</td>
-                                                            <td style="border:1px solid #000; padding:8px;">${fr(tBAll)}</td>
-                                                        </tr></tbody></table>`;
+                        <td style="border:1px solid #000; padding:8px; text-align:center;">JUMLAH PENERIMAAN BANK</td>
+                        <td style="border:1px solid #000; padding:8px;">${fr(tBRK)}</td>
+                        <td style="border:1px solid #000; padding:8px;">${fr(tBSI)}</td>
+                        <td style="border:1px solid #000; padding:8px;">${fr(tBAll)}</td>
+                    </tr></tbody></table>`;
         tablesContainer.innerHTML += bankHtml;
 
-        // 5. ROOMS Section
+        // 5. ROOMS Section (Original)
         let roomHtml = `
             <h6 style="margin:25px 0 10px; font-weight:bold; border-left:4px solid #f43f5e; padding-left:10px; font-size:11pt;">5. PENDAPATAN PER RUANGAN</h6>
-                                                                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
-                                                                    <thead style="background:#f8fafc;">
-                                                                        <tr>
-                                                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 50%;">Nama Ruangan</th>
-                                                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 15%;">Jumlah Pasien</th>
-                                                                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 35%;">Total Pendapatan</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>`;
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                    <thead style="background:#f8fafc;">
+                        <tr>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 50%;">Nama Ruangan</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 15%;">Jumlah Pasien</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 35%;">Total Pendapatan</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
 
         let tRCount = 0, tRTotal = 0;
         const roomEntries = Object.entries(data.rooms || {});
@@ -1930,19 +1930,290 @@ window.openPreviewModal = function (type) {
             const count = data.room_patients[room] || 0;
             tRCount += count; tRTotal += total;
             roomHtml += `
-                                                                        <tr>
-                                                                            <td style="border:1px solid #000; padding:8px;">${room}</td>
-                                                                            <td style="border:1px solid #000; padding:8px; text-align:center;">${count}</td>
-                                                                            <td style="border:1px solid #000; padding:8px;">${fr(total)}</td>
-                                                                        </tr>`;
+                        <tr>
+                            <td style="border:1px solid #000; padding:8px;">${room}</td>
+                            <td style="border:1px solid #000; padding:8px; text-align:center;">${count}</td>
+                            <td style="border:1px solid #000; padding:8px;">${fr(total)}</td>
+                        </tr>`;
         });
         roomHtml += `
-                                                                        <tr style="background:#f1f5f9; font-weight:bold;">
-                                                                            <td style="border:1px solid #000; padding:8px; text-align:center;">GRAND TOTAL (SEMUA RUANGAN)</td>
-                                                                            <td style="border:1px solid #000; padding:8px; text-align:center;">${tRCount}</td>
-                                                                            <td style="border:1px solid #000; padding:8px;">${fr(tRTotal)}</td>
-                                                                        </tr></tbody></table>`;
+                        <tr style="background:#f1f5f9; font-weight:bold;">
+                            <td style="border:1px solid #000; padding:8px; text-align:center;">GRAND TOTAL (SEMUA RUANGAN)</td>
+                            <td style="border:1px solid #000; padding:8px; text-align:center;">${tRCount}</td>
+                            <td style="border:1px solid #000; padding:8px;">${fr(tRTotal)}</td>
+                        </tr></tbody></table>`;
         tablesContainer.innerHTML += roomHtml;
+
+        // ADDITIVE SECTIONS
+        if (data.additive_report) {
+            const add = data.additive_report;
+
+            // 1. PENERIMAAN PASIEN TUNAI
+            let tunaiHtml = `
+                <h6 style="margin:30px 0 10px; font-weight:bold; border-left:4px solid #fbbf24; padding-left:10px; font-size:11pt;">6. PENERIMAAN PASIEN TUNAI</h6>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                    <thead style="background:#fbbf24; color: #000;">
+                        <tr>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 5%;">NO</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 45%;">UNIT</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 20%;">TOTAL PASIEN</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center; width: 30%;">JUMLAH (RP)</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            let sumT = 0, sumTC = 0;
+            add.tunai.forEach((item, i) => {
+                sumT += parseFloat(item.total); sumTC += parseInt(item.count);
+                tunaiHtml += `<tr>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${i + 1}</td>
+                    <td style="border:1px solid #000; padding:8px;">${item.unit}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${item.count}</td>
+                    <td style="border:1px solid #000; padding:8px;">${fr(item.total)}</td>
+                </tr>`;
+            });
+            tunaiHtml += `<tr style="background:#f1f5f9; font-weight:bold;">
+                <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center;">TOTAL PENERIMAAN PASIEN TUNAI</td>
+                <td style="border:1px solid #000; padding:8px; text-align:center;">${sumTC}</td>
+                <td style="border:1px solid #000; padding:8px;">${fr(sumT)}</td>
+            </tr></tbody></table>`;
+            tablesContainer.innerHTML += tunaiHtml;
+
+            // 2. PENERIMAAN PASIEN NON TUNAI
+            let nonTunaiHtml = `
+                <h6 style="margin:30px 0 10px; font-weight:bold; border-left:4px solid #fbbf24; padding-left:10px; font-size:11pt;">7. PENERIMAAN PASIEN NON TUNAI</h6>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:8pt;">
+                    <thead style="background:#fbbf24; color: #000;">
+                        <tr>
+                            <th style="border:1px solid #000; padding:5px; text-align:center;">NO</th>
+                            <th style="border:1px solid #000; padding:5px; text-align:center;">UNIT</th>
+                            <th style="border:1px solid #000; padding:5px; text-align:center;">PASIEN QRIS</th>
+                            <th style="border:1px solid #000; padding:5px; text-align:center;">PASIEN TRF</th>
+                            <th style="border:1px solid #000; padding:5px; text-align:center;">TOTAL PASIEN</th>
+                            <th style="border:1px solid #000; padding:5px; text-align:center;">QRIS (RP)</th>
+                            <th style="border:1px solid #000; padding:5px; text-align:center;">TRANSFER (RP)</th>
+                            <th style="border:1px solid #000; padding:5px; text-align:center;">TOTAL (RP)</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            let sntQ = 0, sntT = 0, sntAll = 0, spQ = 0, spT = 0, spAll = 0;
+            add.non_tunai.forEach((item, i) => {
+                sntQ += parseFloat(item.qris_amount); sntT += parseFloat(item.transfer_amount); sntAll += parseFloat(item.total_amount);
+                spQ += parseInt(item.pasien_qris); spT += parseInt(item.pasien_transfer); spAll += parseInt(item.total_pasien);
+                nonTunaiHtml += `<tr>
+                    <td style="border:1px solid #000; padding:5px; text-align:center;">${i + 1}</td>
+                    <td style="border:1px solid #000; padding:5px;">${item.unit}</td>
+                    <td style="border:1px solid #000; padding:5px; text-align:center;">${item.pasien_qris}</td>
+                    <td style="border:1px solid #000; padding:5px; text-align:center;">${item.pasien_transfer}</td>
+                    <td style="border:1px solid #000; padding:5px; text-align:center;">${item.total_pasien}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(item.qris_amount)}</td>
+                    <td style="border:1px solid #000; padding:5px;">${fr(item.transfer_amount)}</td>
+                    <td style="border:1px solid #000; padding:5px; font-weight:bold;">${fr(item.total_amount)}</td>
+                </tr>`;
+            });
+            nonTunaiHtml += `<tr style="background:#f1f5f9; font-weight:bold;">
+                <td colspan="2" style="border:1px solid #000; padding:5px; text-align:center;">TOTAL NON TUNAI</td>
+                <td style="border:1px solid #000; padding:5px; text-align:center;">${spQ}</td>
+                <td style="border:1px solid #000; padding:5px; text-align:center;">${spT}</td>
+                <td style="border:1px solid #000; padding:5px; text-align:center;">${spAll}</td>
+                <td style="border:1px solid #000; padding:5px;">${fr(sntQ)}</td>
+                <td style="border:1px solid #000; padding:5px;">${fr(sntT)}</td>
+                <td style="border:1px solid #000; padding:5px;">${fr(sntAll)}</td>
+            </tr></tbody></table>`;
+            tablesContainer.innerHTML += nonTunaiHtml;
+
+            // 3. BPJS
+            let bpjsHtml = `
+                <h6 style="margin:30px 0 10px; font-weight:bold; border-left:4px solid #fbbf24; padding-left:10px; font-size:11pt;">8. PENERIMAAN PASIEN BPJS KESEHATAN</h6>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                    <thead style="background:#fbbf24; color: #000;">
+                        <tr>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">NO</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">UNIT</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">TOTAL PASIEN</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">BPJS (GROSS)</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">VPK / POTONGAN</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">ADM BANK</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">JUMLAH (NET)</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            let sumB = 0, sumBC = 0;
+            add.bpjs.data.forEach((item, i) => {
+                sumB += parseFloat(item.total); sumBC += parseInt(item.count);
+                bpjsHtml += `<tr>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${i + 1}</td>
+                    <td style="border:1px solid #000; padding:8px;">${item.unit}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${item.count}</td>
+                    <td style="border:1px solid #000; padding:8px;">${fr(item.total)}</td>
+                    <td style="border:1px solid #000; padding:8px;">0,00</td>
+                    <td style="border:1px solid #000; padding:8px;">0,00</td>
+                    <td style="border:1px solid #000; padding:8px; font-weight:bold;">${fr(item.total)}</td>
+                </tr>`;
+            });
+            const vpk = parseFloat(add.bpjs.deductions.vpk || 0);
+            const adm = parseFloat(add.bpjs.deductions.adm || 0);
+            bpjsHtml += `<tr style="background:#f1f5f9; font-weight:bold;">
+                <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center;">TOTAL BPJS KESEHATAN</td>
+                <td style="border:1px solid #000; padding:8px; text-align:center;">${sumBC}</td>
+                <td style="border:1px solid #000; padding:8px;">${fr(sumB)}</td>
+                <td style="border:1px solid #000; padding:8px;">${fr(vpk)}</td>
+                <td style="border:1px solid #000; padding:8px;">${fr(adm)}</td>
+                <td style="border:1px solid #000; padding:8px;">${fr(sumB - vpk - adm)}</td>
+            </tr></tbody></table>`;
+            tablesContainer.innerHTML += bpjsHtml;
+
+            // 4. JAMINAN
+            let jaminanHtml = `
+                <h6 style="margin:30px 0 10px; font-weight:bold; border-left:4px solid #fbbf24; padding-left:10px; font-size:11pt;">9. PENERIMAAN PASIEN JAMINAN</h6>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                    <thead style="background:#fbbf24; color: #000;">
+                        <tr>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">NO</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">PENJAMIN / PERUSAHAAN</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">UNIT</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">TOTAL PASIEN</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">JUMLAH (RP)</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            let sumJ = 0, sumJC = 0;
+            add.jaminan.forEach((item, i) => {
+                sumJ += parseFloat(item.total); sumJC += parseInt(item.count);
+                jaminanHtml += `<tr>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${i + 1}</td>
+                    <td style="border:1px solid #000; padding:8px;">${item.penjamin}</td>
+                    <td style="border:1px solid #000; padding:8px;">${item.unit}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${item.count}</td>
+                    <td style="border:1px solid #000; padding:8px;">${fr(item.total)}</td>
+                </tr>`;
+            });
+            jaminanHtml += `<tr style="background:#f1f5f9; font-weight:bold;">
+                <td colspan="3" style="border:1px solid #000; padding:8px; text-align:center;">TOTAL PENERIMAAN JAMINAN</td>
+                <td style="border:1px solid #000; padding:8px; text-align:center;">${sumJC}</td>
+                <td style="border:1px solid #000; padding:8px;">${fr(sumJ)}</td>
+            </tr></tbody></table>`;
+            tablesContainer.innerHTML += jaminanHtml;
+
+            // 5. KERJASAMA
+            let kerjasamaHtml = `
+                <h6 style="margin:30px 0 10px; font-weight:bold; border-left:4px solid #fbbf24; padding-left:10px; font-size:11pt;">10. PENERIMAAN KERJA SAMA</h6>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                    <thead style="background:#fbbf24; color: #000;">
+                        <tr>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">NO</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">INSTANSI</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">KEGIATAN</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">JUMLAH (RP)</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            let sumK = 0, sumKC = 0;
+            add.kerjasama.forEach((item, i) => {
+                sumK += parseFloat(item.total); sumKC += parseInt(item.count);
+                kerjasamaHtml += `<tr>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${i + 1}</td>
+                    <td style="border:1px solid #000; padding:8px;">${item.instansi}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${item.count}</td>
+                    <td style="border:1px solid #000; padding:8px;">${fr(item.total)}</td>
+                </tr>`;
+            });
+            kerjasamaHtml += `<tr style="background:#f1f5f9; font-weight:bold;">
+                <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center;">TOTAL KERJA SAMA</td>
+                <td style="border:1px solid #000; padding:8px; text-align:center;">${sumKC}</td>
+                <td style="border:1px solid #000; padding:8px;">${fr(sumK)}</td>
+            </tr></tbody></table>`;
+            tablesContainer.innerHTML += kerjasamaHtml;
+
+            // 6. LAIN-LAIN
+            let lainHtml = `
+                <h6 style="margin:30px 0 10px; font-weight:bold; border-left:4px solid #fbbf24; padding-left:10px; font-size:11pt;">11. PENERIMAAN LAIN-LAIN</h6>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                    <thead style="background:#fbbf24; color: #000;">
+                        <tr>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">NO</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">KETERANGAN</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">KEGIATAN</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">JUMLAH (RP)</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            let sumL = 0, sumLC = 0;
+            add.lain.forEach((item, i) => {
+                sumL += parseFloat(item.total); sumLC += parseInt(item.count);
+                lainHtml += `<tr>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${i + 1}</td>
+                    <td style="border:1px solid #000; padding:8px;">${item.keterangan}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${item.count}</td>
+                    <td style="border:1px solid #000; padding:8px;">${fr(item.total)}</td>
+                </tr>`;
+            });
+            lainHtml += `<tr style="background:#f1f5f9; font-weight:bold;">
+                <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center;">TOTAL LAIN-LAIN</td>
+                <td style="border:1px solid #000; padding:8px; text-align:center;">${sumLC}</td>
+                <td style="border:1px solid #000; padding:8px;">${fr(sumL)}</td>
+            </tr></tbody></table>`;
+            tablesContainer.innerHTML += lainHtml;
+
+            // BANK SUMMARY
+            let bankSumHtml = `
+                <h6 style="margin:30px 0 10px; font-weight:bold; border-left:4px solid #fbbf24; padding-left:10px; font-size:11pt;">12. REKAPITULASI PENERIMAAN PER BANK</h6>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                    <thead style="background:#fbbf24; color: #000;">
+                        <tr>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">NO</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">NAMA BANK</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">TRANSAKSI</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">JUMLAH (RP)</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            let bT = 0, bC = 0;
+            add.bank_summary.forEach((item, i) => {
+                bT += parseFloat(item.total); bC += parseInt(item.count);
+                bankSumHtml += `<tr>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${i + 1}</td>
+                    <td>${item.bank}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${item.count}</td>
+                    <td style="border:1px solid #000; padding:8px;">${fr(item.total)}</td>
+                </tr>`;
+            });
+            bankSumHtml += `<tr style="background:#f1f5f9; font-weight:bold;">
+                <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center;">TOTAL BANK</td>
+                <td style="border:1px solid #000; padding:8px; text-align:center;">${bC}</td>
+                <td style="border:1px solid #000; padding:8px;">${fr(bT)}</td>
+            </tr></tbody></table>`;
+            tablesContainer.innerHTML += bankSumHtml;
+
+            // UNIT SUMMARY
+            let unitSumHtml = `
+                <h6 style="margin:30px 0 10px; font-weight:bold; border-left:4px solid #fbbf24; padding-left:10px; font-size:11pt;">13. PENDAPATAN PER UNIT (GROSS)</h6>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:9pt;">
+                    <thead style="background:#fbbf24; color: #000;">
+                        <tr>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">NO</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">UNIT</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">PASIEN</th>
+                            <th style="border:1px solid #000; padding:8px; text-align:center;">JUMLAH (RP)</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            let uT = 0, uC = 0;
+            add.unit_summary.forEach((item, i) => {
+                uT += parseFloat(item.total); uC += parseInt(item.count);
+                unitSumHtml += `<tr>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${i + 1}</td>
+                    <td>${item.unit}</td>
+                    <td style="border:1px solid #000; padding:8px; text-align:center;">${item.count}</td>
+                    <td style="border:1px solid #000; padding:8px;">${fr(item.total)}</td>
+                </tr>`;
+            });
+            unitSumHtml += `<tr style="background:#f1f5f9; font-weight:bold;">
+                <td colspan="2" style="border:1px solid #000; padding:8px; text-align:center;">TOTAL UNIT</td>
+                <td style="border:1px solid #000; padding:8px; text-align:center;">${uC}</td>
+                <td style="border:1px solid #000; padding:8px;">${fr(uT)}</td>
+            </tr></tbody></table>`;
+            tablesContainer.innerHTML += unitSumHtml;
+        }
 
     } else if (reportType === 'REKON') {
         const periodText = document.getElementById('rekonFilterPeriode')?.value || 'Bulanan';

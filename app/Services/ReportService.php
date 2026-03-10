@@ -1359,26 +1359,39 @@ class ReportService
         // 4. PENERIMAAN PASIEN JAMINAN (Asuransi/Perusahaan)
         $jaminan = $this->getActiveRevenueQuery('pendapatan_jaminan')
             ->join('ruangans', 'pendapatan_jaminan.ruangan_id', '=', 'ruangans.id')
+            ->leftJoin('perusahaans', 'pendapatan_jaminan.perusahaan_id', '=', 'perusahaans.id')
             ->whereBetween('tanggal', [$start, $end])
             ->where('tahun', $tahun)
-            ->select('transaksi as penjamin', 'ruangans.nama as unit', DB::raw('COUNT(*) as count, SUM(total) as total'))
-            ->groupBy('transaksi', 'ruangans.nama')
+            ->select(
+                DB::raw("COALESCE(perusahaans.nama, transaksi, 'UMUM') as penjamin"),
+                'ruangans.nama as unit',
+                DB::raw('COUNT(*) as count, SUM(total) as total')
+            )
+            ->groupBy(DB::raw("COALESCE(perusahaans.nama, transaksi, 'UMUM')"), 'ruangans.nama')
             ->get();
 
         // 5. PENERIMAAN KERJA SAMA
         $kerjasama = $this->getActiveRevenueQuery('pendapatan_kerjasama')
+            ->leftJoin('mous', 'pendapatan_kerjasama.mou_id', '=', 'mous.id')
             ->whereBetween('tanggal', [$start, $end])
             ->where('tahun', $tahun)
-            ->select('transaksi as instansi', DB::raw('COUNT(*) as count, SUM(total) as total'))
-            ->groupBy('transaksi')
+            ->select(
+                DB::raw("COALESCE(mous.nama, transaksi, 'KERJASAMA LAIN') as instansi"),
+                DB::raw('COUNT(*) as count, SUM(total) as total')
+            )
+            ->groupBy(DB::raw("COALESCE(mous.nama, transaksi, 'KERJASAMA LAIN')"))
             ->get();
 
         // 6. PENERIMAAN LAIN-LAIN
         $lain = $this->getActiveRevenueQuery('pendapatan_lain')
+            ->leftJoin('mous', 'pendapatan_lain.mou_id', '=', 'mous.id')
             ->whereBetween('tanggal', [$start, $end])
             ->where('tahun', $tahun)
-            ->select('transaksi as keterangan', DB::raw('COUNT(*) as count, SUM(total) as total'))
-            ->groupBy('transaksi')
+            ->select(
+                DB::raw("COALESCE(mous.nama, transaksi, 'LAIN-LAIN') as keterangan"),
+                DB::raw('COUNT(*) as count, SUM(total) as total')
+            )
+            ->groupBy(DB::raw("COALESCE(mous.nama, transaksi, 'LAIN-LAIN')"))
             ->get();
 
         // SUMMARY PER UNIT (All sources)
