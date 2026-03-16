@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const t = tahun ? tahun.value : null;
 
     if (!u || !p) {
-      toast("Ã¢Å¡ Ã¯¸ Username dan password wajib diisi", "error");
+      toast("Username dan password wajib diisi", "error");
       return;
     }
 
@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           data = JSON.parse(text);
         } catch {
-          console.error("Ã¢Å’ BUKAN JSON:", text);
+          console.error("BUKAN JSON:", text);
           throw new Error("Server error, bukan JSON");
         }
 
@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 1000);
       })
       .catch(err => {
-        toast("Ã¢Å’ " + err.message, "error");
+        toast(err.message, "error");
         btn.disabled = false;
         btn.innerHTML = originalContent;
         password.value = "";

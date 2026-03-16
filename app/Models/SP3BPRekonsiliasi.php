@@ -10,6 +10,10 @@ class SP3BPRekonsiliasi extends Model
 
     protected $fillable = [
         'sp3bp_id',
+        'bank_masuk',
+        'bank_keluar',
+        'tunai_masuk',
+        'tunai_keluar',
         'saldo_bank',
         'saldo_tunai',
         'saldo_buku',

@@ -30,6 +30,10 @@ use App\Http\Controllers\PenandaTanganController;
 use App\Http\Controllers\SiklusUpController;
 use App\Http\Controllers\BankAccountLedgerController;
 use App\Http\Controllers\RevenueSyncController;
+use App\Http\Controllers\IncomeReportController;
+use App\Http\Controllers\ExpenseReportController;
+use App\Http\Controllers\FinancialStatementController;
+use App\Http\Controllers\BankReportController;
 
 Route::get('/health', function () {
     return response('OK', 200);
@@ -419,7 +423,7 @@ Route::middleware('auth')
         |--------------------------------------------------
         | KODE REKENING (CRUD)
         |--------------------------------------------------
-        | Ã¢Å¡ Ã¯¸ Jangan diubah endpoint-nya
+        | Jangan diubah endpoint-nya
         */
         Route::get('/master/kode-rekening', [KodeRekeningController::class, 'index'])->middleware('permission:KODE_REKENING_PENDAPATAN_VIEW');
         Route::post('/master/kode-rekening', [KodeRekeningController::class, 'store'])->middleware('permission:KODE_REKENING_PENDAPATAN_MANAGE');
@@ -457,6 +461,7 @@ Route::middleware('auth')
         */
         Route::prefix('pengesahan/sp3bp')->group(function () {
             Route::get('/', [\App\Http\Controllers\SP3BPController::class, 'index'])->middleware('permission:SP3BP_VIEW');
+            Route::post('/', [\App\Http\Controllers\SP3BPController::class, 'store'])->middleware('permission:SP3BP_GENERATE');
             Route::get('/{id}', [\App\Http\Controllers\SP3BPController::class, 'show'])->middleware('permission:SP3BP_VIEW');
             Route::post('/{id}/generate', [\App\Http\Controllers\SP3BPController::class, 'generate'])->middleware('permission:SP3BP_GENERATE');
             Route::post('/{id}/sahkan', [\App\Http\Controllers\SP3BPController::class, 'sahkan'])->middleware('permission:SP3BP_APPROVE');
@@ -468,10 +473,12 @@ Route::middleware('auth')
         // LRKB Routes
         Route::prefix('pengesahan/lrkb')->group(function () {
             Route::get('/', [\App\Http\Controllers\LRKBController::class, 'index'])->middleware('permission:LRKB_VIEW');
+            Route::post('/', [\App\Http\Controllers\LRKBController::class, 'store'])->middleware('permission:LRKB_GENERATE');
             Route::get('/{id}', [\App\Http\Controllers\LRKBController::class, 'show'])->middleware('permission:LRKB_VIEW');
             Route::post('/{id}/generate', [\App\Http\Controllers\LRKBController::class, 'generate'])->middleware('permission:LRKB_GENERATE');
             Route::post('/{id}/validate', [\App\Http\Controllers\LRKBController::class, 'validateLrkb'])->middleware('permission:LRKB_APPROVE');
             Route::post('/{id}/unvalidate', [\App\Http\Controllers\LRKBController::class, 'unvalidateLrkb'])->middleware('permission:LRKB_APPROVE');
+            Route::post('/{id}/catatan', [\App\Http\Controllers\LRKBController::class, 'saveCatatan'])->middleware('permission:LRKB_GENERATE');
             Route::get('/{id}/print', [\App\Http\Controllers\LRKBController::class, 'print'])->middleware('permission:LRKB_PRINT');
             Route::delete('/{id}', [\App\Http\Controllers\LRKBController::class, 'destroy'])->middleware('permission:LRKB_MANAGE');
         });
@@ -493,8 +500,8 @@ Route::middleware('auth')
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard/laporan/data', [LaporanController::class, 'index'])->middleware('permission:LAP_PENDAPATAN_VIEW');
-    Route::get('/dashboard/laporan/export/pendapatan', [LaporanController::class, 'export'])->middleware('permission:LAP_PENDAPATAN_EXPORT');
+    Route::get('/dashboard/laporan/data', [IncomeReportController::class, 'index'])->middleware('permission:LAP_PENDAPATAN_VIEW');
+    Route::get('/dashboard/laporan/export/pendapatan', [IncomeReportController::class, 'export'])->middleware('permission:LAP_PENDAPATAN_EXPORT');
     Route::get('/dashboard/laporan/export/pendapatan-pdf', [LaporanController::class, 'exportPdf'])->middleware('permission:LAP_PENDAPATAN_EXPORT');
 
     Route::get('/dashboard/laporan/export/rekon', [LaporanController::class, 'exportRekon'])->middleware('permission:LAP_REKON_EXPORT');
@@ -508,20 +515,20 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard/laporan/export/anggaran', [LaporanController::class, 'exportAnggaran'])->middleware('permission:LAP_LRA_EXPORT');
     Route::get('/dashboard/laporan/export/anggaran-pdf', [LaporanController::class, 'exportAnggaranPdf'])->middleware('permission:LAP_LRA_EXPORT');
-    Route::get('/dashboard/laporan/rekon', [LaporanController::class, 'getRekon'])->middleware('permission:LAP_REKON_VIEW');
-    Route::get('/dashboard/laporan/piutang', [LaporanController::class, 'getPiutang'])->middleware('permission:LAP_PIUTANG_VIEW');
-    Route::get('/dashboard/laporan/mou', [LaporanController::class, 'getMou'])->middleware('permission:LAP_MOU_VIEW');
-    Route::get('/dashboard/laporan/anggaran', [LaporanController::class, 'getAnggaran'])->middleware('permission:LAP_LRA_VIEW');
-    Route::get('/dashboard/laporan/lra', [LaporanController::class, 'getAnggaran'])->middleware('permission:LAP_LRA_VIEW');
-    Route::get('/dashboard/laporan/pengeluaran', [LaporanController::class, 'pengeluaran'])->middleware('permission:LAP_PENGELUARAN_VIEW');
-    Route::get('/dashboard/laporan/dpa', [LaporanController::class, 'getDpa'])->middleware('permission:LAP_DPA_VIEW');
+    Route::get('/dashboard/laporan/rekon', [BankReportController::class, 'getRekon'])->middleware('permission:LAP_REKON_VIEW');
+    Route::get('/dashboard/laporan/piutang', [IncomeReportController::class, 'getPiutang'])->middleware('permission:LAP_PIUTANG_VIEW');
+    Route::get('/dashboard/laporan/mou', [IncomeReportController::class, 'getMou'])->middleware('permission:LAP_MOU_VIEW');
+    Route::get('/dashboard/laporan/anggaran', [FinancialStatementController::class, 'getAnggaran'])->middleware('permission:LAP_LRA_VIEW');
+    Route::get('/dashboard/laporan/lra', [FinancialStatementController::class, 'getAnggaran'])->middleware('permission:LAP_LRA_VIEW');
+    Route::get('/dashboard/laporan/pengeluaran', [ExpenseReportController::class, 'index'])->middleware('permission:LAP_PENGELUARAN_VIEW');
+    Route::get('/dashboard/laporan/dpa', [FinancialStatementController::class, 'getDpa'])->middleware('permission:LAP_DPA_VIEW');
     Route::get('/dashboard/laporan/export/pengeluaran', [LaporanController::class, 'exportPengeluaran'])->middleware('permission:LAP_PENGELUARAN_EXPORT');
     Route::get('/dashboard/laporan/export/pengeluaran-pdf', [LaporanController::class, 'exportPengeluaranPdf'])->middleware('permission:LAP_PENGELUARAN_EXPORT');
 
     Route::get('/dashboard/laporan/export/dpa', [LaporanController::class, 'exportDpa'])->middleware('permission:LAP_DPA_EXPORT');
     Route::get('/dashboard/laporan/export/dpa-pdf', [LaporanController::class, 'exportDpaPdf'])->middleware('permission:LAP_DPA_EXPORT');
 
-    Route::get('/dashboard/laporan/bku', [LaporanController::class, 'getBku'])->middleware('permission:BKU_PENDAPATAN_VIEW');
+    Route::get('/dashboard/laporan/bku', [BankReportController::class, 'getBku'])->middleware('permission:BKU_PENDAPATAN_VIEW');
     Route::get('/dashboard/laporan/export/bku', [LaporanController::class, 'exportBku'])->middleware('permission:BKU_PENDAPATAN_EXPORT');
     Route::get('/dashboard/laporan/export/bku-pdf', [LaporanController::class, 'exportBkuPdf'])->middleware('permission:BKU_PENDAPATAN_EXPORT');
 

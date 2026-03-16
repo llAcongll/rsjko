@@ -53,6 +53,17 @@
                         <option value="PENGELUARAN">PENGELUARAN</option>
                     </select>
                 </div>
+                <div class="filter-item">
+                    <label>Klasifikasi</label>
+                    <select id="lraLevel" class="filter-date-input" style="width: 140px;">
+                        <option value="1">Akun</option>
+                        <option value="2">Kelompok</option>
+                        <option value="3" selected>Jenis</option>
+                        <option value="4">Objek</option>
+                        <option value="5">Rincian Objek</option>
+                        <option value="6">Sub Rincian Objek</option>
+                    </select>
+                </div>
                 <button class="btn-filter" id="btnSptjbLoad" onclick="performManualLoad()">
                     <i class="ph ph-magnifying-glass"></i>
                     <span>Tampilkan</span>

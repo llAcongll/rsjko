@@ -18,13 +18,13 @@ class AnggaranRekening extends Model
        RELATION
     ========================= */
 
-    // Anggaran Ã¢â€ â€™ Kode Rekening
+    // Anggaran - Kode Rekening
     public function kodeRekening()
     {
         return $this->belongsTo(KodeRekening::class, 'kode_rekening_id');
     }
 
-    // Anggaran Rekening Ã¢â€ â€™ Rincian
+    // Anggaran Rekening - Rincian
     public function rincian()
     {
         return $this->hasMany(AnggaranRincian::class, 'anggaran_rekening_id');

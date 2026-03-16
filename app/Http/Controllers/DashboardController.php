@@ -107,9 +107,9 @@ class DashboardController extends BaseController
                     'PEGAWAI', 'BARANG_JASA', 'MODAL' => $user->hasPermission('BELANJA_VIEW') ? view('dashboard.pages.pengeluaran.index', ['param' => $param]) : abort(403),
                     'ANGGARAN' => $user->hasPermission('ANGGARAN_PENGELUARAN_VIEW') ? view('dashboard.pages.pengeluaran.anggaran') : abort(403),
                     'disbursement' => ($user->hasPermission('SPP_VIEW') || $user->hasPermission('SPM_VIEW') || $user->hasPermission('SP2D_VIEW')) ? view('dashboard.pages.pengeluaran.disbursement') : abort(403),
-                    'spj' => $user->hasPermission('BELANJA_VIEW') ? view('dashboard.pages.pengeluaran.spj') : abort(403),
                     'ledger' => $user->hasPermission('BKU_PENGELUARAN_VIEW') ? view('dashboard.pages.pengeluaran.ledger') : abort(403),
                     'rekening-koran' => $user->hasPermission('REK_KORAN_PENG_VIEW') ? view('dashboard.pages.pengeluaran.rekening-koran') : abort(403),
+                    'saldo' => $user->hasPermission('BELANJA_VIEW') ? view('dashboard.pages.pengeluaran.saldo') : abort(403),
                     default => abort(404),
                 },
 
@@ -149,23 +149,39 @@ class DashboardController extends BaseController
                 ->sum('nilai');
 
             /* 2. REALISASI & BREAKDOWN (RS vs PELAYANAN) */
-            $totalRS = 0;
-            $totalPelayanan = 0;
-
-            foreach ($tables as $tbl) {
-                $sums = DB::table($tbl)
+            $revenueSubqueries = collect($tables)->map(function ($tbl) use ($tahunAnggaran) {
+                return DB::table($tbl)
                     ->join('revenue_masters', $tbl . '.revenue_master_id', '=', 'revenue_masters.id')
                     ->where($tbl . '.tahun', $tahunAnggaran)
                     ->where('revenue_masters.is_posted', true)
                     ->select(
-                        DB::raw('SUM(' . $tbl . '.rs_tindakan + ' . $tbl . '.rs_obat) as rs'),
-                        DB::raw('SUM(' . $tbl . '.pelayanan_tindakan + ' . $tbl . '.pelayanan_obat) as pelayanan')
-                    )
-                    ->first();
+                        DB::raw("'$tbl' as source_table"),
+                        DB::raw('(' . $tbl . '.rs_tindakan + ' . $tbl . '.rs_obat) as rs'),
+                        DB::raw('(' . $tbl . '.pelayanan_tindakan + ' . $tbl . '.pelayanan_obat) as pelayanan'),
+                        DB::raw($tbl . '.total as total_row')
+                    );
+            });
 
-                $totalRS += ($sums->rs ?? 0);
-                $totalPelayanan += ($sums->pelayanan ?? 0);
-            }
+            $unionedRevenue = DB::table(function ($query) use ($revenueSubqueries) {
+                $first = $revenueSubqueries->shift();
+                $query->from($first);
+                foreach ($revenueSubqueries as $sub) {
+                    $query->unionAll($sub);
+                }
+            }, 'combined_revenues');
+
+            $allSums = $unionedRevenue->select(
+                DB::raw('SUM(rs) as total_rs'),
+                DB::raw('SUM(pelayanan) as total_pelayanan'),
+                DB::raw("SUM(CASE WHEN source_table = 'pendapatan_umum' THEN total_row ELSE 0 END) as inc_umum"),
+                DB::raw("SUM(CASE WHEN source_table = 'pendapatan_bpjs' THEN total_row ELSE 0 END) as inc_bpjs"),
+                DB::raw("SUM(CASE WHEN source_table = 'pendapatan_jaminan' THEN total_row ELSE 0 END) as inc_jaminan"),
+                DB::raw("SUM(CASE WHEN source_table = 'pendapatan_kerjasama' THEN total_row ELSE 0 END) as inc_kerja"),
+                DB::raw("SUM(CASE WHEN source_table = 'pendapatan_lain' THEN total_row ELSE 0 END) as inc_lain")
+            )->first();
+
+            $totalRS = $allSums->total_rs ?? 0;
+            $totalPelayanan = $allSums->total_pelayanan ?? 0;
 
             /* 3. DEDUCTIONS (POTONGAN & ADM BANK) */
             $totalPotongan = DB::table('penyesuaian_pendapatans')
@@ -185,31 +201,11 @@ class DashboardController extends BaseController
             $persenCapaianPengeluaran = $targetPengeluaran > 0 ? round(($realisasiPengeluaran / $targetPengeluaran) * 100, 2) : 0;
 
             /* 6. DISTRIBUSI PASIEN (Pie Chart) */
-            $incUmum = DB::table('pendapatan_umum')
-                ->join('revenue_masters', 'pendapatan_umum.revenue_master_id', '=', 'revenue_masters.id')
-                ->where('pendapatan_umum.tahun', $tahunAnggaran)
-                ->where('revenue_masters.is_posted', true)
-                ->sum('pendapatan_umum.total');
-            $incBpjs = DB::table('pendapatan_bpjs')
-                ->join('revenue_masters', 'pendapatan_bpjs.revenue_master_id', '=', 'revenue_masters.id')
-                ->where('pendapatan_bpjs.tahun', $tahunAnggaran)
-                ->where('revenue_masters.is_posted', true)
-                ->sum('pendapatan_bpjs.total');
-            $incJaminan = DB::table('pendapatan_jaminan')
-                ->join('revenue_masters', 'pendapatan_jaminan.revenue_master_id', '=', 'revenue_masters.id')
-                ->where('pendapatan_jaminan.tahun', $tahunAnggaran)
-                ->where('revenue_masters.is_posted', true)
-                ->sum('pendapatan_jaminan.total');
-            $incKerja = DB::table('pendapatan_kerjasama')
-                ->join('revenue_masters', 'pendapatan_kerjasama.revenue_master_id', '=', 'revenue_masters.id')
-                ->where('pendapatan_kerjasama.tahun', $tahunAnggaran)
-                ->where('revenue_masters.is_posted', true)
-                ->sum('pendapatan_kerjasama.total');
-            $incLain = DB::table('pendapatan_lain')
-                ->join('revenue_masters', 'pendapatan_lain.revenue_master_id', '=', 'revenue_masters.id')
-                ->where('pendapatan_lain.tahun', $tahunAnggaran)
-                ->where('revenue_masters.is_posted', true)
-                ->sum('pendapatan_lain.total');
+            $incUmum = $allSums->inc_umum ?? 0;
+            $incBpjs = $allSums->inc_bpjs ?? 0;
+            $incJaminan = $allSums->inc_jaminan ?? 0;
+            $incKerja = $allSums->inc_kerja ?? 0;
+            $incLain = $allSums->inc_lain ?? 0;
 
             $totalForDist = $incUmum + $incBpjs + $incJaminan + $incKerja + $incLain;
 
@@ -251,19 +247,29 @@ class DashboardController extends BaseController
             // Get all rooms first to ensure labels are complete (optional, but better for consistency)
             $rooms = DB::table('ruangans')->pluck('nama', 'id');
 
-            foreach ($tables as $tbl) {
-                $results = DB::table($tbl)
+            $roomSubqueries = collect($tables)->map(function ($tbl) use ($tahunAnggaran) {
+                return DB::table($tbl)
                     ->join('revenue_masters', $tbl . '.revenue_master_id', '=', 'revenue_masters.id')
                     ->where($tbl . '.tahun', $tahunAnggaran)
                     ->where('revenue_masters.is_posted', true)
                     ->select($tbl . '.ruangan_id', DB::raw('SUM(' . $tbl . '.total) as total'))
-                    ->groupBy($tbl . '.ruangan_id')
-                    ->get();
+                    ->groupBy($tbl . '.ruangan_id');
+            });
 
-                foreach ($results as $res) {
-                    $roomName = $rooms[$res->ruangan_id] ?? 'Unknown';
-                    $roomIncome[$roomName] = ($roomIncome[$roomName] ?? 0) + $res->total;
+            $unionedRooms = DB::table(function ($query) use ($roomSubqueries) {
+                $first = $roomSubqueries->shift();
+                $query->from($first);
+                foreach ($roomSubqueries as $sub) {
+                    $query->unionAll($sub);
                 }
+            }, 'combined_rooms')
+            ->select('ruangan_id', DB::raw('SUM(total) as total'))
+            ->groupBy('ruangan_id')
+            ->get();
+
+            foreach ($unionedRooms as $res) {
+                $roomName = $rooms[$res->ruangan_id] ?? 'Unknown';
+                $roomIncome[$roomName] = ($roomIncome[$roomName] ?? 0) + $res->total;
             }
 
             // Sort by income DESC
@@ -321,9 +327,53 @@ class DashboardController extends BaseController
     public function chart7Days()
     {
         $tables = ['pendapatan_umum', 'pendapatan_bpjs', 'pendapatan_jaminan', 'pendapatan_kerjasama', 'pendapatan_lain'];
-
-        // Cari tahun dari data terakhir
         $year = session('tahun_anggaran') ?? now()->year;
+
+        // 1. Fetch all Income grouped by month and table
+        $incomeSubqueries = collect($tables)->map(function ($tbl) use ($year) {
+            return DB::table($tbl)
+                ->join('revenue_masters', $tbl . '.revenue_master_id', '=', 'revenue_masters.id')
+                ->where($tbl . '.tahun', $year)
+                ->where('revenue_masters.is_posted', true)
+                ->select(
+                    DB::raw("MONTH($tbl.tanggal) as bulan"),
+                    DB::raw("'$tbl' as source_table"),
+                    DB::raw("SUM($tbl.total) as total_inc")
+                )
+                ->groupBy(DB::raw("MONTH($tbl.tanggal)"), DB::raw("'$tbl'"));
+        });
+
+        $monthlyIncomeRaw = DB::table(function ($query) use ($incomeSubqueries) {
+            $first = $incomeSubqueries->shift();
+            $query->from($first);
+            foreach ($incomeSubqueries as $sub) {
+                $query->unionAll($sub);
+            }
+        }, 'combined_monthly_inc')
+        ->select('bulan', 'source_table', 'total_inc')
+        ->get();
+
+        // 2. Fetch all Deductions grouped by month and category
+        $monthlyDeductions = DB::table('penyesuaian_pendapatans')
+            ->where('tahun', $year)
+            ->select(
+                DB::raw("MONTH(tanggal) as bulan"),
+                'kategori',
+                DB::raw('SUM(IFNULL(potongan, 0) + IFNULL(administrasi_bank, 0)) as total_ded')
+            )
+            ->groupBy(DB::raw("MONTH(tanggal)"), 'kategori')
+            ->get()
+            ->groupBy('bulan');
+
+        // 3. Fetch all Expenditures grouped by month
+        $monthlyExpenditures = DB::table('expenditures')
+            ->whereYear('spending_date', $year)
+            ->select(
+                DB::raw("MONTH(spending_date) as bulan"),
+                DB::raw('SUM(gross_value) as total_exp')
+            )
+            ->groupBy(DB::raw("MONTH(spending_date)"))
+            ->pluck('total_exp', 'bulan');
 
         $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         $labels = [];
@@ -333,34 +383,23 @@ class DashboardController extends BaseController
         for ($m = 1; $m <= 12; $m++) {
             $labels[] = $monthNames[$m - 1];
 
-            // 1. PENDAPATAN
+            // Calculate Income for this month from union result
             $monthTotal = 0;
+            $monthRows = $monthlyIncomeRaw->where('bulan', $m);
+            
             foreach ($tables as $tbl) {
-                // Deduct for BPJS and Jaminan in chart too
-                $raw = DB::table($tbl)
-                    ->join('revenue_masters', $tbl . '.revenue_master_id', '=', 'revenue_masters.id')
-                    ->where($tbl . '.tahun', $year)
-                    ->whereMonth($tbl . '.tanggal', $m)
-                    ->where('revenue_masters.is_posted', true)
-                    ->sum($tbl . '.total');
+                $raw = $monthRows->where('source_table', $tbl)->sum('total_inc');
 
                 if ($tbl === 'pendapatan_bpjs' || $tbl === 'pendapatan_jaminan') {
-                    $mStart = Carbon::create($year, $m, 1)->toDateString();
-                    $mEnd = Carbon::create($year, $m, 1)->endOfMonth()->toDateString();
-                    $ded = $this->calculateDeductions($mStart, $mEnd, $tbl, $year);
+                    $kat = ($tbl === 'pendapatan_bpjs') ? 'BPJS' : 'JAMINAN';
+                    $ded = $monthlyDeductions->get($m)?->where('kategori', $kat)->sum('total_ded') ?? 0;
                     $raw = max(0, $raw - $ded);
                 }
-
                 $monthTotal += $raw;
             }
-            $values[] = $monthTotal;
 
-            // 2. PENGELUARAN (ECONOMIC)
-            $pengTotal = DB::table('expenditures')
-                ->whereYear('spending_date', $year)
-                ->whereMonth('spending_date', $m)
-                ->sum('gross_value');
-            $valuesPengeluaran[] = $pengTotal;
+            $values[] = $monthTotal;
+            $valuesPengeluaran[] = $monthlyExpenditures->get($m) ?? 0;
         }
 
         return response()->json([

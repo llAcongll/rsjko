@@ -19,7 +19,7 @@ $cssPaths = [
     'resources/views' => ['blade.php']
 ];
 
-echo "Ã°Å¸Å¡â‚¬ Starting CSS Conflict Cleaner...\n";
+echo "Starting CSS Conflict Cleaner...\n";
 
 foreach ($cssPaths as $path => $exts) {
     if (!is_dir($root . '/' . $path))
@@ -152,7 +152,7 @@ $report .= "Generated on: " . date('Y-m-d H:i:s') . "\n";
 $report .= "Mode: " . ($isFixMode ? "Fix & Protect" : "Audit Only") . "\n\n";
 
 if (empty($results)) {
-    $report .= "Ã°Å¸â€ºÂ¡Ã¯Â¸Â **Universal Table System is fully protected.** No conflicts detected.\n";
+    $report .= "**Universal Table System is fully protected.** No conflicts detected.\n";
 } else {
     $report .= "| File | Conflict Details | Status |\n";
     $report .= "| :--- | :--- | :--- |\n";

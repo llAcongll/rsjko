@@ -188,7 +188,7 @@ $report .= "Generated on: " . date('Y-m-d H:i:s') . "\n";
 $report .= "Mode: " . ($isFixMode ? "Auto-Fix & Repair" : "Audit Only (No Changes Made)") . "\n\n";
 
 if (empty($results)) {
-    $report .= "Ã¢Å“â€¦ **All systems go!** No table inconsistencies detected across the application.\n";
+    $report .= "**All systems go!** No table inconsistencies detected across the application.\n";
 } else {
     $report .= "| File | Issues Found / Resolved | Status |\n";
     $report .= "| :--- | :--- | :--- |\n";

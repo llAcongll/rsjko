@@ -16,6 +16,7 @@ class RekeningKoran extends Model
         'tanggal',
         'tahun',
         'bank',
+        'destination_bank',
         'keterangan',
         'cd',
         'jumlah',
@@ -27,6 +28,7 @@ class RekeningKoran extends Model
         'tahun' => 'integer',
         'jumlah' => 'decimal:2',
         'is_saldo_awal' => 'boolean',
+        'destination_bank' => 'string',
     ];
 }
 

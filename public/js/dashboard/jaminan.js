@@ -803,7 +803,7 @@
         isEditJaminan = true;
         editJaminanId = id;
         const title = document.querySelector('#pendapatanJaminanModal .modal-title');
-        if (title) title.innerText = 'Ã¢Å“Ã¯¸ Edit Pendapatan Jaminan';
+        if (title) title.innerText = 'Edit Pendapatan Jaminan';
 
         const data = await fetch(`/dashboard/pendapatan/jaminan/${id}`, { headers: { Accept: 'application/json' } }).then(res => res.json());
 

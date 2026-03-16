@@ -14,15 +14,15 @@ window.openRuanganForm = function (id = null, kode = '', nama = '') {
   const kodeEl = document.getElementById('ruanganKode');
   const namaEl = document.getElementById('ruanganNama');
 
-  titleEl.innerText = id ? 'Ã¢Å“Ã¯¸ Edit Ruangan' : 'Ã°Å¸¥ Tambah Ruangan';
+  titleEl.innerText = id ? 'Edit Ruangan' : 'Tambah Ruangan';
   namaEl.value = nama || '';
 
   if (id) {
-    // EDIT Ã¢â€ â€™ kode tetap
+    // EDIT - kode tetap
     kodeEl.value = kode;
     kodeEl.readOnly = true;
   } else {
-    // TAMBAH Ã¢â€ â€™ auto-generate kode
+    // TAMBAH - auto-generate kode
     kodeEl.value = '';
     kodeEl.readOnly = true;
 
@@ -86,7 +86,7 @@ window.submitRuangan = function () {
     .then(() => {
       closeRuanganModal();
       if (typeof window.loadRuanganTable === 'function') {
-        window.loadRuanganTable(); // Ã°Å¸â€¥ REFRESH DATA SAJA
+        window.loadRuanganTable(); // REFRESH DATA SAJA
       }
       toast('Ruangan berhasil disimpan', 'success');
     })
@@ -97,19 +97,19 @@ window.submitRuangan = function () {
    LOAD DATA RUANGAN
 ========================= */
 window.loadRuanganTable = function () {
-  console.log('Ã°Å¸â€¥ loadRuanganTable DIPANGGIL');
+  console.log('loadRuanganTable DIPANGGIL');
 
   fetch('/dashboard/ruangan-list', {
     headers: { 'Accept': 'application/json' }
   })
     .then(r => r.json())
     .then(data => {
-      // Ã°Å¸â€â€˜ SIMPAN KE STATE
+      // SIMPAN KE STATE
       ruanganData = data;
       filteredRuangan = [...data];
       currentPage = 1;
 
-      // Ã°Å¸â€¥ RENDER LEWAT SATU PINTU
+      // RENDER LEWAT SATU PINTU
       renderRuanganPage();
       updatePaginationInfo(filteredRuangan.length);
       updateSortIconsRuangan();

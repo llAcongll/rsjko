@@ -101,7 +101,7 @@ window.openAnggaranModal = function (id, nama) {
   document.getElementById('arKodeRekeningId').value = id;
   document.getElementById('arTahun').value = activeAnggaranTahun;
   if (document.getElementById('arTahunLabel')) document.getElementById('arTahunLabel').innerText = activeAnggaranTahun;
-  document.getElementById('anggaranModalTitle').innerText = `Ã°Å¸â€™° Anggaran: ${nama}`;
+  document.getElementById('anggaranModalTitle').innerText = `Anggaran: ${nama}`;
   document.getElementById('rincianBody').innerHTML = '';
   document.getElementById('arNilai').value = 'Rp 0';
 

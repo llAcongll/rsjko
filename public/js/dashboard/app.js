@@ -32,11 +32,11 @@ window.loadContent = async function (page) {
   if (!mainContent) return false;
 
   try {
-    mainContent.innerHTML = "<div style='display:flex;justify-content:center;padding:40px;'><p>Ã¢³ Memuat...</p></div>";
+    mainContent.innerHTML = "<div style='display:flex;justify-content:center;padding:40px;'><p>Memuat...</p></div>";
 
     const res = await fetch(`/dashboard/content/${page}`);
     if (!res.ok) {
-      mainContent.innerHTML = "<p>Ã¢Å’ Gagal memuat konten</p>";
+      mainContent.innerHTML = "<p>Gagal memuat konten</p>";
       return false;
     }
 
@@ -45,7 +45,7 @@ window.loadContent = async function (page) {
     return true;
   } catch (err) {
     console.error(err);
-    mainContent.innerHTML = "<p>Ã¢Å’ Terjadi kesalahan</p>";
+    mainContent.innerHTML = "<p>Terjadi kesalahan</p>";
     return false;
   }
 };
@@ -775,16 +775,16 @@ window.openLaporanSp2d = async function (btn) {
 };
 
 window.openSaldoDana = async function (btn) {
-  if (!guardPermission('BELANJA_VIEW')) return;
+  if (!guardPermission('BKU_PENGELUARAN_VIEW')) return;
 
-  const parentBtn = document.getElementById('btnPengeluaran');
+  const parentBtn = document.getElementById('btnKasPeng');
   setActiveMenu(parentBtn);
   closeOnMobile();
 
   await loadContent('pengeluaran/saldo');
 
   document
-    .querySelectorAll('#submenuPengeluaran button')
+    .querySelectorAll('#submenuKasPeng button')
     .forEach(b => b.classList.remove('active'));
 
   if (btn) btn.classList.add('active');

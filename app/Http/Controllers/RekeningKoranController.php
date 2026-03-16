@@ -21,7 +21,7 @@ class RekeningKoranController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKKOR_VIEW'), 403);
+        $this->authorizePermission('REKKOR_VIEW');
 
         $q = RekeningKoran::query()
             ->where('tahun', session('tahun_anggaran', date('Y')));
@@ -51,7 +51,7 @@ class RekeningKoranController extends Controller
 
     public function setSaldoAwal(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
+        $this->authorizePermission('REKKOR_MANAGE');
 
         $request->validate([
             'bank' => 'required',
@@ -76,7 +76,7 @@ class RekeningKoranController extends Controller
                 'tanggal' => $tahun . '-01-01',
                 'bank' => $request->bank,
                 'keterangan' => 'Saldo Awal Tahun ' . $tahun,
-                'cd' => 'D',
+                'cd' => 'C',
                 'jumlah' => $request->jumlah,
                 'is_saldo_awal' => true
             ]);
@@ -87,7 +87,7 @@ class RekeningKoranController extends Controller
 
     public function deleteSaldoAwal(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
+        $this->authorizePermission('REKKOR_MANAGE');
 
         $request->validate([
             'bank' => 'required',
@@ -105,7 +105,7 @@ class RekeningKoranController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
+        $this->authorizePermission('REKKOR_MANAGE');
 
         $data = $request->validate([
             'tanggal' => 'required|date',
@@ -152,13 +152,13 @@ class RekeningKoranController extends Controller
 
     public function show(RekeningKoran $rekeningKoran)
     {
-        abort_unless(auth()->user()->hasPermission('REKKOR_VIEW'), 403);
+        $this->authorizePermission('REKKOR_VIEW');
         return response()->json($rekeningKoran);
     }
 
     public function update(Request $request, RekeningKoran $rekeningKoran)
     {
-        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
+        $this->authorizePermission('REKKOR_MANAGE');
 
         // Proteksi data yang sudah diposting
         if ($rekeningKoran->cd === 'C' && $rekeningKoran->revenue_master_id) {
@@ -228,7 +228,7 @@ class RekeningKoranController extends Controller
 
     public function destroy(RekeningKoran $rekeningKoran)
     {
-        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
+        $this->authorizePermission('REKKOR_MANAGE');
 
         // Proteksi data yang sudah diposting
         if ($rekeningKoran->cd === 'C' && $rekeningKoran->revenue_master_id) {
@@ -269,7 +269,7 @@ class RekeningKoranController extends Controller
 
     public function downloadTemplate()
     {
-        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
+        $this->authorizePermission('REKKOR_MANAGE');
 
         $headers = [
             'Content-Type' => 'text/csv',
@@ -288,7 +288,7 @@ class RekeningKoranController extends Controller
 
     public function import(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
+        $this->authorizePermission('REKKOR_MANAGE');
 
         $request->validate([
             'file' => 'required|file|mimes:csv,txt'
@@ -412,7 +412,7 @@ class RekeningKoranController extends Controller
     }
     public function bulkDelete(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKKOR_MANAGE'), 403);
+        $this->authorizePermission('REKKOR_MANAGE');
 
         $bank = $request->input('bank');
         $start = $request->input('start');
@@ -466,7 +466,7 @@ class RekeningKoranController extends Controller
 
     public function print(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKKOR_EXPORT'), 403);
+        $this->authorizePermission('REKKOR_EXPORT');
 
         $bank = $request->input('bank');
         $start = $request->input('start');
@@ -527,7 +527,7 @@ class RekeningKoranController extends Controller
 
     public function exportExcel(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('REKKOR_EXPORT'), 403);
+        $this->authorizePermission('REKKOR_EXPORT');
 
         $bank = $request->input('bank');
         $start = $request->input('start');
@@ -539,10 +539,8 @@ class RekeningKoranController extends Controller
             $qAwal = RekeningKoran::where('tahun', $tahun)->where('tanggal', '<', $start);
             if ($bank && $bank !== 'Semua Bank')
                 $qAwal->where('bank', $bank);
-            $itemsAwal = $qAwal->get();
-            foreach ($itemsAwal as $item) {
-                $saldoAwal += ($item->cd === 'C' ? $item->jumlah : -$item->jumlah);
-            }
+            
+            $saldoAwal = $qAwal->selectRaw("SUM(CASE WHEN cd = 'C' THEN jumlah ELSE -jumlah END) as balance")->value('balance') ?? 0;
         }
 
         $query = RekeningKoran::where('tahun', $tahun);
@@ -560,20 +558,20 @@ class RekeningKoranController extends Controller
             $item->saldo_running = $running;
         }
 
-        header("Content-Type: application/vnd.ms-excel");
-        header("Content-Disposition: attachment; filename=\"Rekening_Koran_{$tahun}.xls\"");
-
-        return view('dashboard.exports.rekening_excel', [
-            'items' => $items,
-            'saldoAwal' => $saldoAwal,
-            'bank' => $bank ?: 'Semua Bank',
-            'start' => $start,
-            'end' => $end,
-            'tahun' => $tahun,
-            'ptKiri' => $request->has('ptKiri') ? \App\Models\PenandaTangan::find($request->ptKiri) : null,
-            'ptTengah' => $request->has('ptTengah') ? \App\Models\PenandaTangan::find($request->ptTengah) : null,
-            'ptKanan' => $request->has('ptKanan') ? \App\Models\PenandaTangan::find($request->ptKanan) : null,
-        ]);
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\RekeningKoranExport([
+                'items' => $items,
+                'saldoAwal' => $saldoAwal,
+                'bank' => $bank ?: 'Semua Bank',
+                'start' => $start,
+                'end' => $end,
+                'tahun' => $tahun,
+                'ptKiri' => $request->has('ptKiri') ? \App\Models\PenandaTangan::find($request->ptKiri) : null,
+                'ptTengah' => $request->has('ptTengah') ? \App\Models\PenandaTangan::find($request->ptTengah) : null,
+                'ptKanan' => $request->has('ptKanan') ? \App\Models\PenandaTangan::find($request->ptKanan) : null,
+            ]),
+            "Rekening_Koran_{$tahun}.xlsx"
+        );
     }
 }
 

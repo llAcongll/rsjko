@@ -104,7 +104,8 @@ window.loadLaporan = async function (type) {
     const tahunEl = document.getElementById('laporanTahun');
     const start = startEl ? startEl.value : '';
     const end = endEl ? endEl.value : '';
-    const tahun = tahunEl ? tahunEl.value : '';
+    const tahun = (tahunEl && tahunEl.value) ? tahunEl.value : (window.tahunAnggaran || '');
+
 
     window.lastLaporanType = type;
 
@@ -132,13 +133,13 @@ window.loadLaporan = async function (type) {
             case 'PIUTANG': url = `/dashboard/laporan/piutang?${params}`; break;
             case 'MOU': url = `/dashboard/laporan/mou?${params}`; break;
             case 'ANGGARAN': {
-                const start = document.getElementById('startDate')?.value;
-                const end = document.getElementById('endDate')?.value;
-                const tahun = document.getElementById('laporanTahun')?.value || '';
-                const kategori = document.getElementById('lraCategory')?.value || 'SEMUA';
-                const klasifikasi = document.getElementById('lraLevel')?.value || '3';
+                const s = document.getElementById('startDate')?.value ?? start;
+                const e = document.getElementById('endDate')?.value ?? end;
+                const t = document.getElementById('laporanTahun')?.value || tahun;
+                const kat = document.getElementById('lraCategory')?.value || 'SEMUA';
+                const klas = document.getElementById('lraLevel')?.value || '3';
 
-                url = `/dashboard/laporan/lra?start=${start}&end=${end}&tahun=${tahun}&kategori=${kategori}&klasifikasi=${klasifikasi}`;
+                url = `/dashboard/laporan/lra?start=${s}&end=${e}&tahun=${t}&kategori=${kat}&klasifikasi=${klas}`;
                 break;
             }
             case 'PENGELUARAN': url = `/dashboard/laporan/pengeluaran?${params}`; break;
@@ -680,7 +681,7 @@ function renderRekon(data) {
 
     // Check if data is not empty
     if (!data || !data.analysis || data.analysis.length === 0) {
-        analysisBody.innerHTML = '<tr><td colspan="6" style="text-align:center">Ã°Å¸â€œ­ Tidak ada data transaksi</td></tr>';
+        analysisBody.innerHTML = '<tr><td colspan="6" style="text-align:center">Tidak ada data transaksi</td></tr>';
         if (recapBody) recapBody.innerHTML = '<tr><td colspan="5" class="text-center">Tidak ada data rekap</td></tr>';
         if (bankBody) bankBody.innerHTML = '<tr><td colspan="5" class="text-center">Tidak ada data saldo bank</td></tr>';
         if (sumBank) sumBank.innerText = 'Rp 0';
@@ -739,10 +740,10 @@ function renderRekon(data) {
         let statusClass = 'badge-success';
         let statusText = '✅ MATCH';
 
-        if (item.status === 'BELUM DISETOR') { statusClass = 'badge-danger'; statusText = 'Ã¢Å¡ Ã¯¸ BELUM DISETOR'; }
-        else if (item.status === 'BELUM DICATAT') { statusClass = 'badge-warning'; statusText = 'Ã¢â€œ BELUM DICATAT'; }
-        else if (item.status === 'DELAY SETORAN') { statusClass = 'badge-info'; statusText = 'Ã¢³ DELAY'; }
-        else if (item.status === 'SELISIH NOMINAL') { statusClass = 'badge-danger'; statusText = 'Ã¢Å’ SELISIH'; }
+        if (item.status === 'BELUM DISETOR') { statusClass = 'badge-danger'; statusText = 'BELUM DISETOR'; }
+        else if (item.status === 'BELUM DICATAT') { statusClass = 'badge-warning'; statusText = 'BELUM DICATAT'; }
+        else if (item.status === 'DELAY SETORAN') { statusClass = 'badge-info'; statusText = 'DELAY'; }
+        else if (item.status === 'SELISIH NOMINAL') { statusClass = 'badge-danger'; statusText = 'SELISIH'; }
 
         const selisihColor = item.selisih === 0 ? '#64748b' : (item.selisih > 0 ? '#16a34a' : '#ef4444');
 
@@ -1199,19 +1200,19 @@ function renderAnggaran(data) {
 
         if (data.category === 'SEMUA') {
             tableContainer.innerHTML += generateTableHtml(data.data_pendapatan, 'PENDAPATAN', {
-                target: data.sub_totals.pendapatan.target,
-                realisasi_total: data.sub_totals.pendapatan.real,
-                realisasi_lalu: data.data_pendapatan.reduce((a, b) => a + (b.level === 1 ? b.realisasi_lalu : 0), 0),
-                realisasi_kini: data.data_pendapatan.reduce((a, b) => a + (b.level === 1 ? b.realisasi_kini : 0), 0),
-                persen: data.sub_totals.pendapatan.persen
+                target: data.sub_totals.pendapatan.target || 0,
+                realisasi_total: data.sub_totals.pendapatan.real || 0,
+                realisasi_lalu: data.sub_totals.pendapatan.real_lalu || 0,
+                realisasi_kini: data.sub_totals.pendapatan.real_kini || 0,
+                persen: data.sub_totals.pendapatan.persen || 0
             });
 
             tableContainer.innerHTML += generateTableHtml(data.data_pengeluaran, 'BELANJA (PENGELUARAN)', {
-                target: data.sub_totals.pengeluaran.target,
-                realisasi_total: data.sub_totals.pengeluaran.real,
-                realisasi_lalu: data.data_pengeluaran.reduce((a, b) => a + (b.level === 1 ? b.realisasi_lalu : 0), 0),
-                realisasi_kini: data.data_pengeluaran.reduce((a, b) => a + (b.level === 1 ? b.realisasi_kini : 0), 0),
-                persen: data.sub_totals.pengeluaran.persen
+                target: data.sub_totals.pengeluaran.target || 0,
+                realisasi_total: data.sub_totals.pengeluaran.real || 0,
+                realisasi_lalu: data.sub_totals.pengeluaran.real_lalu || 0,
+                realisasi_kini: data.sub_totals.pengeluaran.real_kini || 0,
+                persen: data.sub_totals.pengeluaran.persen || 0
             });
 
             // Summary Table (Surplus/Defisit)
@@ -1386,7 +1387,8 @@ window.exportLaporan = function (type) {
 
     if (reportType === 'ANGGARAN') {
         const cat = document.getElementById('lraCategory')?.value || 'SEMUA';
-        url += `&category=${cat}`;
+        const klas = document.getElementById('lraLevel')?.value || '3';
+        url += `&category=${cat}&klasifikasi=${klas}`;
 
         const tw = document.getElementById('sp3bpTriwulan')?.value;
         if (tw) {
@@ -1446,7 +1448,7 @@ window.exportLaporan = function (type) {
         url = `/dashboard/laporan/export/${endpoint}?tahun=${th}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
     }
     window.location.href = url;
-    toast(`Ã¢³ Menyiapkan Unduh Excel ${reportType}...`, 'info');
+    toast(`Menyiapkan Unduh Excel ${reportType}...`, 'info');
 };
 
 window.exportPdf = function (type) {
@@ -1469,7 +1471,7 @@ window.exportPdf = function (type) {
             url = `/dashboard/laporan/export/${endpoint}?periode=${p}&bulan=${b}&triwulan=${tw}&semester=${sem}&start=${start}&end=${end}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
         }
         window.location.href = url;
-        toast(`Ã¢³ Menyiapkan Unduh PDF ${reportType}...`, 'info');
+        toast(`Menyiapkan Unduh PDF ${reportType}...`, 'info');
         return;
     }
 
@@ -1517,7 +1519,8 @@ window.exportPdf = function (type) {
 
     if (reportType === 'ANGGARAN') {
         const cat = document.getElementById('lraCategory')?.value || 'SEMUA';
-        url += `&category=${cat}`;
+        const klas = document.getElementById('lraLevel')?.value || '3';
+        url += `&category=${cat}&klasifikasi=${klas}`;
 
         const tw = document.getElementById('sp3bpTriwulan')?.value;
         if (tw) {
@@ -1577,7 +1580,7 @@ window.exportPdf = function (type) {
         url = `/dashboard/laporan/export/${endpoint}?tahun=${th}&pt_id_kiri=${ptKiri}&pt_id_tengah=${ptTengah}&pt_id_kanan=${ptKanan}`;
     }
     window.location.href = url;
-    toast(`Ã¢³ Menyiapkan Export PDF ${reportType}...`, 'info');
+    toast(`Menyiapkan Export PDF ${reportType}...`, 'info');
 };
 
 window.numFr = (num) => {
@@ -3622,25 +3625,25 @@ window.renderSp3bpDetail = function (data) {
                     <h4 style="margin-bottom:10px;">Rekonsiliasi Kas (Fisik)</h4>
                     <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
                         <tr>
-                            <td style="color: #64748b;">Bank (Penerimaan)</td>
+                            <td style="color: #64748b;">Saldo Bank (Penerimaan)</td>
                             <td class="text-right" style="color: #10b981;">+ ${formatRupiahTable(data.rekonsiliasi?.bank_masuk || 0)}</td>
                         </tr>
                         <tr>
-                            <td style="color: #64748b;">Bank (Pengeluaran)</td>
-                            <td class="text-right" style="color: #ef4444;">- ${formatRupiahTable(data.rekonsiliasi?.bank_keluar || 0)}</td>
+                            <td style="color: #64748b;">Saldo Bank (Pengeluaran)</td>
+                            <td class="text-right" style="color: #10b981;">+ ${formatRupiahTable(data.rekonsiliasi?.bank_keluar || 0)}</td>
                         </tr>
                         <tr style="border-bottom: 1px dashed #e2e8f0;">
-                            <td style="font-weight: 600;">Sub-Total Bank</td>
+                            <td style="font-weight: 600;">Sub-Total Saldo Bank</td>
                             <td class="text-right" style="font-weight: 600; background: #fafafa;">${formatRupiahTable(data.rekonsiliasi?.saldo_bank || 0)}</td>
                         </tr>
                         <tr style="height: 5px;"><td></td><td></td></tr>
                         <tr>
-                            <td style="color: #64748b;">Tunai (Penerimaan)</td>
+                            <td style="color: #64748b;">Saldo Kas Tunai (Penerimaan)</td>
                             <td class="text-right" style="color: #10b981;">+ ${formatRupiahTable(data.rekonsiliasi?.tunai_masuk || 0)}</td>
                         </tr>
                         <tr>
-                            <td style="color: #64748b;">Tunai (Pengeluaran)</td>
-                            <td class="text-right" style="color: #ef4444;">- ${formatRupiahTable(data.rekonsiliasi?.tunai_keluar || 0)}</td>
+                            <td style="color: #64748b;">Saldo Kas Tunai (Pengeluaran)</td>
+                            <td class="text-right" style="color: #10b981;">+ ${formatRupiahTable(data.rekonsiliasi?.tunai_keluar || 0)}</td>
                         </tr>
                         <tr style="border-bottom: 1px dashed #e2e8f0;">
                             <td style="font-weight: 600;">Sub-Total Tunai</td>
@@ -3951,14 +3954,25 @@ window.renderLrkbDetail = function (data) {
                             <td style="border: 1px solid black; padding: 12px; font-weight: 800; background: #fafafa;">SALDO AWAL KAS</td>
                             <td style="border: 1px solid black; padding: 12px; text-align: right;"></td>
                         </tr>
-                        <tr>
-                            <td style="border: 1px solid black; padding: 12px; padding-left: 40px;">Saldo Kas Per 1 Januari / Libur Lalu</td>
-                            <td style="border: 1px solid black; padding: 12px;">${formatRupiahTable(data.saldo_awal)}</td>
-                        </tr>
-                        <tr style="font-weight: 800; background: #fff;">
-                            <td style="border: 1px solid black; padding: 12px; padding-left: 20px;">JUMLAH SALDO AWAL</td>
-                            <td style="border: 1px solid black; padding: 12px; border-top: 2px solid black;">${formatRupiahTable(data.saldo_awal)}</td>
-                        </tr>
+                        ${(() => {
+            const saPen = (data.details || []).find(d => d.jenis === 'sa_penerimaan')?.jumlah || 0;
+            const saPeng = (data.details || []).find(d => d.jenis === 'sa_pengeluaran')?.jumlah || 0;
+            const saTotal = data.saldo_awal || (saPen + saPeng);
+            return `
+                                <tr>
+                                    <td style="border: 1px solid black; padding: 12px; padding-left: 40px;">- Saldo Awal Penerimaan</td>
+                                    <td style="border: 1px solid black; padding: 12px;">${formatRupiahTable(saPen)}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid black; padding: 12px; padding-left: 40px;">- Saldo Awal Pengeluaran</td>
+                                    <td style="border: 1px solid black; padding: 12px;">${formatRupiahTable(saPeng)}</td>
+                                </tr>
+                                <tr style="font-weight: 800; background: #fff;">
+                                    <td style="border: 1px solid black; padding: 12px; padding-left: 20px;">JUMLAH SALDO AWAL</td>
+                                    <td style="border: 1px solid black; padding: 12px; border-top: 2px solid black;">${formatRupiahTable(saTotal)}</td>
+                                </tr>
+                            `;
+        })()}
 
                         <!-- PENERIMAAN -->
                         <tr style="height: 15px;"><td colspan="2" style="border: 1px solid black;"></td></tr>
@@ -3995,19 +4009,21 @@ window.renderLrkbDetail = function (data) {
                             <td style="border: 1px solid black; padding: 15px; text-align: right;"></td>
                         </tr>
                         ${(() => {
-            const d_bank_in = (data.details || []).find(d => d.jenis === 'bank_masuk')?.jumlah || 0;
-            const d_bank_out = (data.details || []).find(d => d.jenis === 'bank_keluar')?.jumlah || 0;
-            const d_tunai_in = (data.details || []).find(d => d.jenis === 'tunai_masuk')?.jumlah || 0;
-            const d_tunai_out = (data.details || []).find(d => d.jenis === 'tunai_keluar')?.jumlah || 0;
+            const getVal = (type) => (data.details || []).find(d => d.jenis === type)?.jumlah || 0;
+            
+            const b_pen = getVal('bank_penerimaan_end');
+            const b_peng = getVal('bank_pengeluaran_end');
+            const t_pen = getVal('tunai_penerimaan_end');
+            const t_peng = getVal('tunai_pengeluaran_end');
 
             return `
                                 <tr>
-                                    <td style="border: 1px solid black; padding: 12px; padding-left: 40px;">- Arus Bank (Penerimaan)</td>
-                                    <td style="border: 1px solid black; padding: 12px; color: #10b981;">+ ${formatRupiahTable(d_bank_in)}</td>
+                                    <td style="border: 1px solid black; padding: 12px; padding-left: 40px;">- Saldo Bank Penerimaan</td>
+                                    <td style="border: 1px solid black; padding: 12px; color: #10b981;">+ ${formatRupiahTable(b_pen)}</td>
                                 </tr>
                                 <tr>
-                                    <td style="border: 1px solid black; padding: 12px; padding-left: 40px;">- Arus Bank (Pengeluaran)</td>
-                                    <td style="border: 1px solid black; padding: 12px; color: #ef4444;">- ${formatRupiahTable(d_bank_out)}</td>
+                                    <td style="border: 1px solid black; padding: 12px; padding-left: 40px;">- Saldo Bank Pengeluaran</td>
+                                    <td style="border: 1px solid black; padding: 12px; color: #10b981;">+ ${formatRupiahTable(b_peng)}</td>
                                 </tr>
                                 <tr style="background: #fafafa;">
                                     <td style="border: 1px solid black; padding: 12px; padding-left: 40px; font-weight: 700;">Sub-Total Saldo Bank (Rekening Koran)</td>
@@ -4015,12 +4031,12 @@ window.renderLrkbDetail = function (data) {
                                 </tr>
                                 <tr style="height: 10px;"><td colspan="2" style="border-left: 1px solid black; border-right: 1px solid black;"></td></tr>
                                 <tr>
-                                    <td style="border: 1px solid black; padding: 12px; padding-left: 40px;">- Arus Tunai (Penerimaan)</td>
-                                    <td style="border: 1px solid black; padding: 12px; color: #10b981;">+ ${formatRupiahTable(d_tunai_in)}</td>
+                                    <td style="border: 1px solid black; padding: 12px; padding-left: 40px;">- Saldo Kas Tunai Penerimaan</td>
+                                    <td style="border: 1px solid black; padding: 12px; color: #10b981;">+ ${formatRupiahTable(t_pen)}</td>
                                 </tr>
                                 <tr>
-                                    <td style="border: 1px solid black; padding: 12px; padding-left: 40px;">- Arus Tunai (Pengeluaran)</td>
-                                    <td style="border: 1px solid black; padding: 12px; color: #ef4444;">- ${formatRupiahTable(d_tunai_out)}</td>
+                                    <td style="border: 1px solid black; padding: 12px; padding-left: 40px;">- Saldo Kas Tunai Pengeluaran</td>
+                                    <td style="border: 1px solid black; padding: 12px; color: #10b981;">+ ${formatRupiahTable(t_peng)}</td>
                                 </tr>
                                 <tr style="background: #fafafa;">
                                     <td style="border: 1px solid black; padding: 12px; padding-left: 40px; font-weight: 700;">Sub-Total Saldo Kas Tunai (Fisik di Brankas)</td>

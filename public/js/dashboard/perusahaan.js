@@ -14,15 +14,15 @@ window.openPerusahaanForm = function (id = null, kode = '', nama = '') {
     const kodeEl = document.getElementById('perusahaanKode');
     const namaEl = document.getElementById('perusahaanNama');
 
-    titleEl.innerText = id ? 'Ã¢Å“Ã¯¸ Edit Perusahaan' : 'Ã°Å¸¢ Tambah Perusahaan';
+    titleEl.innerText = id ? 'Edit Perusahaan' : 'Tambah Perusahaan';
     namaEl.value = nama || '';
 
     if (id) {
-        // EDIT Ã¢â€ â€™ kode tetap
+        // EDIT - kode tetap
         kodeEl.value = kode;
         kodeEl.readOnly = true;
     } else {
-        // TAMBAH Ã¢â€ â€™ auto-generate kode
+        // TAMBAH - auto-generate kode
         kodeEl.value = '';
         kodeEl.readOnly = true;
 
@@ -97,7 +97,7 @@ window.submitPerusahaan = function () {
    LOAD DATA PERUSAHAAN
 ========================= */
 window.loadPerusahaanTable = function () {
-    console.log('Ã°Å¸â€¥ loadPerusahaanTable DIPANGGIL');
+    console.log('loadPerusahaanTable DIPANGGIL');
 
     fetch('/dashboard/perusahaan-list', {
         headers: { 'Accept': 'application/json' }

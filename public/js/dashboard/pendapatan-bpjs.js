@@ -824,7 +824,7 @@
         isEditBpjs = true;
         editBpjsId = id;
         const title = document.querySelector('#pendapatanBpjsModal .modal-title');
-        if (title) title.innerText = 'Ã¢Å“Ã¯¸ Edit Pendapatan BPJS';
+        if (title) title.innerText = 'Edit Pendapatan BPJS';
 
         const data = await fetch(`/dashboard/pendapatan/bpjs/${id}`, { headers: { Accept: 'application/json' } }).then(res => res.json());
 

@@ -879,7 +879,7 @@ function executeAdvance(id, newStatus, label, manualNo = '') {
 }
 
 window.revertStatus = function (id, targetStatus) {
-    const labels = { SPP: 'SPM Ã¢â€ â€™ SPP', SPM: 'SP2D Ã¢â€ â€™ SPM' };
+    const labels = { SPP: 'SPM ke SPP', SPM: 'SP2D ke SPM' };
     const label = labels[targetStatus] || targetStatus;
 
     showActionModal({

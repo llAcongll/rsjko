@@ -14,15 +14,15 @@ window.openMouForm = function (id = null, kode = '', nama = '') {
     const kodeEl = document.getElementById('mouKode');
     const namaEl = document.getElementById('mouNama');
 
-    titleEl.innerText = id ? 'Ã¢Å“Ã¯¸ Edit MOU' : 'Ã°Å¸¤ Tambah MOU';
+    titleEl.innerText = id ? 'Edit MOU' : 'Tambah MOU';
     namaEl.value = nama || '';
 
     if (id) {
-        // EDIT Ã¢â€ â€™ kode tetap
+        // EDIT - kode tetap
         kodeEl.value = kode;
         kodeEl.readOnly = true;
     } else {
-        // TAMBAH Ã¢â€ â€™ auto-generate kode
+        // TAMBAH - auto-generate kode
         kodeEl.value = '';
         kodeEl.readOnly = true;
 
@@ -97,7 +97,7 @@ window.submitMou = function () {
    LOAD DATA MOU
 ========================= */
 window.loadMouTable = function () {
-    console.log('Ã°Å¸â€¥ loadMouTable DIPANGGIL');
+    console.log('loadMouTable DIPANGGIL');
 
     fetch('/dashboard/mou-list', {
         headers: { 'Accept': 'application/json' }

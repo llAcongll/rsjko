@@ -116,9 +116,18 @@
                 <td>SALDO AWAL KAS</td>
                 <td></td>
             </tr>
+            @php
+                $detailsMap = $lrkb->details->pluck('jumlah', 'jenis');
+                $saPen = $detailsMap['sa_penerimaan'] ?? 0;
+                $saPeng = $detailsMap['sa_pengeluaran'] ?? 0;
+            @endphp
             <tr>
-                <td style="padding-left: 25px;">Saldo Awal (Per 1 Jan / Periode Lalu)</td>
-                <td class="text-right">{{ number_format($lrkb->saldo_awal, 2, ',', '.') }}</td>
+                <td style="padding-left: 25px;">- Saldo Awal Penerimaan</td>
+                <td class="text-right">{{ number_format($saPen, 2, ',', '.') }}</td>
+            </tr>
+            <tr>
+                <td style="padding-left: 25px;">- Saldo Awal Pengeluaran</td>
+                <td class="text-right">{{ number_format($saPeng, 2, ',', '.') }}</td>
             </tr>
             <tr class="font-bold">
                 <td>JUMLAH SALDO AWAL</td>
@@ -169,35 +178,40 @@
                 <td>POSISI KAS NYATA / FISIK (REAL)</td>
                 <td></td>
             </tr>
-            @php
-                $detailsMap = $lrkb->details->pluck('jumlah', 'jenis');
-                $bankIn = $detailsMap['bank_masuk'] ?? 0;
-                $bankOut = $detailsMap['bank_keluar'] ?? 0;
-                $tunaiIn = $detailsMap['tunai_masuk'] ?? 0;
-                $tunaiOut = $detailsMap['tunai_keluar'] ?? 0;
-            @endphp
-            <tr>
-                <td style="padding-left: 25px; border-bottom: none;">- Saldo Bank (Rekening Koran)</td>
-                <td class="text-right" style="border-bottom: none;">{{ number_format($lrkb->saldo_bank, 2, ',', '.') }}
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2" style="padding-left: 50px; font-size: 9pt; color: #555; border-top: none;">
-                    <i>Arus Bank: Masuk (+) {{ number_format($bankIn, 2, ',', '.') }} | Keluar (-)
-                        {{ number_format($bankOut, 2, ',', '.') }}</i>
-                </td>
-            </tr>
-            <tr>
-                <td style="padding-left: 25px; border-bottom: none;">- Saldo Kas Tunai (di Brankas)</td>
-                <td class="text-right" style="border-bottom: none;">{{ number_format($lrkb->saldo_tunai, 2, ',', '.') }}
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2" style="padding-left: 50px; font-size: 9pt; color: #555; border-top: none;">
-                    <i>Arus Tunai: Masuk (+) {{ number_format($tunaiIn, 2, ',', '.') }} | Keluar (-)
-                        {{ number_format($tunaiOut, 2, ',', '.') }}</i>
-                </td>
-            </tr>
+             @php
+                 $detailsMap = $lrkb->details->pluck('jumlah', 'jenis');
+                 $b_pen = $detailsMap['bank_penerimaan_end'] ?? 0;
+                 $b_peng = $detailsMap['bank_pengeluaran_end'] ?? 0;
+                 $t_pen = $detailsMap['tunai_penerimaan_end'] ?? 0;
+                 $t_peng = $detailsMap['tunai_pengeluaran_end'] ?? 0;
+             @endphp
+             <tr>
+                 <td style="padding-left: 25px;">- Saldo Bank Penerimaan</td>
+                 <td class="text-right">+ {{ number_format($b_pen, 2, ',', '.') }}</td>
+             </tr>
+             <tr>
+                 <td style="padding-left: 25px;">- Saldo Bank Pengeluaran</td>
+                 <td class="text-right">+ {{ number_format($b_peng, 2, ',', '.') }}</td>
+             </tr>
+             <tr class="font-bold">
+                 <td style="padding-left: 15px;">Sub-Total Saldo Bank (Rekening Koran)</td>
+                 <td class="text-right" style="border-top: 1px solid black;">{{ number_format($lrkb->saldo_bank, 2, ',', '.') }}</td>
+             </tr>
+
+             <tr style="height: 10px;"><td colspan="2" style="border: none;"></td></tr>
+
+             <tr>
+                 <td style="padding-left: 25px;">- Saldo Kas Tunai Penerimaan</td>
+                 <td class="text-right">+ {{ number_format($t_pen, 2, ',', '.') }}</td>
+             </tr>
+             <tr>
+                 <td style="padding-left: 25px;">- Saldo Kas Tunai Pengeluaran</td>
+                 <td class="text-right">+ {{ number_format($t_peng, 2, ',', '.') }}</td>
+             </tr>
+             <tr class="font-bold">
+                 <td style="padding-left: 15px;">Sub-Total Saldo Kas Tunai (di Brankas)</td>
+                 <td class="text-right" style="border-top: 1px solid black;">{{ number_format($lrkb->saldo_tunai, 2, ',', '.') }}</td>
+             </tr>
 
             <tr style="height: 10px;">
                 <td colspan="2" style="border: none;"></td>
@@ -235,8 +249,3 @@
 </body>
 
 </html>
-
-
-
-
-

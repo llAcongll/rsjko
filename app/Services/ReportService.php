@@ -295,34 +295,39 @@ class ReportService
     {
         $rootNodes = \App\Models\KodeRekening::whereNull('parent_id')
             ->orderBy('kode')
+            ->with('children')
             ->get();
+
+        // Batch fetch all rincian for the year to avoid N+1 in recursion
+        $allRincian = DB::table('anggaran_rincian')
+            ->join('anggaran_rekening', 'anggaran_rincian.anggaran_rekening_id', '=', 'anggaran_rekening.id')
+            ->where('anggaran_rekening.tahun', $tahun)
+            ->select(
+                'anggaran_rekening.kode_rekening_id',
+                'anggaran_rincian.uraian',
+                'anggaran_rincian.volume',
+                'anggaran_rincian.satuan',
+                'anggaran_rincian.tarif',
+                'anggaran_rincian.subtotal'
+            )
+            ->get()
+            ->groupBy('kode_rekening_id');
 
         $flatList = [];
         foreach ($rootNodes as $node) {
-            $this->processDpaNode($node, $tahun, $flatList);
+            $this->processDpaNode($node, $tahun, $flatList, $allRincian);
         }
 
         return $flatList;
     }
 
-    private function processDpaNode($node, $tahun, &$flatList)
+    private function processDpaNode($node, $tahun, &$flatList, $allRincian)
     {
         $total = 0;
         $childList = [];
 
         if ($node->tipe === 'detail') {
-            $rincian = DB::table('anggaran_rincian')
-                ->join('anggaran_rekening', 'anggaran_rincian.anggaran_rekening_id', '=', 'anggaran_rekening.id')
-                ->where('anggaran_rekening.kode_rekening_id', $node->id)
-                ->where('anggaran_rekening.tahun', $tahun)
-                ->select(
-                    'anggaran_rincian.uraian',
-                    'anggaran_rincian.volume',
-                    'anggaran_rincian.satuan',
-                    'anggaran_rincian.tarif',
-                    'anggaran_rincian.subtotal'
-                )
-                ->get();
+            $rincian = $allRincian->get($node->id) ?? [];
 
             foreach ($rincian as $r) {
                 $total += $r->subtotal;
@@ -339,7 +344,7 @@ class ReportService
             }
         } else {
             foreach ($node->children as $child) {
-                $res = $this->processDpaNode($child, $tahun, $childList);
+                $res = $this->processDpaNode($child, $tahun, $childList, $allRincian);
                 $total += $res['total'];
             }
         }
@@ -407,7 +412,7 @@ class ReportService
             'rk.bank_remarks'
         )
             ->orderBy('rm.tanggal', 'asc')
-            ->get();
+            ->cursor();
 
         // 2. Ambil Rekening Koran yang belum memiliki revenue_master_id (BELUM DICATAT)
         $queryOrphan = DB::table('rekening_korans')
@@ -784,6 +789,14 @@ class ReportService
         $startOfYear = $tahun . '-01-01';
         $prevEnd = Carbon::parse($start)->subDay()->toDateString();
 
+        \Log::info('Generating LRA Data', [
+            'category' => $category,
+            'start' => $start,
+            'end' => $end,
+            'tahun_session' => session('tahun_anggaran'),
+            'tahun_passed' => $tahun
+        ]);
+
         $query = \App\Models\KodeRekening::with('children')
             ->whereNull('parent_id')
             ->orderBy('category', 'asc')
@@ -953,39 +966,91 @@ class ReportService
         switch ($sumberData) {
             case 'UMUM':
             case 'PASIEN_UMUM':
-                return $this->getActiveRevenueQuery('pendapatan_umum')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
+                return DB::table('pendapatan_umum')
+                    ->join('revenue_masters', 'pendapatan_umum.revenue_master_id', '=', 'revenue_masters.id')
+                    ->where('pendapatan_umum.tahun', $tahun)
+                    ->whereBetween('pendapatan_umum.tanggal', [$startDate, $endDate])
+                    ->sum('pendapatan_umum.total');
+
             case 'BPJS_JAMINAN':
-                $bpjs = $this->getActiveRevenueQuery('pendapatan_bpjs')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
-                $jam = $this->getActiveRevenueQuery('pendapatan_jaminan')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
-                $ded = DB::table('penyesuaian_pendapatans')->whereIn('kategori', ['BPJS', 'JAMINAN'])->whereBetween('tanggal', [$startDate, $endDate])->where('tahun', $tahun)->sum(DB::raw('IFNULL(potongan, 0) + IFNULL(administrasi_bank, 0)'));
-                return ($bpjs + $jam) - $ded;
-            case 'KERJASAMA':
-                return $this->getActiveRevenueQuery('pendapatan_kerjasama')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->sum('total');
-            case 'PKL':
-                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->whereIn('ruangan_id', function ($q) {
-                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Praktek Kerja Lapangan%');
-                })->sum('total');
-            case 'MAGANG':
-                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->whereIn('ruangan_id', function ($q) {
-                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Magang%');
-                })->sum('total');
-            case 'PENELITIAN':
-                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->whereIn('ruangan_id', function ($q) {
-                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Penelitian%');
-                })->sum('total');
-            case 'PERMINTAAN_DATA':
-                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->whereIn('ruangan_id', function ($q) {
-                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Permintaan Data%')->orWhere('nama', 'like', '%Pengambilan Data%');
-                })->sum('total');
-            case 'STUDY_BANDING':
-                return $this->getActiveRevenueQuery('pendapatan_lain')->where('tahun', $tahun)->whereBetween('tanggal', [$startDate, $endDate])->whereIn('ruangan_id', function ($q) {
-                    $q->select('id')->from('ruangans')->where('nama', 'like', '%Studi Banding%');
-                })->sum('total');
-            case 'LAIN_LAIN':
-                return $this->getActiveRevenueQuery('pendapatan_lain')
-                    ->where('tahun', $tahun)
+                $bpjs = DB::table('pendapatan_bpjs')
+                    ->join('revenue_masters', 'pendapatan_bpjs.revenue_master_id', '=', 'revenue_masters.id')
+                    ->where('pendapatan_bpjs.tahun', $tahun)
+                    ->whereBetween('pendapatan_bpjs.tanggal', [$startDate, $endDate])
+                    ->sum('pendapatan_bpjs.total');
+
+                $jam = DB::table('pendapatan_jaminan')
+                    ->join('revenue_masters', 'pendapatan_jaminan.revenue_master_id', '=', 'revenue_masters.id')
+                    ->where('pendapatan_jaminan.tahun', $tahun)
+                    ->whereBetween('pendapatan_jaminan.tanggal', [$startDate, $endDate])
+                    ->sum('pendapatan_jaminan.total');
+
+                $ded = DB::table('penyesuaian_pendapatans')
+                    ->whereIn('kategori', ['BPJS', 'JAMINAN'])
                     ->whereBetween('tanggal', [$startDate, $endDate])
-                    ->whereNotIn('ruangan_id', function ($q) {
+                    ->where('tahun', $tahun)
+                    ->sum(DB::raw('IFNULL(potongan, 0) + IFNULL(administrasi_bank, 0)'));
+
+                return ($bpjs + $jam) - $ded;
+
+            case 'KERJASAMA':
+                return DB::table('pendapatan_kerjasama')
+                    ->join('revenue_masters', 'pendapatan_kerjasama.revenue_master_id', '=', 'revenue_masters.id')
+                    ->where('pendapatan_kerjasama.tahun', $tahun)
+                    ->whereBetween('pendapatan_kerjasama.tanggal', [$startDate, $endDate])
+                    ->sum('pendapatan_kerjasama.total');
+
+            case 'PKL':
+                return DB::table('pendapatan_lain')
+                    ->join('revenue_masters', 'pendapatan_lain.revenue_master_id', '=', 'revenue_masters.id')
+                    ->where('pendapatan_lain.tahun', $tahun)
+                    ->whereBetween('pendapatan_lain.tanggal', [$startDate, $endDate])
+                    ->whereIn('pendapatan_lain.ruangan_id', function ($q) {
+                        $q->select('id')->from('ruangans')->where('nama', 'like', '%Praktek Kerja Lapangan%');
+                    })->sum('pendapatan_lain.total');
+
+            case 'MAGANG':
+                return DB::table('pendapatan_lain')
+                    ->join('revenue_masters', 'pendapatan_lain.revenue_master_id', '=', 'revenue_masters.id')
+                    ->where('pendapatan_lain.tahun', $tahun)
+                    ->whereBetween('pendapatan_lain.tanggal', [$startDate, $endDate])
+                    ->whereIn('pendapatan_lain.ruangan_id', function ($q) {
+                        $q->select('id')->from('ruangans')->where('nama', 'like', '%Magang%');
+                    })->sum('pendapatan_lain.total');
+
+            case 'PENELITIAN':
+                return DB::table('pendapatan_lain')
+                    ->join('revenue_masters', 'pendapatan_lain.revenue_master_id', '=', 'revenue_masters.id')
+                    ->where('pendapatan_lain.tahun', $tahun)
+                    ->whereBetween('pendapatan_lain.tanggal', [$startDate, $endDate])
+                    ->whereIn('pendapatan_lain.ruangan_id', function ($q) {
+                        $q->select('id')->from('ruangans')->where('nama', 'like', '%Penelitian%');
+                    })->sum('pendapatan_lain.total');
+
+            case 'PERMINTAAN_DATA':
+                return DB::table('pendapatan_lain')
+                    ->join('revenue_masters', 'pendapatan_lain.revenue_master_id', '=', 'revenue_masters.id')
+                    ->where('pendapatan_lain.tahun', $tahun)
+                    ->whereBetween('pendapatan_lain.tanggal', [$startDate, $endDate])
+                    ->whereIn('pendapatan_lain.ruangan_id', function ($q) {
+                        $q->select('id')->from('ruangans')->where('nama', 'like', '%Permintaan Data%')->orWhere('nama', 'like', '%Pengambilan Data%');
+                    })->sum('pendapatan_lain.total');
+
+            case 'STUDY_BANDING':
+                return DB::table('pendapatan_lain')
+                    ->join('revenue_masters', 'pendapatan_lain.revenue_master_id', '=', 'revenue_masters.id')
+                    ->where('pendapatan_lain.tahun', $tahun)
+                    ->whereBetween('pendapatan_lain.tanggal', [$startDate, $endDate])
+                    ->whereIn('pendapatan_lain.ruangan_id', function ($q) {
+                        $q->select('id')->from('ruangans')->where('nama', 'like', '%Studi Banding%');
+                    })->sum('pendapatan_lain.total');
+
+            case 'LAIN_LAIN':
+                return DB::table('pendapatan_lain')
+                    ->join('revenue_masters', 'pendapatan_lain.revenue_master_id', '=', 'revenue_masters.id')
+                    ->where('pendapatan_lain.tahun', $tahun)
+                    ->whereBetween('pendapatan_lain.tanggal', [$startDate, $endDate])
+                    ->whereNotIn('pendapatan_lain.ruangan_id', function ($q) {
                         $q->select('id')->from('ruangans')
                             ->where('nama', 'like', '%Praktek Kerja Lapangan%')
                             ->orWhere('nama', 'like', '%Magang%')
@@ -994,7 +1059,9 @@ class ReportService
                             ->orWhere('nama', 'like', '%Pengambilan Data%')
                             ->orWhere('nama', 'like', '%Studi Banding%');
                     })
-                    ->sum('total');
+                    ->sum('pendapatan_lain.total');
+
+
             case 'PEGAWAI':
             case 'BARANG_JASA':
             case 'MODAL':
@@ -1303,7 +1370,7 @@ class ReportService
             $query->select(DB::raw(1))
                 ->from('revenue_masters')
                 ->whereColumn('revenue_masters.id', "{$table}.revenue_master_id")
-                ->where('revenue_masters.is_posted', true);
+                ->whereIn('revenue_masters.is_posted', [0, 1]);
         });
     }
 

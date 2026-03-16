@@ -655,7 +655,7 @@
     const totalEl = document.getElementById('totalPembayaran');
     if (totalEl) totalEl.innerText = 'Rp 0';
     const titleEl = document.querySelector('.modal-title');
-    if (titleEl) titleEl.innerText = 'Ã¢Å¾â€¢ Tambah Pasien Umum';
+    if (titleEl) titleEl.innerText = 'Tambah Pasien Umum';
 
     modal.classList.add('show');
     loadRuangan();
@@ -675,7 +675,7 @@
 
     const btnSimpan = document.getElementById('btnSimpanPendapatan');
     btnSimpan.disabled = true;
-    btnSimpan.innerText = 'Ã¢³ Menyimpan...';
+    btnSimpan.innerText = 'Menyimpan...';
 
     const formData = new FormData(form);
     // Add activeMasterId
@@ -712,7 +712,7 @@
       toast(err.message, 'error');
     } finally {
       btnSimpan.disabled = false;
-      btnSimpan.innerText = 'Ã°Å¸â€™¾ Simpan';
+      btnSimpan.innerText = 'Simpan';
     }
   };
 
@@ -751,12 +751,12 @@
 
       form.querySelectorAll('.nominal-display').forEach((disp, i) => {
         const val = form.querySelectorAll('.nominal-value')[i].value;
-        disp.value = formatRibuan(val);
+      disp.value = formatRibuan(val);
       });
 
       hitungTotal();
       cekSiapSimpan();
-      document.querySelector('.modal-title').innerText = 'Ã¢Å“Ã¯¸ Edit Pasien Umum';
+      document.querySelector('.modal-title').innerText = 'Edit Pasien Umum';
     });
   };
 
@@ -860,7 +860,7 @@
       totalNominal += parseFloat(input.value || 0);
     });
 
-    let valid = !!(tanggal && nama && ruangan && metode && totalNominal > 0);
+    let valid = !!(tanggal && nama && ruangan && metode && (metode === 'TUNAI' || totalNominal > 0));
 
     if (metode === 'NON_TUNAI') {
       if (!bank || !detail) {

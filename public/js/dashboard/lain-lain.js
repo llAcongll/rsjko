@@ -775,7 +775,7 @@
         isEditLain = true;
         editLainId = id;
         const title = document.querySelector('#pendapatanLainModal .modal-title');
-        if (title) title.innerText = 'Ã¢Å“Ã¯¸ Edit Pendapatan Lain-lain';
+        if (title) title.innerText = 'Edit Pendapatan Lain-lain';
 
         const data = await fetch(`/dashboard/pendapatan/lain/${id}`, { headers: { Accept: 'application/json' } }).then(res => res.json());
         await openPendapatanLainModal();

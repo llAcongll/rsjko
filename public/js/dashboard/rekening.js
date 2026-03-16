@@ -28,7 +28,7 @@ window.openRekeningForm = function (row = null) {
   editingRekeningId = row ? row.id : null;
 
   rekeningModalTitle.innerText =
-    row ? 'Ã¢Å“Ã¯¸ Edit Rekening' : 'Ã¢Å¾â€¢ Tambah Rekening';
+    row ? 'Edit Rekening' : 'Tambah Rekening';
 
   rkTanggal.value = formatDateForInput(row?.tanggal);
 
@@ -155,6 +155,12 @@ window.detailRekening = function (id) {
                         </span>
                     </div>
                 </div>
+                ${row.cd === 'D' ? `
+                <div class="detail-row">
+                    <div class="label">Kirim ke Bank</div>
+                    <div class="value">${row.destination_bank || '-'}</div>
+                </div>
+                ` : ''}
                 <div class="detail-total">
                     <span>Jumlah</span>
                     <strong>${formatRupiah(row.jumlah)}</strong>
@@ -270,7 +276,7 @@ window.loadRekening = function () {
 /* =========================
    RENDER TABLE + SUMMARY
 ========================= */
-// Ã°Å¸â€¹ refactor calculation logic for reuse
+// refactor calculation logic for reuse
 function getRekeningProcessedData(data) {
   const bankFilter = document.getElementById('filterBank')?.value || '';
   const startDateFilter = document.getElementById('filterStart')?.value || '';

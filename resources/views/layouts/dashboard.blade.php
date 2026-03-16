@@ -300,6 +300,12 @@
               <span>BKU Pengeluaran</span>
             </button>
           @endif
+          @if(auth()->user()->hasPermission('BKU_PENGELUARAN_VIEW'))
+            <button onclick="openSaldoDana(this)">
+              <i class="ph ph-piggy-bank"></i>
+              <span>Saldo Dana</span>
+            </button>
+          @endif
         </div>
       @endif
 

@@ -780,7 +780,7 @@
         isEditKerjasama = true;
         editKerjasamaId = id;
         const title = document.querySelector('#pendapatanKerjasamaModal .modal-title');
-        if (title) title.innerText = 'Ã¢Å“Ã¯¸ Edit Pendapatan Kerjasama';
+        if (title) title.innerText = 'Edit Pendapatan Kerjasama';
 
         const data = await fetch(`/dashboard/pendapatan/kerjasama/${id}`, { headers: { Accept: 'application/json' } }).then(res => res.json());
         await openPendapatanKerjasamaModal();

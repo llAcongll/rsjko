@@ -16,8 +16,7 @@ class TreasurerCashController extends Controller
 
     public function index(Request $request)
     {
-        // ... (existing code inside index remains the same)
-        abort_unless(auth()->user()->hasPermission('BKU_PENGELUARAN_VIEW') || auth()->user()->isAdmin(), 403);
+        $this->authorizePermission('BKU_PENGELUARAN_VIEW', true);
 
         $year = $request->get('year', date('Y'));
         $month = $request->get('month');
@@ -59,7 +58,7 @@ class TreasurerCashController extends Controller
 
     public function sync(Request $request)
     {
-        abort_unless(auth()->user()->hasPermission('BKU_PENGELUARAN_EXPORT') || auth()->user()->isAdmin(), 403);
+        $this->authorizePermission('BKU_PENGELUARAN_EXPORT', true);
         $year = $request->get('year', session('tahun_anggaran', date('Y')));
         $this->service->syncLedger($year);
         return response()->json(['message' => 'BKU synchronized successfully']);
