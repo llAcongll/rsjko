@@ -97,51 +97,51 @@
         </div>
 
         <div
-            style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 20px;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <button class="btn-preview" style="background: #64748b; border-color: #64748b; color: white;"
+            style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 20px; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button class="btn-preview" style="background: #64748b; border-color: #64748b; color: white; padding: 6px 12px; font-size: 11px;"
                     onclick="closePreviewModal()">
                     <i class="ph ph-x-circle"></i> Tutup
                 </button>
 
                 <div
-                    style="display: flex; gap: 10px; background: #f8fafc; padding: 6px 12px; border-radius: 10px; border: 1px solid #e2e8f0;">
-                    <div class="filter-item" style="display: flex; align-items: center; gap: 5px;">
-                        <label style="font-size: 10px; font-weight: 700; color: #475569;">PT. KIRI:</label>
+                    style="display: flex; gap: 6px; background: #f8fafc; padding: 4px 8px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div class="filter-item" style="display: flex; align-items: center; gap: 4px;">
+                        <label style="font-size: 9px; font-weight: 700; color: #475569; white-space: nowrap;">PT. KIRI:</label>
                         <select id="ptSelectKiri" onchange="updateSignatory('Kiri')"
-                            style="height: 30px; padding: 0 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 10px; min-width: 140px; background: #fff;">
+                            style="height: 26px; padding: 0 4px; border-radius: 4px; border: 1px solid #cbd5e1; font-size: 9px; width: 120px; background: #fff;">
                             <option value="">-- Kosong --</option>
                         </select>
                     </div>
-                    <div class="divider" style="width: 1px; height: 25px; background: #e2e8f0;"></div>
-                    <div class="filter-item" style="display: flex; align-items: center; gap: 5px;">
-                        <label style="font-size: 10px; font-weight: 700; color: #475569;">PT. TENGAH:</label>
+                    <div class="divider" style="width: 1px; height: 18px; background: #e2e8f0;"></div>
+                    <div class="filter-item" style="display: flex; align-items: center; gap: 4px;">
+                        <label style="font-size: 9px; font-weight: 700; color: #475569; white-space: nowrap;">PT. TENGAH:</label>
                         <select id="ptSelectTengah" onchange="updateSignatory('Tengah')"
-                            style="height: 30px; padding: 0 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 10px; min-width: 140px; background: #fff;">
+                            style="height: 26px; padding: 0 4px; border-radius: 4px; border: 1px solid #cbd5e1; font-size: 9px; width: 120px; background: #fff;">
                             <option value="">-- Kosong --</option>
                         </select>
                     </div>
-                    <div class="divider" style="width: 1px; height: 25px; background: #e2e8f0;"></div>
-                    <div class="filter-item" style="display: flex; align-items: center; gap: 5px;">
-                        <label style="font-size: 10px; font-weight: 700; color: #475569;">PT. KANAN:</label>
+                    <div class="divider" style="width: 1px; height: 18px; background: #e2e8f0;"></div>
+                    <div class="filter-item" style="display: flex; align-items: center; gap: 4px;">
+                        <label style="font-size: 9px; font-weight: 700; color: #475569; white-space: nowrap;">PT. KANAN:</label>
                         <select id="ptSelectKanan" onchange="updateSignatory('Kanan')"
-                            style="height: 30px; padding: 0 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 10px; min-width: 140px; background: #fff;">
+                            style="height: 26px; padding: 0 4px; border-radius: 4px; border: 1px solid #cbd5e1; font-size: 9px; width: 120px; background: #fff;">
                             <option value="">-- Kosong --</option>
                         </select>
                     </div>
                 </div>
             </div>
-            <div style="display: flex; gap: 12px;">
+            <div style="display: flex; gap: 8px;">
                 @if(auth()->user()->hasPermission('LAPORAN_EXPORT'))
-                    <button class="btn-filter" style="background: #10b981; border-color: #10b981; color: white;"
+                    <button class="btn-filter" style="background: #10b981; border-color: #10b981; color: white; padding: 6px 12px; font-size: 11px;"
                         onclick="exportLaporan()">
-                        <i class="ph ph-file-xls"></i> Unduh Excel
+                        <i class="ph ph-file-xls"></i> Excel
                     </button>
                 @endif
                 @if(auth()->user()->hasPermission('LAPORAN_EXPORT_PDF'))
-                    <button class="btn-filter" style="background: #ef4444; border-color: #ef4444; color: white;"
+                    <button class="btn-filter" style="background: #ef4444; border-color: #ef4444; color: white; padding: 6px 12px; font-size: 11px;"
                         onclick="exportPdf()">
-                        <i class="ph ph-file-pdf"></i> Unduh PDF
+                        <i class="ph ph-file-pdf"></i> PDF
                     </button>
                 @endif
             </div>

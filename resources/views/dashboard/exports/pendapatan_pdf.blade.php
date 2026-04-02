@@ -162,7 +162,7 @@
         <tr>
             <td style="width: 165px; border: none; vertical-align: top;">
                 <img src="https://lh3.googleusercontent.com/d/1L_r51MzZ9qlSFW1WKVvJM40DKtrA-6hx=w400"
-                    style="height: 165px; width: auto; object-fit: contain;">
+                    style="height: 165px; width: auto; object-fit: contain;" />
             </td>
             <td style="border: none; text-align: center; vertical-align: top; padding-right: 165px;">
                 <h1 style="margin: 0; padding: 0; font-size: 14pt; font-weight: normal; color: #000; line-height: 1.2;">

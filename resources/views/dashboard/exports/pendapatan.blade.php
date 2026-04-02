@@ -1,640 +1,454 @@
-<!DOCTYPE html>
-<html>
+@php
+    function format_number($val) {
+        return number_format($val, 2, ',', '.');
+    }
+@endphp
+<table>
+    <tr>
+        <td colspan="8" style="text-align: center; font-size: 14pt;">PEMERINTAH PROVINSI KEPULAUAN RIAU</td>
+    </tr>
+    <tr>
+        <td colspan="8" style="text-align: center; font-size: 13pt; font-weight: bold;">RUMAH SAKIT JIWA DAN KETERGANTUNGAN OBAT ENGKU HAJI DAUD</td>
+    </tr>
+    <tr>
+        <td colspan="8" style="text-align: center; font-size: 8pt;">Jalan Indun Suri - Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152</td>
+    </tr>
+    <tr>
+        <td colspan="8" style="text-align: center; font-size: 8pt;">Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795</td>
+    </tr>
+    <tr>
+        <td colspan="8" style="text-align: center; border-bottom: 2px solid #000; height: 10px;"></td>
+    </tr>
+    <tr><td colspan="8" style="height: 20px;"></td></tr>
+    <tr>
+        <td colspan="8" style="font-size: 16pt; font-weight: bold; text-align: center;">LAPORAN PENDAPATAN PASIEN</td>
+    </tr>
+    <tr>
+        <td colspan="8" style="font-size: 11pt; text-align: center;">Periode: {{ \Carbon\Carbon::parse($start)->translatedFormat('d F Y') }} s/d {{ \Carbon\Carbon::parse($end)->translatedFormat('d F Y') }}</td>
+    </tr>
+    <tr><td colspan="8" style="height: 30px;"></td></tr>
 
-<head>
-    <meta charset="utf-8">
-    <style>
-        .title {
-            font-family: Arial, sans-serif;
-            font-size: 16pt;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .subtitle {
-            font-family: Arial, sans-serif;
-            font-size: 11pt;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .table {
-            border-collapse: collapse;
-            width: 100%;
-            font-family: Arial, sans-serif;
-            font-size: 10pt;
-        }
-
-        .table th {
-            background-color: #f2f2f2;
-            border: 1px solid #000;
-            padding: 5px;
-        }
-
-        .table td {
-            border: 1px solid #000;
-            padding: 5px;
-        }
-
-        .text-right {
-            text-align: right;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .font-bold {
-            font-weight: bold;
-        }
-
-        .bg-gray {
-            background-color: #f9f9f9;
-        }
-
-        .section-header {
-            background-color: #d9ead3;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .spacer {
-            height: 20px;
-            border: none !important;
-        }
-    </style>
-</head>
-
-<body>
-    <table class="table" style="border: none; margin-bottom: 20px;">
+    <!-- SECTION 1 -->
+    <tr>
+        <td colspan="5" style="background-color: #d9ead3; font-size: 12pt; font-weight: bold; border: 1px solid #000;">1. RINGKASAN PENDAPATAN</td>
+    </tr>
+    <tr>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Kategori Pendapatan</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Jumlah Transaksi</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Jasa Rumah Sakit</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Jasa Pelayanan</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Total Pendapatan</th>
+    </tr>
+    @php $totTrans = 0; $totRs = 0; $totPel = 0; $totAll = 0; @endphp
+    @foreach(['UMUM' => 'Pasien Umum', 'BPJS' => 'BPJS', 'JAMINAN' => 'Jaminan', 'KERJASAMA' => 'Kerjasama', 'LAIN' => 'Lain-lain'] as $key => $label)
+        @php
+            $item = $summary[$key] ?? ['count' => 0, 'rs' => 0, 'pelayanan' => 0, 'total' => 0];
+            $totTrans += $item['count']; $totRs += $item['rs']; $totPel += $item['pelayanan']; $totAll += $item['total'];
+        @endphp
         <tr>
-            <td colspan="5" class="text-center" style="border: none; font-size: 14pt;">PEMERINTAH PROVINSI KEPULAUAN RIAU</td>
+            <td style="border: 1px solid #000;">{{ $label }}</td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $item['count'] }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $item['rs'] }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $item['pelayanan'] }}</td>
+            <td style="border: 1px solid #000; text-align: right; font-weight: bold;">{{ $item['total'] }}</td>
         </tr>
-        <tr>
-            <td colspan="5" class="text-center" style="border: none; font-size: 13pt; font-weight: bold;">RUMAH SAKIT JIWA DAN KETERGANTUNGAN OBAT</td>
-        </tr>
-        <tr>
-            <td colspan="5" class="text-center" style="border: none; font-size: 13pt; font-weight: bold;">ENGKU HAJI DAUD</td>
-        </tr>
-        <tr>
-            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Jalan Indun Suri - Simpang Busung Nomor. 1 Tanjung Uban Kode Pos 29152</td>
-        </tr>
-        <tr>
-            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Telepon ( 0771 ) 482655, 482796 Faksimile. ( 0771 ) 482795</td>
-        </tr>
-        <tr>
-            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Pos-el: rsjkoehd@kepriprov.go.id</td>
-        </tr>
-        <tr>
-            <td colspan="5" class="text-center" style="border: none; font-size: 8pt;">Laman : www.rsudehd.kepriprov.go.id</td>
-        </tr>
-        <tr>
-            <td colspan="5" style="border-bottom: 2px solid #000; height: 10px;"></td>
-        </tr>
-    </table>
+    @endforeach
+    <tr style="background-color: #f2f2f2; font-weight: bold;">
+        <td style="border: 1px solid #000; text-align: center;">TOTAL</td>
+        <td style="border: 1px solid #000; text-align: center;">{{ $totTrans }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $totRs }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $totPel }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $totAll }}</td>
+    </tr>
+    <tr><td colspan="5" style="height: 20px;"></td></tr>
 
-    <div class="title" style="margin-top: 20px;">LAPORAN PENDAPATAN PASIEN</div>
-    <div class="subtitle" style="text-decoration: underline;">Periode: {{ \Carbon\Carbon::parse($start)->translatedFormat('d F Y') }} s/d
-        {{ \Carbon\Carbon::parse($end)->translatedFormat('d F Y') }}</div>
-
-    <table class="table">
-        <!-- SECTION 1: RINGKASAN -->
-        <thead>
-            <tr>
-                <th colspan="5" style="background-color: #d9ead3; font-size: 12pt; text-align: center;">1. RINGKASAN PENDAPATAN</th>
-            </tr>
-            <tr>
-                <th style="text-align: center;">Kategori Pendapatan</th>
-                <th style="text-align: center;">Jumlah Transaksi</th>
-                <th style="text-align: center;">Jasa Rumah Sakit</th>
-                <th style="text-align: center;">Jasa Pelayanan</th>
-                <th style="text-align: center;">Total Pendapatan</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $totTrans = 0;
-                $totRs = 0;
-                $totPel = 0;
-            $totAll = 0; @endphp
-            @foreach(['UMUM' => 'Pasien Umum', 'BPJS' => 'BPJS', 'JAMINAN' => 'Jaminan', 'KERJASAMA' => 'Kerjasama', 'LAIN' => 'Lain-lain'] as $key => $label)
-                @php
-                    $item = $summary[$key] ?? ['count' => 0, 'rs' => 0, 'pelayanan' => 0, 'total' => 0];
-                    $totTrans += $item['count'];
-                    $totRs += $item['rs'];
-                    $totPel += $item['pelayanan'];
-                    $totAll += $item['total'];
-                @endphp
-                <tr>
-                    <td>{{ $label }}</td>
-                    <td class="text-center">{{ number_format($item['count'], 0, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($item['rs'], 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($item['pelayanan'], 2, ',', '.') }}</td>
-                    <td class="text-right font-bold">{{ number_format($item['total'], 2, ',', '.') }}</td>
-                </tr>
-            @endforeach
-            <tr class="font-bold" style="background-color: #f2f2f2;">
-                <td style="text-align: center;">TOTAL</td>
-                <td style="text-align: center;">{{ number_format($totTrans, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($totRs, 2, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($totPel, 2, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($totAll, 2, ',', '.') }}</td>
-            </tr>
-        </tbody>
-
-        <!-- SPACER -->
+    <!-- SECTION 2 -->
+    <tr>
+        <td colspan="5" style="background-color: #fce5cd; font-size: 12pt; font-weight: bold; border: 1px solid #000;">2. RINCIAN METODE JASA (RS & PELAYANAN)</td>
+    </tr>
+    <tr>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Kode Rekening</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Uraian Akun Pendapatan</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Jasa Rumah Sakit</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Jasa Pelayanan</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Total</th>
+    </tr>
+    @php $tJrs = 0; $tJpel = 0; $tJTotal = 0; @endphp
+    @foreach($breakdown as $key => $item)
+        @php
+            $jrs = $item['jasa']['RS'] ?? 0; $jpel = $item['jasa']['PELAYANAN'] ?? 0; $jtot = $item['jasa']['TOTAL'] ?? 0;
+            $tJrs += $jrs; $tJpel += $jpel; $tJTotal += $jtot;
+        @endphp
         <tr>
-            <td colspan="5" style="border: none; height: 30px;"></td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $item['kode'] }}</td>
+            <td style="border: 1px solid #000;">{{ $item['nama'] }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $jrs }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $jpel }}</td>
+            <td style="border: 1px solid #000; text-align: right; font-weight: bold;">{{ $jtot }}</td>
         </tr>
+    @endforeach
+    <tr style="background-color: #f9f9f9; font-weight: bold;">
+        <td colspan="2" style="border: 1px solid #000; text-align: center;">JUMLAH KESELURUHAN</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $tJrs }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $tJpel }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $tJTotal }}</td>
+    </tr>
+    <tr><td colspan="5" style="height: 20px;"></td></tr>
 
-        <!-- SECTION 2: METODE JASA -->
-        <thead>
-            <tr>
-                <th colspan="5" style="background-color: #fce5cd; font-size: 12pt; text-align: center;">2. RINCIAN METODE JASA (RS & PELAYANAN)</th>
-            </tr>
-            <tr>
-                <th style="text-align: center;">Kode Rekening</th>
-                <th style="text-align: center;">Uraian Akun Pendapatan</th>
-                <th style="text-align: center;">Jasa Rumah Sakit</th>
-                <th style="text-align: center;">Jasa Pelayanan</th>
-                <th style="text-align: center;">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $tJrs = 0;
-                $tJpel = 0;
-            $tJTotal = 0; @endphp
-            @foreach($breakdown as $key => $item)
-                @php
-                    $jrs = $item['jasa']['RS'] ?? 0;
-                    $jpel = $item['jasa']['PELAYANAN'] ?? 0;
-                    $jtot = $item['jasa']['TOTAL'] ?? 0;
-                    $tJrs += $jrs;
-                    $tJpel += $jpel;
-                    $tJTotal += $jtot;
-                @endphp
-                <tr>
-                    <td class="text-center">{{ $item['kode'] }}</td>
-                    <td>{{ $item['nama'] }}</td>
-                    <td class="text-right">{{ number_format($jrs, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($jpel, 2, ',', '.') }}</td>
-                    <td class="text-right font-bold">{{ number_format($jtot, 2, ',', '.') }}</td>
-                </tr>
-            @endforeach
-            <tr class="font-bold bg-gray">
-                <td colspan="2" style="text-align: center;">JUMLAH KESELURUHAN</td>
-                <td style="text-align: right;">{{ number_format($tJrs, 2, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($tJpel, 2, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($tJTotal, 2, ',', '.') }}</td>
-            </tr>
-        </tbody>
-
-        <!-- SPACER -->
+    <!-- SECTION 3: METODE PEMBAYARAN -->
+    <tr>
+        <td colspan="5" style="background-color: #cfe2f3; font-size: 12pt; font-weight: bold; border: 1px solid #000;">3. RINCIAN METODE PEMBAYARAN (TUNAI & NON-TUNAI)</td>
+    </tr>
+    <tr>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Kode Rekening</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Uraian Akun Pendapatan</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Tunai</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Non-Tunai</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Total</th>
+    </tr>
+    @php $tTunai = 0; $tNon = 0; $tTotalPay = 0; @endphp
+    @foreach($breakdown as $key => $item)
+        @php
+            $tunai = $item['payments']['TUNAI'] ?? 0; $non = $item['payments']['NON_TUNAI'] ?? 0; $tot = $item['payments']['TOTAL'] ?? 0;
+            $tTunai += $tunai; $tNon += $non; $tTotalPay += $tot;
+        @endphp
         <tr>
-            <td colspan="5" style="border: none; height: 30px;"></td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $item['kode'] }}</td>
+            <td style="border: 1px solid #000;">{{ $item['nama'] }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $tunai }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $non }}</td>
+            <td style="border: 1px solid #000; text-align: right; font-weight: bold;">{{ $tot }}</td>
         </tr>
+    @endforeach
+    <tr style="background-color: #f9f9f9; font-weight: bold;">
+        <td colspan="2" style="border: 1px solid #000; text-align: center;">JUMLAH KESELURUHAN</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $tTunai }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $tNon }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $tTotalPay }}</td>
+    </tr>
+    <tr><td colspan="5" style="height: 20px;"></td></tr>
 
-        <!-- SECTION 3: METODE PEMBAYARAN -->
-        <thead>
-            <tr>
-                <th colspan="5" style="background-color: #cfe2f3; font-size: 12pt; text-align: center;">3. RINCIAN METODE PEMBAYARAN (TUNAI
-                    & NON-TUNAI)</th>
-            </tr>
-            <tr>
-                <th style="text-align: center;">Kode Rekening</th>
-                <th style="text-align: center;">Uraian Akun Pendapatan</th>
-                <th style="text-align: center;">Tunai</th>
-                <th style="text-align: center;">Non-Tunai</th>
-                <th style="text-align: center;">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $tTunai = 0;
-                $tNon = 0;
-            $tTotal = 0; @endphp
-            @foreach($breakdown as $key => $item)
-                @php
-                    $tTunai += $item['payments']['TUNAI'];
-                    $tNon += $item['payments']['NON_TUNAI'];
-                    $tTotal += $item['payments']['TOTAL'];
-                @endphp
-                <tr>
-                    <td class="text-center">{{ $item['kode'] }}</td>
-                    <td>{{ $item['nama'] }}</td>
-                    <td class="text-right">{{ number_format($item['payments']['TUNAI'], 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($item['payments']['NON_TUNAI'], 2, ',', '.') }}</td>
-                    <td class="text-right font-bold">{{ number_format($item['payments']['TOTAL'], 2, ',', '.') }}</td>
-                </tr>
-            @endforeach
-            <tr class="font-bold bg-gray">
-                <td colspan="2" style="text-align: center;">JUMLAH KESELURUHAN</td>
-                <td style="text-align: right;">{{ number_format($tTunai, 2, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($tNon, 2, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($tTotal, 2, ',', '.') }}</td>
-            </tr>
-        </tbody>
-
-        <!-- SPACER -->
+    <!-- SECTION 4: PENERIMAAN BANK -->
+    <tr>
+        <td colspan="5" style="background-color: #ead1dc; font-size: 12pt; font-weight: bold; border: 1px solid #000;">4. RINCIAN PENERIMAAN BANK (BRK & BSI)</td>
+    </tr>
+    <tr>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Kode Rekening</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Uraian Akun Pendapatan</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">BRK</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">BSI</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Total</th>
+    </tr>
+    @php $tBrk = 0; $tBsi = 0; $tTotalBank = 0; @endphp
+    @foreach($breakdown as $key => $item)
+        @php
+            $brk = $item['banks']['BRK'] ?? 0; $bsi = $item['banks']['BSI'] ?? 0; $tot = $item['banks']['TOTAL'] ?? 0;
+            $tBrk += $brk; $tBsi += $bsi; $tTotalBank += $tot;
+        @endphp
         <tr>
-            <td colspan="5" style="border: none; height: 30px;"></td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $item['kode'] }}</td>
+            <td style="border: 1px solid #000;">{{ $item['nama'] }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $brk }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $bsi }}</td>
+            <td style="border: 1px solid #000; text-align: right; font-weight: bold;">{{ $tot }}</td>
         </tr>
+    @endforeach
+    <tr style="background-color: #f9f9f9; font-weight: bold;">
+        <td colspan="2" style="border: 1px solid #000; text-align: center;">JUMLAH PENERIMAAN BANK</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $tBrk }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $tBsi }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $tTotalBank }}</td>
+    </tr>
+    <tr><td colspan="5" style="height: 20px;"></td></tr>
 
-        <!-- SECTION 4: BANK -->
-        <thead>
-            <tr>
-                <th colspan="5" style="background-color: #fff2cc; font-size: 12pt; text-align: center;">4. RINCIAN PENERIMAAN BANK (RECON)
-                </th>
-            </tr>
-            <tr>
-                <th style="text-align: center;">Kode Rekening</th>
-                <th style="text-align: center;">Uraian Akun Pendapatan</th>
-                <th style="text-align: center;">BRK (Tunai + Transfer)</th>
-                <th style="text-align: center;">BSI (Transfer)</th>
-                <th style="text-align: center;">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $tBrk = 0;
-                $tBsi = 0;
-            $tTotalB = 0; @endphp
-            @foreach($breakdown as $key => $item)
-                @php
-                    $tBrk += $item['banks']['BRK'];
-                    $tBsi += $item['banks']['BSI'];
-                    $tTotalB += $item['banks']['TOTAL'];
-                @endphp
-                <tr>
-                    <td class="text-center">{{ $item['kode'] }}</td>
-                    <td>{{ $item['nama'] }}</td>
-                    <td class="text-right">{{ number_format($item['banks']['BRK'], 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($item['banks']['BSI'], 2, ',', '.') }}</td>
-                    <td class="text-right font-bold">{{ number_format($item['banks']['TOTAL'], 2, ',', '.') }}</td>
-                </tr>
-            @endforeach
-            <tr class="font-bold bg-gray">
-                <td colspan="2" style="text-align: center;">JUMLAH PENERIMAAN BANK</td>
-                <td style="text-align: right;">{{ number_format($tBrk, 2, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($tBsi, 2, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($tTotalB, 2, ',', '.') }}</td>
-            </tr>
-        </tbody>
-
-        <!-- SPACER -->
+    <!-- SECTION 5: RUANGAN -->
+    <tr>
+        <td colspan="3" style="background-color: #fff2cc; font-size: 12pt; font-weight: bold; border: 1px solid #000;">5. PENDAPATAN PER RUANGAN</td>
+    </tr>
+    <tr>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Nama Ruangan</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Total Pasien</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">Total Pendapatan</th>
+    </tr>
+    @php $tRCount = 0; $tRTotal = 0; @endphp
+    @foreach($rooms as $name => $data)
+        @php $tRCount += $data['count']; $tRTotal += $data['total']; @endphp
         <tr>
-            <td colspan="5" style="border: none; height: 30px;"></td>
+            <td style="border: 1px solid #000;">{{ $name }}</td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $data['count'] }}</td>
+            <td style="border: 1px solid #000; text-align: right; font-weight: bold;">{{ $data['total'] }}</td>
         </tr>
-
-        <!-- SECTION 5: ROOMS -->
-        <thead>
-            <tr>
-                <th colspan="5" style="background-color: #ead1dc; font-size: 12pt; text-align: center;">5. PENDAPATAN & PASIEN PER RUANGAN
-                </th>
-            </tr>
-            <tr>
-                <th colspan="2" style="text-align: center;">Nama Ruangan</th>
-                <th style="text-align: center;">Jumlah Pasien</th>
-                <th colspan="2" style="text-align: center;">Total Pendapatan</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $tRCount = 0;
-            $tRTotal = 0; @endphp
-            @foreach($rooms as $name => $data)
-                @php $tRCount += $data['count'];
-                $tRTotal += $data['total']; @endphp
-                <tr>
-                    <td colspan="2">{{ $name }}</td>
-                    <td class="text-center">{{ number_format($data['count'], 0, ',', '.') }}</td>
-                    <td colspan="2" class="text-right">{{ number_format($data['total'], 2, ',', '.') }}</td>
-                </tr>
-            @endforeach
-            <tr class="font-bold bg-gray">
-                <td colspan="2" style="text-align: center;">GRAND TOTAL (SEMUA RUANGAN)</td>
-                <td style="text-align: center;">{{ number_format($tRCount, 0, ',', '.') }}</td>
-                <td colspan="2" style="text-align: right;">{{ number_format($tRTotal, 2, ',', '.') }}</td>
-            </tr>
-        </tbody>
-    </table>
+    @endforeach
+    <tr style="background-color: #f9f9f9; font-weight: bold;">
+        <td style="border: 1px solid #000; text-align: center;">GRAND TOTAL (SEMUA RUANGAN)</td>
+        <td style="border: 1px solid #000; text-align: center;">{{ $tRCount }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $tRTotal }}</td>
+    </tr>
+    <tr><td colspan="5" style="height: 30px;"></td></tr>
 
     <!-- ADDITIVE SECTIONS -->
-    <div class="spacer"></div>
-    <table class="table">
-        <thead>
-            <tr><th colspan="4" style="background-color: #fbbf24; text-align: center;">1. PENERIMAAN PASIEN TUNAI</th></tr>
-            <tr>
-                <th style="width: 50px; text-align: center;">NO</th>
-                <th style="text-align: center;">UNIT</th>
-                <th style="width: 150px; text-align: center;">TOTAL PASIEN</th>
-                <th style="width: 200px; text-align: center;">JUMLAH (RP)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $stTotal = 0; $stCount = 0; @endphp
-            @foreach($additive_report['tunai'] as $idx => $item)
-                @php $stTotal += $item->total; $stCount += $item->count; @endphp
-                <tr>
-                    <td class="text-center">{{ $idx + 1 }}</td>
-                    <td>{{ $item->unit }}</td>
-                    <td class="text-center">{{ $item->count }}</td>
-                    <td class="text-right">{{ number_format($item->total, 2, ',', '.') }}</td>
-                </tr>
-            @endforeach
-            <tr class="font-bold bg-gray">
-                <td colspan="2" class="text-center">TOTAL PENERIMAAN PASIEN TUNAI</td>
-                <td class="text-center">{{ $stCount }}</td>
-                <td class="text-right">{{ number_format($stTotal, 2, ',', '.') }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="spacer"></div>
-    <table class="table">
-        <thead>
-            <tr><th colspan="8" style="background-color: #fbbf24; text-align: center;">2. PENERIMAAN PASIEN NON TUNAI</th></tr>
-            <tr>
-                <th style="width: 50px; text-align: center;">NO</th>
-                <th style="text-align: center;">UNIT</th>
-                <th style="width: 100px; text-align: center;">PASIEN QRIS</th>
-                <th style="width: 100px; text-align: center;">PASIEN TRF</th>
-                <th style="width: 100px; text-align: center;">TOTAL PASIEN</th>
-                <th style="width: 150px; text-align: center;">QRIS (RP)</th>
-                <th style="width: 150px; text-align: center;">TRANSFER (RP)</th>
-                <th style="width: 150px; text-align: center;">TOTAL (RP)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php 
-                $sntQris = 0; $sntTrans = 0; $sntTotal = 0; 
-                $sntPQris = 0; $sntPTrans = 0; $sntPAll = 0; 
-            @endphp
-            @foreach($additive_report['non_tunai'] as $idx => $item)
-                @php 
-                    $sntQris += $item->qris_amount; 
-                    $sntTrans += $item->transfer_amount; 
-                    $sntTotal += $item->total_amount; 
-                    $sntPQris += $item->pasien_qris;
-                    $sntPTrans += $item->pasien_transfer;
-                    $sntPAll += $item->total_pasien;
-                @endphp
-                <tr>
-                    <td class="text-center">{{ $idx + 1 }}</td>
-                    <td>{{ $item->unit }}</td>
-                    <td class="text-center">{{ $item->pasien_qris }}</td>
-                    <td class="text-center">{{ $item->pasien_transfer }}</td>
-                    <td class="text-center">{{ $item->total_pasien }}</td>
-                    <td class="text-right">{{ number_format($item->qris_amount, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($item->transfer_amount, 2, ',', '.') }}</td>
-                    <td class="text-right font-bold">{{ number_format($item->total_amount, 2, ',', '.') }}</td>
-                </tr>
-            @endforeach
-            <tr class="font-bold bg-gray">
-                <td colspan="2" class="text-center">TOTAL PENERIMAAN PASIEN NON TUNAI</td>
-                <td class="text-center">{{ $sntPQris }}</td>
-                <td class="text-center">{{ $sntPTrans }}</td>
-                <td class="text-center">{{ $sntPAll }}</td>
-                <td class="text-right">{{ number_format($sntQris, 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($sntTrans, 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($sntTotal, 2, ',', '.') }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="spacer"></div>
-    <table class="table">
-        <thead>
-            <tr><th colspan="7" style="background-color: #fbbf24; text-align: center;">3. PENERIMAAN PASIEN BPJS KESEHATAN</th></tr>
-            <tr>
-                <th style="width: 50px; text-align: center;">NO</th>
-                <th style="text-align: center;">UNIT</th>
-                <th style="width: 120px; text-align: center;">TOTAL PASIEN</th>
-                <th style="width: 120px; text-align: center;">BPJS (GROSS)</th>
-                <th style="width: 120px; text-align: center;">VPK / POTONGAN</th>
-                <th style="width: 120px; text-align: center;">ADM BANK</th>
-                <th style="width: 120px; text-align: center;">JUMLAH (NET)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $sbpTotal = 0; $sbpCount = 0; @endphp
-            @foreach($additive_report['bpjs']['data'] as $idx => $item)
-                @php $sbpTotal += $item->total; $sbpCount += $item->count; @endphp
-                <tr>
-                    <td class="text-center">{{ $idx + 1 }}</td>
-                    <td>{{ $item->unit }}</td>
-                    <td class="text-center">{{ $item->count }}</td>
-                    <td class="text-right">{{ number_format($item->total, 2, ',', '.') }}</td>
-                    <td class="text-right">0,00</td>
-                    <td class="text-right">0,00</td>
-                    <td class="text-right font-bold">{{ number_format($item->total, 2, ',', '.') }}</td>
-                </tr>
-            @endforeach
-            @php 
-                $vpk = $additive_report['bpjs']['deductions']->vpk ?? 0;
-                $adm = $additive_report['bpjs']['deductions']->adm ?? 0;
-                $net = $sbpTotal - $vpk - $adm;
-            @endphp
-            <tr class="font-bold bg-gray">
-                <td colspan="2" class="text-center">TOTAL PENERIMAAN BPJS KESEHATAN</td>
-                <td class="text-center">{{ $sbpCount }}</td>
-                <td class="text-right">{{ number_format($sbpTotal, 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($vpk, 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($adm, 2, ',', '.') }}</td>
-                <td class="text-right font-bold">{{ number_format($net, 2, ',', '.') }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="spacer"></div>
-    <table class="table">
-        <thead>
-            <tr><th colspan="5" style="background-color: #fbbf24; text-align: center;">4. PENERIMAAN PASIEN JAMINAN (ASURANSI, PT, DLL)</th></tr>
-            <tr>
-                <th style="width: 50px; text-align: center;">NO</th>
-                <th style="text-align: center;">PENJAMIN / PERUSAHAAN</th>
-                <th style="text-align: center;">UNIT</th>
-                <th style="width: 150px; text-align: center;">TOTAL PASIEN</th>
-                <th style="width: 200px; text-align: center;">JUMLAH (RP)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $sjTotal = 0; $sjCount = 0; @endphp
-            @foreach($additive_report['jaminan'] as $idx => $item)
-                @php $sjTotal += $item->total; $sjCount += $item->count; @endphp
-                <tr>
-                    <td class="text-center">{{ $idx + 1 }}</td>
-                    <td>{{ $item->penjamin }}</td>
-                    <td>{{ $item->unit }}</td>
-                    <td class="text-center">{{ $item->count }}</td>
-                    <td class="text-right">{{ number_format($item->total, 2, ',', '.') }}</td>
-                </tr>
-            @endforeach
-            <tr class="font-bold bg-gray">
-                <td colspan="3" class="text-center">TOTAL PENERIMAAN PASIEN JAMINAN</td>
-                <td class="text-center">{{ $sjCount }}</td>
-                <td class="text-right">{{ number_format($sjTotal, 2, ',', '.') }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="spacer"></div>
-    <table class="table">
-        <thead>
-            <tr><th colspan="4" style="background-color: #fbbf24; text-align: center;">5. PENERIMAAN KERJA SAMA (PKL, MAGANG, DLL)</th></tr>
-            <tr>
-                <th style="width: 50px; text-align: center;">NO</th>
-                <th style="text-align: center;">KERJA SAMA (INSTANSI)</th>
-                <th style="width: 150px; text-align: center;">JUMLAH KEGIATAN</th>
-                <th style="width: 200px; text-align: center;">JUMLAH (RP)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $skTotal = 0; $skCount = 0; @endphp
-            @foreach($additive_report['kerjasama'] as $idx => $item)
-                @php $skTotal += $item->total; $skCount += $item->count; @endphp
-                <tr>
-                    <td class="text-center">{{ $idx + 1 }}</td>
-                    <td>{{ $item->instansi }}</td>
-                    <td class="text-center">{{ $item->count }}</td>
-                    <td class="text-right">{{ number_format($item->total, 2, ',', '.') }}</td>
-                </tr>
-            @endforeach
-            <tr class="font-bold bg-gray">
-                <td colspan="2" class="text-center">TOTAL PENERIMAAN KERJA SAMA</td>
-                <td class="text-center">{{ $skCount }}</td>
-                <td class="text-right">{{ number_format($skTotal, 2, ',', '.') }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="spacer"></div>
-    <table class="table">
-        <thead>
-            <tr><th colspan="4" style="background-color: #fbbf24; text-align: center;">6. PENERIMAAN LAIN-LAIN</th></tr>
-            <tr>
-                <th style="width: 50px; text-align: center;">NO</th>
-                <th style="text-align: center;">KETERANGAN</th>
-                <th style="width: 150px; text-align: center;">JUMLAH KEGIATAN</th>
-                <th style="width: 200px; text-align: center;">JUMLAH (RP)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $slTotal = 0; $slCount = 0; @endphp
-            @foreach($additive_report['lain'] as $idx => $item)
-                @php $slTotal += $item->total; $slCount += $item->count; @endphp
-                <tr>
-                    <td class="text-center">{{ $idx + 1 }}</td>
-                    <td>{{ $item->keterangan }}</td>
-                    <td class="text-center">{{ $item->count }}</td>
-                    <td class="text-right">{{ number_format($item->total, 2, ',', '.') }}</td>
-                </tr>
-            @endforeach
-            <tr class="font-bold bg-gray">
-                <td colspan="2" class="text-center">TOTAL PENERIMAAN LAIN-LAIN</td>
-                <td class="text-center">{{ $slCount }}</td>
-                <td class="text-right">{{ number_format($slTotal, 2, ',', '.') }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="spacer"></div>
-    <table class="table">
-        <thead>
-            <tr><th colspan="4" style="background-color: #fbbf24; text-align: center;">REKAPITULASI PENERIMAAN PER BANK</th></tr>
-            <tr>
-                <th style="width: 50px; text-align: center;">NO</th>
-                <th style="text-align: center;">NAMA BANK</th>
-                <th style="width: 150px; text-align: center;">TOTAL TRANSAKSI</th>
-                <th style="width: 200px; text-align: center;">JUMLAH (RP)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $sbTotal = 0; $sbCount = 0; @endphp
-            @foreach($additive_report['bank_summary'] as $idx => $item)
-                @php $sbTotal += $item['total']; $sbCount += $item['count']; @endphp
-                <tr>
-                    <td class="text-center">{{ $idx + 1 }}</td>
-                    <td>{{ $item['bank'] }}</td>
-                    <td class="text-center">{{ $item['count'] }}</td>
-                    <td class="text-right">{{ number_format($item['total'], 2, ',', '.') }}</td>
-                </tr>
-            @endforeach
-            <tr class="font-bold bg-gray">
-                <td colspan="2" class="text-center">TOTAL KESELURUHAN PENERIMAAN BANK</td>
-                <td class="text-center">{{ $sbCount }}</td>
-                <td class="text-right">{{ number_format($sbTotal, 2, ',', '.') }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="spacer"></div>
-    <table class="table">
-        <thead>
-            <tr><th colspan="4" style="background-color: #fbbf24; text-align: center;">REKAPITULASI PENDAPATAN PER UNIT</th></tr>
-            <tr>
-                <th style="width: 50px; text-align: center;">NO</th>
-                <th style="text-align: center;">UNIT</th>
-                <th style="width: 150px; text-align: center;">TOTAL PASIEN</th>
-                <th style="width: 200px; text-align: center;">JUMLAH (RP)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $suTotal = 0; $suCount = 0; @endphp
-            @foreach($additive_report['unit_summary'] as $idx => $item)
-                @php $suTotal += $item['total']; $suCount += $item['count']; @endphp
-                <tr>
-                    <td class="text-center">{{ $idx + 1 }}</td>
-                    <td>{{ $item['unit'] }}</td>
-                    <td class="text-center">{{ $item['count'] }}</td>
-                    <td class="text-right">{{ number_format($item['total'], 2, ',', '.') }}</td>
-                </tr>
-            @endforeach
-            <tr class="font-bold bg-gray">
-                <td colspan="2" class="text-center">TOTAL PENDAPATAN PER UNIT</td>
-                <td class="text-center">{{ $suCount }}</td>
-                <td class="text-right">{{ number_format($suTotal, 2, ',', '.') }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="spacer"></div>
-    <table style="border: none;">
+    <tr>
+        <td colspan="4" style="background-color: #fbbf24; font-size: 12pt; font-weight: bold; border: 1px solid #000; color: #000;">1. PENERIMAAN PASIEN TUNAI</td>
+    </tr>
+    <tr>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">NO</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">UNIT</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">TOTAL PASIEN</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">JUMLAH (RP)</th>
+    </tr>
+    @php $stTotal = 0; $stCount = 0; @endphp
+    @foreach($additive_report['tunai'] as $idx => $item)
+        @php $stTotal += $item->total; $stCount += $item->count; @endphp
         <tr>
-            <td align="center">
-                @if($ptKiri)
-                    <br>
-                    {{ $ptKiri->jabatan }}<br><br><br><br>
-                    {{ $ptKiri->nama }}<br>
-                    NIP. {{ $ptKiri->nip }}
-                @endif
-            </td>
-            <td></td>
-            <td align="center">
-                @if($ptTengah)
-                    <br>
-                    {{ $ptTengah->jabatan }}<br><br><br><br>
-                    {{ $ptTengah->nama }}<br>
-                    NIP. {{ $ptTengah->nip }}
-                @endif
-            </td>
-            <td></td>
-            <td align="center">
-                Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
-                @if($ptKanan)
-                    {{ $ptKanan->jabatan }}<br><br><br><br>
-                    {{ $ptKanan->nama }}<br>
-                    NIP. {{ $ptKanan->nip }}
-                @else
-                    &nbsp;<br>
-                    &nbsp;<br><br><br><br>
-                    ...................................<br>
-                    NIP. ...................................
-                @endif
-            </td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $idx + 1 }}</td>
+            <td style="border: 1px solid #000;">{{ $item->unit }}</td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $item->count }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $item->total }}</td>
         </tr>
-    </table>
-</body>
+    @endforeach
+    <tr style="background-color: #f9f9f9; font-weight: bold;">
+        <td colspan="2" style="border: 1px solid #000; text-align: center;">TOTAL TUNAI</td>
+        <td style="border: 1px solid #000; text-align: center;">{{ $stCount }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $stTotal }}</td>
+    </tr>
+    <tr><td colspan="5" style="height: 20px;"></td></tr>
 
-</html>
+    <tr>
+        <td colspan="8" style="background-color: #fbbf24; font-size: 12pt; font-weight: bold; border: 1px solid #000; color: #000;">2. PENERIMAAN PASIEN NON TUNAI</td>
+    </tr>
+    <tr>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">NO</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">UNIT</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">PASIEN QRIS</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">PASIEN TRF</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">TOT PSN</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">QRIS (RP)</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">TRF (RP)</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">TOTAL (RP)</th>
+    </tr>
+    @php $sntQris = 0; $sntTrans = 0; $sntTotal = 0; $sntPQris = 0; $sntPTrans = 0; $sntPAll = 0; @endphp
+    @foreach($additive_report['non_tunai'] as $idx => $item)
+        @php 
+            $sntQris += $item->qris_amount; $sntTrans += $item->transfer_amount; $sntTotal += $item->total_amount; 
+            $sntPQris += $item->pasien_qris; $sntPTrans += $item->pasien_transfer; $sntPAll += $item->total_pasien;
+        @endphp
+        <tr>
+            <td style="border: 1px solid #000; text-align: center;">{{ $idx + 1 }}</td>
+            <td style="border: 1px solid #000;">{{ $item->unit }}</td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $item->pasien_qris }}</td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $item->pasien_transfer }}</td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $item->total_pasien }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $item->qris_amount }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $item->transfer_amount }}</td>
+            <td style="border: 1px solid #000; text-align: right; font-weight: bold;">{{ $item->total_amount }}</td>
+        </tr>
+    @endforeach
+    <tr style="background-color: #f9f9f9; font-weight: bold;">
+        <td colspan="2" style="border: 1px solid #000; text-align: center;">TOTAL NON TUNAI</td>
+        <td style="border: 1px solid #000; text-align: center;">{{ $sntPQris }}</td>
+        <td style="border: 1px solid #000; text-align: center;">{{ $sntPTrans }}</td>
+        <td style="border: 1px solid #000; text-align: center;">{{ $sntPAll }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $sntQris }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $sntTrans }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $sntTotal }}</td>
+    </tr>
+    <tr><td colspan="8" style="height: 20px;"></td></tr>
 
+    <tr>
+        <td colspan="7" style="background-color: #fbbf24; font-size: 12pt; font-weight: bold; border: 1px solid #000; color: #000;">3. PENERIMAAN PASIEN BPJS KESEHATAN</td>
+    </tr>
+    <tr>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">NO</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">UNIT</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">TOTAL PASIEN</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">BPJS (GROSS)</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">VPK / POTONGAN</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">ADM BANK</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">JUMLAH (NET)</th>
+    </tr>
+    @php $sbpTotal = 0; $sbpCount = 0; @endphp
+    @foreach($additive_report['bpjs']['data'] as $idx => $item)
+        @php $sbpTotal += $item->total; $sbpCount += $item->count; @endphp
+        <tr>
+            <td style="border: 1px solid #000; text-align: center;">{{ $idx + 1 }}</td>
+            <td style="border: 1px solid #000;">{{ $item->unit }}</td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $item->count }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $item->total }}</td>
+            <td style="border: 1px solid #000; text-align: right;">0</td>
+            <td style="border: 1px solid #000; text-align: right;">0</td>
+            <td style="border: 1px solid #000; text-align: right; font-weight: bold;">{{ $item->total }}</td>
+        </tr>
+    @endforeach
+    @php 
+        $vpk = $additive_report['bpjs']['deductions']->vpk ?? 0;
+        $adm = $additive_report['bpjs']['deductions']->adm ?? 0;
+        $net = $sbpTotal - $vpk - $adm;
+    @endphp
+    <tr style="background-color: #f9f9f9; font-weight: bold;">
+        <td colspan="2" style="border: 1px solid #000; text-align: center;">TOTAL BPJS</td>
+        <td style="border: 1px solid #000; text-align: center;">{{ $sbpCount }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $sbpTotal }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $vpk }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $adm }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $net }}</td>
+    </tr>
+    <tr><td colspan="7" style="height: 20px;"></td></tr>
 
+    <tr>
+        <td colspan="5" style="background-color: #fbbf24; font-size: 12pt; font-weight: bold; border: 1px solid #000; color: #000;">4. PENERIMAAN PASIEN JAMINAN</td>
+    </tr>
+    <tr>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">NO</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">PENJAMIN / PERUSAHAAN</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">UNIT</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">TOTAL PASIEN</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">JUMLAH (RP)</th>
+    </tr>
+    @php $sjTotal = 0; $sjCount = 0; @endphp
+    @foreach($additive_report['jaminan'] as $idx => $item)
+        @php $sjTotal += $item->total; $sjCount += $item->count; @endphp
+        <tr>
+            <td style="border: 1px solid #000; text-align: center;">{{ $idx + 1 }}</td>
+            <td style="border: 1px solid #000;">{{ $item->penjamin }}</td>
+            <td style="border: 1px solid #000;">{{ $item->unit }}</td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $item->count }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $item->total }}</td>
+        </tr>
+    @endforeach
+    <tr style="background-color: #f9f9f9; font-weight: bold;">
+        <td colspan="3" style="border: 1px solid #000; text-align: center;">TOTAL JAMINAN</td>
+        <td style="border: 1px solid #000; text-align: center;">{{ $sjCount }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $sjTotal }}</td>
+    </tr>
+    <tr><td colspan="5" style="height: 20px;"></td></tr>
 
+    <tr>
+        <td colspan="4" style="background-color: #fbbf24; font-size: 12pt; font-weight: bold; border: 1px solid #000; color: #000;">5. PENERIMAAN KERJA SAMA</td>
+    </tr>
+    <tr>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">NO</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">KERJA SAMA (INSTANSI)</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">JUMLAH KEGIATAN</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">JUMLAH (RP)</th>
+    </tr>
+    @php $skTotal = 0; $skCount = 0; @endphp
+    @foreach($additive_report['kerjasama'] as $idx => $item)
+        @php $skTotal += $item->total; $skCount += $item->count; @endphp
+        <tr>
+            <td style="border: 1px solid #000; text-align: center;">{{ $idx + 1 }}</td>
+            <td style="border: 1px solid #000;">{{ $item->instansi }}</td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $item->count }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $item->total }}</td>
+        </tr>
+    @endforeach
+    <tr style="background-color: #f9f9f9; font-weight: bold;">
+        <td colspan="2" style="border: 1px solid #000; text-align: center;">TOTAL KERJA SAMA</td>
+        <td style="border: 1px solid #000; text-align: center;">{{ $skCount }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $skTotal }}</td>
+    </tr>
+    <tr><td colspan="4" style="height: 20px;"></td></tr>
 
+    <tr>
+        <td colspan="4" style="background-color: #fbbf24; font-size: 12pt; font-weight: bold; border: 1px solid #000; color: #000;">6. PENERIMAAN LAIN-LAIN</td>
+    </tr>
+    <tr>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">NO</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">KETERANGAN</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">JUMLAH KEGIATAN</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">JUMLAH (RP)</th>
+    </tr>
+    @php $slTotal = 0; $slCount = 0; @endphp
+    @foreach($additive_report['lain'] as $idx => $item)
+        @php $slTotal += $item->total; $slCount += $item->count; @endphp
+        <tr>
+            <td style="border: 1px solid #000; text-align: center;">{{ $idx + 1 }}</td>
+            <td style="border: 1px solid #000;">{{ $item->keterangan }}</td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $item->count }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $item->total }}</td>
+        </tr>
+    @endforeach
+    <tr style="background-color: #f9f9f9; font-weight: bold;">
+        <td colspan="2" style="border: 1px solid #000; text-align: center;">TOTAL LAIN-LAIN</td>
+        <td style="border: 1px solid #000; text-align: center;">{{ $slCount }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $slTotal }}</td>
+    </tr>
+    <tr><td colspan="4" style="height: 20px;"></td></tr>
 
+    <tr>
+        <td colspan="4" style="background-color: #fbbf24; font-size: 12pt; font-weight: bold; border: 1px solid #000; color: #000;">REKAPITULASI PENERIMAAN PER BANK</td>
+    </tr>
+    <tr>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">NO</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">NAMA BANK</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">TOTAL TRANSAKSI</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">JUMLAH (RP)</th>
+    </tr>
+    @php $sbTotal = 0; $sbCount = 0; @endphp
+    @foreach($additive_report['bank_summary'] as $idx => $item)
+        @php $sbTotal += $item['total']; $sbCount += $item['count']; @endphp
+        <tr>
+            <td style="border: 1px solid #000; text-align: center;">{{ $idx + 1 }}</td>
+            <td style="border: 1px solid #000;">{{ $item['bank'] }}</td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $item['count'] }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $item['total'] }}</td>
+        </tr>
+    @endforeach
+    <tr style="background-color: #f9f9f9; font-weight: bold;">
+        <td colspan="2" style="border: 1px solid #000; text-align: center;">TOTAL PER BANK</td>
+        <td style="border: 1px solid #000; text-align: center;">{{ $sbCount }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $sbTotal }}</td>
+    </tr>
+    <tr><td colspan="4" style="height: 20px;"></td></tr>
+
+    <tr>
+        <td colspan="4" style="background-color: #fbbf24; font-size: 12pt; font-weight: bold; border: 1px solid #000; color: #000;">REKAPITULASI PENDAPATAN PER UNIT</td>
+    </tr>
+    <tr>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">NO</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">UNIT</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">TOTAL PASIEN</th>
+        <th style="border: 1px solid #000; text-align: center; font-weight: bold; background-color: #f3f3f3;">JUMLAH (RP)</th>
+    </tr>
+    @php $suTotal = 0; $suCount = 0; @endphp
+    @foreach($additive_report['unit_summary'] as $idx => $item)
+        @php $suTotal += $item['total']; $suCount += $item['count']; @endphp
+        <tr>
+            <td style="border: 1px solid #000; text-align: center;">{{ $idx + 1 }}</td>
+            <td style="border: 1px solid #000;">{{ $item['unit'] }}</td>
+            <td style="border: 1px solid #000; text-align: center;">{{ $item['count'] }}</td>
+            <td style="border: 1px solid #000; text-align: right;">{{ $item['total'] }}</td>
+        </tr>
+    @endforeach
+    <tr style="background-color: #f9f9f9; font-weight: bold;">
+        <td colspan="2" style="border: 1px solid #000; text-align: center;">TOTAL PER UNIT</td>
+        <td style="border: 1px solid #000; text-align: center;">{{ $suCount }}</td>
+        <td style="border: 1px solid #000; text-align: right;">{{ $suTotal }}</td>
+    </tr>
+    <tr><td colspan="4" style="height: 30px;"></td></tr>
+
+    <!-- SIGNATURES -->
+    <tr>
+        <td colspan="2" style="text-align: center; vertical-align: top;">
+            @if($ptKiri)
+                {{ $ptKiri->jabatan }}<br><br><br><br>
+                {{ $ptKiri->nama }}<br>
+                NIP. {{ $ptKiri->nip }}
+            @endif
+        </td>
+        <td colspan="2" style="text-align: center; vertical-align: top;">
+            @if($ptTengah)
+                {{ $ptTengah->jabatan }}<br><br><br><br>
+                {{ $ptTengah->nama }}<br>
+                NIP. {{ $ptTengah->nip }}
+            @endif
+        </td>
+        <td colspan="2" style="text-align: center; vertical-align: top;">
+            Tanjung Uban, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
+            @if($ptKanan)
+                {{ $ptKanan->jabatan }}<br><br><br><br>
+                {{ $ptKanan->nama }}<br>
+                NIP. {{ $ptKanan->nip }}
+            @endif
+        </td>
+    </tr>
+</table>

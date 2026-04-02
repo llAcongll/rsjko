@@ -502,19 +502,19 @@ Route::middleware('auth')
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/laporan/data', [IncomeReportController::class, 'index'])->middleware('permission:LAP_PENDAPATAN_VIEW');
     Route::get('/dashboard/laporan/export/pendapatan', [IncomeReportController::class, 'export'])->middleware('permission:LAP_PENDAPATAN_EXPORT');
-    Route::get('/dashboard/laporan/export/pendapatan-pdf', [LaporanController::class, 'exportPdf'])->middleware('permission:LAP_PENDAPATAN_EXPORT');
+    Route::get('/dashboard/laporan/export/pendapatan-pdf', [IncomeReportController::class, 'exportPdf'])->middleware('permission:LAP_PENDAPATAN_EXPORT');
 
-    Route::get('/dashboard/laporan/export/rekon', [LaporanController::class, 'exportRekon'])->middleware('permission:LAP_REKON_EXPORT');
-    Route::get('/dashboard/laporan/export/rekon-pdf', [LaporanController::class, 'exportRekonPdf'])->middleware('permission:LAP_REKON_EXPORT');
+    Route::get('/dashboard/laporan/export/rekon', [IncomeReportController::class, 'exportRekon'])->middleware('permission:LAP_REKON_EXPORT');
+    Route::get('/dashboard/laporan/export/rekon-pdf', [IncomeReportController::class, 'exportRekonPdf'])->middleware('permission:LAP_REKON_EXPORT');
 
-    Route::get('/dashboard/laporan/export/piutang', [LaporanController::class, 'exportPiutang'])->middleware('permission:LAP_PIUTANG_EXPORT');
-    Route::get('/dashboard/laporan/export/piutang-pdf', [LaporanController::class, 'exportPiutangPdf'])->middleware('permission:LAP_PIUTANG_EXPORT');
+    Route::get('/dashboard/laporan/export/piutang', [IncomeReportController::class, 'exportPiutang'])->middleware('permission:LAP_PIUTANG_EXPORT');
+    Route::get('/dashboard/laporan/export/piutang-pdf', [IncomeReportController::class, 'exportPiutangPdf'])->middleware('permission:LAP_PIUTANG_EXPORT');
 
-    Route::get('/dashboard/laporan/export/mou', [LaporanController::class, 'exportMou'])->middleware('permission:LAP_MOU_EXPORT');
-    Route::get('/dashboard/laporan/export/mou-pdf', [LaporanController::class, 'exportMouPdf'])->middleware('permission:LAP_MOU_EXPORT');
+    Route::get('/dashboard/laporan/export/mou', [IncomeReportController::class, 'exportMou'])->middleware('permission:LAP_MOU_EXPORT');
+    Route::get('/dashboard/laporan/export/mou-pdf', [IncomeReportController::class, 'exportMouPdf'])->middleware('permission:LAP_MOU_EXPORT');
 
-    Route::get('/dashboard/laporan/export/anggaran', [LaporanController::class, 'exportAnggaran'])->middleware('permission:LAP_LRA_EXPORT');
-    Route::get('/dashboard/laporan/export/anggaran-pdf', [LaporanController::class, 'exportAnggaranPdf'])->middleware('permission:LAP_LRA_EXPORT');
+    Route::get('/dashboard/laporan/export/anggaran', [IncomeReportController::class, 'exportAnggaran'])->middleware('permission:LAP_LRA_EXPORT');
+    Route::get('/dashboard/laporan/export/anggaran-pdf', [IncomeReportController::class, 'exportAnggaranPdf'])->middleware('permission:LAP_LRA_EXPORT');
     Route::get('/dashboard/laporan/rekon', [BankReportController::class, 'getRekon'])->middleware('permission:LAP_REKON_VIEW');
     Route::get('/dashboard/laporan/piutang', [IncomeReportController::class, 'getPiutang'])->middleware('permission:LAP_PIUTANG_VIEW');
     Route::get('/dashboard/laporan/mou', [IncomeReportController::class, 'getMou'])->middleware('permission:LAP_MOU_VIEW');
@@ -522,50 +522,50 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/laporan/lra', [FinancialStatementController::class, 'getAnggaran'])->middleware('permission:LAP_LRA_VIEW');
     Route::get('/dashboard/laporan/pengeluaran', [ExpenseReportController::class, 'index'])->middleware('permission:LAP_PENGELUARAN_VIEW');
     Route::get('/dashboard/laporan/dpa', [FinancialStatementController::class, 'getDpa'])->middleware('permission:LAP_DPA_VIEW');
-    Route::get('/dashboard/laporan/export/pengeluaran', [LaporanController::class, 'exportPengeluaran'])->middleware('permission:LAP_PENGELUARAN_EXPORT');
-    Route::get('/dashboard/laporan/export/pengeluaran-pdf', [LaporanController::class, 'exportPengeluaranPdf'])->middleware('permission:LAP_PENGELUARAN_EXPORT');
+    Route::get('/dashboard/laporan/export/pengeluaran', [IncomeReportController::class, 'exportPengeluaran'])->middleware('permission:LAP_PENGELUARAN_EXPORT');
+    Route::get('/dashboard/laporan/export/pengeluaran-pdf', [IncomeReportController::class, 'exportPengeluaranPdf'])->middleware('permission:LAP_PENGELUARAN_EXPORT');
 
-    Route::get('/dashboard/laporan/export/dpa', [LaporanController::class, 'exportDpa'])->middleware('permission:LAP_DPA_EXPORT');
-    Route::get('/dashboard/laporan/export/dpa-pdf', [LaporanController::class, 'exportDpaPdf'])->middleware('permission:LAP_DPA_EXPORT');
+    Route::get('/dashboard/laporan/export/dpa', [IncomeReportController::class, 'exportDpa'])->middleware('permission:LAP_DPA_EXPORT');
+    Route::get('/dashboard/laporan/export/dpa-pdf', [IncomeReportController::class, 'exportDpaPdf'])->middleware('permission:LAP_DPA_EXPORT');
 
     Route::get('/dashboard/laporan/bku', [BankReportController::class, 'getBku'])->middleware('permission:BKU_PENDAPATAN_VIEW');
-    Route::get('/dashboard/laporan/export/bku', [LaporanController::class, 'exportBku'])->middleware('permission:BKU_PENDAPATAN_EXPORT');
-    Route::get('/dashboard/laporan/export/bku-pdf', [LaporanController::class, 'exportBkuPdf'])->middleware('permission:BKU_PENDAPATAN_EXPORT');
+    Route::get('/dashboard/laporan/export/bku', [IncomeReportController::class, 'exportBku'])->middleware('permission:BKU_PENDAPATAN_EXPORT');
+    Route::get('/dashboard/laporan/export/bku-pdf', [IncomeReportController::class, 'exportBkuPdf'])->middleware('permission:BKU_PENDAPATAN_EXPORT');
 
-    Route::get('/dashboard/laporan/lak', [LaporanController::class, 'getLak'])->middleware('permission:LAP_LAK_VIEW');
-    Route::get('/dashboard/laporan/export/lak', [LaporanController::class, 'exportLak'])->middleware('permission:LAP_LAK_EXPORT');
-    Route::get('/dashboard/laporan/export/lak-pdf', [LaporanController::class, 'exportLakPdf'])->middleware('permission:LAP_LAK_EXPORT');
+    Route::get('/dashboard/laporan/lak', [IncomeReportController::class, 'getLak'])->middleware('permission:LAP_LAK_VIEW');
+    Route::get('/dashboard/laporan/export/lak', [IncomeReportController::class, 'exportLak'])->middleware('permission:LAP_LAK_EXPORT');
+    Route::get('/dashboard/laporan/export/lak-pdf', [IncomeReportController::class, 'exportLakPdf'])->middleware('permission:LAP_LAK_EXPORT');
 
-    Route::get('/dashboard/laporan/neraca', [LaporanController::class, 'getNeraca'])->middleware('permission:LAP_NERACA_VIEW');
-    Route::get('/dashboard/laporan/neraca/manual', [LaporanController::class, 'getNeracaManualInputs'])->middleware('permission:LAP_NERACA_VIEW');
-    Route::post('/dashboard/laporan/neraca/manual', [LaporanController::class, 'saveNeracaManualInputs'])->middleware('permission:LAP_NERACA_APPROVE');
-    Route::get('/dashboard/laporan/export/neraca', [LaporanController::class, 'exportNeraca'])->middleware('permission:LAP_NERACA_EXPORT');
-    Route::get('/dashboard/laporan/export/neraca-pdf', [LaporanController::class, 'exportNeracaPdf'])->middleware('permission:LAP_NERACA_EXPORT');
+    Route::get('/dashboard/laporan/neraca', [IncomeReportController::class, 'getNeraca'])->middleware('permission:LAP_NERACA_VIEW');
+    Route::get('/dashboard/laporan/neraca/manual', [IncomeReportController::class, 'getNeracaManualInputs'])->middleware('permission:LAP_NERACA_VIEW');
+    Route::post('/dashboard/laporan/neraca/manual', [IncomeReportController::class, 'saveNeracaManualInputs'])->middleware('permission:LAP_NERACA_APPROVE');
+    Route::get('/dashboard/laporan/export/neraca', [IncomeReportController::class, 'exportNeraca'])->middleware('permission:LAP_NERACA_EXPORT');
+    Route::get('/dashboard/laporan/export/neraca-pdf', [IncomeReportController::class, 'exportNeracaPdf'])->middleware('permission:LAP_NERACA_EXPORT');
 
-    Route::get('/dashboard/laporan/lo', [LaporanController::class, 'getLo'])->middleware('permission:LAP_LO_VIEW');
-    Route::get('/dashboard/laporan/export/lo', [LaporanController::class, 'exportLo'])->middleware('permission:LAP_LO_EXPORT');
-    Route::get('/dashboard/laporan/export/lo-pdf', [LaporanController::class, 'exportLoPdf'])->middleware('permission:LAP_LO_EXPORT');
+    Route::get('/dashboard/laporan/lo', [IncomeReportController::class, 'getLo'])->middleware('permission:LAP_LO_VIEW');
+    Route::get('/dashboard/laporan/export/lo', [IncomeReportController::class, 'exportLo'])->middleware('permission:LAP_LO_EXPORT');
+    Route::get('/dashboard/laporan/export/lo-pdf', [IncomeReportController::class, 'exportLoPdf'])->middleware('permission:LAP_LO_EXPORT');
 
-    Route::get('/dashboard/laporan/lpe', [LaporanController::class, 'getLpe'])->middleware('permission:LAP_LPE_VIEW');
-    Route::get('/dashboard/laporan/export/lpe', [LaporanController::class, 'exportLpe'])->middleware('permission:LAP_LPE_EXPORT');
-    Route::get('/dashboard/laporan/export/lpe-pdf', [LaporanController::class, 'exportLpePdf'])->middleware('permission:LAP_LPE_EXPORT');
+    Route::get('/dashboard/laporan/lpe', [IncomeReportController::class, 'getLpe'])->middleware('permission:LAP_LPE_VIEW');
+    Route::get('/dashboard/laporan/export/lpe', [IncomeReportController::class, 'exportLpe'])->middleware('permission:LAP_LPE_EXPORT');
+    Route::get('/dashboard/laporan/export/lpe-pdf', [IncomeReportController::class, 'exportLpePdf'])->middleware('permission:LAP_LPE_EXPORT');
 
-    Route::get('/dashboard/laporan/calk', [LaporanController::class, 'getCalk'])->middleware('permission:LAP_CALK_VIEW');
-    Route::post('/dashboard/laporan/calk', [LaporanController::class, 'saveCalk'])->middleware('permission:LAP_CALK_APPROVE');
-    Route::get('/dashboard/laporan/export/calk', [LaporanController::class, 'exportCalk'])->middleware('permission:LAP_CALK_EXPORT');
-    Route::get('/dashboard/laporan/export/calk-pdf', [LaporanController::class, 'exportCalkPdf'])->middleware('permission:LAP_CALK_EXPORT');
+    Route::get('/dashboard/laporan/calk', [IncomeReportController::class, 'getCalk'])->middleware('permission:LAP_CALK_VIEW');
+    Route::post('/dashboard/laporan/calk', [IncomeReportController::class, 'saveCalk'])->middleware('permission:LAP_CALK_APPROVE');
+    Route::get('/dashboard/laporan/export/calk', [IncomeReportController::class, 'exportCalk'])->middleware('permission:LAP_CALK_EXPORT');
+    Route::get('/dashboard/laporan/export/calk-pdf', [IncomeReportController::class, 'exportCalkPdf'])->middleware('permission:LAP_CALK_EXPORT');
 
-    Route::get('/dashboard/laporan/lpsal', [LaporanController::class, 'getLpsal'])->middleware('permission:LAP_LPSAL_VIEW');
-    Route::get('/dashboard/laporan/export/lpsal', [LaporanController::class, 'exportLpsal'])->middleware('permission:LAP_LPSAL_EXPORT');
-    Route::get('/dashboard/laporan/export/lpsal-pdf', [LaporanController::class, 'exportLpsalPdf'])->middleware('permission:LAP_LPSAL_EXPORT');
+    Route::get('/dashboard/laporan/lpsal', [IncomeReportController::class, 'getLpsal'])->middleware('permission:LAP_LPSAL_VIEW');
+    Route::get('/dashboard/laporan/export/lpsal', [IncomeReportController::class, 'exportLpsal'])->middleware('permission:LAP_LPSAL_EXPORT');
+    Route::get('/dashboard/laporan/export/lpsal-pdf', [IncomeReportController::class, 'exportLpsalPdf'])->middleware('permission:LAP_LPSAL_EXPORT');
 
-    Route::get('/dashboard/laporan/rka', [LaporanController::class, 'getRka'])->middleware('permission:LAP_RKA_VIEW');
-    Route::get('/dashboard/laporan/export/rka', [LaporanController::class, 'exportRka'])->middleware('permission:LAP_RKA_EXPORT');
-    Route::get('/dashboard/laporan/export/rka-pdf', [LaporanController::class, 'exportRkaPdf'])->middleware('permission:LAP_RKA_EXPORT');
+    Route::get('/dashboard/laporan/rka', [IncomeReportController::class, 'getRka'])->middleware('permission:LAP_RKA_VIEW');
+    Route::get('/dashboard/laporan/export/rka', [IncomeReportController::class, 'exportRka'])->middleware('permission:LAP_RKA_EXPORT');
+    Route::get('/dashboard/laporan/export/rka-pdf', [IncomeReportController::class, 'exportRkaPdf'])->middleware('permission:LAP_RKA_EXPORT');
 
-    Route::get('/dashboard/laporan/rba', [LaporanController::class, 'getRba'])->middleware('permission:LAP_RBA_VIEW');
-    Route::get('/dashboard/laporan/export/rba', [LaporanController::class, 'exportRba'])->middleware('permission:LAP_RBA_EXPORT');
-    Route::get('/dashboard/laporan/export/rba-pdf', [LaporanController::class, 'exportRbaPdf'])->middleware('permission:LAP_RBA_EXPORT');
+    Route::get('/dashboard/laporan/rba', [IncomeReportController::class, 'getRba'])->middleware('permission:LAP_RBA_VIEW');
+    Route::get('/dashboard/laporan/export/rba', [IncomeReportController::class, 'exportRba'])->middleware('permission:LAP_RBA_EXPORT');
+    Route::get('/dashboard/laporan/export/rba-pdf', [IncomeReportController::class, 'exportRbaPdf'])->middleware('permission:LAP_RBA_EXPORT');
 });
 
 Route::get(
