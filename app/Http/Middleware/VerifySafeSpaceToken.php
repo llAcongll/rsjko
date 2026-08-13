@@ -12,7 +12,7 @@ class VerifySafeSpaceToken
     {
         $token = $request->bearerToken();
         
-        $expectedToken = env('SAFE_SPACE_BOT_TOKEN');
+        $expectedToken = config('services.safe_space.bot_token');
 
         if (!$expectedToken) {
             return response()->json([

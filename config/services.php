@@ -35,6 +35,10 @@ return [
         ],
     ],
 
+    'safe_space' => [
+        'bot_token' => env('SAFE_SPACE_BOT_TOKEN'),
+    ],
+
 ];
 
 
