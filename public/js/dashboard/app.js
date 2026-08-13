@@ -999,4 +999,12 @@ document.addEventListener('click', (e) => {
 
 
 
+window.openSafeSpace = async (btn) => {
+  if (!guardPermission('SAFE_SPACE_VIEW')) return;
 
+  hideSubmenus();
+  setActiveMenu(btn);
+  closeOnMobile();
+
+  await loadContent("safe-space");
+};

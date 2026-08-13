@@ -100,6 +100,14 @@
         </button>
       @endif
 
+      {{-- SAFE SPACE MONITORING --}}
+      @if(auth()->user()->hasPermission('SAFE_SPACE_VIEW'))
+        <button onclick="openSafeSpace(this)">
+          <i class="ph ph-shield-plus"></i>
+          <span>Monitoring Skrining SAFE SPACE</span>
+        </button>
+      @endif
+
       {{-- 2. PERENCANAAN --}}
       @php
         $hasPerencanaan = auth()->user()->isAdmin() ||

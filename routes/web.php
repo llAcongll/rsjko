@@ -79,6 +79,8 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('dashboard')->group(function () {
+        Route::get('/safe-space/statistics', [\App\Http\Controllers\SafeSpaceController::class, 'statistics']);
+        Route::get('/content/safe-space', [\App\Http\Controllers\SafeSpaceController::class, 'index']);
         Route::get('/content/{page}/{param?}', [DashboardController::class, 'content']);
     });
 
