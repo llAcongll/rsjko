@@ -6,14 +6,28 @@
       </h2>
       <p style="color: #64748b; font-size: 14px; margin: 0;">Dashboard monitoring hasil skrining mental siswa</p>
     </div>
-    <div class="page-header-right">
-      <select id="safeSpacePeriod" class="form-select" onchange="loadSafeSpaceStats()" style="padding: 8px 32px 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; cursor: pointer; background-color: #fff;">
+    <div class="page-header-right" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <select id="safeSpacePeriod" class="form-select" onchange="toggleSSCustomDate(); loadSafeSpaceStats()" style="padding: 8px 32px 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; cursor: pointer; background-color: #fff;">
         <option value="all">Semua Periode</option>
         <option value="today">Hari Ini</option>
         <option value="this_week">Minggu Ini</option>
         <option value="this_month">Bulan Ini</option>
         <option value="this_year">Tahun Ini</option>
+        <option value="custom">Custom</option>
       </select>
+
+      <div id="ssCustomDateContainer" style="display: none; gap: 8px; align-items: center;">
+        <input type="date" id="ssStartDate" class="form-input" style="padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+        <span style="color: #64748b;">-</span>
+        <input type="date" id="ssEndDate" class="form-input" style="padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+        <button onclick="applySSCustomDate()" style="padding: 7px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 14px; white-space: nowrap; cursor: pointer;">Terapkan</button>
+      </div>
+
+      @if(auth()->user()->role === 'ADMIN')
+      <button onclick="confirmDeleteToday()" style="padding: 7px 16px; border: 1px solid #ef4444; background: #fef2f2; color: #ef4444; border-radius: 6px; font-size: 14px; white-space: nowrap; cursor: pointer; margin-left: 10px; display: flex; align-items: center; gap: 6px;">
+        <i class="ph ph-trash"></i> Hapus Data Hari Ini
+      </button>
+      @endif
     </div>
   </div>
 

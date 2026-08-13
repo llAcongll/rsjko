@@ -1037,7 +1037,16 @@ window.loadSafeSpaceStats = function(period = null) {
     if (err) err.style.display = 'none';
     if (content) content.style.display = 'none';
 
-    fetch(`/dashboard/safe-space/statistics?period=${period}`, {
+    let url = `/dashboard/safe-space/statistics?period=${period}`;
+    if (period === 'custom') {
+        const startDate = document.getElementById('ssStartDate')?.value;
+        const endDate = document.getElementById('ssEndDate')?.value;
+        if (startDate && endDate) {
+            url += `&start_date=${startDate}&end_date=${endDate}`;
+        }
+    }
+
+    fetch(url, {
         headers: { Accept: 'application/json' }
     })
     .then(r => {
@@ -1167,3 +1176,73 @@ function renderSSChart(canvasId, chartObj, labels, dataArr, colors, saveRef) {
     
     saveRef(newChart);
 }
+
+window.toggleSSCustomDate = function() {
+    const period = document.getElementById('safeSpacePeriod').value;
+    const container = document.getElementById('ssCustomDateContainer');
+    if (period === 'custom') {
+        container.style.display = 'flex';
+    } else {
+        container.style.display = 'none';
+    }
+};
+
+window.applySSCustomDate = function() {
+    const startDate = document.getElementById('ssStartDate').value;
+    const endDate = document.getElementById('ssEndDate').value;
+    
+    if (!startDate || !endDate) {
+        toast('Tanggal awal dan akhir harus diisi', 'warning');
+        return;
+    }
+    
+    if (startDate > endDate) {
+        toast('Tanggal awal tidak boleh lebih besar dari tanggal akhir', 'warning');
+        return;
+    }
+    
+    loadSafeSpaceStats('custom');
+};
+
+window.confirmDeleteToday = function() {
+    fetch('/dashboard/safe-space/today/count', {
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) {
+            toast(data.error, 'error');
+            return;
+        }
+        
+        if (data.count === 0) {
+            toast('Tidak ada data hari ini untuk dihapus', 'info');
+            return;
+        }
+        
+        openConfirm(
+            'Hapus Data Hari Ini',
+            `Apakah Anda yakin ingin menghapus ${data.count} record data skrining hari ini? Tindakan ini tidak dapat dibatalkan.`,
+            function() {
+                fetch('/dashboard/safe-space/today', {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken(),
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        toast(res.message, 'success');
+                        loadSafeSpaceStats();
+                    } else {
+                        toast(res.error || 'Gagal menghapus data', 'error');
+                    }
+                })
+                .catch(err => toast('Terjadi kesalahan sistem', 'error'));
+            }
+        );
+    })
+    .catch(err => toast('Gagal mengambil jumlah data', 'error'));
+};

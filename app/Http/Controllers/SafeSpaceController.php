@@ -115,4 +115,30 @@ class SafeSpaceController extends Controller
             ]
         ]);
     }
+
+    public function todayCount()
+    {
+        if (auth()->user()->role !== 'ADMIN') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        $count = SafeSpaceScreening::whereDate('created_at', Carbon::today())->count();
+        return response()->json(['count' => $count]);
+    }
+
+    public function deleteToday()
+    {
+        if (auth()->user()->role !== 'ADMIN') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        $count = SafeSpaceScreening::whereDate('created_at', Carbon::today())->count();
+        SafeSpaceScreening::whereDate('created_at', Carbon::today())->delete();
+        
+        return response()->json([
+            'success' => true,
+            'deleted_count' => $count,
+            'message' => "Berhasil menghapus $count data hari ini"
+        ]);
+    }
 }
