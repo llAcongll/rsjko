@@ -1007,4 +1007,163 @@ window.openSafeSpace = async (btn) => {
   closeOnMobile();
 
   await loadContent("safe-space");
+  
+  if (typeof window.initSafeSpace === 'function') {
+      window.initSafeSpace();
+  }
 };
+
+/* =========================
+   SAFE SPACE MONITORING
+========================= */
+let safeSpaceAnxietyChart = null;
+let safeSpaceDepressionChart = null;
+let safeSpaceSafetyChart = null;
+
+window.initSafeSpace = function() {
+    loadSafeSpaceStats('all');
+};
+
+window.loadSafeSpaceStats = function(period = null) {
+    if (!period) {
+        period = document.getElementById('safeSpacePeriod') ? document.getElementById('safeSpacePeriod').value : 'all';
+    }
+
+    const loader = document.getElementById('safeSpaceLoading');
+    const err = document.getElementById('safeSpaceError');
+    const content = document.getElementById('safeSpaceContent');
+
+    if (loader) loader.style.display = 'block';
+    if (err) err.style.display = 'none';
+    if (content) content.style.display = 'none';
+
+    fetch(`/dashboard/safe-space/statistics?period=${period}`, {
+        headers: { Accept: 'application/json' }
+    })
+    .then(r => {
+        if (!r.ok) throw new Error('HTTP Error ' + r.status);
+        return r.json();
+    })
+    .then(data => {
+        if (loader) loader.style.display = 'none';
+        if (content) content.style.display = 'block';
+        renderSafeSpaceStats(data);
+    })
+    .catch(error => {
+        console.error('Safe Space Stats Error:', error);
+        if (loader) loader.style.display = 'none';
+        if (err) err.style.display = 'block';
+    });
+};
+
+function renderSafeSpaceStats(data) {
+    const elTotal = document.getElementById('ss-total');
+    if (elTotal) elTotal.innerText = data.total;
+
+    // Charts
+    renderSSChart('chartAnxiety', safeSpaceAnxietyChart, 
+        ['Tidak Ada', 'Ringan', 'Sedang', 'Berat'], 
+        [data.anxiety.none, data.anxiety.mild, data.anxiety.moderate, data.anxiety.severe], 
+        ['#10b981', '#fcd34d', '#f97316', '#ef4444'], 
+        (chart) => safeSpaceAnxietyChart = chart
+    );
+    
+    renderSSChart('chartDepression', safeSpaceDepressionChart, 
+        ['Tidak Ada', 'Ringan', 'Sedang', 'Berat'], 
+        [data.depression.none, data.depression.mild, data.depression.moderate, data.depression.severe], 
+        ['#10b981', '#fcd34d', '#f97316', '#ef4444'], 
+        (chart) => safeSpaceDepressionChart = chart
+    );
+    
+    renderSSChart('chartSafety', safeSpaceSafetyChart, 
+        ['Aman (Tidak)', 'Berisiko (Ya)'], 
+        [data.safety.no, data.safety.yes], 
+        ['#10b981', '#ef4444'], 
+        (chart) => safeSpaceSafetyChart = chart
+    );
+
+    // Lists (Ansietas)
+    const listAnxiety = document.getElementById('listAnxiety');
+    if (listAnxiety) {
+        listAnxiety.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span><span style="color:#10b981; margin-right:4px;">●</span> Tidak Ada</span> <strong style="font-weight:600;">${data.anxiety.none} <span style="color:#64748b; font-weight:400;">(${data.anxiety.none_pct}%)</span></strong></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span><span style="color:#fcd34d; margin-right:4px;">●</span> Gejala Ringan</span> <strong style="font-weight:600;">${data.anxiety.mild} <span style="color:#64748b; font-weight:400;">(${data.anxiety.mild_pct}%)</span></strong></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span><span style="color:#f97316; margin-right:4px;">●</span> Gejala Sedang</span> <strong style="font-weight:600;">${data.anxiety.moderate} <span style="color:#64748b; font-weight:400;">(${data.anxiety.moderate_pct}%)</span></strong></div>
+            <div style="display:flex; justify-content:space-between;"><span><span style="color:#ef4444; margin-right:4px;">●</span> Gejala Berat</span> <strong style="font-weight:600;">${data.anxiety.severe} <span style="color:#64748b; font-weight:400;">(${data.anxiety.severe_pct}%)</span></strong></div>
+        `;
+    }
+
+    // Lists (Depresi)
+    const listDepression = document.getElementById('listDepression');
+    if (listDepression) {
+        listDepression.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span><span style="color:#10b981; margin-right:4px;">●</span> Tidak Ada</span> <strong style="font-weight:600;">${data.depression.none} <span style="color:#64748b; font-weight:400;">(${data.depression.none_pct}%)</span></strong></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span><span style="color:#fcd34d; margin-right:4px;">●</span> Ringan</span> <strong style="font-weight:600;">${data.depression.mild} <span style="color:#64748b; font-weight:400;">(${data.depression.mild_pct}%)</span></strong></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span><span style="color:#f97316; margin-right:4px;">●</span> Sedang</span> <strong style="font-weight:600;">${data.depression.moderate} <span style="color:#64748b; font-weight:400;">(${data.depression.moderate_pct}%)</span></strong></div>
+            <div style="display:flex; justify-content:space-between;"><span><span style="color:#ef4444; margin-right:4px;">●</span> Berat</span> <strong style="font-weight:600;">${data.depression.severe} <span style="color:#64748b; font-weight:400;">(${data.depression.severe_pct}%)</span></strong></div>
+        `;
+    }
+
+    // Lists (Safety)
+    const listSafety = document.getElementById('listSafety');
+    if (listSafety) {
+        listSafety.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span><span style="color:#10b981; margin-right:4px;">●</span> Menjawab TIDAK (Aman)</span> <strong style="font-weight:600;">${data.safety.no} <span style="color:#64748b; font-weight:400;">(${data.safety.no_pct}%)</span></strong></div>
+            <div style="display:flex; justify-content:space-between;"><span><span style="color:#ef4444; margin-right:4px;">●</span> Menjawab YA (Berisiko)</span> <strong style="font-weight:600;">${data.safety.yes} <span style="color:#64748b; font-weight:400;">(${data.safety.yes_pct}%)</span></strong></div>
+        `;
+    }
+    
+    // Safety Status details
+    const listSafetyStatus = document.getElementById('listSafetyStatus');
+    if (listSafetyStatus) {
+        if (data.safety.yes > 0) {
+            listSafetyStatus.innerHTML = `
+                <div style="font-size:13px; font-weight:600; color:#64748b; margin-bottom:10px;">Dari ${data.safety.yes} siswa yang menjawab YA:</div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Aman saat ini</span> <strong style="color:#10b981; font-weight:600;">${data.safety_status.safe} <span style="color:#64748b; font-weight:400;">(${data.safety_status.safe_pct}%)</span></strong></div>
+                <div style="display:flex; justify-content:space-between;"><span>Tidak aman saat ini</span> <strong style="color:#ef4444; font-weight:600;">${data.safety_status.unsafe} <span style="color:#64748b; font-weight:400;">(${data.safety_status.unsafe_pct}%)</span></strong></div>
+            `;
+            listSafetyStatus.style.display = 'block';
+        } else {
+            listSafetyStatus.innerHTML = '';
+            listSafetyStatus.style.display = 'none';
+        }
+    }
+}
+
+function renderSSChart(canvasId, chartObj, labels, dataArr, colors, saveRef) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    if (chartObj) chartObj.destroy();
+    const ctx = canvas.getContext('2d');
+
+    const newChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: dataArr,
+                backgroundColor: colors,
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return ' ' + context.label + ': ' + context.raw + ' siswa';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    saveRef(newChart);
+}

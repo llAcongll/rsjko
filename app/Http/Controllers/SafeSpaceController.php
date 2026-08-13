@@ -58,9 +58,11 @@ class SafeSpaceController extends Controller
             COUNT(id) as total,
             SUM(CASE WHEN anxiety_result = 'none' THEN 1 ELSE 0 END) as anxiety_none,
             SUM(CASE WHEN anxiety_result = 'mild' THEN 1 ELSE 0 END) as anxiety_mild,
+            SUM(CASE WHEN anxiety_result = 'moderate' THEN 1 ELSE 0 END) as anxiety_moderate,
             SUM(CASE WHEN anxiety_result = 'severe' THEN 1 ELSE 0 END) as anxiety_severe,
             SUM(CASE WHEN depression_result = 'none' THEN 1 ELSE 0 END) as depression_none,
             SUM(CASE WHEN depression_result = 'mild' THEN 1 ELSE 0 END) as depression_mild,
+            SUM(CASE WHEN depression_result = 'moderate' THEN 1 ELSE 0 END) as depression_moderate,
             SUM(CASE WHEN depression_result = 'severe' THEN 1 ELSE 0 END) as depression_severe,
             SUM(CASE WHEN safety_answer = 'yes' THEN 1 ELSE 0 END) as safety_yes,
             SUM(CASE WHEN safety_answer = 'no' THEN 1 ELSE 0 END) as safety_no,
@@ -73,8 +75,8 @@ class SafeSpaceController extends Controller
         if ($total === 0) {
             return response()->json([
                 'total' => 0,
-                'anxiety' => ['none' => 0, 'none_pct' => 0, 'mild' => 0, 'mild_pct' => 0, 'severe' => 0, 'severe_pct' => 0],
-                'depression' => ['none' => 0, 'none_pct' => 0, 'mild' => 0, 'mild_pct' => 0, 'severe' => 0, 'severe_pct' => 0],
+                'anxiety' => ['none' => 0, 'none_pct' => 0, 'mild' => 0, 'mild_pct' => 0, 'moderate' => 0, 'moderate_pct' => 0, 'severe' => 0, 'severe_pct' => 0],
+                'depression' => ['none' => 0, 'none_pct' => 0, 'mild' => 0, 'mild_pct' => 0, 'moderate' => 0, 'moderate_pct' => 0, 'severe' => 0, 'severe_pct' => 0],
                 'safety' => ['yes' => 0, 'yes_pct' => 0, 'no' => 0, 'no_pct' => 0],
                 'safety_status' => ['safe' => 0, 'safe_pct' => 0, 'unsafe' => 0, 'unsafe_pct' => 0]
             ]);
@@ -84,25 +86,32 @@ class SafeSpaceController extends Controller
             return round(((int) $count / $total) * 100, 2);
         };
 
+        $safetyYes = (int) $stats->safety_yes;
+        $calcSafetyPct = function ($count) use ($safetyYes) {
+            return $safetyYes > 0 ? round(((int) $count / $safetyYes) * 100, 2) : 0;
+        };
+
         return response()->json([
             'total' => $total,
             'anxiety' => [
                 'none' => (int) $stats->anxiety_none, 'none_pct' => $calcPct($stats->anxiety_none),
                 'mild' => (int) $stats->anxiety_mild, 'mild_pct' => $calcPct($stats->anxiety_mild),
+                'moderate' => (int) $stats->anxiety_moderate, 'moderate_pct' => $calcPct($stats->anxiety_moderate),
                 'severe' => (int) $stats->anxiety_severe, 'severe_pct' => $calcPct($stats->anxiety_severe),
             ],
             'depression' => [
                 'none' => (int) $stats->depression_none, 'none_pct' => $calcPct($stats->depression_none),
                 'mild' => (int) $stats->depression_mild, 'mild_pct' => $calcPct($stats->depression_mild),
+                'moderate' => (int) $stats->depression_moderate, 'moderate_pct' => $calcPct($stats->depression_moderate),
                 'severe' => (int) $stats->depression_severe, 'severe_pct' => $calcPct($stats->depression_severe),
             ],
             'safety' => [
-                'yes' => (int) $stats->safety_yes, 'yes_pct' => $calcPct($stats->safety_yes),
+                'yes' => $safetyYes, 'yes_pct' => $calcPct($safetyYes),
                 'no' => (int) $stats->safety_no, 'no_pct' => $calcPct($stats->safety_no),
             ],
             'safety_status' => [
-                'safe' => (int) $stats->safety_safe, 'safe_pct' => $calcPct($stats->safety_safe),
-                'unsafe' => (int) $stats->safety_unsafe, 'unsafe_pct' => $calcPct($stats->safety_unsafe),
+                'safe' => (int) $stats->safety_safe, 'safe_pct' => $calcSafetyPct($stats->safety_safe),
+                'unsafe' => (int) $stats->safety_unsafe, 'unsafe_pct' => $calcSafetyPct($stats->safety_unsafe),
             ]
         ]);
     }
