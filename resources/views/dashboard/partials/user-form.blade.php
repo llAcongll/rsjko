@@ -413,6 +413,14 @@
                 <div class="permission-item"><label><input type="checkbox" value="LOG_VIEW"> Lihat Logs</label></div>
               </div>
             </div>
+
+            {{-- 11. SAFE SPACE --}}
+            <div class="perm-group">
+              <div class="perm-group-title"><i class="ph ph-shield-plus"></i> 11. SAFE SPACE</div>
+              <div class="perm-grid">
+                <div class="permission-item" style="grid-column: 1 / -1;"><label><input type="checkbox" value="SAFE_SPACE_VIEW"> Lihat Monitoring SAFE SPACE</label></div>
+              </div>
+            </div>
           </div>
 
 
