@@ -16,6 +16,10 @@
         <option value="custom">Custom</option>
       </select>
 
+      <select id="safeSpaceSchool" class="form-select" onchange="loadSafeSpaceStats()" style="padding: 8px 32px 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; cursor: pointer; background-color: #fff;">
+        <option value="">Semua Sekolah</option>
+      </select>
+
       <div id="ssCustomDateContainer" style="display: none; gap: 8px; align-items: center;">
         <input type="date" id="ssStartDate" class="form-input" style="padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
         <span style="color: #64748b;">-</span>

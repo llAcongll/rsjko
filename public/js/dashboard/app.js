@@ -1021,7 +1021,32 @@ let safeSpaceDepressionChart = null;
 let safeSpaceSafetyChart = null;
 
 window.initSafeSpace = function() {
+    loadSafeSpaceSchools();
     loadSafeSpaceStats('all');
+};
+
+window.loadSafeSpaceSchools = function() {
+    fetch('/dashboard/schools/list')
+        .then(r => r.json())
+        .then(data => {
+            const select = document.getElementById('safeSpaceSchool');
+            if (!select) return;
+            
+            // clear old options except first
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+            
+            data.forEach(school => {
+                if (school.is_active) {
+                    const opt = document.createElement('option');
+                    opt.value = school.id;
+                    opt.textContent = school.name;
+                    select.appendChild(opt);
+                }
+            });
+        })
+        .catch(err => console.error('Error loading schools:', err));
 };
 
 window.loadSafeSpaceStats = function(period = null) {
@@ -1038,6 +1063,12 @@ window.loadSafeSpaceStats = function(period = null) {
     if (content) content.style.display = 'none';
 
     let url = `/dashboard/safe-space/statistics?period=${period}`;
+    
+    const schoolId = document.getElementById('safeSpaceSchool') ? document.getElementById('safeSpaceSchool').value : '';
+    if (schoolId) {
+        url += `&school_id=${schoolId}`;
+    }
+
     if (period === 'custom') {
         const startDate = document.getElementById('ssStartDate')?.value;
         const endDate = document.getElementById('ssEndDate')?.value;
