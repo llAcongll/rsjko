@@ -15,6 +15,7 @@ class SafeSpaceApiController extends Controller
         // 1. Validasi
         $validator = Validator::make($request->all(), [
             'session_id' => 'required|string',
+            'school_id' => 'nullable|exists:schools,id',
             'started_at' => 'nullable|date',
             'completed_at' => 'nullable|date',
             'score' => 'nullable|integer',

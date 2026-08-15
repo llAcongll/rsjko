@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RuanganController;
+use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\RekeningKoranController;
 use App\Http\Controllers\PendapatanUmumController;
 use App\Http\Controllers\PendapatanBpjsController;
@@ -139,6 +140,30 @@ Route::middleware('auth')
                 Route::put('/{ruangan}', [RuanganController::class, 'update'])->middleware('permission:RUANGAN_MANAGE');
                 Route::delete('/{ruangan}', [RuanganController::class, 'destroy'])->middleware('permission:RUANGAN_MANAGE');
                 Route::get('/next-kode', [RuanganController::class, 'nextKode']);
+            });
+    });
+
+/*
+|--------------------------------------------------------------------------
+| MASTER SEKOLAH - SAFE SPACE
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')
+    ->prefix('dashboard')
+    ->group(function () {
+        Route::get('/schools/active', [SchoolController::class, 'activeSchools']);
+
+        Route::middleware('permission:SAFE_SPACE_VIEW')
+            ->prefix('schools')
+            ->group(function () {
+                Route::get('/', [SchoolController::class, 'index']);
+                Route::get('/list', [SchoolController::class, 'list']);
+                Route::post('/', [SchoolController::class, 'store'])
+                    ->middleware('permission:MASTER_MANAGE');
+                Route::put('/{school}', [SchoolController::class, 'update'])
+                    ->middleware('permission:MASTER_MANAGE');
+                Route::delete('/{school}', [SchoolController::class, 'destroy'])
+                    ->middleware('permission:MASTER_MANAGE');
             });
     });
 

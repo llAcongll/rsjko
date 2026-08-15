@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SafeSpaceScreening extends Model
 {
@@ -10,6 +11,7 @@ class SafeSpaceScreening extends Model
 
     protected $fillable = [
         'session_id',
+        'school_id',
         'started_at',
         'completed_at',
         'score',
@@ -25,4 +27,9 @@ class SafeSpaceScreening extends Model
         'completed_at' => 'datetime',
         'score' => 'integer',
     ];
+
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 }
