@@ -25,6 +25,12 @@ class SafeSpaceController extends Controller
 
         $query = SafeSpaceScreening::query();
 
+        $schoolId = $request->query('school_id');
+
+        if ($schoolId !== null && $schoolId !== '') {
+            $query->where('school_id', $schoolId);
+        }
+
         $period = $request->query('period', 'all');
         
         switch ($period) {
